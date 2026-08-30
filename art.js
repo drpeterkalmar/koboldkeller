@@ -37,7 +37,7 @@
     if (hurt > 0) { ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(hurt * 20)); }
 
     const bob = Math.sin(walk * Math.PI * 2) * scale * 0.035;
-    const headR = scale * 0.30;
+    const headR = scale * 0.33;
     const bodyH = scale * 0.30, bodyW = scale * 0.30;
     const legH = scale * 0.16;
     const legSwing = Math.sin(walk * Math.PI * 2) * scale * 0.05;
@@ -83,23 +83,30 @@
     ctx.lineTo(headR * 0.85, cy + headR * 0.28);
     ctx.closePath(); ctx.fillStyle = skin; ctx.fill();
 
-    // Haarbüschel
+    // Haarbüschel (flauschig, 2 Tuffs)
     ctx.beginPath();
-    ctx.moveTo(-headR * 0.5, cy - headR * 0.82);
-    ctx.quadraticCurveTo(0, cy - headR * 1.45, headR * 0.5, cy - headR * 0.82);
-    ctx.quadraticCurveTo(0, cy - headR * 1.02, -headR * 0.5, cy - headR * 0.82);
+    ctx.moveTo(-headR * 0.55, cy - headR * 0.78);
+    ctx.quadraticCurveTo(-headR * 0.25, cy - headR * 1.55, headR * 0.05, cy - headR * 0.95);
+    ctx.quadraticCurveTo(headR * 0.3, cy - headR * 1.5, headR * 0.55, cy - headR * 0.78);
+    ctx.quadraticCurveTo(0, cy - headR * 1.05, -headR * 0.55, cy - headR * 0.78);
     ctx.closePath(); ctx.fillStyle = o.hair || "#5b3a29"; ctx.fill();
 
-    // Augen (groß, mit Glanzpunkt)
-    const eyeY = cy + headR * 0.05, eyeDX = headR * 0.38, eyeR = headR * 0.17;
+    // Augen (XXL-Kuller-Augen, zwei Glanzpunkte)
+    const eyeY = cy + headR * 0.08, eyeDX = headR * 0.36, eyeR = headR * 0.22;
     for (const s of [-1, 1]) {
       if (blink) {
         ctx.strokeStyle = "#2b2340"; ctx.lineWidth = 2.4;
-        ctx.beginPath(); ctx.arc(s * eyeDX, eyeY, eyeR, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+        ctx.beginPath(); ctx.arc(s * eyeDX, eyeY, eyeR * 0.9, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
       } else {
-        ell(ctx, s * eyeDX, eyeY, eyeR, eyeR * 1.15, "#fff", "#2b2340", 1.6);
-        ell(ctx, s * eyeDX + eyeR * 0.25, eyeY + eyeR * 0.15, eyeR * 0.55, eyeR * 0.68, "#2b2340");
-        ell(ctx, s * eyeDX + eyeR * 0.45, eyeY - eyeR * 0.35, eyeR * 0.22, eyeR * 0.22, "#fff");
+        ell(ctx, s * eyeDX, eyeY, eyeR, eyeR * 1.18, "#ffffff", "#2b2340", 1.8);
+        // Iris (dunkles Pflaumen-Ton) fast füllend
+        ell(ctx, s * eyeDX, eyeY + eyeR * 0.1, eyeR * 0.72, eyeR * 0.88, "#3b2d5e");
+        // innerer Farbreflex
+        ell(ctx, s * eyeDX, eyeY + eyeR * 0.3, eyeR * 0.5, eyeR * 0.55, "#5a4390");
+        // großer Glanzpunkt oben-links
+        ell(ctx, s * eyeDX - eyeR * 0.28, eyeY - eyeR * 0.38, eyeR * 0.30, eyeR * 0.24, "#ffffff");
+        // Mini-Glanz unten-rechts
+        ell(ctx, s * eyeDX + eyeR * 0.26, eyeY + eyeR * 0.48, eyeR * 0.13, eyeR * 0.11, "rgba(255,255,255,.85)");
       }
     }
     // Wangen (rot) + Mund
@@ -142,9 +149,12 @@
     ell(ctx, 0, -R * 1.02 + bob, R * 0.66, R * 0.48, "#f5efe2");
     // Nase
     ell(ctx, 0, -R * 1.02 + bob, R * 0.17, R * 0.2, "#ffb37b", "#c97b4a", 1.5);
-    // Augen über dem Bart
-    ell(ctx, -R * 0.34, -R * 1.22 + bob, R * 0.10, R * 0.12, "#2b2340");
-    ell(ctx, R * 0.34, -R * 1.22 + bob, R * 0.10, R * 0.12, "#2b2340");
+    // Augen über dem Bart (Glitzer-Kuller)
+    for (const s of [-1, 1]) {
+      ell(ctx, s * R * 0.34, -R * 1.22 + bob, R * 0.13, R * 0.15, "#ffffff", "#2b2340", 1.4);
+      ell(ctx, s * R * 0.34, -R * 1.20 + bob, R * 0.09, R * 0.11, "#3b2d5e");
+      ell(ctx, s * R * 0.34 - R * 0.04, -R * 1.27 + bob, R * 0.045, R * 0.035, "#ffffff");
+    }
     // Zipfelmütze
     ctx.beginPath();
     ctx.moveTo(-R * 0.72, -R * 1.32 + bob);
@@ -165,11 +175,12 @@
     const bodyY = -R * sq * 0.75;
     ell(ctx, 0, bodyY, R / sq, R * sq, "#66d9e8", "#2fa3b8", 2);
     ell(ctx, -R * 0.25, bodyY - R * 0.35, R * 0.3, R * 0.18, "rgba(255,255,255,.5)");
-    // Kulleraugen
+    // Kulleraugen mit Glitzer
     for (const s of [-1, 1]) {
-      ell(ctx, s * R * 0.34, bodyY + R * 0.05, R * 0.14, R * 0.17, "#fff", "#2b2340", 1.5);
-      ell(ctx, s * R * 0.34 + R * 0.04, bodyY + R * 0.08, R * 0.07, R * 0.09, "#2b2340");
-      ell(ctx, s * R * 0.34 + R * 0.07, bodyY - R * 0.02, R * 0.03, R * 0.03, "#fff");
+      ell(ctx, s * R * 0.34, bodyY + R * 0.05, R * 0.16, R * 0.19, "#ffffff", "#2b2340", 1.5);
+      ell(ctx, s * R * 0.34 + R * 0.02, bodyY + R * 0.08, R * 0.11, R * 0.13, "#3b2d5e");
+      ell(ctx, s * R * 0.34 - R * 0.04, bodyY - R * 0.02, R * 0.05, R * 0.04, "#ffffff");
+      ell(ctx, s * R * 0.34 + R * 0.07, bodyY + R * 0.14, R * 0.025, R * 0.02, "rgba(255,255,255,.8)");
     }
     // Mund: kleines "o"
     ell(ctx, 0, bodyY + R * 0.45, R * 0.09, R * 0.11, "#1d7a8c");
@@ -202,10 +213,11 @@
       ctx.moveTo(s * R * 0.35, -R * 2.15); ctx.lineTo(s * R * 0.55, -R * 2.75); ctx.lineTo(s * R * 0.75, -R * 2.05);
       ctx.closePath(); ctx.fillStyle = "#b58ae8"; ctx.fill(); ctx.strokeStyle = "#7d55b5"; ctx.stroke();
     }
-    // Kulleraugen
+    // Kulleraugen mit Glitzer
     for (const s of [-1, 1]) {
-      ell(ctx, s * R * 0.32, -R * 1.55, R * 0.16, R * 0.19, "#fff", "#2b2340", 1.5);
-      ell(ctx, s * R * 0.32 + R * 0.04, -R * 1.5, R * 0.08, R * 0.1, "#2b2340");
+      ell(ctx, s * R * 0.32, -R * 1.55, R * 0.17, R * 0.20, "#ffffff", "#2b2340", 1.5);
+      ell(ctx, s * R * 0.32 + R * 0.02, -R * 1.52, R * 0.11, R * 0.13, "#3b2d5e");
+      ell(ctx, s * R * 0.32 - R * 0.05, -R * 1.62, R * 0.05, R * 0.04, "#ffffff");
     }
     // Zährchen
     ell(ctx, 0, -R * 1.15, R * 0.08, R * 0.06, "#2b2340");
@@ -278,10 +290,11 @@
       ctx.moveTo(s * R * 0.45, -R * 2.85 + bob); ctx.lineTo(s * R * 0.68, -R * 3.25 + bob); ctx.lineTo(s * R * 0.75, -R * 2.7 + bob);
       ctx.closePath(); ctx.fillStyle = "#f5efe2"; ctx.fill(); ctx.strokeStyle = "#5a3a8a"; ctx.stroke();
     }
-    // Kulleraugen (wütend-süß)
+    // Kulleraugen (wütend-süß, mit Glitzer)
     for (const s of [-1, 1]) {
-      ell(ctx, s * R * 0.26, -R * 2.4 + bob, R * 0.13, R * 0.15, "#fff", "#2b2340", 1.5);
-      ell(ctx, s * R * 0.26, -R * 2.38 + bob, R * 0.06, R * 0.08, "#2b2340");
+      ell(ctx, s * R * 0.26, -R * 2.4 + bob, R * 0.15, R * 0.17, "#ffffff", "#2b2340", 1.5);
+      ell(ctx, s * R * 0.26, -R * 2.38 + bob, R * 0.10, R * 0.12, "#3b2d5e");
+      ell(ctx, s * R * 0.26 - R * 0.05, -R * 2.46 + bob, R * 0.05, R * 0.04, "#ffffff");
     }
     // dicker Braunstrich (wütend, aber niedlich)
     ctx.strokeStyle = "#3a2f55"; ctx.lineWidth = 2.5;

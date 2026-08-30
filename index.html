@@ -70,6 +70,10 @@
       color:#fff; text-align:center; font-family:inherit; outline:none; }
   #nameInput:focus { border-color:var(--gold); }
   .hidden { display:none !important; }
+  #pauseBtn { position:absolute; top:calc(8px + env(safe-area-inset-top)); right:62px;
+      width:44px; height:44px; border-radius:14px; background:rgba(20,12,40,.75);
+      border:2px solid rgba(255,255,255,.25); color:#fff; font-size:18px; cursor:pointer;
+      pointer-events:auto; z-index:5; }
   #muteBtn { position:absolute; top:calc(8px + env(safe-area-inset-top)); right:10px;
       width:44px; height:44px; border-radius:14px; background:rgba(20,12,40,.75);
       border:2px solid rgba(255,255,255,.25); color:#fff; font-size:20px; cursor:pointer;
@@ -93,6 +97,7 @@
   </div>
   <div id="toasts"></div>
   <div id="skills"></div>
+  <button id="pauseBtn">⏸️</button>
   <button id="muteBtn">🔊</button>
   <div id="saveNote">💾 gespeichert</div>
 </div>
@@ -141,11 +146,12 @@
     window.__errors.push("rejection: " + String(e && e.reason || e));
   });
 </script>
-<script src="art.js"></script>
-<script src="sfx.js"></script>
-<script src="particles.js"></script>
-<script src="world.js"></script>
-<script src="render.js"></script>
-<script src="game.js"></script>
+<script src="art.js?v=3"></script>
+<script src="sfx.js?v=3"></script>
+<script src="particles.js?v=3"></script>
+<script src="world.js?v=3"></script>
+<script src="render.js?v=3"></script>
+<script src="game.js?v=3"></script>
+<script>window.KK_VER = 3; console.log("Koboldkeller v3");</script>
 </body>
 </html>

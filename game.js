@@ -363,6 +363,12 @@
       SFX.setMuted(!SFX.isMuted());
       $("muteBtn").textContent = SFX.isMuted() ? "🔇" : "🔊";
     });
+    $("pauseBtn").addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); });
+    $("pauseBtn").addEventListener("click", e => {
+      e.preventDefault(); e.stopPropagation();
+      if (S.screen === "play") { S.screen = "pause"; $("pauseMenu").classList.remove("hidden"); }
+      else if (S.screen === "pause") { S.screen = "play"; $("pauseMenu").classList.add("hidden"); }
+    });
   }
 
   // ---------------- Skillbar (Touch) ----------------
