@@ -249,6 +249,17 @@ var R = (function () {
       skin: p.skin, outfit: p.outfit, hair: p.hair, blink: p.blinkT > 0, crown: st.depth >= 9,
     });
     ctx.globalAlpha = 1;
+    // Rundumschlag-Blitz (weißer Ring, kurz sichtbar)
+    if (st.p && st.p.atk360 > 0) {
+      const a = (st.p.atk360 / 0.35);
+      ctx.globalAlpha = 0.55 * a;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3 + 3 * a;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy - 8, 34 + (1 - a) * 22, 17 + (1 - a) * 11, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
   }
 
   Rr.ell = function (ctx, x, y, rx, ry, col) {

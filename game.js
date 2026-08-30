@@ -7,8 +7,9 @@
   function resize() { VW = window.innerWidth; VH = window.innerHeight; cv.width = VW; cv.height = VH; }
   window.addEventListener("resize", resize); resize();
 
-  const SKINS = ["#7ed957", "#ffb37b", "#7bd0ff", "#ff8ba0", "#c9a0ff", "#ffd75e"];
-  const OUTFITS = ["#ff6f91", "#4fc3f7", "#ffd75e", "#8be9a0", "#c9a0ff", "#ff8c42"];
+  const SKINS = ["#7ed957", "#ffb37b", "#7bd0ff", "#ff8ba0"];
+  const OUTFITS = ["#ff6f91", "#4fc3f7", "#ffd75e", "#ff8c42"];
+  const NAMES = ["Knuffel", "Wichtel-Willy", "Glitzer-Emma", "Pupsi", "Krümel", "Flauschi", "Kobbi", "Zuckerkaefer", "Mopsi", "Wackel", "Brummi", "Schmusebacke", "Pünktchen", "Knorpf", "Tapsi", "Blubber"];
   const SAVE_KEY = "koboldkeller_save_v1";
   const $ = id => document.getElementById(id);
 
@@ -70,7 +71,7 @@
     const base = {
       wichtel: { hp: 2 + Math.floor(depth * 0.6), dmg: 1, speed: 1.5, xp: 3, scale: 1 },
       slime: { hp: 3 + Math.floor(depth * 0.8), dmg: 1, speed: 1.1, xp: 4, scale: 1 },
-      bat: { hp: 2 + Math.floor(depth * 0.5), dmg: 1, speed: 2.2, xp: 4, scale: 1 },
+      bat: { hp: 2 + Math.floor(depth * 0.3), dmg: 1, speed: 1.7, xp: 4, scale: 1 },
       wisp: { hp: 4 + Math.floor(depth * 0.6), dmg: 1, speed: 1.3, xp: 6, scale: 1 },
       boss: { hp: 18 + depth * 4, dmg: 2, speed: 1.4, xp: 30, scale: 1.5 },
     }[type];
@@ -116,13 +117,13 @@
     const p = S.p;
     if (!p || S.screen !== "play" || p.atkCd > 0) return;
     p.atkT = 0.001; p.atkCd = 0.45;
+    p.atk360 = 0.35; // Rundumschlag-Anzeige (Sichtbarkeit fürs Auge)
     SFX.swing();
     setTimeout(() => {
       if (S.screen !== "play") return;
       for (const e of [...S.ents]) {
-        const d = Math.hypot(e.x - p.x, e.y - p.y);
-        const aim = (e.x - p.x) * (p.face || 1);
-        if (d < 1.5 && aim > -0.4) {
+        // RUNDUM: jeder Gegner im Umkreis wird getroffen
+        if (Math.hypot(e.x - p.x, e.y - p.y) < 1.5) {
           hurtEnt(e, 1 + Math.floor(p.lvl / 3));
         }
       }
@@ -243,7 +244,46 @@
     toast(depth === 0 ? "🏠 Willkommen zu Hause!" : "🕳️ Ebene " + depth + (depth >= 4 && depth % 4 === 0 ? " — der Boss-Kobold wartet!" : ""));
   }
   function descend() { if (S.depth < 20) { buildLevel(S.depth + 1); save(); } }
-  function goTown() { buildLevel(0); save(); }  // ---------------- Eingabe ----------------
+  function goTown() { buildLevel(0); save(); }  // ---------------- Wegfindung (BFS durch die Gänge) ----------------
+  function findPath(sx, sy, tx, ty) {
+    const { w, h, rows } = S.map;
+    const clamp = v => Math.max(0, Math.min(w - 1, v));
+    const scx = Math.max(0, Math.min(w - 1, Math.floor(sx)));
+    const scy = Math.max(0, Math.min(h - 1, Math.floor(sy)));
+    const tcx = Math.max(0, Math.min(w - 1, Math.floor(tx)));
+    const tcy = Math.max(0, Math.min(h - 1, Math.floor(ty)));
+    if (scx === tcx && scy === tcy) return [];
+    const prev = new Int32Array(w * h).fill(-1);
+    const seen = new Uint8Array(w * h);
+    const start = scy * w + scx, goal = tcy * w + tcx;
+    const q = [start]; seen[start] = 1;
+    let found = start === goal;
+    while (q.length && !found) {
+      const cur = q.shift();
+      const cx = cur % w, cy = (cur / w) | 0;
+      if (cx === tcx && cy === tcy) { found = true; break; }
+      const nbrs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (const d of nbrs) {
+        const nx2 = cx + d[0], ny2 = cy + d[1];
+        if (nx2 < 0 || ny2 < 0 || nx2 >= w || ny2 >= h) continue;
+        const idx = ny2 * w + nx2;
+        if (seen[idx] || rows[ny2][nx2].blocked) continue;
+        seen[idx] = 1; prev[idx] = cur; q.push(idx);
+      }
+    }
+    if (!found) return null;  // kein Weg → Geradeaus-Fallback
+    const path = [];
+    let cur = goal;
+    while (cur !== start && cur >= 0) {
+      const cx = cur % w, cy = (cur / w) | 0;
+      path.push({ x: cx + 0.5, y: cy + 0.5 });
+      cur = prev[cur];
+    }
+    path.reverse();
+    return path;
+  }
+
+  // ---------------- Eingabe ----------------
   const keys = {};
   window.addEventListener("keydown", e => {
     keys[e.code] = true;
@@ -292,6 +332,7 @@
       const spot = nearestFreeSpot(tx, ty);
       if (spot) { tx = spot.x; ty = spot.y; }
     }
+    p.path = findPath(p.x, p.y, tx, ty);   // BFS-Route durch die Gänge
     p.target = { x: tx, y: ty };
   }
 
@@ -314,6 +355,8 @@
 
   let selLook = 0;
   function initMenu() {
+    // Vorbefüllter Zufallsname
+    $("nameInput").value = NAMES[Math.floor(Math.random() * NAMES.length)];
     const looks = $("looks");
     looks.innerHTML = "";
     SKINS.forEach((sk, i) => {
@@ -321,9 +364,9 @@
       div.className = "look" + (i === 0 ? " sel" : "");
       div.dataset.i = i;
       const c = document.createElement("canvas");
-      c.width = 70; c.height = 74;
+      c.width = 58; c.height = 66;
       const cc = c.getContext("2d");
-      Art.drawChibi(cc, 35, 68, 40, { skin: sk, outfit: OUTFITS[i], hair: "#5b3a29" });
+      Art.drawChibi(cc, 29, 60, 36, { skin: sk, outfit: OUTFITS[i], hair: "#5b3a29" });
       div.appendChild(c);
       looks.appendChild(div);
     });
@@ -470,15 +513,27 @@
       const d = Math.hypot(p.foe.x - p.x, p.foe.y - p.y);
       if (d < 1.15) {
         mvx = mvy = 0;
-        if (p.atkCd <= 0) {
-          p.face = p.foe.x >= p.x ? 1 : -1;
-          playerAttack();
-        }
+        if (p.atkCd <= 0) { p.face = p.foe.x >= p.x ? 1 : -1; playerAttack(); }
       } else { mvx = (p.foe.x - p.x) / d; mvy = (p.foe.y - p.y) / d; }
     } else if (p.target) {
-      const d = Math.hypot(p.target.x - p.x, p.target.y - p.y);
-      if (d < 0.12) p.target = null;
-      else { mvx = (p.target.x - p.x) / d; mvy = (p.target.y - p.y) / d; }
+      // BFS-Pfad abarbeiten, falls vorhanden
+      if (p.path && p.path.length) {
+        const wp = p.path[0];
+        const wd = Math.hypot(wp.x - p.x, wp.y - p.y);
+        if (wd < 0.25) { p.path.shift(); }
+        else { mvx = (wp.x - p.x) / wd; mvy = (wp.y - p.y) / wd; }
+      }
+      if (!mvx && !mvy) {
+        const d = Math.hypot(p.target.x - p.x, p.target.y - p.y);
+        if (d < 0.12) { p.target = null; p.path = null; }
+        else { mvx = (p.target.x - p.x) / d; mvy = (p.target.y - p.y) / d; }
+      } else {
+        // Zwischen-Punkten folgen; letzter Punkt exakt anlaufen
+        if (!p.path || !p.path.length) {
+          const d = Math.hypot(p.target.x - p.x, p.target.y - p.y);
+          if (d < 0.12) { p.target = null; p.path = null; }
+        }
+      }
     }
 
     // --- Kollision & Move ---
@@ -505,6 +560,7 @@
     } else p.walkT = 0;
 
     p.atkCd = Math.max(0, p.atkCd - dt);
+    p.atk360 = Math.max(0, (p.atk360 || 0) - dt);
     p.atkT = p.atkT > 0 ? (p.atkT + dt / 0.3 >= 1 ? 0 : p.atkT + dt / 0.3) : 0;
     p.hurtT = Math.max(0, p.hurtT - dt);
     p.invulT = Math.max(0, p.invulT - dt);
