@@ -420,11 +420,17 @@
     }
     const p = S.p;
     if (best) { p.foe = best; p.target = { x: best.x, y: best.y }; return; }
+    // Treppe/Portal: Ziel PER BFS-WEG erreichen (direkter set = Geradeauslauf
+    // → hängen an der ersten Wand → "Spieler friert ein")
     if (S.info.stairs && Math.hypot(S.info.stairs.x - w.x, S.info.stairs.y - w.y) < 1.4) {
-      p.target = { x: S.info.stairs.x, y: S.info.stairs.y }; S.gotoStairs = true; return;
+      p.foe = null; S.enterPortal = false; S.gotoStairs = true;
+      p.path = findPath(p.x, p.y, S.info.stairs.x, S.info.stairs.y);
+      p.target = { x: S.info.stairs.x, y: S.info.stairs.y }; return;
     }
     if (S.info.portal && Math.hypot(S.info.portal.x - w.x, S.info.portal.y - w.y) < 1.4) {
-      p.target = { x: S.info.portal.x, y: S.info.portal.y }; S.enterPortal = true; return;
+      p.foe = null; S.gotoStairs = false; S.enterPortal = true;
+      p.path = findPath(p.x, p.y, S.info.portal.x, S.info.portal.y);
+      p.target = { x: S.info.portal.x, y: S.info.portal.y }; return;
     }
     p.foe = null; S.gotoStairs = false; S.enterPortal = false;
     let tx = w.x, ty = w.y;

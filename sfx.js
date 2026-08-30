@@ -1,6 +1,9 @@
-/* sfx.js v3 — Blob-Audio (Medienpfad = iOS-Silent-Switch-sicher) mit
+/* sfx.js v4 — Blob-Audio (Medienpfad = iOS-Silent-Switch-sicher) mit
    sauberen Pegeln (kein Clipping!), moderater Lautstärke und
-   Auto-Stopp beim Tab/App-Wechsel. (MIT) */
+   Auto-Stopp beim Tab/App-Wechsel. (MIT)
+   v4 (Spielstand v13): Wiedergabe über wiederverwendbare Element-Pools
+   (max 3 pro Sound) statt new Audio() pro Play — iOS-Ruckel-Fix.
+   Alle Effekte werden nach dem ersten Tap vorgerendert. */
 "use strict";
 var SFX = (function () {
   let muted = false;
@@ -80,13 +83,28 @@ var SFX = (function () {
     }).catch(() => {});
     return null;
   }
+  // ---------- v13: Wiederverwendbare Element-Pools (Ruckel-Fix) ----------
+  // Vorher: JEDES play() baute ein new Audio() -> hunderte Medienkontexte
+  // auf iOS -> Ruckeln. Jetzt: max 3 Elemente pro Sound, rotierend.
+  const POOL_SIZE = 3;
+  const elPool = {};
+  const elRR = {};
+  function pooledEl(name, url) {
+    let pool = elPool[name];
+    if (!pool) pool = elPool[name] = [];
+    for (const el of pool) if (el.paused) return el;
+    if (pool.length < POOL_SIZE) { const a = new Audio(url); pool.push(a); return a; }
+    elRR[name] = ((elRR[name] || 0) + 1) % POOL_SIZE;
+    return pool[elRR[name]];
+  }
   function play(name) {
     if (muted || document.hidden) return;
     let url = blobCache[name];
     if (url === undefined) url = getBlob(name);
     if (!url) return;
     try {
-      const a = new Audio(url);
+      const a = pooledEl(name, url);
+      a.currentTime = 0;
       a.volume = FX_VOL;
       const pr = a.play();
       if (pr && pr.catch) pr.catch(() => {});
@@ -126,10 +144,18 @@ var SFX = (function () {
       a.volume = 0.01; const p = a.play(); if (p && p.catch) p.catch(() => {});
     } catch (e) {}
   }
+  let unlocked = false;
   return {
     setMuted(m) { muted = m; if (m) stopMusic(); },
     isMuted() { return muted; },
-    resume() { unlock(); },
+    resume() {
+      if (!unlocked) {
+        unlocked = true;      // Unlock nur EINMAL statt je Tap
+        unlock();
+        // Alle Effekte vorrendern (Lazy-Render mitten im Kampf = Ruckel-Beitrag)
+        setTimeout(() => { Object.keys(FX).forEach(n => getBlob(n)); }, 50);
+      }
+    },
     audioOk() { return !!musicEl && !musicEl.paused; },
     music(mode) { if (mode) musicMode = mode; music(musicMode); },
     stopMusic() { stopMusic(); },
@@ -146,5 +172,10 @@ var SFX = (function () {
     portal() { play("portal"); },
     stairs() { play("stairs"); },
     down() { play("down"); },
+    poolInfo() {
+      const total = Object.keys(elPool).reduce((s, k) => s + elPool[k].length, 0);
+      const busy = Object.values(elPool).flat().filter(e => !e.paused).length;
+      return { elements: total, busy, unlocked };
+    },
   };
 })();
