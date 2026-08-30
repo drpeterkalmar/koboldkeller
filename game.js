@@ -7,8 +7,15 @@
   function resize() { VW = window.innerWidth; VH = window.innerHeight; cv.width = VW; cv.height = VH; }
   window.addEventListener("resize", resize); resize();
 
-  const SKINS = ["#7ed957", "#ffb37b", "#7bd0ff", "#ff8ba0"];
-  const OUTFITS = ["#ff6f91", "#4fc3f7", "#ffd75e", "#ff8c42"];
+  // 6 putzige Tier-Figuren (2 Reihen à 3 im Menü)
+  const PETS = [
+    { id: "kobold", name: "Kobold", skin: "#7ed957", outfit: "#ff6f91", hair: "#5b3a29" },
+    { id: "baer", name: "Bär", skin: "#c98d5a", outfit: "#5f7fd9", hair: "#8a5a33" },
+    { id: "hase", name: "Hase", skin: "#f3ead9", outfit: "#ffd75e", hair: "#e8d9c0" },
+    { id: "tintenfisch", name: "Tintenfisch", skin: "#b48be8", outfit: "#4fc3f7", hair: "#8a5fc0" },
+    { id: "panda", name: "Roter Panda", skin: "#e8734a", outfit: "#7ed957", hair: "#7a3b22" },
+    { id: "katze", name: "Katze", skin: "#f0a35e", outfit: "#ff6f91", hair: "#b06a2c" },
+  ];
   const NAMES = ["Knuffel", "Wichtel-Willy", "Glitzer-Emma", "Pupsi", "Krümel", "Flauschi", "Kobbi", "Zuckerkaefer", "Mopsi", "Wackel", "Brummi", "Schmusebacke", "Pünktchen", "Knorpf", "Tapsi", "Blubber"];
   const SAVE_KEY = "koboldkeller_save_v1";
   const $ = id => document.getElementById(id);
@@ -27,9 +34,13 @@
       x: 0, y: 0, hp: 6, maxHp: 6, xp: 0, lvl: 1, xpNext: 10,
       speed: 3.4, face: 1, walkT: 0, atkT: 0, hurtT: 0, invulT: 0,
       skin: look.skin, outfit: look.outfit, hair: look.hair,
+      species: look.species || "kobold",
       name: look.name, blinkT: 0, target: null, foe: null,
       atkCd: 0, potionCount: 3, dashT: 0, dashDx: 0, dashDy: 0,
       spellT: 0, stairHover: 0,
+      atk: 1,        // Melee-Schaden (wächst durch Level + Schwert-Upgrades)
+      projN: 1,      // Anzahl Seifenblasen (wächst durch Stab-Upgrades), feuern in Fächer
+      magic: 1,      // Projektil-Schaden (wächst durch Zauber-Upgrades)
     };
   }
 
@@ -41,6 +52,8 @@
         look: S.look, depth: S.depth, hp: p.hp, maxHp: p.maxHp,
         xp: p.xp, lvl: p.lvl, xpNext: p.xpNext,
         gold: S.gold, bag: S.bag, potionCount: p.potionCount, seed: S.seed,
+        atk: p.atk, projN: p.projN, magic: p.magic,      // Waffen-Upgrades bleiben erhalten
+        deepest: S.deepest || 1,                          // tiefste erreichte Ebene (für Schnell-Einstieg)
       }));
       const n = $("saveNote");
       if (n) { n.style.opacity = "1"; setTimeout(() => { n.style.opacity = "0.45"; }, 900); }
@@ -68,12 +81,15 @@
 
   // ---------------- Entities ----------------
   function makeEnt(type, x, y, depth) {
+    // Skalierung: Tiefe + Spieler-Level (der Kobold wird stärker, die Keller auch)
+    const L = (S.p && S.p.lvl) || 1;
+    const dmgUp = Math.floor(depth / 6) + Math.floor(L / 7);  // +1 Schaden pro 6 Ebenen ODER 6 Level
     const base = {
-      wichtel: { hp: 2 + Math.floor(depth * 0.6), dmg: 1, speed: 1.5, xp: 3, scale: 1 },
-      slime: { hp: 3 + Math.floor(depth * 0.8), dmg: 1, speed: 1.1, xp: 4, scale: 1 },
-      bat: { hp: 2 + Math.floor(depth * 0.3), dmg: 1, speed: 1.7, xp: 4, scale: 1 },
-      wisp: { hp: 4 + Math.floor(depth * 0.6), dmg: 1, speed: 1.3, xp: 6, scale: 1 },
-      boss: { hp: 18 + depth * 4, dmg: 2, speed: 1.4, xp: 30, scale: 1.5 },
+      wichtel: { hp: 2 + Math.floor(depth * 0.9) + Math.floor(L * 0.5), dmg: 1 + dmgUp, speed: 1.5, xp: 3 + depth + L, scale: 1 },
+      slime: { hp: 3 + Math.floor(depth * 1.1) + Math.floor(L * 0.6), dmg: 1 + dmgUp, speed: 1.1, xp: 4 + depth + L, scale: 1 },
+      bat: { hp: 2 + Math.floor(depth * 0.5) + Math.floor(L * 0.4), dmg: 1 + dmgUp, speed: 1.7, xp: 4 + depth + L, scale: 1 },
+      wisp: { hp: 4 + Math.floor(depth * 0.9) + Math.floor(L * 0.5), dmg: 1 + dmgUp, speed: 1.3, xp: 6 + depth * 2 + L, scale: 1 },
+      boss: { hp: 18 + depth * 5 + L * 3, dmg: 2 + dmgUp, speed: 1.4, xp: 30 + depth * 8 + L * 5, scale: 1.5 },
     }[type];
     return {
       type, x, y, hp: base.hp, maxHp: base.hp, dmg: base.dmg, speed: base.speed,
@@ -90,8 +106,10 @@
     while (p.xp >= p.xpNext) {
       p.xp -= p.xpNext;
       p.lvl++; p.xpNext = Math.floor(p.xpNext * 1.4) + 4;
-      p.maxHp++; p.hp = p.maxHp;
-      toast("⭐ Level " + p.lvl + "! ❤️+1");
+      p.maxHp += 2; p.hp = p.maxHp;
+      p.atk = (p.atk || 1) + 0.5;   // Schaden pro Schlag wächst
+      if (p.lvl % 3 === 0) p.projN = (p.projN || 1) + 1;
+      toast("⭐ Level " + p.lvl + "! ❤️+2, ⚔️+0.5" + (p.lvl % 3 === 0 ? ", 🫧+1 Projektil" : ""));
       SFX.levelup();
       Particles.spawn(p.x, p.y, "#8be9a0", 22, 0.6, 1.5);
     }
@@ -123,8 +141,8 @@
       if (S.screen !== "play") return;
       for (const e of [...S.ents]) {
         // RUNDUM: jeder Gegner im Umkreis wird getroffen
-        if (Math.hypot(e.x - p.x, e.y - p.y) < 1.5) {
-          hurtEnt(e, 1 + Math.floor(p.lvl / 3));
+        if (Math.hypot(e.x - p.x, e.y - p.y) < (1.5 + (p.atk > 3 ? 0.3 : 0))) {
+          hurtEnt(e, p.atk);
         }
       }
     }, 130);
@@ -143,10 +161,15 @@
     const tx = best ? best.x : p.x + p.face * 4;
     const ty = best ? best.y : p.y;
     const ang = Math.atan2(ty - p.y, tx - p.x);
-    S.projectiles.push({
-      x: p.x, y: p.y, vx: Math.cos(ang) * 6.5, vy: Math.sin(ang) * 6.5,
-      life: 1.4, face: p.face, lock: best || null, dmg: 2 + Math.floor(p.lvl / 3),
-    });
+    // Fächer: mehrere Seifenblasen in mehrere Richtungen (projN, Abstand 0.38 rad)
+    const N = p.projN || 1;
+    for (let k = 0; k < N; k++) {
+      const a = ang + (N > 1 ? (k - (N - 1) / 2) * 0.38 : 0);
+      S.projectiles.push({
+        x: p.x, y: p.y, vx: Math.cos(a) * 6.5, vy: Math.sin(a) * 6.5,
+        life: 1.4, face: p.face, lock: best || null, dmg: p.magic,
+      });
+    }
   }
   function castDash() {
     const p = S.p;
@@ -183,6 +206,13 @@
       S.items.push({ kind: "mushroom", x: e.x, y: e.y, seed: 2, vx: -1, vy: -0.5, flyingT: 0.6 });
     } else if (Math.random() < 0.06) {
       S.items.push({ kind: "mushroom", x: e.x, y: e.y, seed: Math.random() * 7, vx: (Math.random() - 0.5), vy: (Math.random() - 0.5), flyingT: 0.4 });
+    }
+    // Waffen-Upgrades: seltene Glitzerbeute — Boss lässt GARANTIERT eins fallen
+    const upChance = e.type === "boss" ? 1 : 0.07;
+    if (Math.random() < upChance) {
+      const r = Math.random();
+      const kind = r < 0.38 ? "sword" : r < 0.76 ? "wand" : "gem";
+      S.items.push({ kind, x: e.x, y: e.y, seed: Math.random() * 7, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, flyingT: 0.6 });
     }
     gainXp(e.xp);
     if (e.type === "boss") { toast("👑 Boss besiegt!"); SFX.levelup(); }
@@ -234,6 +264,7 @@
     const info = depth === 0 ? W.buildTown(map, rnd) : W.buildDungeon(map, rnd, depth);
     S.map = map; S.info = info;
     S.ents = []; S.items = []; S.projectiles = [];
+    S.bossSpawned = false;  // Fix: Flag pro Ebene zurücksetzen (sonst nur EIN Boss auf Ebene 4, nie wieder)
     if (depth > 0) {
       const count = 6 + Math.min(12, depth);
       for (let i = 0; i < count; i++) {
@@ -248,6 +279,15 @@
         const spot = freeSpot(map, rnd);
         if (spot) S.items.push({ kind: "mushroom", x: spot.x, y: spot.y, seed: Math.random() * 7 });
       }
+      // Waffen-Upgrades liegen hin und wieder im Dungeon herum (Ebene 2+)
+      const nUp = 1 + Math.floor(rnd() * 2);
+      for (let i = 0; i < nUp; i++) {
+        const spot = freeSpot(map, rnd);
+        if (spot) {
+          const r = rnd();
+          S.items.push({ kind: r < 0.38 ? "sword" : r < 0.76 ? "wand" : "gem", x: spot.x, y: spot.y, seed: Math.random() * 7 });
+        }
+      }
     }
     for (let i = 0; i < 7 + depth * 2; i++) {
       const spot = freeSpot(map, rnd);
@@ -261,10 +301,48 @@
     p.x = info.entry.x; p.y = info.entry.y;
     p.target = null; p.foe = null;
     SFX.stairs();
+    SFX.music(depth === 0 ? "town" : "dungeon");
     toast(depth === 0 ? "🏠 Willkommen zu Hause!" : "🕳️ Ebene " + depth + (depth >= 4 && depth % 4 === 0 ? " — der Boss-Kobold wartet!" : ""));
   }
-  function descend() { if (S.depth < 20) { buildLevel(S.depth + 1); save(); } }
-  function goTown() { buildLevel(0); save(); }  // ---------------- Wegfindung (BFS durch die Gänge) ----------------
+  function descend() {
+    if (S.depth < 20) {
+      buildLevel(S.depth + 1);
+      S.deepest = Math.max(S.deepest || 1, S.depth);
+      save();
+    }
+  }
+  function goTown() { buildLevel(0); save(); }
+  // ---------------- Keller-Tiefe wählen (Diablo-Ärger-Heiler) ----------------
+  function openAscendMenu() {
+    S.screen = "depth";
+    const box = $("depthBtns");
+    const deepest = S.deepest || 1;
+    const btns = [];
+    // Ebene 1 immer; dazu max. 5 Stufenraster bis deepest (1, 4, 7, 10, 13 …)
+    const picks = [];
+    for (let d = 1; d <= deepest; d += 3) picks.push(d);
+    if (picks[picks.length - 1] !== deepest) picks.push(deepest);
+    for (const d of picks) {
+      btns.push('<button class="bigBtn" data-depth="' + d + '">' +
+        (d === 1 ? "🪜 Von oben (Ebene 1)" : "🕳️ Ebene " + d) +
+        (d % 4 === 0 ? " 👑" : "") + '</button>');
+    }
+    box.innerHTML = btns.join("");
+    box.querySelectorAll("button").forEach(b => {
+      b.addEventListener("click", () => {
+        const d = parseInt(b.getAttribute("data-depth"), 10);
+        $("depthMenu").classList.add("hidden");
+        S.screen = "play";
+        buildLevel(d);
+        S.deepest = Math.max(deepest, d);
+        save();
+      });
+    });
+    $("depthMenu").classList.remove("hidden");
+    S.screen = "depth";
+  }
+
+  // ---------------- Wegfindung (BFS durch die Gänge) ----------------
   function findPath(sx, sy, tx, ty) {
     const { w, h, rows } = S.map;
     const clamp = v => Math.max(0, Math.min(w - 1, v));
@@ -384,14 +462,15 @@
     $("nameInput").value = NAMES[Math.floor(Math.random() * NAMES.length)];
     const looks = $("looks");
     looks.innerHTML = "";
-    SKINS.forEach((sk, i) => {
+    PETS.forEach((pet, i) => {
       const div = document.createElement("div");
       div.className = "look" + (i === 0 ? " sel" : "");
       div.dataset.i = i;
+      div.title = pet.name;
       const c = document.createElement("canvas");
       c.width = 58; c.height = 66;
       const cc = c.getContext("2d");
-      Art.drawChibi(cc, 29, 60, 36, { skin: sk, outfit: OUTFITS[i], hair: "#5b3a29" });
+      Art.drawChibi(cc, 29, 60, 36, { skin: pet.skin, outfit: pet.outfit, hair: pet.hair, species: pet.id });
       div.appendChild(c);
       looks.appendChild(div);
     });
@@ -406,7 +485,7 @@
     $("btnNew").addEventListener("click", () => {
       clearSave();
       const name = ($("nameInput").value || "Kobold").trim().slice(0, 12);
-      S.look = { skin: SKINS[selLook], outfit: OUTFITS[selLook], hair: "#5b3a29", name: name };
+      S.look = { skin: PETS[selLook].skin, outfit: PETS[selLook].outfit, hair: PETS[selLook].hair, species: PETS[selLook].id, name: name };
       S.p = makePlayer(S.look);
       S.gold = 0; S.bag = [];
       S.seed = (Math.random() * 1e9) | 0;
@@ -424,7 +503,9 @@
         S.p.hp = sv.hp; S.p.maxHp = sv.maxHp || 6;
         S.p.xp = sv.xp || 0; S.p.lvl = sv.lvl || 1; S.p.xpNext = sv.xpNext || 10;
         S.p.potionCount = (sv.potionCount === undefined) ? 3 : sv.potionCount;
+        S.p.atk = sv.atk || 1; S.p.projN = sv.projN || 1; S.p.magic = sv.magic || 1;
         S.gold = sv.gold || 0; S.bag = sv.bag || []; S.seed = sv.seed || 12345;
+        S.deepest = sv.deepest || Math.max(1, sv.depth || 1);
         buildLevel(sv.depth || 0);
         S.screen = "play";
         $("startMenu").classList.add("hidden");
@@ -437,6 +518,8 @@
     $("muteBtn").addEventListener("click", () => {
       SFX.setMuted(!SFX.isMuted());
       $("muteBtn").textContent = SFX.isMuted() ? "🔇" : "🔊";
+      if (SFX.isMuted()) SFX.stopMusic();
+      else if (S.screen === "play") SFX.music(S.depth === 0 ? "town" : "dungeon");
     });
     $("pauseBtn").addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); });
     $("pauseBtn").addEventListener("click", e => {
@@ -603,8 +686,7 @@
     }
     if (S.info.portal && Math.hypot(S.info.portal.x - p.x, S.info.portal.y - p.y) < 0.45) {
       p.target = null;
-      toast("🕳️ Der Keller öffnet sich …");
-      descend();
+      openAscendMenu();
       return;
     }
 
@@ -637,6 +719,9 @@
           SFX.loot();
         }
         else if (it.kind === "potion") { p.potionCount = Math.min(3, p.potionCount + 1); SFX.loot(); toast("🧪 Trank gefunden!"); }
+        else if (it.kind === "sword") { p.atk += 1; SFX.levelup(); toast("⚔️ SCHARFES SCHWERT! Schaden +1 (jetzt " + p.atk + ")"); Particles.spawn(it.x, it.y, "#ffd75e", 20, 0.6, 1.2); }
+        else if (it.kind === "wand") { p.projN += 1; SFX.levelup(); toast("🪄 ZAUBERWANDEL! +" + (p.projN - 1) + " extra Seifenblase (" + p.projN + "×)"); Particles.spawn(it.x, it.y, "#9be1ff", 20, 0.6, 1.2); }
+        else if (it.kind === "gem") { p.magic += 1; SFX.levelup(); toast("✨ GLITZERSTEIN! Seifenblasen-Schaden +1 (jetzt " + p.magic + ")"); Particles.spawn(it.x, it.y, "#d9b3ff", 20, 0.6, 1.2); }
         S.items.splice(i, 1);
       }
     }
@@ -754,6 +839,8 @@
     $("lvlBadge").textContent = "⭐ Lv " + p.lvl;
     $("goldBadge").textContent = "🪙 " + S.gold;
     $("depthBadge").textContent = S.depth === 0 ? "🏠 Stadt" : "🕳️ Ebene " + S.depth;
+    const wb = $("weaponBadge");
+    if (wb) wb.textContent = "⚔️" + p.atk + " 🫧" + (p.projN || 1) + "×" + (p.magic || 1);
   }
 
   // ---------------- rAF ----------------
@@ -776,6 +863,12 @@
     descend: () => descend(),
     state: () => ({ depth: S.depth, hp: S.p && S.p.hp, ents: S.ents.length, gold: S.gold, screen: S.screen }),
     errors: () => window.__errors,
+    // Test-Hooks (v7-Suite)
+    gain: (n) => gainXp(n),
+    ascend: () => openAscendMenu(),
+    goDepth: (d) => { buildLevel(d); },
+    save: () => save(),
+    load: () => loadSave(),
   };
   requestAnimationFrame(frame);
 })();

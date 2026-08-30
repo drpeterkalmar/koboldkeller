@@ -1,8 +1,11 @@
-/* sfx.js — WebAudio-Sounds, alle prozedural (MIT) */
+/* sfx.js — WebAudio-Sounds + cozy-Musik, alle prozedural (MIT) */
 "use strict";
 var SFX = (function () {
   let ctx = null;
   let muted = false;
+  let musicTimer = null;
+  let musicMode = "town"; // "town" | "dungeon"
+  let musicStep = 0;
   function ac() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === "suspended") ctx.resume();
@@ -13,10 +16,10 @@ var SFX = (function () {
     g.gain.linearRampToValueAtTime(peak, t0 + a);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d);
   }
-  function tone(freq, type, a, d, peak, slide) {
+  function tone(freq, type, a, d, peak, slide, when) {
     if (muted) return;
     try {
-      const c = ac(), t0 = c.currentTime;
+      const c = ac(), t0 = when || c.currentTime;
       const o = c.createOscillator(), g = c.createGain();
       o.type = type; o.frequency.setValueAtTime(freq, t0);
       if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t0 + a + d);
@@ -39,10 +42,49 @@ var SFX = (function () {
       src.start(t0);
     } catch (e) { }
   }
+  // ---- Cozy-Musik: sanfte Arpeggien über ruhendem Bass (2 Welten, 8 Takte Loop) ----
+  const TOWNS = [
+    [262, 330, 392, 494],   // C — freundlich
+    [220, 277, 330, 415],   // Am — verträumt
+    [349, 440, 523, 440],   // F — warm
+    [294, 370, 440, 370],   // G— aufgehend
+  ];
+  const DUNGEON = [
+    [196, 233, 294, 233],   // Gm — dunkel aber niedlich
+    [175, 220, 262, 220],   // F — grummelig
+    [165, 208, 247, 208],   // Em — schelmisch
+    [147, 185, 220, 185],   // Dm — tief
+  ];
+  function musicTick() {
+    if (muted) return;
+    try {
+      const seqs = musicMode === "town" ? TOWNS : DUNGEON;
+      const bar = Math.floor(musicStep / 8) % seqs.length;
+      const chord = seqs[bar];
+      const i = musicStep % 8;
+      const notes = [chord[i % 4], chord[(i + 2) % 4] * 2, chord[(i + 1) % 4] * 2];
+      const base = musicMode === "town" ? 0.055 : 0.04;
+      tone(notes[0], "triangle", 0.04, 0.5, base);
+      if (i % 2 === 1) tone(notes[1], "sine", 0.05, 0.45, base * 0.55);
+      if (i % 4 === 2) tone(notes[2] * 2, "sine", 0.05, 0.4, base * 0.35);
+      // weicher Basspuls
+      if (i % 8 === 0) tone(chord[0] / 2, "sine", 0.03, 0.9, base * 0.8);
+      musicStep++;
+    } catch (e) { }
+  }
+  function startMusic(mode) {
+    musicMode = mode || musicMode;
+    if (musicTimer) return;
+    musicStep = 0;
+    musicTimer = setInterval(musicTick, 250); // 120 BPM, Achtel
+  }
+  function stopMusic() { if (musicTimer) { clearInterval(musicTimer); musicTimer = null; } }
   return {
-    setMuted(m) { muted = m; },
+    setMuted(m) { muted = m; if (m) { } },
     isMuted() { return muted; },
     resume() { try { ac(); } catch (e) { } },
+    music(mode) { if (mode) musicMode = mode; if (muted) return; startMusic(mode); },
+    stopMusic() { stopMusic(); },
     step() { noise(0.07, 0.05, 500); },
     swing() { tone(320, "triangle", 0.01, 0.12, 0.12, 0.5); },
     hit() { noise(0.10, 0.18, 900); tone(180, "square", 0.005, 0.08, 0.10, 0.6); },

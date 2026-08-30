@@ -71,25 +71,61 @@
 
     // Kopf
     ell(ctx, 0, cy, headR, headR * 0.95, skin, shade(skin, 0.6), 2);
-    // Kobold-Ohren (spitz nach außen)
-    ctx.beginPath();
-    ctx.moveTo(-headR * 0.9, cy - headR * 0.1);
-    ctx.lineTo(-headR * 1.55, cy - headR * 0.55);
-    ctx.lineTo(-headR * 0.85, cy + headR * 0.28);
-    ctx.closePath(); ctx.fillStyle = skinD; ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(headR * 0.9, cy - headR * 0.1);
-    ctx.lineTo(headR * 1.55, cy - headR * 0.55);
-    ctx.lineTo(headR * 0.85, cy + headR * 0.28);
-    ctx.closePath(); ctx.fillStyle = skin; ctx.fill();
+    // Ohren — je nach Tier (species), Default: Kobold-Spitzohren
+    const sp = o.species || "kobold";
+    if (sp === "baer") {
+      ell(ctx, -headR * 0.85, cy - headR * 0.85, headR * 0.30, headR * 0.30, skinD);
+      ell(ctx, headR * 0.85, cy - headR * 0.85, headR * 0.30, headR * 0.30, skinD);
+    } else if (sp === "hase") {
+      const earL = headR * 1.35;
+      ell(ctx, -headR * 0.38, cy - headR * 0.80 - earL * 0.35, headR * 0.17, earL * 0.55, skin, shade(skin, 0.55), 1.6);
+      ell(ctx, headR * 0.38, cy - headR * 0.80 - earL * 0.35, headR * 0.17, earL * 0.55, skin, shade(skin, 0.55), 1.6);
+      ell(ctx, -headR * 0.38, cy - headR * 0.80 - earL * 0.35, headR * 0.08, earL * 0.38, "rgba(255,150,170,.75)");
+      ell(ctx, headR * 0.38, cy - headR * 0.80 - earL * 0.35, headR * 0.08, earL * 0.38, "rgba(255,150,170,.75)");
+    } else if (sp === "katze") {
+      ctx.beginPath();
+      ctx.moveTo(-headR * 0.92, cy - headR * 0.55); ctx.lineTo(-headR * 0.62, cy - headR * 1.55); ctx.lineTo(-headR * 0.28, cy - headR * 0.82);
+      ctx.closePath(); ctx.fillStyle = skin; ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(headR * 0.92, cy - headR * 0.55); ctx.lineTo(headR * 0.28, cy - headR * 0.82); ctx.lineTo(headR * 0.62, cy - headR * 1.55);
+      ctx.closePath(); ctx.fillStyle = skinD; ctx.fill();
+    } else if (sp === "panda") {
+      ell(ctx, -headR * 0.88, cy - headR * 0.80, headR * 0.30, headR * 0.26, "#3a3a44");
+      ell(ctx, headR * 0.88, cy - headR * 0.80, headR * 0.30, headR * 0.26, "#3a3a44");
+    } else if (sp === "tintenfisch") {
+      const t0 = o.walk || 0;
+      for (let i = 0; i < 4; i++) {
+        const ta = (-0.85 + i * 0.55) + Math.sin(t0 * 3 + i) * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(-headR * 0.5, cy + headR * 0.75);
+        ctx.quadraticCurveTo(
+          -headR * 0.5 + Math.cos(ta) * headR * 0.55, cy + headR * 1.05 + Math.sin(ta) * headR * 0.35,
+          -headR * 0.45 + Math.cos(ta) * headR * 0.75, cy + headR * 1.15 + Math.sin(ta * 1.3) * headR * 0.30
+        );
+        ctx.strokeStyle = skinD; ctx.lineWidth = headR * 0.22; ctx.lineCap = "round"; ctx.stroke();
+      }
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(-headR * 0.9, cy - headR * 0.1);
+      ctx.lineTo(-headR * 1.55, cy - headR * 0.55);
+      ctx.lineTo(-headR * 0.85, cy + headR * 0.28);
+      ctx.closePath(); ctx.fillStyle = skinD; ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(headR * 0.9, cy - headR * 0.1);
+      ctx.lineTo(headR * 1.55, cy - headR * 0.55);
+      ctx.lineTo(headR * 0.85, cy + headR * 0.28);
+      ctx.closePath(); ctx.fillStyle = skin; ctx.fill();
+    }
 
-    // Haarbüschel (flauschig, 2 Tuffs)
+    // Haarbüschel (flauschig, 2 Tuffs) — nur Kobold & Katze (andere Tiere haben Ohren oben)
+    if (sp === "kobold" || sp === "katze") {
     ctx.beginPath();
     ctx.moveTo(-headR * 0.55, cy - headR * 0.78);
     ctx.quadraticCurveTo(-headR * 0.25, cy - headR * 1.55, headR * 0.05, cy - headR * 0.95);
     ctx.quadraticCurveTo(headR * 0.3, cy - headR * 1.5, headR * 0.55, cy - headR * 0.78);
     ctx.quadraticCurveTo(0, cy - headR * 1.05, -headR * 0.55, cy - headR * 0.78);
     ctx.closePath(); ctx.fillStyle = o.hair || "#5b3a29"; ctx.fill();
+    }
 
     // Augen (XXL-Kuller-Augen, zwei Glanzpunkte)
     const eyeY = cy + headR * 0.08, eyeDX = headR * 0.36, eyeR = headR * 0.22;
@@ -108,6 +144,24 @@
         // Mini-Glanz unten-rechts
         ell(ctx, s * eyeDX + eyeR * 0.26, eyeY + eyeR * 0.48, eyeR * 0.13, eyeR * 0.11, "rgba(255,255,255,.85)");
       }
+    }
+    // Schnurrhaare (Katze)
+    if (sp === "katze") {
+      ctx.strokeStyle = "rgba(43,35,64,.55)"; ctx.lineWidth = 1.2;
+      for (const side of [-1, 1]) {
+        for (let wi = 0; wi < 2; wi++) {
+          ctx.beginPath();
+          ctx.moveTo(side * headR * 0.55, cy + headR * (0.18 + wi * 0.16));
+          ctx.quadraticCurveTo(side * headR * 1.1, cy + headR * (0.10 + wi * 0.22), side * headR * 1.45, cy + headR * (0.04 + wi * 0.28));
+          ctx.stroke();
+        }
+      }
+      // Näschen
+      ell(ctx, 0, cy + headR * 0.14, headR * 0.09, headR * 0.07, "#ff8ba0");
+    }
+    // Fisch-Mund (Tintenfisch): kleines O statt Lächeln
+    if (sp === "tintenfisch") {
+      ell(ctx, 0, cy + headR * 0.42, headR * 0.10, headR * 0.13, "#2b2340");
     }
     // Wangen (rot) + Mund
     ell(ctx, -headR * 0.62, cy + headR * 0.38, headR * 0.16, headR * 0.10, "rgba(255,110,130,.5)");
@@ -356,6 +410,64 @@
     if (kind === "coin") ART.drawCoin(ctx, x, y, s);
     else if (kind === "mushroom") ART.drawMushroom(ctx, x, y, s);
     else ART.drawPotion(ctx, x, y, s);
+  };
+
+  // ---------- Waffen-Upgrades (putzig glitzernd) ----------
+  ART.drawSword = function (ctx, x, y, s) {
+    // Klinge
+    ctx.fillStyle = "#dfe8f5";
+    ctx.beginPath();
+    ctx.moveTo(x - s * 0.13, y + s * 0.3);
+    ctx.lineTo(x - s * 0.13, y - s * 0.25);
+    ctx.quadraticCurveTo(x, y - s * 0.52, x + s * 0.13, y - s * 0.25);
+    ctx.lineTo(x + s * 0.13, y + s * 0.3);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#9fb2cc"; ctx.lineWidth = 1.2; ctx.stroke();
+    // Glanzlinie
+    ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(x - s * 0.04, y + s * 0.22); ctx.lineTo(x - s * 0.04, y - s * 0.2); ctx.stroke();
+    // Parierstange + Griff
+    ctx.fillStyle = "#ffd75e";
+    ctx.fillRect(x - s * 0.3, y + s * 0.28, s * 0.6, s * 0.11);
+    ctx.fillStyle = "#8a5a33";
+    ctx.fillRect(x - s * 0.06, y + s * 0.38, s * 0.12, s * 0.26);
+    // Knauf
+    ell(ctx, x, y + s * 0.68, s * 0.09, s * 0.09, "#ffd75e");
+  };
+  ART.drawWand = function (ctx, x, y, s, t) {
+    // Stab
+    ctx.strokeStyle = "#8a5a33"; ctx.lineWidth = s * 0.09; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x - s * 0.18, y + s * 0.42); ctx.lineTo(x + s * 0.14, y - s * 0.2); ctx.stroke();
+    // Stern
+    const sy2 = y - s * 0.32, sp = s * 0.2 * (1 + Math.sin(t * 6) * 0.12);
+    ctx.fillStyle = "#9be1ff";
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + i * 1.2566;
+      const a2 = a + 0.6283;
+      ctx.lineTo(x + Math.cos(a) * sp, sy2 + Math.sin(a) * sp);
+      ctx.lineTo(x + Math.cos(a2) * sp * 0.45, sy2 + Math.sin(a2) * sp * 0.45);
+    }
+    ctx.closePath(); ctx.fill();
+    // Glitzerflecken
+    for (let i = 0; i < 3; i++) {
+      const aa = t * 3 + i * 2.1;
+      ell(ctx, x + Math.cos(aa) * s * 0.3, sy2 + Math.sin(aa) * s * 0.22, 1.4, 1.4, "#ffffff");
+    }
+  };
+  ART.drawGem = function (ctx, x, y, s) {
+    // Diamanten
+    ctx.fillStyle = "#d9b3ff";
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.45);
+    ctx.lineTo(x + s * 0.38, y);
+    ctx.lineTo(x, y + s * 0.45);
+    ctx.lineTo(x - s * 0.38, y);
+    ctx.closePath(); ctx.fill();
+    // Facetten
+    ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(x - s * 0.38, y); ctx.lineTo(x + s * 0.38, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y - s * 0.45); ctx.lineTo(x, y + s * 0.45); ctx.stroke();
   };
 
   window.Art = ART;

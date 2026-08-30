@@ -60,7 +60,7 @@
   .bigBtn:active { transform:translateY(4px); box-shadow:0 2px 0 #b57614; }
   .bigBtn.green { background:linear-gradient(180deg,#a5f0b5,#3ddc84); box-shadow:0 6px 0 #1e9457; color:#0b3d22; }
   /* Farben-Auswahl (Kobold-Look) */
-  #looks { display:flex; gap:10px; justify-content:center; margin-top:14px; }
+  #looks { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:14px; max-width:230px; margin-left:auto; margin-right:auto; }
   .look { width:64px; height:68px; border-radius:18px; background:rgba(0,0,0,.3);
       border:3px solid rgba(255,255,255,.2); display:flex; align-items:center;
       justify-content:center; cursor:pointer; transition:transform .1s, border-color .1s; }
@@ -94,6 +94,9 @@
       <span id="goldBadge">🪙 0</span>
       <span id="depthBadge">🕳️ Keller</span>
     </div>
+    <div class="hudRow">
+      <span id="weaponBadge" style="font-size:12px; opacity:.95">⚔️1 🫧1</span>
+    </div>
   </div>
   <div id="toasts"></div>
   <div id="skills"></div>
@@ -126,6 +129,15 @@
   </div>
 </div>
 
+<!-- Keller-Tiefe wählen -->
+<div id="depthMenu" class="overlay hidden">
+  <div class="panel">
+    <h1>🕳️ Wie tief darfs gehen?</h1>
+    <div id="depthBtns" style="display:flex; flex-direction:column; gap:8px; margin-top:12px"></div>
+    <p style="font-size:13px; opacity:.6; margin-top:10px">In den Dungeons liegen Waffen-Upgrades! ⚔️🪄✨</p>
+  </div>
+</div>
+
 <!-- Rucksack -->
 <div id="bag" class="overlay hidden">
   <div class="panel">
@@ -146,12 +158,12 @@
     window.__errors.push("rejection: " + String(e && e.reason || e));
   });
 </script>
-<script src="art.js?v=6"></script>
-<script src="sfx.js?v=6"></script>
-<script src="particles.js?v=6"></script>
-<script src="world.js?v=6"></script>
-<script src="render.js?v=6"></script>
-<script src="game.js?v=6"></script>
-<script>window.KK_VER = 6; console.log("Koboldkeller v6");
+<script src="art.js?v=7"></script>
+<script src="sfx.js?v=7"></script>
+<script src="particles.js?v=7"></script>
+<script src="world.js?v=7"></script>
+<script src="render.js?v=7"></script>
+<script src="game.js?v=7"></script>
+<script>window.KK_VER = 7; console.log("Koboldkeller v7");
 </body>
 </html>

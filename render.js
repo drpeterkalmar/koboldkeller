@@ -229,6 +229,20 @@ var R = (function () {
     const lift = it.flyingT > 0 ? 10 : 0;  // fliegende Goodies schweben höher
     if (it.kind === "coin") Art.drawCoin(ctx, sx, sy - 8 - lift + bounce, 26);
     else if (it.kind === "mushroom") Art.drawMushroom(ctx, sx, sy - 6 - lift + bounce, 30);
+    else if (it.kind === "sword") { // Scharfes Schwert (aufsteigender Glanz)
+      const s = 30 + Math.sin(t * 5 + (it.seed || 0)) * 2;
+      Rr.glow(ctx, sx, sy - 10, 16, "rgba(255,215,94,.5)");
+      Art.drawSword(ctx, sx, sy - 10 - lift + bounce, s);
+    }
+    else if (it.kind === "wand") {
+      Rr.glow(ctx, sx, sy - 10, 16, "rgba(155,225,255,.6)");
+      Art.drawWand(ctx, sx, sy - 10 - lift + bounce, 30, t);
+    }
+    else if (it.kind === "gem") {
+      const pulse = Math.sin(t * 6 + (it.seed || 0)) * 0.12 + 1;
+      Rr.glow(ctx, sx, sy - 10, 17, "rgba(200,150,255,.65)");
+      Art.drawGem(ctx, sx, sy - 10 - lift + bounce, 26 * pulse);
+    }
     else Art.drawPotion(ctx, sx, sy - 6 - lift + bounce, 30);
   }
 
@@ -259,7 +273,8 @@ var R = (function () {
     shadow(ctx, sx, sy, 14);
     Art.drawChibi(ctx, sx, sy - 4, 46, {
       walk: p.walkT, atk: p.atkT, hurt: p.hurtT, face: p.face,
-      skin: p.skin, outfit: p.outfit, hair: p.hair, blink: p.blinkT > 0, crown: st.depth >= 9,
+      skin: p.skin, outfit: p.outfit, hair: p.hair, species: p.species,
+      blink: p.blinkT > 0, crown: st.depth >= 9,
     });
     ctx.globalAlpha = 1;
     // Rundumschlag-Blitz (weißer Ring, kurz sichtbar)
@@ -278,6 +293,14 @@ var R = (function () {
   Rr.ell = function (ctx, x, y, rx, ry, col) {
     ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
     ctx.fillStyle = col; ctx.fill();
+  };
+
+  Rr.glow = function (ctx, x, y, r, col) {
+    const g = ctx.createRadialGradient(x, y, 1, x, y, r);
+    g.addColorStop(0, col);
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
   };
 
   return Rr;
