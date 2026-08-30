@@ -31,5 +31,9 @@ Vanilla JS + Canvas 2D, 5 kleine Module (`art.js` prozedurale Chibi-Grafik,
 `sfx.js` WebAudio, `particles.js`, `world.js` Weltgen, `render.js` Iso-Renderer,
 `game.js` Loop). Deterministisches RNG pro Ebene. MIT-Lizenz.
 
+## Credits
+
+- Musik: „Town Theme 1“ (Geomancer) & „Stepping Down Into the Dungeon“ — CC0 / Public Domain via OpenGameArt.org (gespiegelt auf creazilla.com)
+
 ## Entwickeln
 Lokal testen: `python3 -m http.server 8471` im Projektordner, dann http://localhost:8471

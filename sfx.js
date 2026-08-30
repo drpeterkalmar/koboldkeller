@@ -93,63 +93,25 @@ var SFX = (function () {
     } catch (e) {}
   }
 
-  // ---------- Musik: 8-s-Loop offline gerendert, leise, loopend ----------
+  // ---------- Musik: echte CC0-Stuecke (audio/*.m4a), Medienpfad ----------
+  // Musik: "Town Theme 1" by Geomancer (CC0, via OpenGameArt/Creazilla)
+  //        "Stepping Down Into the Dungeon" (CC0, via OpenGameArt/Creazilla)
   let musicEl = null, musicMode = "town", musicWanted = false;
-  function musicBlobUrl(mode) {
-    const key = "music_" + mode;
-    if (blobCache[key]) return blobCache[key];
-    const TOWNS = [[262,330,392,494],[220,277,330,415],[349,440,523,440],[294,370,440,370]];
-    const DUNGEON = [[196,233,294,233],[175,220,262,220],[165,208,247,208],[147,185,220,185]];
-    const seqs = mode === "town" ? TOWNS : DUNGEON;
-    const base = mode === "town" ? 0.20 : 0.16;  // Summe aller Stimmen < 0.75 → kein Clipping
-    const STEP = 0.25, N = 32;
-    const oc = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, Math.ceil(SR * STEP * N), SR);
-    for (let s = 0; s < N; s++) {
-      const bar = Math.floor(s / 8) % seqs.length;
-      const chord = seqs[bar], i = s % 8, t0 = s * STEP;
-      grain(oc, oc.destination, chord[i % 4], "triangle", 0.03, 0.5, base, 1, t0);
-      if (i % 2 === 1) grain(oc, oc.destination, chord[(i + 2) % 4] * 2, "sine", 0.04, 0.45, base * 0.6, 1, t0);
-      if (i % 4 === 2) grain(oc, oc.destination, chord[(i + 1) % 4] * 2 * 2, "sine", 0.04, 0.4, base * 0.4, 1, t0);
-      if (i === 0) grain(oc, oc.destination, chord[0] / 2, "sine", 0.03, 0.9, base * 0.8, 1, t0);
-    }
-    blobCache[key] = null;
-    oc.startRendering().then(buffer => {
-      const ch = buffer.getChannelData(0);
-      const fade = Math.floor(SR * 0.04);
-      for (let i = 0; i < fade; i++) ch[ch.length - 1 - i] *= i / fade;
-      blobCache[key] = URL.createObjectURL(wavFromSamples(ch));
-      if (musicEl && musicEl.dataset.mode === mode) {
-        musicEl.src = blobCache[key]; musicEl.loop = true; musicEl.volume = MUS_VOL;
-        const p = musicEl.play(); if (p && p.catch) p.catch(() => {});
-      }
-      for (const w of waiters[key] || []) w();
-      waiters[key] = [];
-    }).catch(() => {});
-    return null;
+  function musicUrl(mode) {
+    return (mode === "town" ? "audio/town.m4a" : "audio/dungeon.m4a") + "?v=11";
   }
   function ensureEl() {
-    if (!musicEl) { musicEl = new Audio(); musicEl.loop = true; musicEl.volume = MUS_VOL; }
+    if (!musicEl) { musicEl = new Audio(); musicEl.loop = true; musicEl.volume = 0.55; musicEl.preload = "auto"; }
     return musicEl;
   }
   function music(mode) {
     if (mode) musicMode = mode;
     if (muted) return;
     musicWanted = true;
-    const key = "music_" + musicMode;
-    let url = blobCache[key];
-    if (url === undefined) url = musicBlobUrl(musicMode);
     const el = ensureEl();
-    el.dataset.mode = musicMode;
-    if (url) {
-      if (el.src !== url) el.src = url;
-      const p = el.play(); if (p && p.catch) p.catch(() => {});
-    } else if (el.paused) {
-      // Sync-stummer Unlock-WAV, Element bleibt "wanted" — Blob greift im .then
-      try {
-        el.src = URL.createObjectURL(wavFromSamples(new Float32Array(SR * 0.04)));
-        const p = el.play(); if (p && p.catch) p.catch(() => {});
-      } catch (e) {}
-    }
+    const url = musicUrl(musicMode);
+    if (!el.src || el.src.indexOf(url.replace("?v=11","")) === -1) { el.src = url; }
+    const p = el.play(); if (p && p.catch) p.catch(() => {});
   }
   function stopMusic() { musicWanted = false; if (musicEl) { try { musicEl.pause(); } catch (e) {} } }
   // App-/Tab-Wechsel: Musik PAUSIERT, beim Zurückkehern weiter — nur wenn gewünscht
