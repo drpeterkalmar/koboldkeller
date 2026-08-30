@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Koboldkeller</title>
+<style>
+  :root { --panel:#2b1e3f; --panel2:#3a2a55; --gold:#ffd75e; --heart:#ff5d73; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none;
+      -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#1a1030; touch-action:none;
+      font-family:"Baloo 2","Comic Sans MS","Chalkboard SE",system-ui,sans-serif; }
+  #cv { position:absolute; inset:0; width:100%; height:100%; display:block; cursor:crosshair; }
+  /* ---------- HUD ---------- */
+  #hud { position:absolute; inset:0; pointer-events:none; }
+  .hudTL { position:absolute; top:calc(8px + env(safe-area-inset-top)); left:10px;
+      display:flex; flex-direction:column; gap:4px; }
+  #hearts { font-size:24px; letter-spacing:2px; text-shadow:0 2px 4px rgba(0,0,0,.6); }
+  #hearts .empty { opacity:.25; filter:grayscale(1); }
+  #xpBar { width:170px; height:14px; background:rgba(0,0,0,.45); border-radius:8px;
+      border:2px solid rgba(255,255,255,.25); overflow:hidden; }
+  #xpFill { height:100%; width:0%; background:linear-gradient(90deg,#8be9a0,#3ddc84);
+      border-radius:6px; transition:width .25s; }
+  #lvlBadge, #goldBadge, #depthBadge { display:inline-flex; align-items:center; gap:6px;
+      background:rgba(20,12,40,.75); border:2px solid rgba(255,255,255,.18); color:#fff;
+      font-weight:700; border-radius:14px; padding:2px 10px; font-size:15px; }
+  .hudRow { display:flex; gap:6px; align-items:center; }
+  #toasts { position:absolute; top:18%; left:50%; transform:translateX(-50%); text-align:center; }
+  .toast { display:inline-block; background:rgba(25,15,50,.85); color:#fff; font-weight:800;
+      border:2px solid var(--gold); border-radius:16px; padding:6px 16px; font-size:18px;
+      margin-top:6px; animation:toastIn .3s ease-out; }
+  @keyframes toastIn { from { transform:scale(.6); opacity:0; } to { transform:scale(1); opacity:1; } }
+  /* ---------- Fähigkeiten-Buttons ---------- */
+  #skills { position:absolute; bottom:calc(14px + env(safe-area-inset-bottom)); left:50%;
+      transform:translateX(-50%); display:flex; gap:12px; pointer-events:auto; }
+  .skillBtn { width:62px; height:62px; border-radius:20px; border:3px solid rgba(255,255,255,.35);
+      background:rgba(30,18,60,.85); color:#fff; font-size:28px; position:relative;
+      display:flex; align-items:center; justify-content:center; cursor:pointer;
+      transition:transform .08s, filter .1s; }
+  .skillBtn:active { transform:scale(.9); filter:brightness(1.3); }
+  .skillBtn.cd { filter:grayscale(.8) brightness(.6); }
+  .skillBtn .key { position:absolute; top:-4px; right:-4px; background:var(--gold); color:#402a00;
+      font-size:11px; font-weight:800; border-radius:8px; padding:0 5px; }
+  .skillBtn .cool { position:absolute; left:0; bottom:0; width:100%; height:0%;
+      background:rgba(0,0,20,.65); border-radius:0 0 17px 17px; }
+  /* ---------- Overlays ---------- */
+  .overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      background:radial-gradient(ellipse at center, rgba(40,20,70,.88), rgba(10,5,25,.96));
+      pointer-events:auto; z-index:10; }
+  .panel { background:var(--panel); border:4px solid var(--gold); border-radius:26px;
+      padding:28px 34px; text-align:center; color:#fff; max-width:min(92vw,560px);
+      box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  .panel h1 { font-size:clamp(34px,8vw,56px); color:var(--gold);
+      text-shadow:0 4px 0 #7a4a00, 0 8px 18px rgba(0,0,0,.5); letter-spacing:1px; }
+  .panel p { font-size:17px; color:#d8c9ff; margin-top:8px; line-height:1.45; }
+  .bigBtn { display:inline-block; margin:16px 6px 0; padding:14px 34px; font-size:22px;
+      font-weight:800; color:#402a00; background:linear-gradient(180deg,#ffe28a,#ffb93d);
+      border:none; border-radius:20px; cursor:pointer; box-shadow:0 6px 0 #b57614;
+      transition:transform .08s; font-family:inherit; }
+  .bigBtn:active { transform:translateY(4px); box-shadow:0 2px 0 #b57614; }
+  .bigBtn.green { background:linear-gradient(180deg,#a5f0b5,#3ddc84); box-shadow:0 6px 0 #1e9457; color:#0b3d22; }
+  /* Farben-Auswahl (Kobold-Look) */
+  #looks { display:flex; gap:14px; justify-content:center; margin-top:14px; }
+  .look { width:78px; height:78px; border-radius:22px; background:rgba(0,0,0,.3);
+      border:3px solid rgba(255,255,255,.2); display:flex; align-items:center;
+      justify-content:center; cursor:pointer; transition:transform .1s, border-color .1s; }
+  .look.sel { border-color:var(--gold); transform:scale(1.1); background:rgba(255,215,94,.15); }
+  #nameInput { margin-top:14px; width:220px; padding:10px 14px; font-size:18px; font-weight:700;
+      border-radius:14px; border:3px solid rgba(255,255,255,.3); background:rgba(0,0,0,.35);
+      color:#fff; text-align:center; font-family:inherit; outline:none; }
+  #nameInput:focus { border-color:var(--gold); }
+  .hidden { display:none !important; }
+  #muteBtn { position:absolute; top:calc(8px + env(safe-area-inset-top)); right:10px;
+      width:44px; height:44px; border-radius:14px; background:rgba(20,12,40,.75);
+      border:2px solid rgba(255,255,255,.25); color:#fff; font-size:20px; cursor:pointer;
+      pointer-events:auto; z-index:5; }
+  #saveNote { position:absolute; bottom:8px; right:12px; color:rgba(255,255,255,.45);
+      font-size:12px; pointer-events:none; }
+  #contMenu .bigBtn { display:block; width:100%; margin:10px 0 0; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">
+  <div class="hudTL">
+    <div id="hearts"></div>
+    <div id="xpBar"><div id="xpFill"></div></div>
+    <div class="hudRow">
+      <span id="lvlBadge">⭐ Lv 1</span>
+      <span id="goldBadge">🪙 0</span>
+      <span id="depthBadge">🕳️ Keller</span>
+    </div>
+  </div>
+  <div id="toasts"></div>
+  <div id="skills"></div>
+  <button id="muteBtn">🔊</button>
+  <div id="saveNote">💾 gespeichert</div>
+</div>
+
+<!-- Startmenü -->
+<div id="startMenu" class="overlay">
+  <div class="panel">
+    <h1>🍄 Koboldkeller</h1>
+    <p>Ein putziges Abenteuer! Klicke oder tippe, um zu laufen.<br>
+       Tippe auf einen Wicht, um ihn zum Kuscheln … äh … Kämpfen aufzufordern!</p>
+    <div id="looks"></div>
+    <input id="nameInput" maxlength="12" placeholder="Dein Name">
+    <button id="btnNew" class="bigBtn green">🚀 Neues Abenteuer</button>
+    <button id="btnCont" class="bigBtn hidden">💾 Weiterspielen</button>
+    <p style="font-size:13px; margin-top:14px; opacity:.6">Tastatur: Klick laufen · 1/2/3 Zauber · R Trank · I Rucksack</p>
+  </div>
+</div>
+
+<!-- Pause -->
+<div id="pauseMenu" class="overlay hidden">
+  <div class="panel">
+    <h1>⏸️ Pause</h1>
+    <button id="btnResume" class="bigBtn green">▶️ Weiterspielen</button>
+    <button id="btnTown" class="bigBtn">🏠 Zurück in die Stadt</button>
+    <p style="font-size:13px; opacity:.6">Fortschritt wird automatisch gespeichert.</p>
+  </div>
+</div>
+
+<!-- Rucksack -->
+<div id="bag" class="overlay hidden">
+  <div class="panel">
+    <h1>🎒 Rucksack</h1>
+    <div id="bagList" style="margin-top:10px; font-size:17px; line-height:1.8; color:#e6ddff"></div>
+    <button id="btnBagClose" class="bigBtn">Schließen</button>
+  </div>
+</div>
+
+<script>
+  window.__errors = [];
+  window.__frames = 0;
+  window.onerror = function (m, s, l, c) {
+    window.__errors.push(String(m) + " @" + (s||"") + ":" + l + ":" + c);
+    return false;
+  };
+  window.addEventListener("unhandledrejection", e => {
+    window.__errors.push("rejection: " + String(e && e.reason || e));
+  });
+</script>
+<script src="art.js"></script>
+<script src="sfx.js"></script>
+<script src="particles.js"></script>
+<script src="world.js"></script>
+<script src="render.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
