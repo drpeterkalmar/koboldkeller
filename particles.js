@@ -24,9 +24,10 @@ var Particles = (function () {
     }
   }
   function draw(ctx, camX, camY) {
+    // Achtung: draw läuft INNERHALB von ctx.translate(-camX,-camY) — Kamera NICHT nochmal abziehen
     for (const p of list) {
-      const sx = W.isoX(p.x, p.y) - camX;
-      const sy = W.isoY(p.x, p.y) - camY - (1 - p.t / p.life) * 16;
+      const sx = W.isoX(p.x, p.y);
+      const sy = W.isoY(p.x, p.y) - (1 - p.t / p.life) * 16;
       ctx.globalAlpha = Math.max(0, 1 - p.t / p.life);
       ctx.beginPath(); ctx.ellipse(sx, sy, p.size, p.size, 0, 0, Math.PI * 2);
       ctx.fillStyle = p.color; ctx.fill();

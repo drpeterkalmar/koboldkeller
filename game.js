@@ -520,6 +520,8 @@
       $("muteBtn").textContent = SFX.isMuted() ? "🔇" : "🔊";
       if (SFX.isMuted()) SFX.stopMusic();
       else if (S.screen === "play") SFX.music(S.depth === 0 ? "town" : "dungeon");
+      // Probe-Klingel: hörbarer Beweis, dass WebAudio durchkommt
+      SFX.coin();
     });
     $("pauseBtn").addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); });
     $("pauseBtn").addEventListener("click", e => {
