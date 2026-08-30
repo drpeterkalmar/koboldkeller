@@ -52,10 +52,17 @@
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } }
 
   // ---------------- Toasts ----------------
-  function toast(msg) { S.toasts.push({ msg }); if (S.toasts.length > 3) S.toasts.shift(); renderToasts(); }
+  function toast(msg) {
+    S.toasts.push({ msg });
+    if (S.toasts.length > 3) S.toasts.shift();
+    renderToasts();
+    setTimeout(() => {
+      const i = S.toasts.findIndex(t => t.msg === msg);
+      if (i >= 0) { S.toasts.splice(i, 1); renderToasts(); }
+    }, 2600);
+  }
   function renderToasts() {
     $("toasts").innerHTML = S.toasts.map(t => '<div class="toast">' + t.msg + "</div>").join("");
-    if (S.toasts.length) setTimeout(() => { S.toasts.shift(); renderToasts(); }, 2600);
   }
 
   // ---------------- Entities ----------------
@@ -507,20 +514,17 @@
     let bl = p.blinkT;
     p.blinkShow = bl > 0;
 
-    // --- Stairs/Portal-Check beim Ankommen ---
-    if (S.gotoStairs && p.target && S.info.stairs) {
-      if (Math.hypot(p.target.x - p.x, p.target.y - p.y) < 0.5 || Math.hypot(S.info.stairs.x - p.x, S.info.stairs.y - p.y) < 0.6) {
-        S.gotoStairs = false; p.target = null;
-        descend();
-      }
+    // --- Stairs/Portal: direkter Betreten-Check (draufsteigen statt vorbeilaufen) ---
+    if (S.info.stairs && Math.hypot(S.info.stairs.x - p.x, S.info.stairs.y - p.y) < 0.45) {
+      p.target = null;
+      descend();
+      return;
     }
-    if (S.enterPortal && p.target && S.info.portal) {
-      if (Math.hypot(S.info.portal.x - p.x, S.info.portal.y - p.y) < 0.7) {
-        S.enterPortal = false; p.target = null;
-        $("pauseMenu").classList.remove("hidden");
-        S.screen = "pause";
-        toast("🕳️ Wähle: Keller oder Stadt!");
-      }
+    if (S.info.portal && Math.hypot(S.info.portal.x - p.x, S.info.portal.y - p.y) < 0.45) {
+      p.target = null;
+      toast("🕳️ Der Keller öffnet sich …");
+      descend();
+      return;
     }
 
     // --- Items einsammeln ---
