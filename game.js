@@ -277,7 +277,15 @@
       p.target = { x: S.info.portal.x, y: S.info.portal.y }; S.enterPortal = true; return;
     }
     p.foe = null; S.gotoStairs = false; S.enterPortal = false;
-    p.target = { x: w.x, y: w.y };
+    let tx = w.x, ty = w.y;
+    // Ziel in Wand? → aufs nächste freie Feld daneben umbiegen
+    const tcx = Math.max(0, Math.min(S.map.w - 1, Math.floor(tx)));
+    const tcy = Math.max(0, Math.min(S.map.h - 1, Math.floor(ty)));
+    if (S.map.rows[tcy][tcx].blocked) {
+      const spot = nearestFreeSpot(tx, ty);
+      if (spot) { tx = spot.x; ty = spot.y; }
+    }
+    p.target = { x: tx, y: ty };
   }
 
   // ---------------- Menüs ----------------
@@ -399,11 +407,37 @@
   }
 
   // ---------------- Haupt-Loop ----------------
+  function cellFree(x, y) {
+    const cx = Math.max(0, Math.min(S.map.w - 1, Math.floor(x)));
+    const cy = Math.max(0, Math.min(S.map.h - 1, Math.floor(y)));
+    return !S.map.rows[cy][cx].blocked;
+  }
+  function nearestFreeSpot(x, y) {
+    for (let r = 1; r <= 8; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          if (cellFree(x + dx, y + dy)) return { x: x + dx + 0.5, y: y + dy + 0.5 };
+        }
+      }
+    }
+    return null;
+  }
   let stepAcc = 0;
   function step(dt) {
     S.now += dt;
     const p = S.p;
     if (!p || S.screen !== "play") return;
+
+    // --- Auto-Befreiung: Wer in einer Wand steckt, wird sanft aufs freie Feld geschoben ---
+    if (!cellFree(p.x, p.y)) {
+      const spot = nearestFreeSpot(p.x, p.y);
+      if (spot) {
+        p.x = spot.x; p.y = spot.y;
+        p.target = null; p.foe = null;
+        Particles.spawn(p.x, p.y, "#e6d5ff", 10, 0.5, 1);
+      }
+    }
 
     // --- Bewegungsziel ---
     let mvx = 0, mvy = 0;
@@ -438,10 +472,20 @@
     if (mvx || mvy) {
       const nx = p.x + mvx * p.speed * dt;
       const ny = p.y + mvy * p.speed * dt;
-      const canX = !S.map.rows[Math.max(0, Math.min(S.map.h - 1, Math.floor(ny)))][Math.max(0, Math.min(S.map.w - 1, Math.floor(p.x)))].blocked;
-      const canY = !S.map.rows[Math.max(0, Math.min(S.map.h - 1, Math.floor(p.y)))][Math.max(0, Math.min(S.map.w - 1, Math.floor(nx)))].blocked;
-      if (canX) p.x = nx;
-      if (canY) p.y = ny;
+      // Kollisions-Prüfung pro Achse: X-Schritt prüft X-Ziel, Y-Schritt prüft Y-Ziel
+      const canX = mvy !== 0 ? false : cellFree(nx, p.y);
+      const canY = mvx !== 0 ? false : cellFree(p.x, ny);
+      const cellFreeBoth = cellFree(nx, ny);
+      if (mvy !== 0 && mvx !== 0) {
+        // Diagonal: beide Achsen einzeln frei?
+        if (cellFree(nx, p.y)) p.x = nx;
+        if (cellFree(p.x, ny)) p.y = ny;
+      } else if (cellFreeBoth) {
+        p.x = nx; p.y = ny;
+      } else {
+        if (mvy === 0 && canX) p.x = nx;
+        if (mvx === 0 && canY) p.y = ny;
+      }
       if (mvx) p.face = mvx > 0 ? 1 : -1;
       p.walkT += dt * 2.6;
       if (Math.random() < dt * 2.2) SFX.step();
