@@ -492,7 +492,7 @@
       buildLevel(0);
       S.screen = "play";
       $("startMenu").classList.add("hidden");
-      SFX.resume(); SFX.coin();
+      SFX.resume(); SFX.music("town"); SFX.coin();
     });
     const sv = loadSave();
     if (sv && sv.look && sv.look.skin) {
@@ -509,7 +509,7 @@
         buildLevel(sv.depth || 0);
         S.screen = "play";
         $("startMenu").classList.add("hidden");
-        SFX.resume();
+        SFX.resume(); SFX.music(sv.depth ? "dungeon" : "town");
       });
     }
     $("btnResume").addEventListener("click", () => { S.screen = "play"; $("pauseMenu").classList.add("hidden"); });
@@ -870,5 +870,16 @@
     save: () => save(),
     load: () => loadSave(),
   };
+  // iOS-Audio-Wächter: erster Touch/Klick weckt suspendierten AudioContext
+  const audioWake = () => {
+    try {
+      SFX.resume();
+      if (S.screen === "play" && !SFX.isMuted()) SFX.music(S.depth === 0 ? "town" : "dungeon");
+      const badge = $("audioHint");
+      if (badge) badge.style.display = SFX.audioOk() ? "none" : "block";
+    } catch (e) { }
+  };
+  window.addEventListener("pointerdown", audioWake, { passive: true });
+  window.addEventListener("keydown", audioWake, { passive: true });
   requestAnimationFrame(frame);
 })();

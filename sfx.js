@@ -79,10 +79,27 @@ var SFX = (function () {
     musicTimer = setInterval(musicTick, 250); // 120 BPM, Achtel
   }
   function stopMusic() { if (musicTimer) { clearInterval(musicTimer); musicTimer = null; } }
+  // iOS-Unlock: Context erzeugen + stummen Puffer spielen (innerhalb der Geste!)
+  let unlocked = false;
+  function unlock() {
+    try {
+      const c = ac();
+      if (c.state !== "running") { c.resume(); }
+      if (!unlocked) {
+        const len = Math.floor(c.sampleRate * 0.06);
+        const buf = c.createBuffer(1, len, c.sampleRate);
+        const src = c.createBufferSource(); src.buffer = buf;
+        src.connect(c.destination); src.start(0);
+        unlocked = true;
+      }
+      return c.state;
+    } catch (e) { return "error"; }
+  }
   return {
-    setMuted(m) { muted = m; if (m) { } },
+    setMuted(m) { muted = m; if (m) stopMusic(); },
     isMuted() { return muted; },
-    resume() { try { ac(); } catch (e) { } },
+    resume() { unlock(); },
+    audioOk() { try { return ac().state === "running"; } catch (e) { return false; } },
     music(mode) { if (mode) musicMode = mode; if (muted) return; startMusic(mode); },
     stopMusic() { stopMusic(); },
     step() { noise(0.07, 0.05, 500); },
