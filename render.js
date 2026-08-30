@@ -179,6 +179,7 @@ var R = (function () {
     for (const e of st.ents) objs.push({ d: e.x + e.y, kind: "ent", e, x: e.x, y: e.y });
     objs.push({ d: st.px + st.py, kind: "player", x: st.px, y: st.py });
     for (const it of st.items) objs.push({ d: it.x + it.y, kind: "item", it, x: it.x, y: it.y });
+    for (const pr of st.projectiles || []) objs.push({ d: pr.x + pr.y, kind: "proj", x: pr.x, y: pr.y, pr });
     objs.sort((a, b) => a.d - b.d);
 
     for (const o of objs) {
@@ -192,6 +193,7 @@ var R = (function () {
       else if (o.kind === "portal") drawPortal(ctx, sx, sy, now);
       else if (o.kind === "stairs") drawStairs(ctx, sx, sy);
       else if (o.kind === "item") drawItem(ctx, o.it, sx, sy, now);
+      else if (o.kind === "proj") drawProj(ctx, o.pr, sx, sy, now);
       else if (o.kind === "ent") drawEnt(ctx, o.e, sx, sy, now);
       else drawPlayer(ctx, st, sx, sy, now);
     }
@@ -224,9 +226,20 @@ var R = (function () {
   function drawItem(ctx, it, sx, sy, t) {
     const bounce = Math.sin(t * 4 + (it.seed || 0)) * 3;
     shadow(ctx, sx, sy, 10);
-    if (it.kind === "coin") Art.drawCoin(ctx, sx, sy - 8 + bounce, 26);
-    else if (it.kind === "mushroom") Art.drawMushroom(ctx, sx, sy - 6 + bounce, 30);
-    else Art.drawPotion(ctx, sx, sy - 6 + bounce, 30);
+    const lift = it.flyingT > 0 ? 10 : 0;  // fliegende Goodies schweben höher
+    if (it.kind === "coin") Art.drawCoin(ctx, sx, sy - 8 - lift + bounce, 26);
+    else if (it.kind === "mushroom") Art.drawMushroom(ctx, sx, sy - 6 - lift + bounce, 30);
+    else Art.drawPotion(ctx, sx, sy - 6 - lift + bounce, 30);
+  }
+
+  function drawProj(ctx, pr, sx, sy, t) {
+    const wob = Math.sin(t * 14 + pr.x) * 1.5;
+    Rr.ell(ctx, sx, sy - 18, 7, 9, "rgba(200,240,255,.85)");
+    Rr.ell(ctx, sx - 2, sy - 12, 2.2, 2.6, "rgba(255,255,255,.95)");
+    // Glitzer-Schweif
+    ctx.globalAlpha = 0.5;
+    Rr.ell(ctx, sx - pr.face * 6, sy - 8, 4, 6, "rgba(150,210,255,.5)");
+    ctx.globalAlpha = 1;
   }
 
   function drawEnt(ctx, e, sx, sy, t) {

@@ -95,8 +95,23 @@ var W = (function () {
       }
     }
     const first = rooms[0], last = rooms[rooms.length - 1];
-    const entry = { x: first.x + 1.5, y: first.y + 1.5 };
-    const stairs = { x: last.x + last.w / 2, y: last.y + last.h / 2 };
+    let entry = { x: first.x + 1.5, y: first.y + 1.5 };
+    let stairs = { x: last.x + last.w / 2, y: last.y + last.h / 2 };
+    // Treppe/Start auf FREIE Kacheln bannen (sonst Ping-Pong zwischen Rettung und Betreten)
+    const freeNear = (pt) => {
+      for (let r = 0; r < 4; r++) {
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            const cx = Math.floor(pt.x + dx), cy = Math.floor(pt.y + dy);
+            if (cx > 0 && cy > 0 && cx < w - 1 && cy < h - 1 && !rows[cy][cx].blocked)
+              return { x: cx + 0.5, y: cy + 0.5 };
+          }
+        }
+      }
+      return pt;
+    };
+    stairs = freeNear(stairs);
+    entry = freeNear(entry);
     // Fackeln
     const torches = [];
     for (const r of rooms) if (rnd() < 0.7) torches.push({ x: r.x + 0.5, y: r.y + 0.5 });

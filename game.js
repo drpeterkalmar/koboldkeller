@@ -15,7 +15,7 @@
 
   const S = {
     screen: "menu", map: null, info: null, depth: 0, seed: 12345,
-    p: null, ents: [], items: [], cam: { x: 0, y: 0 },
+    p: null, ents: [], items: [], projectiles: [], cam: { x: 0, y: 0 },
     now: 0, vis: null, toasts: [], bag: [], gold: 0,
     gotoStairs: false, enterPortal: false, pointerHold: false, saveT: 0,
   };
@@ -133,18 +133,20 @@
     const p = S.p;
     if (!p || S.screen !== "play" || p.atkCd > 0) return;
     p.atkT = 0.001; p.atkCd = 0.7;
-    SFX.portal();
-    Particles.spawn(p.x, p.y, "#7bd0ff", 14, 0.8, 0.8);
-    setTimeout(() => {
-      if (S.screen !== "play") return;
-      for (const e of [...S.ents]) {
-        if (Math.hypot(e.x - p.x, e.y - p.y) < 2.4) {
-          hurtEnt(e, 2 + Math.floor(p.lvl / 3));
-          Particles.spawn(e.x, e.y, "#7bd0ff", 8, 0.5, 0.6);
-        }
-      }
-      SFX.hit();
-    }, 180);
+    SFX.swing();
+    // Auto-Aim: nächster Gegner im Radius 6 — sonst fliegt die Seifenblase nach vorn
+    let best = null, bestD = 5.5;
+    for (const e of S.ents) {
+      const d = Math.hypot(e.x - p.x, e.y - p.y);
+      if (d < bestD) { best = e; bestD = d; }
+    }
+    const tx = best ? best.x : p.x + p.face * 4;
+    const ty = best ? best.y : p.y;
+    const ang = Math.atan2(ty - p.y, tx - p.x);
+    S.projectiles.push({
+      x: p.x, y: p.y, vx: Math.cos(ang) * 6.5, vy: Math.sin(ang) * 6.5,
+      life: 1.4, face: p.face, lock: best || null, dmg: 2 + Math.floor(p.lvl / 3),
+    });
   }
   function castDash() {
     const p = S.p;
@@ -163,7 +165,25 @@
     const i = S.ents.indexOf(e);
     if (i >= 0) S.ents.splice(i, 1);
     Particles.spawn(e.x, e.y, e.type === "boss" ? "#c9a0ff" : "#ffd0d8", e.type === "boss" ? 34 : 14, 0.6, 1.2);
-    dropLoot(e.x, e.y, e.type === "boss");
+    // Goodie-Explosion: Münzen FLIEGEN auseinander und werden vom Magnet eingesammelt
+    const nCoins = e.type === "boss" ? 8 : 1 + Math.floor(Math.random() * 3);
+    for (let i2 = 0; i2 < nCoins; i2++) {
+      const ang = Math.random() * Math.PI * 2;
+      const fly = 0.8 + Math.random() * 1.6;
+      S.items.push({
+        kind: "coin", x: e.x, y: e.y, seed: Math.random() * 7,
+        vx: Math.cos(ang) * fly, vy: Math.sin(ang) * fly, flyingT: 0.55,
+      });
+    }
+    if (e.type === "boss" || Math.random() < 0.10) {
+      S.items.push({ kind: "potion", x: e.x, y: e.y, seed: Math.random() * 7, vx: (Math.random() - 0.5), vy: (Math.random() - 0.5), flyingT: 0.5 });
+    }
+    if (e.type === "boss") {
+      S.items.push({ kind: "mushroom", x: e.x, y: e.y, seed: 1, vx: 1, vy: 0.5, flyingT: 0.6 });
+      S.items.push({ kind: "mushroom", x: e.x, y: e.y, seed: 2, vx: -1, vy: -0.5, flyingT: 0.6 });
+    } else if (Math.random() < 0.06) {
+      S.items.push({ kind: "mushroom", x: e.x, y: e.y, seed: Math.random() * 7, vx: (Math.random() - 0.5), vy: (Math.random() - 0.5), flyingT: 0.4 });
+    }
     gainXp(e.xp);
     if (e.type === "boss") { toast("👑 Boss besiegt!"); SFX.levelup(); }
     const p = S.p;
@@ -213,7 +233,7 @@
     const map = W.makeMap(40, 40);
     const info = depth === 0 ? W.buildTown(map, rnd) : W.buildDungeon(map, rnd, depth);
     S.map = map; S.info = info;
-    S.ents = []; S.items = [];
+    S.ents = []; S.items = []; S.projectiles = [];
     if (depth > 0) {
       const count = 6 + Math.min(12, depth);
       for (let i = 0; i < count; i++) {
@@ -262,12 +282,17 @@
       const cur = q.shift();
       const cx = cur % w, cy = (cur / w) | 0;
       if (cx === tcx && cy === tcy) { found = true; break; }
-      const nbrs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      const nbrs = [
+        [1, 0], [-1, 0], [0, 1], [0, -1],
+        [1, 1], [1, -1], [-1, 1], [-1, -1],  // DIAGONAL
+      ];
       for (const d of nbrs) {
         const nx2 = cx + d[0], ny2 = cy + d[1];
         if (nx2 < 0 || ny2 < 0 || nx2 >= w || ny2 >= h) continue;
         const idx = ny2 * w + nx2;
         if (seen[idx] || rows[ny2][nx2].blocked) continue;
+        // Diagonal nur ohne Ecken-Anschneiden (beide orthogonalen Nachbarn frei)
+        if (d[0] !== 0 && d[1] !== 0 && (rows[cy][cx + d[0]].blocked || rows[cy + d[1]][cx].blocked)) continue;
         seen[idx] = 1; prev[idx] = cur; q.push(idx);
       }
     }
@@ -583,10 +608,28 @@
       return;
     }
 
-    // --- Items einsammeln ---
+    // --- Fliegende Goodies (Physik) ---
+    for (const it of S.items) {
+      if (it.flyingT > 0) {
+        it.flyingT -= dt;
+        it.x += it.vx * dt; it.y += it.vy * dt;
+        it.vx *= 0.93; it.vy *= 0.93;
+        if (!cellFree(it.x, it.y)) { it.x -= it.vx * dt; it.y -= it.vy * dt; it.vx *= -0.5; it.vy *= -0.5; }
+      }
+    }
+
+    // --- Items: 3-Felder-Magnet ---
     for (let i = S.items.length - 1; i >= 0; i--) {
       const it = S.items[i];
-      if (Math.hypot(it.x - p.x, it.y - p.y) < 0.55) {
+      const dx = p.x - it.x, dy = p.y - it.y;
+      const d = Math.hypot(dx, dy);
+      if (d < 3.2 && d > 0.3) {
+        // Ansaugen (fliegt auf den Kobold zu)
+        const pull = 7.5 * dt * (1.4 - d / 3.2);
+        it.x += dx / d * pull; it.y += dy / d * pull;
+        it.flying = true;
+      }
+      if (d < 0.55) {
         if (it.kind === "coin") { S.gold++; SFX.coin(); Particles.spawn(it.x, it.y, "#ffd75e", 6, 0.3, 0.8); }
         else if (it.kind === "mushroom") {
           if (p.hp < p.maxHp) { p.hp = Math.min(p.maxHp, p.hp + 1); toast("🍄 +1 ❤️"); }
@@ -596,6 +639,31 @@
         else if (it.kind === "potion") { p.potionCount = Math.min(3, p.potionCount + 1); SFX.loot(); toast("🧪 Trank gefunden!"); }
         S.items.splice(i, 1);
       }
+    }
+
+    // --- Projektile (Auto-Aim-Seifenblasen) ---
+    for (let i = S.projectiles.length - 1; i >= 0; i--) {
+      const pr = S.projectiles[i];
+      pr.life -= dt;
+      // leichtes Nachziehen aufs Ziel (Homing)
+      if (pr.lock && pr.lock.hp > 0 && S.ents.includes(pr.lock)) {
+        const ang = Math.atan2(pr.lock.y - pr.y, pr.lock.x - pr.x);
+        const sp = Math.hypot(pr.vx, pr.vy);
+        pr.vx = pr.vx * 0.85 + Math.cos(ang) * sp * 0.15;
+        pr.vy = pr.vy * 0.85 + Math.sin(ang) * sp * 0.15;
+      } else pr.lock = null;
+      pr.x += pr.vx * dt; pr.y += pr.vy * dt;
+      let pop = pr.life <= 0 || !cellFree(pr.x, pr.y);
+      if (!pop) {
+        for (const e of S.ents) {
+          if (Math.hypot(e.x - pr.x, e.y - pr.y) < 0.6) {
+            hurtEnt(e, pr.dmg);
+            Particles.spawn(e.x, e.y, "#7bd0ff", 10, 0.4, 0.7);
+            pop = true; break;
+          }
+        }
+      }
+      if (pop) { Particles.spawn(pr.x, pr.y, "#bfe3ff", 8, 0.3, 0.6); S.projectiles.splice(i, 1); }
     }
 
     // --- Gegner-KI ---
@@ -672,7 +740,7 @@
     if (S.visT <= 0) { S.visT = 6; S.vis = W.visField(S.map, p.x, p.y, S.depth === 0 ? 9 : 6.5); }
     R.drawScene(ctx, {
       map: S.map, info: S.info, depth: S.depth, px: p.x, py: p.y,
-      ents: S.ents, items: S.items, cam: S.cam, now: S.now, vis: S.vis,
+      ents: S.ents, items: S.items, projectiles: S.projectiles, cam: S.cam, now: S.now, vis: S.vis,
       vw: VW, vh: VH, p,
     });
     if (S.screen === "play") { drawHud(); updateSkillbar(); }
