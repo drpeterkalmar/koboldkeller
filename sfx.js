@@ -117,7 +117,7 @@ var SFX = (function () {
   //        "Stepping Down Into the Dungeon" (CC0, via OpenGameArt/Creazilla)
   let musicEl = null, musicMode = "town", musicWanted = false;
   function musicUrl(mode) {
-    return (mode === "town" ? "audio/town.m4a" : "audio/dungeon.m4a") + "?v=11";
+    return (mode === "town" ? "audio/town.m4a" : "audio/dungeon.m4a") + "?v=14";
   }
   function ensureEl() {
     if (!musicEl) { musicEl = new Audio(); musicEl.loop = true; musicEl.volume = 0.55; musicEl.preload = "auto"; }
