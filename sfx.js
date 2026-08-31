@@ -117,7 +117,8 @@ var SFX = (function () {
   //        "Stepping Down Into the Dungeon" (CC0, via OpenGameArt/Creazilla)
   let musicEl = null, musicMode = "town", musicWanted = false;
   function musicUrl(mode) {
-    return (mode === "town" ? "audio/town.m4a" : "audio/dungeon.m4a") + "?v=14";
+    // v15: Keller spielt dieselbe entspannte Stadt-Melodie (Geknatter-Track ausgemustert)
+    return "audio/town.m4a" + "?v=14";
   }
   function ensureEl() {
     if (!musicEl) { musicEl = new Audio(); musicEl.loop = true; musicEl.volume = 0.55; musicEl.preload = "auto"; }
@@ -129,7 +130,7 @@ var SFX = (function () {
     musicWanted = true;
     const el = ensureEl();
     const url = musicUrl(musicMode);
-    if (!el.src || el.src.indexOf(url.replace("?v=11","")) === -1) { el.src = url; }
+    if (!el.src || el.src.indexOf("audio/town.m4a") === -1) { el.src = url; }
     const p = el.play(); if (p && p.catch) p.catch(() => {});
   }
   function stopMusic() { musicWanted = false; if (musicEl) { try { musicEl.pause(); } catch (e) {} } }
