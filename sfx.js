@@ -7,6 +7,7 @@
 "use strict";
 var SFX = (function () {
   let muted = false;
+  var FX_OFF = true; // v13d: Effekte komplett deaktiviert (Ruckel-Diagnose)
   const blobCache = {};
   const waiters = {};
   const SR = 22050;
@@ -98,7 +99,7 @@ var SFX = (function () {
     return pool[elRR[name]];
   }
   function play(name) {
-    if (muted || document.hidden) return;
+    if (FX_OFF || muted || document.hidden) return;
     let url = blobCache[name];
     if (url === undefined) url = getBlob(name);
     if (!url) return;
@@ -153,7 +154,7 @@ var SFX = (function () {
         unlocked = true;      // Unlock nur EINMAL statt je Tap
         unlock();
         // Alle Effekte vorrendern (Lazy-Render mitten im Kampf = Ruckel-Beitrag)
-        setTimeout(() => { Object.keys(FX).forEach(n => getBlob(n)); }, 50);
+        if (!FX_OFF) setTimeout(() => { Object.keys(FX).forEach(n => getBlob(n)); }, 50);
       }
     },
     audioOk() { return !!musicEl && !musicEl.paused; },
