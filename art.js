@@ -307,42 +307,54 @@
     ctx.restore();
   };
 
-  // Boss-Kobold: riesig, mit Krone und Knüppel
+  // Boss-Kobold: riesig, mit Krone und Knüppel — red: der KELLERKÖNIG (Ebene 20, knallrot + Flammen-Aura)
   ART.drawBoss = function (ctx, x, y, scale, o) {
     o = o || {};
     const walk = o.walk || 0, hurt = o.hurt || 0, face = o.face || 1, atk = o.atk;
+    const red = o.red || false;
+    const body = red ? "#d64541" : "#8a5fbf", bodyD = red ? "#7e1f1a" : "#5a3a8a";
+    const belly = red ? "#ffc9b8" : "#c9aef0", head = red ? "#e0503a" : "#9b76d6";
+    const fist = red ? "#a83226" : "#7a51ad", horn = "#f5efe2";
     const bob = Math.sin(walk * Math.PI * 2) * scale * 0.02;
     ctx.save(); ctx.translate(x, y); ctx.scale(face, 1);
     if (hurt > 0) ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(hurt * 20));
     const R = scale * 0.30;
+    // Flammen-Aura (nur Kellerkönig): pulsierender Glut-Schein
+    if (red) {
+      const g = ctx.createRadialGradient(0, -R * 1.2, 2, 0, -R * 1.2, R * 2.8);
+      g.addColorStop(0, "rgba(255,120,40," + (0.30 + Math.sin(walk * 4) * 0.08) + ")");
+      g.addColorStop(1, "rgba(255,120,40,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(-R * 3, -R * 4.2, R * 6, R * 5.4);
+    }
     // Füße
     ell(ctx, -scale * 0.12, -scale * 0.05, scale * 0.09, scale * 0.06, "#7a4a2b");
     ell(ctx, scale * 0.12, -scale * 0.05, scale * 0.09, scale * 0.06, "#7a4a2b");
     // Körper
-    ell(ctx, 0, -R - scale * 0.04 + bob, R * 1.05, R * 0.95, "#8a5fbf", "#5a3a8a", 2.5);
+    ell(ctx, 0, -R - scale * 0.04 + bob, R * 1.05, R * 0.95, body, bodyD, 2.5);
     // Bauchplatte
-    ell(ctx, 0, -R + bob, R * 0.62, R * 0.55, "#c9aef0");
+    ell(ctx, 0, -R + bob, R * 0.62, R * 0.55, belly);
     // Arme
     const armY = -R * 1.15 + bob;
     if (atk !== undefined && atk > 0) {
       const ang = -2.0 + atk * 2.9;
       ctx.save(); ctx.translate(-scale * 0.16, armY); ctx.rotate(-ang);
-      ell(ctx, -scale * 0.12, 0, scale * 0.07, scale * 0.06, "#8a5fbf");
+      ell(ctx, -scale * 0.12, 0, scale * 0.07, scale * 0.06, body);
       rrect(ctx, -scale * 0.42, -scale * 0.035, scale * 0.30, scale * 0.07, scale * 0.03, "#8a5a33");
-      ell(ctx, -scale * 0.47, 0, scale * 0.11, scale * 0.11, "#9b7bd6", "#5a3a8a", 2);
+      ell(ctx, -scale * 0.47, 0, scale * 0.11, scale * 0.11, red ? "#ffd75e" : "#9b7bd6", bodyD, 2);
       ctx.restore();
-      ell(ctx, scale * 0.18, armY, scale * 0.07, scale * 0.06, "#7a51ad");
+      ell(ctx, scale * 0.18, armY, scale * 0.07, scale * 0.06, fist);
     } else {
-      ell(ctx, -scale * 0.22, armY, scale * 0.07, scale * 0.06, "#7a51ad");
-      ell(ctx, scale * 0.22, armY, scale * 0.07, scale * 0.06, "#7a51ad");
+      ell(ctx, -scale * 0.22, armY, scale * 0.07, scale * 0.06, fist);
+      ell(ctx, scale * 0.22, armY, scale * 0.07, scale * 0.06, fist);
     }
     // Kopf
-    ell(ctx, 0, -R * 2.35 + bob, R * 0.72, R * 0.68, "#9b76d6", "#5a3a8a", 2.5);
+    ell(ctx, 0, -R * 2.35 + bob, R * 0.72, R * 0.68, head, bodyD, 2.5);
     // Hörnchen
     for (const s of [-1, 1]) {
       ctx.beginPath();
       ctx.moveTo(s * R * 0.45, -R * 2.85 + bob); ctx.lineTo(s * R * 0.68, -R * 3.25 + bob); ctx.lineTo(s * R * 0.75, -R * 2.7 + bob);
-      ctx.closePath(); ctx.fillStyle = "#f5efe2"; ctx.fill(); ctx.strokeStyle = "#5a3a8a"; ctx.stroke();
+      ctx.closePath(); ctx.fillStyle = horn; ctx.fill(); ctx.strokeStyle = bodyD; ctx.stroke();
     }
     // Kulleraugen (wütend-süß, mit Glitzer)
     for (const s of [-1, 1]) {
@@ -358,14 +370,15 @@
     ctx.strokeStyle = "#3a2f55"; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(0, -R * 2.1 + bob, R * 0.18, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
     ctx.restore();
-    // Krone mittig
+    // Krone mittig (Kellerkönig: glühend rot-golden)
     const r = R * 0.72;
     ctx.save(); ctx.translate(x, y - R * 3.15 + bob);
     ctx.beginPath();
     ctx.moveTo(-r * 0.5, 0); ctx.lineTo(-r * 0.5, -r * 0.4); ctx.lineTo(-r * 0.2, -r * 0.14);
     ctx.lineTo(0, -r * 0.5); ctx.lineTo(r * 0.2, -r * 0.14); ctx.lineTo(r * 0.5, -r * 0.4);
     ctx.lineTo(r * 0.5, 0); ctx.closePath();
-    ctx.fillStyle = "#ffd75e"; ctx.fill(); ctx.strokeStyle = "#b8801f"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = red ? "#ff5d4a" : "#ffd75e"; ctx.fill();
+    ctx.strokeStyle = red ? "#8e1a12" : "#b8801f"; ctx.lineWidth = 2; ctx.stroke();
     ctx.restore();
   };
 

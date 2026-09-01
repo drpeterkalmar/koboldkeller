@@ -264,7 +264,7 @@ var R = (function () {
     else if (e.type === "slime") Art.drawSlime(ctx, sx, sy - 2 * sc, 40 * sc, o);
     else if (e.type === "bat") Art.drawBat(ctx, sx, sy - 14 * sc + Math.sin(t * 3 + (e.seed || 0)) * 4, 40 * sc, o);
     else if (e.type === "wisp") Art.drawWisp(ctx, sx, sy - 12 * sc + Math.sin(t * 2 + (e.seed || 0)) * 5, 42 * sc, o);
-    else if (e.type === "boss") Art.drawBoss(ctx, sx, sy - 4 * sc, 92 * sc, o);
+    else if (e.type === "boss") Art.drawBoss(ctx, sx, sy - 4 * sc, 92 * sc, { walk: e.walkT, hurt: e.hurtT, face: e.face, atk: e.atkT, red: !!e.red });
   }
 
   function drawPlayer(ctx, st, sx, sy, t) {

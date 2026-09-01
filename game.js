@@ -371,12 +371,12 @@
       " · 🪙 " + S.gold + " · ⏱️ " + fmtTime(Math.round(S.runSecs)) +
       (S.mega ? " · 🔥 MEGASCHWER" : "") + "</p>" +
       "<p style='font-size:14px;opacity:.8;margin-top:2px'>Besiegt am " + when + "</p>";
-    const winBox = $("winBox");
-    if (!winBox) return;
+    const winMenu = $("winMenu");
+    if (!winMenu) return;
     $("winStats").innerHTML = stats;
     $("hhGold").innerHTML = tbl("🪙 Meiste Münzen", rowsOf(hh.gold, r => r.gold + " 🪙"));
     $("hhTime").innerHTML = tbl("⏱️ Schnellster Durchlauf", rowsOf(hh.time, r => fmtTime(r.secs)));
-    $("winMenu").classList.remove("hidden");
+    winMenu.classList.remove("hidden");
   }
   // ---------------- SIEG! 🏆 ----------------
   function hhLoad() {
@@ -974,6 +974,8 @@
   // ---------------- Boot ----------------
   initMenu();
   buildSkillbar();
+  const verL = $("verLabel");
+  if (verL) verL.textContent = "🍄 Koboldkeller v17 — Kellerkönig + Ehrenhall";
   window.KK = {
     start: (skinIdx) => { $("btnNew").click(); },
     attack: playerAttack, bubbles: castBubbles, dash: castDash, potion: usePotion,
@@ -992,7 +994,7 @@
   // Sieges-Screen: Buttons verdrahten (einmalig beim Boot)
   try {
     $("btnWinTown").addEventListener("click", () => { $("winMenu").classList.add("hidden"); S.winQueued = false; goTown(); S.screen = "play"; });
-    $("btnWinAgain").addEventListener("click", () => { $("winMenu").classList.add("hidden"); S.winQueued = false; S.runSecs = 0; descend(); });
+    $("btnWinAgain").addEventListener("click", () => { $("winMenu").classList.add("hidden"); S.winQueued = false; S.runSecs = 0; goTown(); descend(); S.screen = "play"; });
   } catch (e) { }
   // iOS-Audio-Wächter: erster Touch/Klick weckt suspendierten AudioContext
   const audioWake = () => {

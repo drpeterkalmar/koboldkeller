@@ -69,6 +69,8 @@ var SFX = (function () {
     stairs: (c,d) => grain(c,d,260,"triangle",0.02,0.2,0.26,0.7,0),
     down: (c,d) => [300,260,220,180].forEach((f,i) => grain(c,d,f,"sine",0.02,0.26,0.26,1,i*0.12)),
     step: (c,d) => noiseGrain(c,d,0.09,0.08,500,0),
+    // Sieges-Fanfare: aufsteigende Fanfare + Glitzer-Arpeggio (Pegel-Summe bleibt < 1)
+    victory: (c,d) => { [392,523,659,784].forEach((f,i) => grain(c,d,f,"triangle",0.02,0.30,0.28,1,i*0.13)); grain(c,d,1047,"triangle",0.03,0.55,0.30,1,0.55); },
   };
 
   function getBlob(name) {
@@ -174,6 +176,7 @@ var SFX = (function () {
     portal() { play("portal"); },
     stairs() { play("stairs"); },
     down() { play("down"); },
+    victory() { play("victory"); },
     poolInfo() {
       const total = Object.keys(elPool).reduce((s, k) => s + elPool[k].length, 0);
       const busy = Object.values(elPool).flat().filter(e => !e.paused).length;
