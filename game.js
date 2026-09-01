@@ -18,6 +18,9 @@
   ];
   const NAMES = ["Knuffel", "Wichtel-Willy", "Glitzer-Emma", "Pupsi", "Krümel", "Flauschi", "Kobbi", "Zuckerkaefer", "Mopsi", "Wackel", "Brummi", "Schmusebacke", "Pünktchen", "Knorpf", "Tapsi", "Blubber"];
   const SAVE_KEY = "koboldkeller_save_v1";
+  const KK_HH_KEY = "koboldkeller_hall_v1";  // Ehrenhall: Bestlisten aller Siege
+  // MEGASCHWER-Modus: alle Gegner doppelt so schnell UND 10× Schaden
+  const MEGA_MULT = { speed: 2, dmg: 10 };
   const $ = id => document.getElementById(id);
 
   const S = {
@@ -25,6 +28,7 @@
     p: null, ents: [], items: [], projectiles: [], cam: { x: 0, y: 0 },
     now: 0, vis: null, toasts: [], bag: [], gold: 0,
     gotoStairs: false, enterPortal: false, pointerHold: false, saveT: 0,
+    runSecs: 0, winQueued: false,
   };
   window.__game = S;
 
@@ -54,6 +58,7 @@
         gold: S.gold, bag: S.bag, potionCount: p.potionCount, seed: S.seed,
         atk: p.atk, projN: p.projN, magic: p.magic,      // Waffen-Upgrades bleiben erhalten
         deepest: S.deepest || 1,                          // tiefste erreichte Ebene (für Schnell-Einstieg)
+        mega: !!S.mega,                                   // MEGASCHWER-Modus bleibt gewählt
       }));
       const n = $("saveNote");
       if (n) { n.style.opacity = "1"; setTimeout(() => { n.style.opacity = "0.45"; }, 900); }
@@ -84,6 +89,7 @@
     // Skalierung: Tiefe + Spieler-Level (der Kobold wird stärker, die Keller auch)
     const L = (S.p && S.p.lvl) || 1;
     const dmgUp = Math.floor(depth / 6) + Math.floor(L / 7);  // +1 Schaden pro 6 Ebenen ODER 6 Level
+    const mega = !!S.mega;  // MEGASCHWER: Gegner 2× schnell, 10× Schaden
     const base = {
       wichtel: { hp: 2 + Math.floor(depth * 0.9) + Math.floor(L * 0.5), dmg: 1 + dmgUp, speed: 1.5, xp: 3 + depth + L, scale: 1 },
       slime: { hp: 3 + Math.floor(depth * 1.1) + Math.floor(L * 0.6), dmg: 1 + dmgUp, speed: 1.1, xp: 4 + depth + L, scale: 1 },
@@ -91,12 +97,19 @@
       wisp: { hp: 4 + Math.floor(depth * 0.9) + Math.floor(L * 0.5), dmg: 1 + dmgUp, speed: 1.3, xp: 6 + depth * 2 + L, scale: 1 },
       boss: { hp: 18 + depth * 5 + L * 3, dmg: 2 + dmgUp, speed: 1.4, xp: 30 + depth * 8 + L * 5, scale: 1.5 },
     }[type];
-    return {
-      type, x, y, hp: base.hp, maxHp: base.hp, dmg: base.dmg, speed: base.speed,
-      xp: base.xp, scale: base.scale, walkT: Math.random() * 6, face: 1,
+    // Ebene 20: der KELLERKÖNIG — RIESIG (2×) und knallrot (SIEG-Boss)
+    const isFinal = type === "boss" && depth >= 20;
+    const scale = base.scale * (isFinal ? 2.0 : 1);
+    const ent = {
+      type, x, y, hp: base.hp, maxHp: base.hp,
+      dmg: base.dmg * (mega ? MEGA_MULT.dmg : 1),
+      speed: base.speed * (mega ? MEGA_MULT.speed : 1),
+      xp: base.xp, scale, walkT: Math.random() * 6, face: 1,
       hurtT: 0, atkT: 0, atkCd: 0, seed: Math.random() * 7,
       homeX: x, homeY: y, tx: x, ty: y, tState: Math.random() * 2,
     };
+    if (isFinal) { ent.red = true; ent.final = true; ent.name = "Kellerkönig"; }
+    return ent;
   }
 
   // ---------------- XP / Level ----------------
@@ -215,7 +228,10 @@
       S.items.push({ kind, x: e.x, y: e.y, seed: Math.random() * 7, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, flyingT: 0.6 });
     }
     gainXp(e.xp);
-    if (e.type === "boss") { toast("👑 Boss besiegt!"); SFX.levelup(); }
+    if (e.type === "boss") {
+      if (e.final) { toast("👑 Der Kellerkönig ist besiegt!"); SFX.boss(); setTimeout(() => winGame("boss"), 1400); }
+      else { toast("👑 Boss besiegt!"); SFX.levelup(); }
+    }
     const p = S.p;
     if (p && p.foe === e) p.foe = null;
   }
@@ -302,15 +318,102 @@
     p.target = null; p.foe = null;
     SFX.stairs();
     SFX.music(depth === 0 ? "town" : "dungeon");
-    toast(depth === 0 ? "🏠 Willkommen zu Hause!" : "🕳️ Ebene " + depth + (depth >= 4 && depth % 4 === 0 ? " — der Boss-Kobold wartet!" : ""));
+    toast(depth === 0 ? "🏠 Willkommen zu Hause!"
+      : depth === 20 ? "🕳️ Ebene 20 — 👑 DER KELLERKÖNIG wartet! Besiege ihn oder fliehe durchs Portal!"
+        : "🕳️ Ebene " + depth + (depth >= 4 && depth % 4 === 0 ? " — der Boss-Kobold wartet!" : ""));
+    if (depth === 0) S.runSecs = 0;  // Timer läuft nur pro Keller-Lauf
   }
   function descend() {
     if (S.depth < 20) {
       buildLevel(S.depth + 1);
       S.deepest = Math.max(S.deepest || 1, S.depth);
       save();
+    } else {
+      // Ebene 20 war die Tiefste — durch das 20. Portal = SIEG! 🎉
+      winGame("portal");
     }
   }
+  // ---------------- Sieges-Bildschirm (2 Bestenlisten nebeneinander) ----------------
+  const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  function fmtTime(secs) {
+    const m = Math.floor(secs / 60), s = secs % 60;
+    return m + ":" + String(s).padStart(2, "0") + " Min";
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function renderWin() {
+    const hh = hhLoad();
+    const medal = ["🥇", "🥈", "🥉", " 4.", " 5."];
+    const rowsOf = function (arr, pick) {
+      if (!arr || !arr.length) return "<tr><td colspan='3' style='opacity:.6;padding:6px 0'>— noch keine Einträge —</td></tr>";
+      let out = "";
+      arr.slice(0, 5).forEach((r, i) => {
+        const d = new Date(r.ts || Date.now());
+        out += "<tr><td style='text-align:right;padding-right:7px;white-space:nowrap;opacity:.85'>" + medal[i] +
+          "</td><td style='text-align:left'><b>" + esc(r.name) + "</b>" +
+          "<br><span style='opacity:.55;font-size:11px'>" + WEEKDAYS[d.getDay()] + " " +
+          d.toLocaleDateString("de-AT") + (r.mega ? " 🔥" : "") + "</span></td>" +
+          "<td style='text-align:right;white-space:nowrap'><b style='font-size:16px'>" + pick(r) + "</b></td></tr>";
+      });
+      return out;
+    };
+    const tbl = (title, rows) =>
+      '<div style="flex:1;min-width:190px;background:rgba(0,0,0,.28);border:2px solid rgba(255,215,94,.35);' +
+      'border-radius:16px;padding:10px 12px;text-align:center">' +
+      '<div style="font-size:15px;font-weight:800;margin-bottom:6px">' + title + "</div>" +
+      '<table style="width:100%;border-collapse:collapse;font-size:14px;color:#f3ecff"><tbody>' + rows + "</tbody></table></div>";
+    const when = new Date().toLocaleDateString("de-AT", { day: "numeric", month: "long", year: "numeric" });
+    const p = S.p;
+    const stats =
+      "<p style='margin-top:6px'>" + esc((S.look && S.look.name) || "Kobold") +
+      " bezwang den Kellerkönig · ⭐ Level " + (p ? p.lvl : 1) +
+      " · 🪙 " + S.gold + " · ⏱️ " + fmtTime(Math.round(S.runSecs)) +
+      (S.mega ? " · 🔥 MEGASCHWER" : "") + "</p>" +
+      "<p style='font-size:14px;opacity:.8;margin-top:2px'>Besiegt am " + when + "</p>";
+    const winBox = $("winBox");
+    if (!winBox) return;
+    $("winStats").innerHTML = stats;
+    $("hhGold").innerHTML = tbl("🪙 Meiste Münzen", rowsOf(hh.gold, r => r.gold + " 🪙"));
+    $("hhTime").innerHTML = tbl("⏱️ Schnellster Durchlauf", rowsOf(hh.time, r => fmtTime(r.secs)));
+    $("winMenu").classList.remove("hidden");
+  }
+  // ---------------- SIEG! 🏆 ----------------
+  function hhLoad() {
+    try { return JSON.parse(localStorage.getItem(KK_HH_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function hhSave(hh) {
+    try { localStorage.setItem(KK_HH_KEY, JSON.stringify(hh)); } catch (e) { }
+  }
+  function winGame(how) {
+    if (S.winQueued) return;
+    S.winQueued = true;
+    S.screen = "win";
+    const p = S.p;
+    const rec = {
+      name: (S.look && S.look.name) || "Kobold",
+      look: S.look, gold: S.gold, lvl: p ? p.lvl : 1,
+      mega: !!S.mega, secs: Math.round(S.runSecs),
+      ts: Date.now(), how: how === "portal" ? "portal" : "boss",
+    };
+    const hh = hhLoad();
+    hh.gold = hh.gold || []; hh.time = hh.time || [];
+    hh.gold.push(rec); hh.time.push(rec);
+    hh.gold.sort((a, b) => b.gold - a.gold); hh.gold = hh.gold.slice(0, 5);
+    hh.time.sort((a, b) => a.secs - b.secs); hh.time = hh.time.slice(0, 5);
+    try { hhSave(hh); } catch (e) { }
+    // Der Sieg bleibt erhalten — Spielstand wandert in den Ehrenhall
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) { const sv = JSON.parse(raw); sv.won = true; localStorage.setItem(KK_HH_KEY, JSON.stringify(hh)); localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); }
+    } catch (e) { }
+    renderWin();
+    try { SFX.stopMusic(); } catch (e) { }
+    try { SFX.victory(); } catch (e) { }
+    Particles.spawn(p ? p.x : 10, p ? p.y : 10, "#ffd75e", 40, 1.2, 2);
+  }
+  window.KK_winGame = winGame;  // Test-Hook
   function goTown() { buildLevel(0); save(); }
   // ---------------- Keller-Tiefe wählen (Diablo-Ärger-Heiler) ----------------
   function openAscendMenu() {
@@ -466,6 +569,8 @@
   function initMenu() {
     // Vorbefüllter Zufallsname
     $("nameInput").value = NAMES[Math.floor(Math.random() * NAMES.length)];
+    const sv0 = loadSave();
+    if (sv0 && sv0.mega) $("megaChk").checked = true;
     const looks = $("looks");
     looks.innerHTML = "";
     PETS.forEach((pet, i) => {
@@ -492,6 +597,7 @@
       clearSave();
       const name = ($("nameInput").value || "Kobold").trim().slice(0, 12);
       S.look = { skin: PETS[selLook].skin, outfit: PETS[selLook].outfit, hair: PETS[selLook].hair, species: PETS[selLook].id, name: name };
+      S.mega = $("megaChk").checked;
       S.p = makePlayer(S.look);
       S.gold = 0; S.bag = [];
       S.seed = (Math.random() * 1e9) | 0;
@@ -499,6 +605,7 @@
       S.screen = "play";
       $("startMenu").classList.add("hidden");
       SFX.resume(); SFX.music("town"); SFX.coin();
+      if (S.mega) toast("🔥 MEGASCHWER! Gegner 2× schnell, 10× Schaden. Viel Glück!");
     });
     const sv = loadSave();
     if (sv && sv.look && sv.look.skin) {
@@ -511,6 +618,7 @@
         S.p.potionCount = (sv.potionCount === undefined) ? 3 : sv.potionCount;
         S.p.atk = sv.atk || 1; S.p.projN = sv.projN || 1; S.p.magic = sv.magic || 1;
         S.gold = sv.gold || 0; S.bag = sv.bag || []; S.seed = sv.seed || 12345;
+        S.mega = !!sv.mega;
         S.deepest = sv.deepest || Math.max(1, sv.depth || 1);
         buildLevel(sv.depth || 0);
         S.screen = "play";
@@ -600,6 +708,7 @@
     S.now += dt;
     const p = S.p;
     if (!p || S.screen !== "play") return;
+    if (S.depth > 0) S.runSecs += dt;  // Spieltimer: nur im Keller läuft die Uhr
 
     // --- Auto-Befreiung: Wer in einer Wand steckt, wird sanft aufs freie Feld geschoben ---
     if (!cellFree(p.x, p.y)) {
@@ -846,7 +955,7 @@
     $("xpFill").style.width = Math.min(100, p.xp / p.xpNext * 100) + "%";
     $("lvlBadge").textContent = "⭐ Lv " + p.lvl;
     $("goldBadge").textContent = "🪙 " + S.gold;
-    $("depthBadge").textContent = S.depth === 0 ? "🏠 Stadt" : "🕳️ Ebene " + S.depth;
+    $("depthBadge").textContent = (S.depth === 0 ? "🏠 Stadt" : "🕳️ Ebene " + S.depth) + (S.mega ? " 🔥" : "");
     const wb = $("weaponBadge");
     if (wb) wb.textContent = "⚔️" + p.atk + " 🫧" + (p.projN || 1) + "×" + (p.magic || 1);
   }
@@ -869,7 +978,7 @@
     start: (skinIdx) => { $("btnNew").click(); },
     attack: playerAttack, bubbles: castBubbles, dash: castDash, potion: usePotion,
     descend: () => descend(),
-    state: () => ({ depth: S.depth, hp: S.p && S.p.hp, ents: S.ents.length, gold: S.gold, screen: S.screen }),
+    state: () => ({ depth: S.depth, hp: S.p && S.p.hp, ents: S.ents.length, gold: S.gold, screen: S.screen, mega: !!S.mega, secs: Math.round(S.runSecs), winQueued: !!S.winQueued }),
     errors: () => window.__errors,
     // Test-Hooks (v7-Suite)
     gain: (n) => gainXp(n),
@@ -877,7 +986,14 @@
     goDepth: (d) => { buildLevel(d); },
     save: () => save(),
     load: () => loadSave(),
+    win: (how) => winGame(how || "boss"),  // v17: Sieges-Screen direkt testen
+    hall: () => { try { return JSON.parse(localStorage.getItem(KK_HH_KEY)) || {}; } catch (e) { return {}; } },
   };
+  // Sieges-Screen: Buttons verdrahten (einmalig beim Boot)
+  try {
+    $("btnWinTown").addEventListener("click", () => { $("winMenu").classList.add("hidden"); S.winQueued = false; goTown(); S.screen = "play"; });
+    $("btnWinAgain").addEventListener("click", () => { $("winMenu").classList.add("hidden"); S.winQueued = false; S.runSecs = 0; descend(); });
+  } catch (e) { }
   // iOS-Audio-Wächter: erster Touch/Klick weckt suspendierten AudioContext
   const audioWake = () => {
     try {

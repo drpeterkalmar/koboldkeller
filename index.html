@@ -81,6 +81,24 @@
   #saveNote { position:absolute; bottom:8px; right:12px; color:rgba(255,255,255,.45);
       font-size:12px; pointer-events:none; }
   #contMenu .bigBtn { display:block; width:100%; margin:10px 0 0; }
+  /* ---------- Sieges-Bildschirm 🏆 ---------- */
+  #winMenu .panel { background:linear-gradient(180deg,#3a2360,#2b1e3f 70%); border-color:#ffd75e;
+      box-shadow:0 0 60px rgba(255,180,60,.35), 0 20px 60px rgba(0,0,0,.6); position:relative; }
+  #winMenu h1 { animation:winPulse 1.6s ease-in-out infinite; }
+  @keyframes winPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+  #winStats { color:#ffe9b8; font-size:16px; margin-top:6px; }
+  #winTables { display:flex; gap:14px; justify-content:center; align-items:stretch;
+      flex-wrap:wrap; margin-top:14px; }
+  #winTables table { width:100%; }
+  #winTables td { padding:3px 4px; vertical-align:top; }
+  #winMenu .tiny { font-size:12px; opacity:.55; margin-top:12px; }
+  #winCrown { font-size:52px; margin-bottom:-6px; filter:drop-shadow(0 4px 10px rgba(255,180,60,.5)); }
+  /* MEGASCHWER-Toggle */
+  #megaRow { display:inline-flex; align-items:center; gap:8px; margin-top:12px; padding:7px 14px;
+      border-radius:14px; background:rgba(255,93,115,.14); border:2px solid rgba(255,93,115,.5);
+      color:#ffb3bd; font-size:14px; font-weight:700; cursor:pointer; user-select:none; }
+  #megaRow:hover { background:rgba(255,93,115,.25); }
+  #megaChk { width:17px; height:17px; accent-color:#ff5d73; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -114,9 +132,26 @@
        Tippe auf einen Wicht, um ihn zum Kuscheln … äh … Kämpfen aufzufordern!</p>
     <div id="looks"></div>
     <input id="nameInput" maxlength="12" placeholder="Dein Name">
+    <label id="megaRow"><input type="checkbox" id="megaChk"> 🔥 MEGASCHWER (Gegner 2× schnell, 10× Schaden)</label>
     <button id="btnNew" class="bigBtn green">🚀 Neues Abenteuer</button>
     <button id="btnCont" class="bigBtn hidden">💾 Weiterspielen</button>
     <p style="font-size:13px; margin-top:14px; opacity:.6">Tastatur: Klick laufen · 1/2/3 Zauber · R Trank · I Rucksack</p>
+  </div>
+</div>
+
+<!-- SIEG! 🏆 (Ehrenhall: Meiste Münzen + Schnellster Durchlauf) -->
+<div id="winMenu" class="overlay hidden">
+  <div class="panel">
+    <div id="winCrown">👑</div>
+    <h1>🎉 GESCHAFFT! 🎉</h1>
+    <div id="winStats"></div>
+    <div id="winTables">
+      <div id="hhGold"></div>
+      <div id="hhTime"></div>
+    </div>
+    <button id="btnWinAgain" class="bigBtn green">🔁 Nochmal von vorn</button>
+    <button id="btnWinTown" class="bigBtn">🏠 Zurück zur Stadt</button>
+    <p class="tiny">Bestlisten bleiben auf diesem Gerät gespeichert — jede Familie sammelt ihre Rekorde!</p>
   </div>
 </div>
 
@@ -160,11 +195,11 @@
   });
 </script>
 <script src="art.js?v=12"></script>
-<script src="sfx.js?v=15"></script>
+<script src="sfx.js?v=17"></script>
 <script src="particles.js?v=12"></script>
 <script src="world.js?v=12"></script>
 <script src="render.js?v=12"></script>
-<script src="game.js?v=13"></script>
-<script>window.KK_VER = 15; console.log("Koboldkeller v15");
+<script src="game.js?v=17"></script>
+<script>window.KK_VER = 17; console.log("Koboldkeller v17");
 </body>
 </html>
