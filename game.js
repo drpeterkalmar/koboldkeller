@@ -975,7 +975,7 @@
   initMenu();
   buildSkillbar();
   const verL = $("verLabel");
-  if (verL) verL.textContent = "🍄 Koboldkeller v17 — Kellerkönig + Ehrenhall";
+  if (verL) verL.textContent = "🍄 Koboldkeller v18 — Kellerkönig + Ehrenhall";
   window.KK = {
     start: (skinIdx) => { $("btnNew").click(); },
     attack: playerAttack, bubbles: castBubbles, dash: castDash, potion: usePotion,

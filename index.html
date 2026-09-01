@@ -15,7 +15,8 @@
   #hud { position:absolute; inset:0; pointer-events:none; }
   .hudTL { position:absolute; top:calc(8px + env(safe-area-inset-top)); left:10px;
       display:flex; flex-direction:column; gap:4px; }
-  #hearts { font-size:24px; letter-spacing:2px; text-shadow:0 2px 4px rgba(0,0,0,.6); }
+  #hearts { font-size:19px; letter-spacing:1px; text-shadow:0 2px 4px rgba(0,0,0,.6);
+      display:flex; flex-wrap:wrap; max-width:330px; line-height:1.15; }
   #hearts .empty { opacity:.25; filter:grayscale(1); }
   #xpBar { width:170px; height:14px; background:rgba(0,0,0,.45); border-radius:8px;
       border:2px solid rgba(255,255,255,.25); overflow:hidden; }
@@ -196,11 +197,11 @@
   });
 </script>
 <script src="art.js?v=12"></script>
-<script src="sfx.js?v=17"></script>
+<script src="sfx.js?v=18"></script>
 <script src="particles.js?v=12"></script>
 <script src="world.js?v=12"></script>
 <script src="render.js?v=12"></script>
-<script src="game.js?v=17"></script>
-<script>window.KK_VER = 17; console.log("Koboldkeller v17");</script>
+<script src="game.js?v=18"></script>
+<script>window.KK_VER = 18; console.log("Koboldkeller v18");</script>
 </body>
 </html>
