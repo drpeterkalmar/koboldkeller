@@ -41,8 +41,9 @@
       species: look.species || "kobold",
       name: look.name, blinkT: 0, target: null, foe: null,
       atkCd: 0, potionCount: 3, dashT: 0, dashDx: 0, dashDy: 0,
+      lastMvx: 1, lastMvy: 0,   // letzte Bewegungsrichtung (Dodge ohne Gegner)
       spellT: 0, stairHover: 0,
-      atk: 2,        // Melee-Schaden (Grundstärke verdoppelt — Kinder-Wunsch)
+      atk: 4,        // Melee-Schaden (2× verdoppelt — Kinder-Wunsch)
       projN: 1,      // Anzahl Seifenblasen (wächst durch Stab-Upgrades), feuern in Fächer
       magic: 1,      // Projektil-Schaden (wächst durch Zauber-Upgrades)
     };
@@ -147,7 +148,7 @@
   function playerAttack() {
     const p = S.p;
     if (!p || S.screen !== "play" || p.atkCd > 0) return;
-    p.atkT = 0.001; p.atkCd = 0.45;
+    p.atkT = 0.001; p.atkCd = 0.25;   // schnellere Angriffs-Frequenz (war 0.45)
     p.atk360 = 0.35; // Rundumschlag-Anzeige (Sichtbarkeit fürs Auge)
     SFX.swing();
     setTimeout(() => {
@@ -180,7 +181,7 @@
       const a = ang + (N > 1 ? (k - (N - 1) / 2) * 0.38 : 0);
       S.projectiles.push({
         x: p.x, y: p.y, vx: Math.cos(a) * 6.5, vy: Math.sin(a) * 6.5,
-        life: 1.4, face: p.face, lock: best || null, dmg: p.magic,
+        life: 1.4, face: p.face, lock: best || null, dmg: p.magic * 0.5,  // Seifenblasen halber Schaden
       });
     }
   }
@@ -199,7 +200,12 @@
       const l = Math.hypot(dx, dy);
       if (l < 0.05) { const a = Math.random() * Math.PI * 2; dx = Math.cos(a); dy = Math.sin(a); }
       else { dx /= l; dy /= l; }
-    } else { dx = p.face; dy = 0; }
+    } else {
+      // kein Gegner: in aktuelle/letzte BEWEGUNGSrichtung, sonst Blickrichtung
+      const lm = Math.hypot(p.lastMvx || 0, p.lastMvy || 0);
+      if (lm > 0.01) { dx = p.lastMvx / lm; dy = p.lastMvy / lm; }
+      else { dx = p.face; dy = 0; }
+    }
     p.dashT = 0.32; p.dashDx = dx; p.dashDy = dy;   // längerer Sprung: ~4.6 Kacheln statt ~2.4
     p.invulT = Math.max(p.invulT, 0.45);            // kurze Unverwundbarkeit während des Ausweichens
     SFX.portal();
@@ -777,6 +783,7 @@
 
     // --- Kollision & Move ---
     if (mvx || mvy) {
+      p.lastMvx = mvx; p.lastMvy = mvy;   // letzte Bewegungsrichtung (für Dodge ohne Gegner)
       const nx = p.x + mvx * p.speed * dt;
       const ny = p.y + mvy * p.speed * dt;
       // Kollisions-Prüfung pro Achse: X-Schritt prüft X-Ziel, Y-Schritt prüft Y-Ziel
@@ -989,7 +996,7 @@
   initMenu();
   buildSkillbar();
   const verL = $("verLabel");
-  if (verL) verL.textContent = "🍄 Koboldkeller v19 — Riesiger Rundumschlag + Dodge-Sprung";
+  if (verL) verL.textContent = "🍄 Koboldkeller v20 — Rasend-Schwert + smarter Dodge";
   window.KK = {
     start: (skinIdx) => { $("btnNew").click(); },
     attack: playerAttack, bubbles: castBubbles, dash: castDash, potion: usePotion,
