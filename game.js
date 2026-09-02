@@ -42,7 +42,7 @@
       name: look.name, blinkT: 0, target: null, foe: null,
       atkCd: 0, potionCount: 3, dashT: 0, dashDx: 0, dashDy: 0,
       spellT: 0, stairHover: 0,
-      atk: 1,        // Melee-Schaden (wächst durch Level + Schwert-Upgrades)
+      atk: 2,        // Melee-Schaden (Grundstärke verdoppelt — Kinder-Wunsch)
       projN: 1,      // Anzahl Seifenblasen (wächst durch Stab-Upgrades), feuern in Fächer
       magic: 1,      // Projektil-Schaden (wächst durch Zauber-Upgrades)
     };
@@ -153,8 +153,8 @@
     setTimeout(() => {
       if (S.screen !== "play") return;
       for (const e of [...S.ents]) {
-        // RUNDUM: jeder Gegner im Umkreis wird getroffen
-        if (Math.hypot(e.x - p.x, e.y - p.y) < (1.5 + (p.atk > 3 ? 0.3 : 0))) {
+        // RUNDUM: jeder Gegner im Umkreis wird getroffen (Radius verdoppelt: 1.5 → 3.0)
+        if (Math.hypot(e.x - p.x, e.y - p.y) < (3.0 + (p.atk > 6 ? 0.6 : 0))) {
           hurtEnt(e, p.atk);
         }
       }
@@ -187,9 +187,23 @@
   function castDash() {
     const p = S.p;
     if (!p || S.screen !== "play" || p.dashT > 0) return;
-    p.dashT = 0.22; p.dashDx = p.face; p.dashDy = 0;
+    // Dodge: WEG vom nächsten Gegner springen — sonst in Blickrichtung
+    let near = null, nd = 6;
+    for (const e of S.ents) {
+      const d = Math.hypot(e.x - p.x, e.y - p.y);
+      if (d < nd) { near = e; nd = d; }
+    }
+    let dx, dy;
+    if (near) {
+      dx = p.x - near.x; dy = p.y - near.y;
+      const l = Math.hypot(dx, dy);
+      if (l < 0.05) { const a = Math.random() * Math.PI * 2; dx = Math.cos(a); dy = Math.sin(a); }
+      else { dx /= l; dy /= l; }
+    } else { dx = p.face; dy = 0; }
+    p.dashT = 0.32; p.dashDx = dx; p.dashDy = dy;   // längerer Sprung: ~4.6 Kacheln statt ~2.4
+    p.invulT = Math.max(p.invulT, 0.45);            // kurze Unverwundbarkeit während des Ausweichens
     SFX.portal();
-    Particles.spawn(p.x, p.y, "#e6d5ff", 10, 0.4, 0.4);
+    Particles.spawn(p.x, p.y, "#e6d5ff", 14, 0.4, 0.4);
   }
   function hurtEnt(e, dmg) {
     e.hp -= dmg; e.hurtT = 0.35;
@@ -729,7 +743,7 @@
 
     if (p.dashT > 0) {
       p.dashT -= dt;
-      mvx = p.dashDx * 3.2; mvy = p.dashDy * 3.2;
+      mvx = p.dashDx * 4.2; mvy = p.dashDy * 4.2;   // Dodge: weiter springen
     } else if (mvx || mvy) {
       p.target = null; p.foe = null; S.gotoStairs = false;
       const l = Math.hypot(mvx, mvy);
@@ -975,7 +989,7 @@
   initMenu();
   buildSkillbar();
   const verL = $("verLabel");
-  if (verL) verL.textContent = "🍄 Koboldkeller v18 — Kellerkönig + Ehrenhall";
+  if (verL) verL.textContent = "🍄 Koboldkeller v19 — Riesiger Rundumschlag + Dodge-Sprung";
   window.KK = {
     start: (skinIdx) => { $("btnNew").click(); },
     attack: playerAttack, bubbles: castBubbles, dash: castDash, potion: usePotion,

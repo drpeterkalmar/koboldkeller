@@ -284,7 +284,8 @@ var R = (function () {
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 3 + 3 * a;
       ctx.beginPath();
-      ctx.ellipse(sx, sy - 8, 34 + (1 - a) * 22, 17 + (1 - a) * 11, 0, 0, Math.PI * 2);
+      // Ellipse passt zur echten Trefferzone (Radius 3.0 Kacheln ≈ 102px Iso-x), Shockwave expandiert
+      ctx.ellipse(sx, sy - 8, 76 + (1 - a) * 26, 38 + (1 - a) * 13, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
     }

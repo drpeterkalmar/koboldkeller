@@ -12,7 +12,7 @@ Grafik (keine Assets), prozedurale Sounds. Lädt sofort, kein Build, kein Server
 | Klick / Tipp | Laufen (auf Wichtel tippen = angreifen) |
 | 1 / ⚔️ | Schlag mit der Waffelholz-Knüppel |
 | 2 / 🫧 | Seifenblasen-Zauber (Flächenschaden) |
-| 3 / 💨 | Blitz-Dash |
+| 3 / 💨 | Dodge-Sprung (weit weg vom nächsten Gegner) |
 | R / 🧪 | Trank trinken |
 | I / 🎒 | Rucksack |
 | Esc | Pause |
