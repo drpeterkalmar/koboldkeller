@@ -1,4 +1,4 @@
-shots/
-test_*.py
-*.log
+node_modules/
 .DS_Store
+shots/neubau/_*.png
+shots/neubau/*.png

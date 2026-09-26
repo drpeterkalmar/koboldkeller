@@ -1,0 +1,683 @@
+/* render.js — Iso-Renderer: Kamera, Boden-Chunks, Tiefensortierung, Licht, Glow (MIT) */
+import * as A from "./art.js";
+import { FX } from "./fx.js";
+import { BIOMES, weaponOf, HATS } from "./config.js";
+import { clamp, TAU, rgba } from "./util.js";
+
+export const R = {
+  cv: null, ctx: null, VW: 0, VH: 0, RS: 1, U: 64, Z: 1, q: 0, qScales: [1, 0.8, 0.65, 0.5],
+  camX: 0, camY: 0, camDX: 0, camDY: 0, shx: 0, shy: 0, zp: 1,
+  lcv: null, lctx: null, LS: 4, lw: 0, lh: 0, vign: null,
+  chunks: new Map(), chunkOrder: [], walls: [], wallTorch: new Map(), L: null, biome: 0, t: 0,
+  lightSpr: new Map(), drawn: 0, focusY: 0.5,
+};
+const CH = 8, CH_MAX = 28;
+
+export function initRender(cv) {
+  R.cv = cv;
+  R.ctx = cv.getContext("2d", { alpha: false });
+  R.lcv = document.createElement("canvas");
+  R.lctx = R.lcv.getContext("2d");
+  resize();
+}
+export function setQuality(q) { q = clamp(q, 0, R.qScales.length - 1); if (q !== R.q) { R.q = q; resize(); } }
+export function resize() {
+  const VW = Math.max(200, window.innerWidth), VH = Math.max(200, window.innerHeight);
+  R.VW = VW; R.VH = VH;
+  R.U = clamp(VW <= VH ? VW / 6.4 : Math.min(VW / 6.4, VH / 7.4), 50, 84);
+  R.Z = R.U / 64;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  R.RS = Math.max(1, dpr * R.qScales[R.q]);
+  R.cv.width = Math.round(VW * R.RS); R.cv.height = Math.round(VH * R.RS);
+  R.cv.style.width = VW + "px"; R.cv.style.height = VH + "px";
+  A.setArtScale(R.Z * R.RS);
+  R.lw = Math.ceil(VW / R.LS); R.lh = Math.ceil(VH / R.LS);
+  R.lcv.width = R.lw; R.lcv.height = R.lh;
+  R.vign = makeVignette(R.lw, R.lh);
+  R.focusY = VH > VW ? 0.46 : 0.52;
+  R.chunks.clear(); R.chunkOrder.length = 0;
+}
+function makeVignette(w, h) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d");
+  const g = x.createRadialGradient(w / 2, h * 0.48, Math.min(w, h) * 0.25, w / 2, h * 0.5, Math.hypot(w, h) * 0.62);
+  g.addColorStop(0, "#fff"); g.addColorStop(1, "#6a5a7a");
+  x.fillStyle = g; x.fillRect(0, 0, w, h);
+  return c;
+}
+/** Licht-Sprite (radial, farbig) — unabhängig von der Art-Skalierung */
+function lightSprite(col) {
+  let s = R.lightSpr.get(col);
+  if (s) return s;
+  s = document.createElement("canvas"); s.width = s.height = 64;
+  const x = s.getContext("2d");
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, rgba(col, 1)); g.addColorStop(0.4, rgba(col, 0.55)); g.addColorStop(1, rgba(col, 0));
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  R.lightSpr.set(col, s);
+  return s;
+}
+
+// ---------- Level-Setup ----------
+export function setLevel(L, biome) {
+  R.L = L; R.biome = biome;
+  R.chunks.clear(); R.chunkOrder.length = 0;
+  const m = L.map; R.walls = [];
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    if (!m.solid[y * m.w + x]) continue;
+    let near = false;
+    for (let dy = -1; dy <= 1 && !near; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && ny >= 0 && nx < m.w && ny < m.h && !m.solid[ny * m.w + nx]) { near = true; break; }
+    }
+    if (near) R.walls.push({ x, y, v: m.v[y * m.w + x], d: x + y + 1, a: 1 });
+  }
+  R.wallTorch.clear();
+  for (const t of L.torches || []) R.wallTorch.set(t.wy * m.w + t.wx, t);
+}
+export function snapCamera(x, y) { R.camX = x; R.camY = y; }
+
+// ---------- Projektion ----------
+export function toScreen(x, y, z = 0) {
+  return [((x - y) * 32 - R.camDX) * R.Z + R.VW / 2 + R.shx, ((x + y) * 16 - z - R.camDY) * R.Z + R.VH * R.focusY + R.shy];
+}
+export function toWorld(sx, sy) {
+  const dx = (sx - R.VW / 2 - R.shx) / R.Z + R.camDX, dy = (sy - R.VH * R.focusY - R.shy) / R.Z + R.camDY;
+  const a = dx / 32, b = dy / 16;
+  return { x: (a + b) / 2, y: (b - a) / 2 };
+}
+
+// ---------- Boden-Chunks ----------
+function chunk(cx, cy) {
+  const key = cy * 64 + cx;
+  let c = R.chunks.get(key);
+  if (c !== undefined) return c;
+  const L = R.L, m = L.map, B = BIOMES[R.biome];
+  const x0 = cx * CH, y0 = cy * CH;
+  let any = false;
+  for (let y = y0; y < y0 + CH && !any; y++) for (let x = x0; x < x0 + CH; x++) if (x < m.w && y < m.h && !m.solid[y * m.w + x]) { any = true; break; }
+  if (!any) { R.chunks.set(key, null); return null; }
+  const ox = (x0 - y0 - CH) * 32 - 4, oy = (x0 + y0) * 16 - 24;
+  const W = CH * 64 + 8, H = CH * 32 + 30;
+  const K = A.artScale();
+  const cv = document.createElement("canvas");
+  cv.width = Math.ceil(W * K); cv.height = Math.ceil(H * K);
+  const g = cv.getContext("2d");
+  g.scale(K, K); g.lineJoin = "round"; g.lineCap = "round";
+  for (let s = x0 + y0; s <= x0 + y0 + 2 * (CH - 1); s++) {
+    for (let x = x0; x < x0 + CH; x++) {
+      const y = s - x;
+      if (y < y0 || y >= y0 + CH || x >= m.w || y >= m.h) continue;
+      const i = y * m.w + x;
+      if (m.solid[i]) continue;
+      const ao = (y > 0 && m.solid[i - m.w] ? 1 : 0) | (x > 0 && m.solid[i - 1] ? 2 : 0);
+      A.drawFloorTile(g, (x - y) * 32 - ox, (x + y) * 16 - oy, B, R.biome, m.v[i], m.deco[i], ao);
+    }
+  }
+  c = { cv, ox, oy, W, H };
+  R.chunks.set(key, c);
+  R.chunkOrder.push(key);
+  if (R.chunkOrder.length > CH_MAX) { const old = R.chunkOrder.shift(); R.chunks.delete(old); }
+  return c;
+}
+/** alle Chunks vorab bauen (beim Levelwechsel, versteckt hinter Blende) */
+export function prewarm(G) {
+  const m = R.L.map;
+  const px = G.p.x, py = G.p.y;
+  const list = [];
+  for (let cy = 0; cy * CH < m.h; cy++) for (let cx = 0; cx * CH < m.w; cx++) list.push([cx, cy, Math.hypot(cx * CH + 4 - px, cy * CH + 4 - py)]);
+  list.sort((a, b) => a[2] - b[2]);
+  for (const [cx, cy] of list.slice(0, CH_MAX - 4)) chunk(cx, cy);
+  // Sprites vorwärmen (sonst Mini-Ruckler beim ersten Auftauchen)
+  const B = BIOMES[R.biome];
+  for (let v = 0; v < 4; v++) A.wallSprite(B, R.biome, v);
+  for (const e of G.ents) {
+    if (e.isBoss) { A.body(e.rig.look, e.rig.outfit, e.rig.cape); for (const m of ["angry", "hurt"]) A.head(e.rig.look, m); A.hat("krone", e.rig.hatRed); continue; }
+    for (const m of ["open", "hurt"]) A.flashOf(A.enemySprite(e.type, e.tint, m));
+    if (e.type === "bat") A.flashOf(A.enemySprite("wing", e.tint));
+  }
+  for (const k of ["coin", "potion", "mushroom", "sword", "wand", "gem"]) A.itemSprite(k);
+  for (const k of ["glow", "dot", "star", "star5", "puff", "heart", "ring", "slash", "shadow", "flame"]) A.fx(k);
+  const lk = G.p.rig.look;
+  for (const m of ["open", "blink", "hurt"]) A.flashOf(A.head(lk, m));
+  A.flashOf(A.body(lk, G.p.rig.outfit)); A.potSprite(POT_COL[R.biome]); A.chestSprite(false); A.chestSprite(true);
+}
+
+// ---------- Mini-Transform-Helfer ----------
+function base(ctx) {
+  const k = R.RS * R.zp;
+  ctx.setTransform(k, 0, 0, k, R.RS * (1 - R.zp) * R.VW / 2, R.RS * (1 - R.zp) * R.VH / 2);
+}
+/** Sprite an Bildschirmposition (Anker), Skalierung s relativ zum Zoom */
+function blit(ctx, s, x, y, sc = 1) {
+  const Z = R.Z * sc;
+  ctx.drawImage(s.cv, x - s.ax * Z, y - s.ay * Z, s.w * Z, s.h * Z);
+}
+/** in Design-Einheiten (ctx bereits skaliert) */
+function put(ctx, s, x, y) { ctx.drawImage(s.cv, x - s.ax, y - s.ay, s.w, s.h); }
+export { blit, put, base };
+
+// =====================================================================
+// Kobold-Rig (Spieler, Bosse, Kellerkönig)
+// =====================================================================
+function drawRig(ctx, X, Y, o) {
+  const k = o.scale * R.Z;
+  const spinning = o.spin >= 0;
+  const spinA = spinning ? o.spin * TAU : 0;
+  const fx = spinning ? (Math.cos(spinA) >= 0 ? 1 : -1) * Math.max(0.25, Math.abs(Math.cos(spinA))) * o.face : o.face;
+  const bob = o.moving ? Math.abs(Math.sin(o.walkPh)) * 4.5 : Math.sin(o.t * 2.6) * 1.1;
+  const sqx = 1 + o.sq, sqy = 1 - o.sq;
+  ctx.save();
+  ctx.translate(X, Y);
+  if (o.alpha < 1) ctx.globalAlpha = o.alpha;
+  ctx.rotate(o.tilt || 0);
+  ctx.scale(k * sqx, k * sqy);
+  const fl = o.flash;
+  const S = (s) => fl ? A.flashOf(s) : s;
+  // Füße
+  const ft = A.foot(o.footCol);
+  const ph = o.walkPh, sw = o.moving ? Math.sin(ph) * 5 : 0;
+  put(ctx, S(ft), -A.RIG.footX * 0.9 + sw, A.RIG.footY - (o.moving ? Math.max(0, Math.cos(ph)) * 4 : 0));
+  put(ctx, S(ft), A.RIG.footX * 0.9 - sw, A.RIG.footY - (o.moving ? Math.max(0, -Math.cos(ph)) * 4 : 0));
+  ctx.translate(0, -bob);
+  // Waffe: Position (unflipped Raum)
+  let wx = 18 * o.face, wy = -26, wr = o.face > 0 ? -1.0 + Math.sin(o.t * 2) * 0.05 : Math.PI + 1.0, wBehind = false;
+  if (spinning) { const a = spinA * (o.face > 0 ? 1 : -1) - 0.3; wx = Math.cos(a) * 26; wy = -24 + Math.sin(a) * 11; wr = a; wBehind = Math.sin(a) < 0; }
+  else if (o.cast > 0) { wr = o.face > 0 ? -0.2 : Math.PI + 0.2; wx = 22 * o.face; }
+  const wsp = o.wpn ? S(A.weapon(o.wpn)) : null;
+  const drawW = () => {
+    if (!wsp) return;
+    ctx.save(); ctx.translate(wx, wy); ctx.rotate(wr); if (o.face < 0 && !spinning) ctx.scale(1, -1);
+    put(ctx, wsp, 0, 0); ctx.restore();
+  };
+  if (wBehind) drawW();
+  ctx.save();
+  ctx.scale(fx, 1);
+  if (o.wand) { ctx.save(); ctx.translate(-14, -30); ctx.rotate(-2.2); put(ctx, S(A.wand(o.wand)), 0, 0); ctx.restore(); }
+  put(ctx, S(A.body(o.look, o.outfit, o.cape)), 0, 0);
+  ctx.translate(0, A.RIG.neck);
+  ctx.rotate(o.moving ? Math.sin(o.walkPh) * 0.06 : Math.sin(o.t * 1.3) * 0.03);
+  put(ctx, S(A.head(o.look, o.mood)), 0, 0);
+  if (o.hat) put(ctx, S(A.hat(o.hat, o.hatRed)), 0, -58);
+  ctx.restore();
+  if (!wBehind) drawW();
+  ctx.restore();
+}
+export { drawRig };
+
+// =====================================================================
+// Hauptzeichnung
+// =====================================================================
+const list = [], order = [];
+let ln = 0;
+function add(d, k, o, sx, sy) {
+  let e = list[ln];
+  if (!e) e = list[ln] = { d: 0, k: 0, o: null, sx: 0, sy: 0 };
+  e.d = d; e.k = k; e.o = o; e.sx = sx; e.sy = sy; ln++;
+}
+const onScreen = (sx, sy, m = 140) => sx > -m && sx < R.VW + m && sy > -m * 1.2 && sy < R.VH + m;
+
+export function draw(G, dt) {
+  const ctx = R.ctx, L = R.L, p = G.p;
+  R.G = G;
+  if (!L || !p) return;
+  R.t += dt;
+  const B = BIOMES[R.biome];
+  // Kamera
+  const tx = p.x + (p.vx || 0) * 0.3, ty = p.y + (p.vy || 0) * 0.3;
+  const f = Math.min(1, dt * 6);
+  R.camX += (tx - R.camX) * f; R.camY += (ty - R.camY) * f;
+  R.camDX = (R.camX - R.camY) * 32; R.camDY = (R.camX + R.camY) * 16 - 44;
+  const amp = FX.trauma * FX.trauma * 16;
+  R.shx = amp * Math.sin(R.t * 47.3) * Math.cos(R.t * 13.1);
+  R.shy = amp * Math.cos(R.t * 53.7) * Math.sin(R.t * 11.9);
+  R.zp = 1 + FX.zoomPunch * 0.04;
+  const Z = R.Z;
+  base(ctx);
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  ctx.fillStyle = B.void; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40);
+
+  // --- Boden-Chunks ---
+  const m = L.map;
+  for (let cy = 0; cy * CH < m.h; cy++) for (let cx = 0; cx * CH < m.w; cx++) {
+    const ox = (cx * CH - cy * CH - CH) * 32 - 4, oy = (cx * CH + cy * CH) * 16 - 24;
+    const sx = (ox - R.camDX) * Z + R.VW / 2 + R.shx, sy = (oy - R.camDY) * Z + R.VH * R.focusY + R.shy;
+    if (sx > R.VW || sy > R.VH || sx + (CH * 64 + 8) * Z < 0 || sy + (CH * 32 + 30) * Z < 0) continue;
+    const c = chunk(cx, cy);
+    if (c) ctx.drawImage(c.cv, sx, sy, c.W * Z, c.H * Z);
+  }
+
+  // --- Boden-Ebene: Treppe, Portal-Ringe, Warnkreise, Schockwellen, Schatten ---
+  if (L.stairs && G.depth < 20) { const [sx, sy] = toScreen(L.stairs.x, L.stairs.y); blit(ctx, A.stairsSprite(R.biome), sx, sy); }
+  const portals = allPortals(G);
+  for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy)) blit(ctx, A.portalRing(po.locked), sx, sy, po.small ? 0.7 : 1); }
+  for (const t of G.teles) {
+    const [sx, sy] = toScreen(t.x, t.y);
+    const rx = 0.707 * t.r * R.U, ry = rx * 0.5, k = Math.min(1, t.t / t.max);
+    ctx.fillStyle = "rgba(255,60,90," + (0.24 + 0.1 * Math.sin(R.t * 18)) + ")";
+    ctx.beginPath(); ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = "rgba(255,40,70,.42)";
+    ctx.beginPath(); ctx.ellipse(sx, sy, rx * k, ry * k, 0, 0, TAU); ctx.fill();
+  }
+  const shadow = A.fx("shadow");
+  const shadowAt = (x, y, r, a = 1) => {
+    const [sx, sy] = toScreen(x, y);
+    if (!onScreen(sx, sy)) return;
+    ctx.globalAlpha = a; ctx.drawImage(shadow.cv, sx - r * 32 * Z, sy - r * 16 * Z, r * 64 * Z, r * 32 * Z);
+  };
+  // gerichteter Schatten weg vom nächsten Licht
+  const dirShadow = (x, y, r, h) => {
+    let best = null, bd = 4.5;
+    for (const t of L.torches) { const d = Math.hypot(t.x - x, t.y - y); if (d < bd) { bd = d; best = t; } }
+    if (!best) return;
+    const [sx, sy] = toScreen(x, y), [lx, ly] = toScreen(best.x, best.y);
+    const ang = Math.atan2(sy - ly, sx - lx), len = (1.2 + (4.5 - bd) * 0.25) * h;
+    ctx.save(); ctx.globalAlpha = 0.32 * (1 - bd / 4.5) + 0.08;
+    ctx.translate(sx, sy); ctx.rotate(ang);
+    ctx.drawImage(shadow.cv, 0, -r * 12 * Z, len * 40 * Z, r * 24 * Z);
+    ctx.restore();
+  };
+  shadowAt(p.x, p.y, 0.8, 1); dirShadow(p.x, p.y, 0.8, 1.2);
+  for (const e of G.ents) {
+    const r = (e.scale || 1) * (e.isBoss ? 1.1 : 0.7);
+    shadowAt(e.x, e.y, r, e.fly ? 0.55 : 1);
+    if (!e.fly && e.type !== "dummy") dirShadow(e.x, e.y, r, e.isBoss ? 2 : 0.8);
+  }
+  for (const it of G.items) shadowAt(it.x, it.y, 0.32, 0.8);
+  for (const s of G.shots) shadowAt(s.x, s.y, 0.3, 0.5);
+  ctx.globalAlpha = 1;
+  for (const r of FX.rings) {
+    const [sx, sy] = toScreen(r.x, r.y), k = 1 - r.life / r.max;
+    const rx = 0.707 * r.r * R.U * (0.35 + 0.65 * Math.sqrt(k));
+    ctx.globalAlpha = (r.life / r.max) * 0.9; ctx.strokeStyle = r.col; ctx.lineWidth = (3 + 5 * (1 - k)) * r.w * Z;
+    ctx.beginPath(); ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // --- Sortierte Ebene ---
+  ln = 0;
+  const pd = p.x + p.y;
+  for (const w of R.walls) {
+    const [sx, sy] = toScreen(w.x + 0.5, w.y + 0.5);
+    if (!onScreen(sx, sy, 90)) continue;
+    // Wand vor dem Spieler → durchsichtig
+    let a = 1;
+    const dd = w.d - pd;
+    if (dd > 0 && dd < 4.2) { const lat = Math.abs((w.x - w.y) - (p.x - p.y)); if (lat < 2.2) a = 0.32 + 0.68 * Math.min(1, (lat - 0.6) / 1.6 + (dd > 3 ? (dd - 3) : 0)); }
+    w.a += (Math.max(0.3, a) - w.a) * Math.min(1, dt * 10);
+    add(w.d, 1, w, sx, sy);
+  }
+  for (const pr of L.props) { const [sx, sy] = toScreen(pr.x, pr.y); if (onScreen(sx, sy, pr.kind === "house" ? 260 : 160)) add(pr.x + pr.y + (pr.kind === "house" ? 0 : 0), 2, pr, sx, sy); }
+  for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy, 160) && !po.locked) add(po.x + po.y, 8, po, sx, sy); }
+  if (L.npc) { const [sx, sy] = toScreen(L.npc.x, L.npc.y); add(L.npc.x + L.npc.y, 7, L.npc, sx, sy); }
+  for (const e of G.ents) { const [sx, sy] = toScreen(e.x, e.y); if (onScreen(sx, sy, e.isBoss ? 300 : 140)) add(e.x + e.y, 3, e, sx, sy); }
+  { const [sx, sy] = toScreen(p.x, p.y); add(pd + 0.01, 4, p, sx, sy); }
+  for (const it of G.items) { const [sx, sy] = toScreen(it.x, it.y); if (onScreen(sx, sy)) add(it.x + it.y, 5, it, sx, sy); }
+  for (const s of G.shots) { const [sx, sy] = toScreen(s.x, s.y); if (onScreen(sx, sy)) add(s.x + s.y, 6, s, sx, sy); }
+  order.length = ln;
+  for (let i = 0; i < ln; i++) order[i] = list[i];
+  order.sort((a, b) => a.d - b.d);
+  R.drawn = ln;
+  for (let i = 0; i < ln; i++) {
+    const e = order[i];
+    switch (e.k) {
+      case 1: {
+        const w = e.o;
+        ctx.globalAlpha = w.a;
+        blit(ctx, A.wallSprite(B, R.biome, w.v), e.sx, e.sy);
+        const t = R.wallTorch.get(w.y * m.w + w.x);
+        if (t) blit(ctx, A.torchSprite(), e.sx + (t.face === "L" ? -16 : 16) * Z, e.sy - 8 * Z);
+        ctx.globalAlpha = 1;
+        break;
+      }
+      case 2: drawProp(ctx, e.o, e.sx, e.sy, G); break;
+      case 3: drawEnemy(ctx, e.o, e.sx, e.sy); break;
+      case 4: drawPlayer(ctx, e.o, e.sx, e.sy, G); break;
+      case 5: drawItem(ctx, e.o, e.sx, e.sy); break;
+      case 6: drawShot(ctx, e.o, e.sx, e.sy); break;
+      case 7: {
+        const n = e.o; const bl = (R.t % 4) < 0.15;
+        ctx.save(); ctx.translate(e.sx, e.sy); ctx.scale(Z * 0.8, Z * 0.8 * (1 + Math.sin(R.t * 2) * 0.02)); put(ctx, A.npcSprite(bl ? "blink" : "open"), 0, 0); ctx.restore();
+        break;
+      }
+      case 8: {
+        const po = e.o, sc = po.small ? 0.7 : 1;
+        ctx.save(); ctx.translate(e.sx, e.sy - 52 * Z * sc);
+        ctx.scale(Z * sc * 0.62, Z * sc); ctx.rotate(R.t * 2.2);
+        ctx.globalAlpha = 0.95; put(ctx, A.swirlSprite(po.col), 0, 0);
+        ctx.restore();
+        break;
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+  // Warnkreis-Rand über den Figuren (bleibt auch hinter Bossen sichtbar)
+  for (const t of G.teles) {
+    const [sx, sy] = toScreen(t.x, t.y);
+    const rx = 0.707 * t.r * R.U, ry = rx * 0.5;
+    ctx.setLineDash([10 * R.Z, 7 * R.Z]); ctx.lineDashOffset = -R.t * 40;
+    ctx.strokeStyle = "rgba(255,90,120,.9)"; ctx.lineWidth = 5 * R.Z; ctx.beginPath(); ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,240,245,.95)"; ctx.lineWidth = 2 * R.Z; ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // normale Partikel
+  drawParticles(ctx, false);
+
+  // --- Licht ---
+  lighting(G, B, portals);
+  base(ctx);
+  ctx.globalCompositeOperation = "multiply";
+  ctx.drawImage(R.lcv, -2, -2, R.VW + 4, R.VH + 4);
+  // --- Glow (additiv) ---
+  ctx.globalCompositeOperation = "lighter";
+  glowPass(ctx, G, B, portals);
+  drawParticles(ctx, true);
+  ctx.globalCompositeOperation = "source-over";
+  // --- Texte ---
+  textPass(ctx, G, portals);
+  // --- Blitze ---
+  if (FX.flashA > 0.01) { ctx.globalAlpha = FX.flashA; ctx.fillStyle = FX.flashCol; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40); ctx.globalAlpha = 1; }
+  const low = p.hp > 0 && p.hp <= Math.max(1, p.maxHp * 0.25) ? 0.25 + 0.15 * Math.sin(R.t * 5) : 0;
+  const ha = Math.max(FX.hurtA, low);
+  if (ha > 0.01) {
+    const g = ctx.createRadialGradient(R.VW / 2, R.VH / 2, Math.min(R.VW, R.VH) * 0.3, R.VW / 2, R.VH / 2, Math.hypot(R.VW, R.VH) * 0.6);
+    g.addColorStop(0, "rgba(255,40,80,0)"); g.addColorStop(1, "rgba(255,40,80," + ha + ")");
+    ctx.fillStyle = g; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40);
+  }
+}
+
+function allPortals(G) {
+  const L = R.L, out = G._portals || (G._portals = []);
+  out.length = 0;
+  if (L.portals) for (const po of L.portals) out.push(po);
+  if (L.homePortal) out.push(L.homePortal);
+  if (G.depth === 20 && L.stairs) out.push(L.exitPortal || (L.exitPortal = { x: L.stairs.x, y: L.stairs.y, col: "#ffd75e", label: "✨ 20. Portal", exit: true }));
+  return out;
+}
+
+function drawPlayer(ctx, p, sx, sy, G) {
+  // Nachbilder beim Dodge
+  for (const tr of FX.trails) {
+    const [tx, ty] = toScreen(tr.x, tr.y);
+    drawRig(ctx, tx, ty, { ...p.rig, alpha: (tr.life / tr.max) * 0.45, flash: true, spin: -1, moving: false });
+  }
+  const o = p.rig;
+  o.alpha = p.blinkT > 0 && Math.floor(R.t * 16) % 2 ? 0.5 : 1;
+  drawRig(ctx, sx, sy - p.z * R.Z, o);
+}
+
+function drawEnemy(ctx, e, sx, sy) {
+  const Z = R.Z;
+  if (e.isBoss) {
+    const o = e.rig;
+    o.flash = e.flashT > 0; o.mood = e.hurtT > 0 ? "hurt" : "angry"; o.t = e.t; o.sq = e.sq; o.face = e.face;
+    o.moving = e.moving; o.walkPh = e.t * 7; o.spin = e.spin ?? -1;
+    // Kobold hinter dem Boss? → Boss durchscheinend
+    const p = R.G && R.G.p;
+    let a = 1;
+    if (p && p.x + p.y < e.x + e.y) {
+      const [px, py] = toScreen(p.x, p.y), w = 60 * e.scale * Z, h = 150 * e.scale * Z;
+      if (Math.abs(px - sx) < w && py < sy + 10 && py > sy - e.z * Z - h) a = 0.5;
+    }
+    e.fadeA = (e.fadeA ?? 1) + (a - (e.fadeA ?? 1)) * 0.2;
+    o.alpha = e.fadeA;
+    drawRig(ctx, sx, sy - e.z * Z, o);
+    return;
+  }
+  const t = e.t;
+  let s = A.enemySprite(e.type, e.tint, e.hurtT > 0 ? "hurt" : "open");
+  if (e.flashT > 0) s = A.flashOf(s);
+  let z = e.z, rot = 0, sqx = 1 + e.sq, sqy = 1 - e.sq, alpha = e.alpha ?? 1;
+  const sc = (e.scale || 1) * Z;
+  switch (e.type) {
+    case "bat": z += 26 + Math.sin(t * 6) * 5; break;
+    case "wisp": z += 18 + Math.sin(t * 3) * 4; break;
+    case "geist": z += 14 + Math.sin(t * 2.4) * 5; break;
+    case "flamme": sqx += Math.sin(t * 22) * 0.04; sqy += Math.cos(t * 19) * 0.05; break;
+    case "dummy": rot = (e.wob || 0) * Math.sin(t * 28) * 0.25; break;
+    default: if (e.moving) rot = Math.sin(t * 11) * 0.08;
+  }
+  ctx.save();
+  ctx.translate(sx, sy - z * Z);
+  if (alpha < 1) ctx.globalAlpha = alpha;
+  ctx.rotate(rot);
+  ctx.scale(sc * sqx * e.face, sc * sqy);
+  if (e.type === "bat") {
+    const w = A.enemySprite("wing", e.tint), fl = 0.35 + 0.65 * Math.abs(Math.sin(t * 16));
+    for (const k of [-1, 1]) { ctx.save(); ctx.translate(k * 12, -26); ctx.scale(k, fl); put(ctx, e.flashT > 0 ? A.flashOf(w) : w, 0, 0); ctx.restore(); }
+  }
+  put(ctx, s, 0, 0);
+  ctx.restore();
+  if (e.hp < e.maxHp && e.type !== "dummy" && e.hp > 0) {
+    const h = (e.type === "wichtel" || e.type === "pilzling" || e.type === "geist" || e.type === "flamme" ? 78 : 60) * (e.scale || 1) + z;
+    const w = 34 * Z, x = sx - w / 2, y = sy - h * Z - 6;
+    ctx.fillStyle = "rgba(30,10,40,.7)"; ctx.beginPath(); ctx.roundRect(x - 2, y - 2, w + 4, 8, 4); ctx.fill();
+    ctx.fillStyle = e.hp / e.maxHp > 0.4 ? "#7cf29a" : "#ffb35e"; ctx.beginPath(); ctx.roundRect(x, y, Math.max(2, w * e.hp / e.maxHp), 4, 2); ctx.fill();
+  }
+}
+
+const POT_COL = ["#d9a06a", "#9fd08a", "#9a9ae0", "#ffb3d8", "#bfe6ff", "#c98a6a"];
+function drawProp(ctx, pr, sx, sy, G) {
+  const Z = R.Z;
+  switch (pr.kind) {
+    case "pot": {
+      const sh = pr.shakeT > 0 ? Math.sin(R.t * 60) * 2 * Z : 0;
+      blit(ctx, A.potSprite(POT_COL[R.biome]), sx + sh, sy);
+      break;
+    }
+    case "chest": blit(ctx, A.chestSprite(pr.open), sx, sy); break;
+    case "house": blit(ctx, A.houseSprite(pr.var), sx, sy); break;
+    case "tree": {
+      ctx.save(); ctx.translate(sx, sy); ctx.rotate(Math.sin(R.t * 1.2 + pr.x) * 0.015);
+      blit(ctx, A.treeSprite(pr.var), 0, 0); ctx.restore(); break;
+    }
+    case "lantern": blit(ctx, A.lanternSprite(), sx, sy); break;
+    case "fountain": blit(ctx, A.fountainSprite(), sx, sy); break;
+  }
+}
+function drawItem(ctx, it, sx, sy) {
+  const Z = R.Z, t = R.t + it.seed;
+  const z = it.z + (it.z <= 0.01 ? 5 + Math.sin(t * 3) * 3 : 0);
+  let s;
+  if (it.kind === "coin") {
+    s = A.itemSprite("coin");
+    const w = Math.max(0.2, Math.abs(Math.cos(t * 4)));
+    ctx.save(); ctx.translate(sx, sy - z * Z); ctx.scale(Z * w, Z); put(ctx, s, 0, 0); ctx.restore();
+    return;
+  }
+  s = A.itemSprite(it.kind, it.v || "");
+  if (!s) return;
+  blit(ctx, s, sx, sy - z * Z, it.kind === "hat" ? 1.1 : 1);
+}
+function drawShot(ctx, s, sx, sy) {
+  const Z = R.Z;
+  if (s.kind === "bubble") {
+    const w = 1 + Math.sin(s.t * 14) * 0.08, sp = A.bubbleSprite(s.tier);
+    ctx.save(); ctx.translate(sx, sy - s.z * Z); ctx.scale(Z * w * s.size, Z / w * s.size); put(ctx, sp, 0, 0); ctx.restore();
+  } else {
+    blit(ctx, A.orbSprite(s.col), sx, sy - s.z * Z, s.kind === "fire" ? 1.3 : 1);
+  }
+}
+
+function drawParticles(ctx, additive) {
+  const Z = R.Z;
+  for (const p of FX.parts) {
+    if (p.add !== additive) continue;
+    const [sx, sy] = toScreen(p.x, p.y, p.z);
+    if (sx < -40 || sy < -40 || sx > R.VW + 40 || sy > R.VH + 40) continue;
+    const k = p.life / p.max;
+    const size = (p.s1 + (p.s0 - p.s1) * k) * Z;
+    if (size <= 0.3) continue;
+    const base = A.fx(p.kind);
+    const s = p.col === "#fff" || p.col === "#ffffff" ? base : A.tinted(base, p.col);
+    ctx.globalAlpha = Math.min(1, k * (1 + (1 - p.fade) * 4));
+    const w = size, h = size * s.h / s.w;
+    if (p.kind === "star" || p.kind === "star5") {
+      ctx.save(); ctx.translate(sx, sy); ctx.rotate(p.rot); ctx.drawImage(s.cv, -w / 2, -h / 2, w, h); ctx.restore();
+    } else ctx.drawImage(s.cv, sx - w / 2, sy - h / 2, w, h);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- Licht ----------
+function lighting(G, B, portals) {
+  const l = R.lctx, L = R.L, p = G.p, LS = R.LS;
+  l.setTransform(1, 0, 0, 1, 0, 0);
+  l.globalCompositeOperation = "source-over";
+  const a = B.amb;
+  const dark = G.darkness || 0;
+  l.fillStyle = "rgb(" + Math.round(a[0] * 255 * (1 - dark)) + "," + Math.round(a[1] * 255 * (1 - dark)) + "," + Math.round(a[2] * 255 * (1 - dark)) + ")";
+  l.fillRect(0, 0, R.lw, R.lh);
+  l.globalCompositeOperation = "lighter";
+  const light = (x, y, r, col, al, zOff = 0) => {
+    const [sx, sy] = toScreen(x, y, zOff);
+    const rx = 0.707 * r * R.U * R.zp;
+    if (sx + rx < 0 || sx - rx > R.VW || sy + rx < 0 || sy - rx > R.VH) return;
+    l.globalAlpha = Math.min(1, al);
+    const ry = rx * 0.62;
+    l.drawImage(lightSprite(col), (sx - rx) / LS, (sy - ry) / LS - 6, rx * 2 / LS, ry * 2 / LS);
+  };
+  const T = R.t;
+  if (R.biome) light(p.x, p.y, 5.6, "#fff1d6", 0.95);
+  else light(p.x, p.y, 3.5, "#fff6e0", 0.25);
+  for (const t of L.torches) { const fl = 0.82 + 0.1 * Math.sin(T * 9 + t.x * 3) + 0.08 * Math.sin(T * 23 + t.y); light(t.x, t.y, 4.4 * (0.95 + fl * 0.05), B.torch, fl); }
+  for (const li of L.lights) light(li.x, li.y, li.r, li.c, li.a * (1 - li.flick + li.flick * Math.sin(T * 7 + li.x)));
+  for (const po of portals) if (!po.locked) light(po.x, po.y, po.small ? 2.4 : 3.4, po.col, 0.8);
+  if (L.stairs && G.depth < 20) light(L.stairs.x, L.stairs.y, 2.6, "#ffe9a8", 0.55);
+  for (const s of G.shots) light(s.x, s.y, s.kind === "bubble" ? 1.6 : 2.0, s.kind === "bubble" ? "#bfefff" : s.col, 0.7);
+  for (const e of G.ents) {
+    if (e.type === "wisp") light(e.x, e.y, 2.6, e.tint || "#8fe9ff", 0.8);
+    else if (e.type === "flamme") light(e.x, e.y, 2.6, "#ff9a4a", 0.85);
+    else if (e.isKing) light(e.x, e.y, 7, "#ff5a3a", 1);
+    else if (e.isBoss) light(e.x, e.y, 3.2, "#ffd0a0", 0.45);
+  }
+  for (const it of G.items) if (it.kind !== "coin") light(it.x, it.y, 1.3, "#fff0c0", 0.45);
+  if (p.spinT > 0) light(p.x, p.y, 3.4, "#fff8e0", p.spinT / 0.28 * 0.7);
+  for (const t of G.teles) light(t.x, t.y, t.r * 1.5, "#ffe0e6", 0.95);
+  l.globalAlpha = 1;
+  l.globalCompositeOperation = "multiply";
+  l.drawImage(R.vign, 0, 0);
+  l.globalCompositeOperation = "source-over";
+}
+
+function glowPass(ctx, G, B, portals) {
+  const Z = R.Z, L = R.L, p = G.p, T = R.t;
+  const glow = A.fx("glow");
+  const g = (x, y, z, size, col, al) => {
+    const [sx, sy] = toScreen(x, y, z);
+    if (sx < -size * Z || sx > R.VW + size * Z || sy < -size * Z || sy > R.VH + size * Z) return;
+    ctx.globalAlpha = al;
+    const s = A.tinted(glow, col), w = size * Z;
+    ctx.drawImage(s.cv, sx - w / 2, sy - w / 2, w, w);
+  };
+  // Fackel-Flammen
+  const flame = A.fx("flame");
+  for (const t of L.torches) {
+    const [sx, sy] = toScreen(t.x, t.y);
+    if (!onScreen(sx, sy)) continue;
+    const [wx, wy] = toScreen(t.wx + 0.5, t.wy + 0.5);
+    const px = wx + (t.face === "L" ? -16 : 16) * Z, py = wy - 38 * Z;
+    const fl = 1 + Math.sin(T * 17 + t.x) * 0.12 + Math.sin(T * 29) * 0.06;
+    ctx.globalAlpha = 0.95;
+    ctx.drawImage(A.tinted(flame, B.torch).cv, px - 9 * Z, py - 24 * Z * fl, 18 * Z, 26 * Z * fl);
+    ctx.drawImage(flame.cv, px - 5 * Z, py - 14 * Z * fl, 10 * Z, 15 * Z * fl);
+    ctx.globalAlpha = 0.5; const s = A.tinted(glow, B.torch), w = 70 * Z * fl; ctx.drawImage(s.cv, px - w / 2, py - 8 * Z - w / 2, w, w);
+    if (Math.random() < 0.04) G.emberAt = t;
+  }
+  if (L.props) for (const pr of L.props) {
+    if (pr.kind === "lantern") { const [sx, sy] = toScreen(pr.x, pr.y); ctx.globalAlpha = 0.55 + Math.sin(T * 5 + pr.x) * 0.08; const s = A.tinted(glow, "#ffd27a"), w = 60 * Z; ctx.drawImage(s.cv, sx - w / 2, sy - 76 * Z - w / 2, w, w); }
+    else if (pr.kind === "house") { const [sx, sy] = toScreen(pr.x, pr.y); ctx.globalAlpha = 0.35; const s = A.tinted(glow, "#ffc56e"); for (const [dx, dy] of [[-72, -32], [30, -10], [64, -28]]) { const w = 46 * Z; ctx.drawImage(s.cv, sx + dx * Z - w / 2, sy + dy * Z - w / 2, w, w); } }
+    else if (pr.kind === "chest" && !pr.open) g(pr.x, pr.y, 20, 50, "#ffd75e", 0.25 + Math.sin(T * 3) * 0.1);
+  }
+  for (const po of portals) if (!po.locked) g(po.x, po.y, 52 * (po.small ? 0.7 : 1), po.small ? 90 : 130, po.col, 0.4 + Math.sin(T * 3) * 0.08);
+  if (L.stairs && G.depth < 20) g(L.stairs.x, L.stairs.y, 4, 70, "#ffe9a8", 0.3 + Math.sin(T * 2.5) * 0.1);
+  for (const s of G.shots) g(s.x, s.y, s.z, s.kind === "bubble" ? 34 * s.size : 44, s.kind === "bubble" ? "#bfefff" : s.col, 0.45);
+  for (const e of G.ents) {
+    if (e.type === "wisp") g(e.x, e.y, 36 + Math.sin(e.t * 3) * 4, 60, e.tint || "#8fe9ff", 0.55);
+    else if (e.type === "flamme") g(e.x, e.y, 30, 64, "#ff9a4a", 0.5);
+    else if (e.isKing) {
+      g(e.x, e.y, 90, 330, "#ff4a2a", 0.3 + Math.sin(T * 4) * 0.06); g(e.x, e.y, 170, 120, "#ffd060", 0.25);
+      // Flammen-Aura: tanzende Flammenzungen rund um den König
+      const fl = A.fx("flame"), fr = A.tinted(fl, "#ff7a2a");
+      const [kx, ky] = toScreen(e.x, e.y, e.z);
+      for (let k = 0; k < 10; k++) {
+        const a = k / 10 * TAU + T * 0.8, rx = Math.cos(a) * 1.25 * R.U, ry = Math.sin(a) * 0.62 * R.U;
+        const front = Math.sin(a) > 0;
+        const h = (1 + 0.35 * Math.sin(T * 9 + k * 1.7)) * (front ? 50 : 72) * R.Z, w = h * 0.62;
+        ctx.globalAlpha = (front ? 0.45 : 0.8) + 0.2 * Math.sin(T * 7 + k);
+        ctx.drawImage((k % 2 ? fl : fr).cv, kx + rx - w / 2, ky + ry - h * 0.92, w, h);
+      }
+    }
+    if (e.tele > 0) g(e.x, e.y, 40 * (e.scale || 1), 90 * (e.scale || 1), "#ff5a7a", e.tele * 0.6);
+  }
+  for (const it of G.items) {
+    const z = it.z + 5 + Math.sin((R.t + it.seed) * 3) * 3;
+    if (it.kind === "coin") g(it.x, it.y, z, 22, "#ffd75e", 0.3);
+    else g(it.x, it.y, z + 12, 54, it.kind === "potion" ? "#ff8fb8" : it.kind === "mushroom" ? "#ff9ae0" : "#fff3a0", 0.45 + Math.sin(T * 4 + it.seed) * 0.12);
+  }
+  // Rundumschlag-Sichel
+  if (p.spinT > 0) {
+    const k = p.spinT / 0.28, [sx, sy] = toScreen(p.x, p.y, 26);
+    const sl = A.tinted(A.fx("slash"), weaponOf(p.atk).trail);
+    const r = 0.707 * 2.9 * R.U;
+    ctx.save(); ctx.translate(sx, sy); ctx.scale(1, 0.5); ctx.rotate((1 - k) * TAU * 1.1 * (p.face > 0 ? 1 : -1));
+    ctx.globalAlpha = Math.min(1, k * 1.6);
+    ctx.drawImage(sl.cv, -r * 1.2, -r * 1.2, r * 2.4, r * 2.4);
+    ctx.restore();
+  }
+  if (FX.flashA > 0) g(p.x, p.y, 40, 200, "#fff6c0", FX.flashA * 0.4);
+  ctx.globalAlpha = 1;
+}
+
+function textPass(ctx, G, portals) {
+  const Z = R.Z;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  for (const po of portals) {
+    const [sx, sy] = toScreen(po.x, po.y, (po.small ? 100 : 135));
+    if (!onScreen(sx, sy)) continue;
+    const txt = po.label || "";
+    ctx.font = "800 " + Math.round(13 * Math.max(1, Z)) + "px system-ui, sans-serif";
+    ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(txt, sx, sy + Math.sin(R.t * 2 + po.x) * 3);
+    ctx.fillStyle = po.locked ? "#c8c0d8" : "#fff8e0"; ctx.fillText(txt, sx, sy + Math.sin(R.t * 2 + po.x) * 3);
+  }
+  if (R.L.stairs && G.depth < 20) {
+    const [sx, sy] = toScreen(R.L.stairs.x, R.L.stairs.y, 58);
+    if (onScreen(sx, sy)) {
+      ctx.font = "800 " + Math.round(13 * Math.max(1, Z)) + "px system-ui, sans-serif";
+      const t = "⬇️ Ebene " + (G.depth + 1);
+      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(t, sx, sy + Math.sin(R.t * 2) * 3);
+      ctx.fillStyle = "#fff8e0"; ctx.fillText(t, sx, sy + Math.sin(R.t * 2) * 3);
+    }
+  }
+  for (const t of FX.texts) {
+    const [sx, sy] = toScreen(t.x, t.y, t.z);
+    const k = t.t / t.life, pop = k < 0.15 ? 0.6 + k / 0.15 * 0.6 : 1.2 - Math.min(0.2, (k - 0.15) * 0.6);
+    ctx.globalAlpha = k > 0.7 ? (1 - k) / 0.3 : 1;
+    ctx.font = "900 " + Math.round(t.size * pop * Math.max(0.9, Z)) + "px system-ui, sans-serif";
+    ctx.lineWidth = 5; ctx.strokeStyle = "rgba(40,10,50,.9)"; ctx.strokeText(t.str, sx, sy);
+    ctx.fillStyle = t.col; ctx.fillText(t.str, sx, sy);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- Minikarte ----------
+export function drawMini(cv, G) {
+  const L = R.L; if (!L || !G.p) return;
+  const m = L.map, c = cv.getContext("2d");
+  const W = cv.width, H = cv.height, s = W / 44;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
+  c.save(); c.translate(W / 2, H / 2); c.scale(1, 0.5); c.rotate(Math.PI / 4);
+  const ox = G.p.x, oy = G.p.y;
+  c.fillStyle = "rgba(255,240,220,.75)";
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    const i = y * m.w + x;
+    if (!m.seen[i] || m.solid[i]) continue;
+    c.fillRect((x - ox) * s * 1.4, (y - oy) * s * 1.4, s * 1.45, s * 1.45);
+  }
+  const dot = (x, y, col, r) => { c.fillStyle = col; c.beginPath(); c.arc((x - ox) * s * 1.4, (y - oy) * s * 1.4, r, 0, TAU); c.fill(); };
+  if (L.stairs && m.seen[Math.floor(L.stairs.y) * m.w + Math.floor(L.stairs.x)]) dot(L.stairs.x, L.stairs.y, "#ffd75e", s * 2.4);
+  if (L.homePortal) dot(L.homePortal.x, L.homePortal.y, "#7fffd4", s * 2);
+  for (const e of G.ents) if (e.isBoss && m.seen[Math.floor(e.y) * m.w + Math.floor(e.x)]) dot(e.x, e.y, "#ff4a5a", s * 2.6);
+  dot(ox, oy, "#ff6fae", s * 2.2);
+  c.restore();
+}

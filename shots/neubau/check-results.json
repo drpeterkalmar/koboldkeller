@@ -1,0 +1,306 @@
+{
+  "date": "2026-09-26T06:57:45.456Z",
+  "profile": "gpu",
+  "throttle": 4,
+  "fpsNormal": {
+    "fps": 781,
+    "p5": 526.3,
+    "frames": 3788,
+    "jsUpdate": 0.04,
+    "jsDraw": 0.41,
+    "avgAll": 755.8,
+    "scale": 2,
+    "q": 0,
+    "budget": 1
+  },
+  "fpsThrottled": {
+    "fps": 494.1,
+    "p5": 178.6,
+    "frames": 2125,
+    "jsUpdate": 0.13,
+    "jsDraw": 1.13,
+    "avgAll": 352.9,
+    "scale": 2,
+    "q": 0,
+    "budget": 1
+  },
+  "software": {
+    "normal": {
+      "fps": 56.1,
+      "p5": 47.4,
+      "frames": 281,
+      "jsUpdate": 0.09,
+      "jsDraw": 0.65,
+      "avgAll": 56.1,
+      "scale": 2,
+      "q": 0,
+      "budget": 1
+    },
+    "throttled": {
+      "fps": 64.3,
+      "p5": 55.2,
+      "frames": 321,
+      "jsUpdate": 0.16,
+      "jsDraw": 1.53,
+      "avgAll": 64,
+      "scale": 1,
+      "q": 3,
+      "budget": 0.6
+    }
+  },
+  "results": [
+    {
+      "id": "A10",
+      "name": "Audio erst nach Geste (vor Tap kein AudioContext)",
+      "pass": true,
+      "value": "none"
+    },
+    {
+      "id": "B1",
+      "name": "Versionslabel im Startmenü",
+      "pass": true,
+      "value": "🍄 Koboldkeller 2 · v1"
+    },
+    {
+      "id": "B2",
+      "name": "Charakterwahl ≤ 4 Porträts pro Reihe (412 px)",
+      "pass": true,
+      "value": "Reihen: 4+4"
+    },
+    {
+      "id": "B3",
+      "name": "Namensfeld mit Zufallsnamen vorbelegt",
+      "pass": true,
+      "value": "Mopsi"
+    },
+    {
+      "id": "A10b",
+      "name": "AudioContext läuft nach erster Geste",
+      "pass": true,
+      "value": "running"
+    },
+    {
+      "id": "B14a",
+      "name": "Tap-to-Move bewegt den Kobold",
+      "pass": true,
+      "value": "(17.5,20.5) → (14.33,17.33)"
+    },
+    {
+      "id": "B18",
+      "name": "Virtueller Joystick bewegt den Kobold",
+      "pass": true,
+      "value": "(14.32,17.32) → (12.08,7.83)"
+    },
+    {
+      "id": "B12t",
+      "name": "Tutorial führt durch Laufen/Schlag/Blase/Sprung",
+      "pass": true,
+      "value": "Schritt 4"
+    },
+    {
+      "id": "B5",
+      "name": "Brunnen heilt",
+      "pass": true,
+      "value": "6/6"
+    },
+    {
+      "id": "B6",
+      "name": "Portal triggert beim Draufsteigen (Stadt → Ebene 1)",
+      "pass": true,
+      "value": "Tiefe 1"
+    },
+    {
+      "id": "B16",
+      "name": "Dieselbe Melodie in Stadt & Keller",
+      "pass": true,
+      "value": "audio/town.m4a @ dungeon"
+    },
+    {
+      "id": "B13",
+      "name": "Fledermaus Ebene 1 zahm: ≥ 4 Treffer bis K.O.",
+      "pass": true,
+      "value": "Schaden 1, 6 Treffer nötig"
+    },
+    {
+      "id": "B11",
+      "name": "Rundumschlag 360° Radius 3 (trifft hinten, nicht >3)",
+      "pass": true,
+      "value": "{\"hinten\":true,\"vorne\":true,\"weit\":false}"
+    },
+    {
+      "id": "B12",
+      "name": "Seifenblasen / Dodge weg (+Unverwundbar) / Trank",
+      "pass": true,
+      "value": "{\"shots\":1,\"invul\":true,\"dodgeAway\":true,\"dodgeDir\":true,\"potion\":true}"
+    },
+    {
+      "id": "B12b",
+      "name": "Rucksack öffnet & schließt",
+      "pass": true,
+      "value": ""
+    },
+    {
+      "id": "B14",
+      "name": "Auto-Befreiung aus Wand + BFS-Weg zur Treppe",
+      "pass": true,
+      "value": "{\"freed\":true,\"wall\":\"6,2\",\"ok\":true,\"n\":8,\"direct\":\"26.0\"}"
+    },
+    {
+      "id": "A2",
+      "name": "FPS normal ≥ 55 (Kampf, 12 Gegner)",
+      "pass": true,
+      "value": "781 fps (p5 526.3, Scale 2)"
+    },
+    {
+      "id": "A3",
+      "name": "FPS mit CPU-Throttle 4× ≥ 45",
+      "pass": true,
+      "value": "494.1 fps (p5 178.6, Scale 2, q0)"
+    },
+    {
+      "id": "B7a",
+      "name": "Ebene 4: Boss vorhanden & erwacht",
+      "pass": true,
+      "value": "Moosbart der Boss-Kobold"
+    },
+    {
+      "id": "B7b",
+      "name": "Bosse auf 8/12/16/20",
+      "pass": true,
+      "value": "true,true,true,true"
+    },
+    {
+      "id": "B7c",
+      "name": "Ebene 20: Kellerkönig riesig & knallrot mit Krone",
+      "pass": true,
+      "value": "{\"name\":\"Kellerkönig\",\"hp\":278,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
+    },
+    {
+      "id": "B8a",
+      "name": "Sieg per Boss-Kill → Siegesbildschirm + Ehrenhall",
+      "pass": true,
+      "value": "win"
+    },
+    {
+      "id": "B9",
+      "name": "Namen in Ehrenhall HTML-escaped",
+      "pass": true,
+      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.202619 🪙⏱️ Schnellster "
+    },
+    {
+      "id": "B8c",
+      "name": "Datum de-AT + Medaillen",
+      "pass": true,
+      "value": "26.9.2026"
+    },
+    {
+      "id": "B8b",
+      "name": "Sieg per 20. Portal",
+      "pass": true,
+      "value": "Einträge: 2"
+    },
+    {
+      "id": "B4",
+      "name": "Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang",
+      "pass": true,
+      "value": "Tiefe 7, Gold 1234, Lv 8 | <b>Zoe</b> · ⭐ 8 · 🪙 1234 · Ebene 7"
+    },
+    {
+      "id": "A9",
+      "name": "App-Wechsel pausiert Spiel + Musik",
+      "pass": true,
+      "value": "{\"screen\":\"pause\",\"audio\":\"suspended\"}"
+    },
+    {
+      "id": "B15",
+      "name": "⏸️ im Spiel sichtbar & jedes Menü hat Rückweg",
+      "pass": true,
+      "value": "btnPause @298,8"
+    },
+    {
+      "id": "B15b",
+      "name": "Umfallen → zurück in die Stadt (volle HP)",
+      "pass": true,
+      "value": "Tiefe 0"
+    },
+    {
+      "id": "A4",
+      "name": "Canvas-Backbuffer ≤ 2× CSS",
+      "pass": true,
+      "value": "2.00"
+    },
+    {
+      "id": "A7",
+      "name": "Touch-Härtung (touch-action, Kontextmenü, kein Zoom)",
+      "pass": true,
+      "value": "{\"touch\":\"none\",\"ctx\":true}"
+    },
+    {
+      "id": "A6",
+      "name": "Cache-Buster ?v=N überall + KK_VER",
+      "pass": true,
+      "value": "v1, 5 Tags, 13 Module"
+    },
+    {
+      "id": "A8",
+      "name": "100dvh + safe-area-insets im CSS",
+      "pass": true,
+      "value": ""
+    },
+    {
+      "id": "A11",
+      "name": "PWA-Manifest + Icons, Vollbild-Button, Wake-Lock abgesichert",
+      "pass": true,
+      "value": "{\"manifest\":true,\"i192\":true,\"i512\":true}"
+    },
+    {
+      "id": "B10",
+      "name": "MEGASCHWER: 2× Tempo, 10× Schaden, 🔥-Badge",
+      "pass": true,
+      "value": "{\"speed\":2,\"dmg\":10,\"badge\":true}"
+    },
+    {
+      "id": "A12",
+      "name": "v20-Save migriert (Name/Look/Level/Gold + Ehrenmütze), Ehrenhall übernommen",
+      "pass": true,
+      "value": "Oldie · ⭐ 7 · 🪙 321 · in der Stadt · aus v20 umgezogen 🎖️ | Hut veteran"
+    },
+    {
+      "id": "A13",
+      "name": "Kaputte Saves → kein Absturz, Menü erscheint",
+      "pass": true,
+      "value": "Menü sichtbar: true"
+    },
+    {
+      "id": "A14",
+      "name": "Querformat: Buttons sichtbar (≥56 px), kein Überlappen",
+      "pass": true,
+      "value": "{\"skillsIn\":true,\"hudIn\":true,\"overlap\":false,\"btns\":[86,64,64,58]}"
+    },
+    {
+      "id": "A2q",
+      "name": "FPS normal Querformat ≥ 55",
+      "pass": true,
+      "value": "586.5 fps (p5 90.1)"
+    },
+    {
+      "id": "C7",
+      "name": "Skill-Buttons ≥ 56 px im Daumenbereich rechts unten",
+      "pass": true,
+      "value": "bAtk:86 bBub:64 bDash:64 bPot:58"
+    },
+    {
+      "id": "A1",
+      "name": "Keine pageerrors/console.errors (hoch + quer)",
+      "pass": true,
+      "value": "0"
+    },
+    {
+      "id": "A5",
+      "name": "Keine externen Requests",
+      "pass": true,
+      "value": "0"
+    }
+  ],
+  "errors": []
+}
