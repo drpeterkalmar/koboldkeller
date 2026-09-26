@@ -1,48 +1,48 @@
 {
-  "date": "2026-09-26T06:57:45.456Z",
+  "date": "2026-09-26T10:42:27.375Z",
   "profile": "gpu",
   "throttle": 4,
   "fpsNormal": {
-    "fps": 781,
-    "p5": 526.3,
-    "frames": 3788,
+    "fps": 883.3,
+    "p5": 434.8,
+    "frames": 4247,
     "jsUpdate": 0.04,
-    "jsDraw": 0.41,
-    "avgAll": 755.8,
+    "jsDraw": 0.32,
+    "avgAll": 854.9,
     "scale": 2,
     "q": 0,
     "budget": 1
   },
   "fpsThrottled": {
-    "fps": 494.1,
-    "p5": 178.6,
-    "frames": 2125,
+    "fps": 543.4,
+    "p5": 181.8,
+    "frames": 2294,
     "jsUpdate": 0.13,
-    "jsDraw": 1.13,
-    "avgAll": 352.9,
+    "jsDraw": 1.02,
+    "avgAll": 381.5,
     "scale": 2,
     "q": 0,
     "budget": 1
   },
   "software": {
     "normal": {
-      "fps": 56.1,
-      "p5": 47.4,
-      "frames": 281,
+      "fps": 54.4,
+      "p5": 47.2,
+      "frames": 273,
       "jsUpdate": 0.09,
-      "jsDraw": 0.65,
-      "avgAll": 56.1,
+      "jsDraw": 0.75,
+      "avgAll": 54.4,
       "scale": 2,
       "q": 0,
       "budget": 1
     },
     "throttled": {
-      "fps": 64.3,
-      "p5": 55.2,
-      "frames": 321,
-      "jsUpdate": 0.16,
-      "jsDraw": 1.53,
-      "avgAll": 64,
+      "fps": 64.5,
+      "p5": 54.1,
+      "frames": 324,
+      "jsUpdate": 0.15,
+      "jsDraw": 1.44,
+      "avgAll": 64.7,
       "scale": 1,
       "q": 3,
       "budget": 0.6
@@ -56,10 +56,16 @@
       "value": "none"
     },
     {
+      "id": "A16",
+      "name": "Vor-Rendern im Menü blockiert nicht (längster Happen < 16 ms, kein Frame > 50 ms, fertig < 12 s)",
+      "pass": true,
+      "value": "400 ms, 58 Sätze, 20.4 MB, max. Happen 11.2 ms, Menü währenddessen 745.4 fps (längster Frame 14.4 ms; Boot davor 148.7 ms), Aufnahme 245 ms"
+    },
+    {
       "id": "B1",
       "name": "Versionslabel im Startmenü",
       "pass": true,
-      "value": "🍄 Koboldkeller 2 · v1"
+      "value": "🍄 Koboldkeller 2 · v3"
     },
     {
       "id": "B2",
@@ -71,7 +77,7 @@
       "id": "B3",
       "name": "Namensfeld mit Zufallsnamen vorbelegt",
       "pass": true,
-      "value": "Mopsi"
+      "value": "Glitzer-Emma"
     },
     {
       "id": "A10b",
@@ -83,13 +89,13 @@
       "id": "B14a",
       "name": "Tap-to-Move bewegt den Kobold",
       "pass": true,
-      "value": "(17.5,20.5) → (14.33,17.33)"
+      "value": "(17.5,20.5) → (14.34,17.34)"
     },
     {
       "id": "B18",
       "name": "Virtueller Joystick bewegt den Kobold",
       "pass": true,
-      "value": "(14.32,17.32) → (12.08,7.83)"
+      "value": "(14.23,17.23) → (12.14,8.77)"
     },
     {
       "id": "B12t",
@@ -143,19 +149,25 @@
       "id": "B14",
       "name": "Auto-Befreiung aus Wand + BFS-Weg zur Treppe",
       "pass": true,
-      "value": "{\"freed\":true,\"wall\":\"6,2\",\"ok\":true,\"n\":8,\"direct\":\"26.0\"}"
+      "value": "{\"freed\":true,\"wall\":\"27,5\",\"ok\":true,\"n\":5,\"direct\":\"13.2\"}"
     },
     {
       "id": "A2",
       "name": "FPS normal ≥ 55 (Kampf, 12 Gegner)",
       "pass": true,
-      "value": "781 fps (p5 526.3, Scale 2)"
+      "value": "883.3 fps (p5 434.8, Scale 2)"
     },
     {
       "id": "A3",
       "name": "FPS mit CPU-Throttle 4× ≥ 45",
       "pass": true,
-      "value": "494.1 fps (p5 178.6, Scale 2, q0)"
+      "value": "543.4 fps (p5 181.8, Scale 2, q0)"
+    },
+    {
+      "id": "A15",
+      "name": "Effekt-Dauerfeuer vs. aus: FPS-Differenz < 5 % (Throttle 4×)",
+      "pass": true,
+      "value": "Median aus 383.6 / an 414.6 fps → -8.1 % (Einzelwerte aus 496.3/383.6/349.8, an 301.4/414.6/415.7) · Audio-Engine Main-Thread 9.9 ms/s = 0.99 % · Stimmen jetzt 25, gestartet 1746, gestohlen 207"
     },
     {
       "id": "B7a",
@@ -173,7 +185,7 @@
       "id": "B7c",
       "name": "Ebene 20: Kellerkönig riesig & knallrot mit Krone",
       "pass": true,
-      "value": "{\"name\":\"Kellerkönig\",\"hp\":278,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
+      "value": "{\"name\":\"Kellerkönig\",\"hp\":296,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
     },
     {
       "id": "B8a",
@@ -185,7 +197,7 @@
       "id": "B9",
       "name": "Namen in Ehrenhall HTML-escaped",
       "pass": true,
-      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.202619 🪙⏱️ Schnellster "
+      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.202628 🪙⏱️ Schnellster "
     },
     {
       "id": "B8c",
@@ -203,7 +215,7 @@
       "id": "B4",
       "name": "Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang",
       "pass": true,
-      "value": "Tiefe 7, Gold 1234, Lv 8 | <b>Zoe</b> · ⭐ 8 · 🪙 1234 · Ebene 7"
+      "value": "Tiefe 7, Gold 1234, Lv 11 | <b>Zoe</b> · ⭐ 11 · 🪙 1234 · Ebene 7"
     },
     {
       "id": "A9",
@@ -239,7 +251,7 @@
       "id": "A6",
       "name": "Cache-Buster ?v=N überall + KK_VER",
       "pass": true,
-      "value": "v1, 5 Tags, 13 Module"
+      "value": "v3, 5 Tags, 15 Module"
     },
     {
       "id": "A8",
@@ -281,7 +293,7 @@
       "id": "A2q",
       "name": "FPS normal Querformat ≥ 55",
       "pass": true,
-      "value": "586.5 fps (p5 90.1)"
+      "value": "720.7 fps (p5 416.7)"
     },
     {
       "id": "C7",
