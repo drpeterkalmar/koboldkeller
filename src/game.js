@@ -3,7 +3,7 @@ import { PLAYER, SPECIES, ENEMIES, POOLS, BIOMES, BOSS_NAMES, BOSS_HAT, HATS, ME
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
-import { vibrate } from "./platform.js";
+import { haptic } from "./platform.js";
 import { writeSave, addHall } from "./save.js";
 import { rand, randi, pick, weighted, TAU, shade, clamp } from "./util.js";
 
@@ -98,13 +98,13 @@ export function buildLevel(depth) {
     }
     L.lights = L.lights || [];
     G.runSecs = 0;
-    playMusic("town");
+    playMusic("town", 0);
   } else {
     L.homePortal.col = "#7fffd4"; L.homePortal.small = true; L.homePortal.label = "🏠 Stadt"; L.homePortal.home = true;
     populate(L, depth);
-    playMusic("dungeon");
+    playMusic("dungeon", G.biome);
   }
-  SFX.stairs();
+  SFX.arrive();
   const B = BIOMES[G.biome];
   if (depth === 0) H().banner("Koboldstadt", "🏠 Willkommen zu Hause!");
   else if (depth === 20) { H().banner("Ebene 20", "👑 Der Kellerkönig wartet …"); H().toast("Besiege den Kellerkönig — oder erreiche das ✨ 20. Portal!"); }
@@ -191,7 +191,7 @@ export function makeEnt(type, x, y) {
   return e;
 }
 
-export function hurtEnt(e, dmg, kx = 0, ky = 0, crit = false) {
+export function hurtEnt(e, dmg, kx = 0, ky = 0, crit = false, src = "sword") {
   if (e.hp <= 0) return;
   e.hp -= dmg; e.flashT = 0.09; e.hurtT = 0.28; e.sq = -0.22; e.sqv = 0;
   if (e.type === "dummy") e.wob = 1;
@@ -199,7 +199,7 @@ export function hurtEnt(e, dmg, kx = 0, ky = 0, crit = false) {
   e.kx += kx * 5.5 * kb; e.ky += ky * 5.5 * kb;
   P.hit(e.x, e.y, crit ? "#ffe36e" : "#fff3b0");
   text(e.x, e.y, (crit ? "💥" : "") + fmt(dmg), crit ? "#ffe36e" : "#ffffff", crit ? 26 : 19, 60 * (e.scale || 1) + (e.fly ? 30 : 0));
-  SFX.hit();
+  SFX.hit({ x: e.x, y: e.y, dmg, crit, boss: e.isBoss, src });
   if (e.isBoss && !e.awake) wakeBoss(e);
   if (e.state === "idle") { e.state = "chase"; e.st = 0; }
   if (e.hp <= 0) killEnt(e);
@@ -212,17 +212,17 @@ export function killEnt(e) {
   const p = G.p;
   if (p.foe === e) p.foe = null;
   if (e.type === "dummy") {
-    P.poof(e.x, e.y, "#ffe9a0"); SFX.poof();
+    P.poof(e.x, e.y, "#ffe9a0"); SFX.poof({ x: e.x, y: e.y });
     G.tutFlags.dummy = true;
     setTimeout(() => { if (G.depth === 0 && G.L && G.L.dummies) { const d = makeEnt("dummy", e.homeX, e.homeY); G.ents.push(d); P.sparkle(d.x, d.y, "#fff", 8); } }, 1500);
     return;
   }
   G.stats.kills++;
   P.poof(e.x, e.y, e.tint || "#ffd0e8", e.isBoss);
-  SFX.poof();
+  SFX.poof({ x: e.x, y: e.y, boss: e.isBoss });
   hitstop(e.isBoss ? 160 : 55);
   shake(e.isBoss ? 0.7 : 0.22);
-  vibrate(e.isBoss ? [60, 40, 90] : 25);
+  if (e.isBoss) haptic("bossKill");
   // Münz-Explosion
   const nC = e.isKing ? 40 : e.isBoss ? 16 : randi(1, 3);
   for (let k = 0; k < nC; k++) G.items.push(flyItem("coin", e.x, e.y));
@@ -242,11 +242,11 @@ export function killEnt(e) {
     flash("#fff6c0", 0.6);
     if (e.isKing) {
       H().banner("GESCHAFFT!", "👑 Der Kellerkönig ist besiegt!", "win");
-      SFX.victory();
+      SFX.bossWin();
       setTimeout(() => winGame("boss"), 1500);
     } else {
       H().toast("👑 " + e.name + " ist besiegt! Die Treppe wartet …");
-      SFX.levelup();
+      SFX.bossWin();
     }
     // restliche Gegner der Arena verpuffen freundlich
     for (const o of G.ents.slice()) if (o.minion) { P.poof(o.x, o.y); const j = G.ents.indexOf(o); if (j >= 0) G.ents.splice(j, 1); }
@@ -269,7 +269,7 @@ export function gainXp(n) {
     H().toast("⭐ Level " + p.lvl + "! ❤️+2 · ⚔️+0,5" + (bub ? " · 🫧+1 Blase" : ""));
     text(p.x, p.y, "⭐ LEVEL " + p.lvl + "!", "#fff38a", 30, 110);
     SFX.levelup(); P.levelUp(p.x, p.y);
-    vibrate([20, 30, 20]);
+    haptic("levelup");
   }
 }
 
@@ -285,25 +285,25 @@ function flyItem(kind, x, y, v) {
 function pickup(it) {
   const p = G.p;
   switch (it.kind) {
-    case "coin": G.gold++; SFX.coin(); P.coinPick(it.x, it.y); return true;
-    case "potion": p.potions++; SFX.pickup(); H().toast("🧪 Trank eingesackt! (" + p.potions + ")"); P.sparkle(it.x, it.y, "#ff8fb8", 6); return true;
+    case "coin": G.gold++; SFX.coin(); haptic("coin"); P.coinPick(it.x, it.y); return true;
+    case "potion": p.potions++; SFX.pickup(); haptic("pickup"); H().toast("🧪 Trank eingesackt! (" + p.potions + ")"); P.sparkle(it.x, it.y, "#ff8fb8", 6); return true;
     case "mushroom":
       if (p.hp < p.maxHp) { p.hp = Math.min(p.maxHp, p.hp + 2); P.heal(p.x, p.y); SFX.heal(); text(p.x, p.y, "+2 ❤️", "#ff8fb8", 20, 90); }
       else { p.shrooms++; SFX.pickup(); H().toast("🍄 Glitzerpilz in den Rucksack! (" + p.shrooms + ")"); }
       return true;
     case "sword": {
       const before = weaponOf(p.atk).name;
-      p.atk += 1; SFX.pickup(); P.sparkle(it.x, it.y, "#ffd75e", 14, 40);
+      p.atk += 1; SFX.pickup(); haptic("pickup"); P.sparkle(it.x, it.y, "#ffd75e", 14, 40);
       const w = weaponOf(p.atk);
       H().toast(w.name !== before ? "⚔️ NEUE WAFFE: " + w.name + "! (Schaden " + fmt(p.atk) + ")" : "⚔️ Schärfer! Schaden +1 (jetzt " + fmt(p.atk) + ")");
       save(); return true;
     }
-    case "wand": p.projN++; SFX.pickup(); P.sparkle(it.x, it.y, "#9be1ff", 14, 40); H().toast("🪄 Zauberstab! " + p.projN + " Seifenblasen auf einmal!"); save(); return true;
-    case "gem": p.magic++; SFX.pickup(); P.sparkle(it.x, it.y, "#d9b3ff", 14, 40); H().toast("✨ Glitzerstein! Blasen-Schaden +1"); save(); return true;
+    case "wand": p.projN++; SFX.pickup(); haptic("pickup"); P.sparkle(it.x, it.y, "#9be1ff", 14, 40); H().toast("🪄 Zauberstab! " + p.projN + " Seifenblasen auf einmal!"); save(); return true;
+    case "gem": p.magic++; SFX.pickup(); haptic("pickup"); P.sparkle(it.x, it.y, "#d9b3ff", 14, 40); H().toast("✨ Glitzerstein! Blasen-Schaden +1"); save(); return true;
     case "hat": {
       const h = it.v;
       if (!p.hats.includes(h)) { p.hats.push(h); p.maxHp += 2; p.hp = p.maxHp; }
-      p.hat = h; SFX.levelup(); P.levelUp(p.x, p.y);
+      p.hat = h; SFX.levelup(); P.levelUp(p.x, p.y); haptic("levelup");
       H().toast(HATS[h].emoji + " " + HATS[h].name + "! Sieht super aus · ❤️+2"); save(); return true;
     }
   }
@@ -318,7 +318,7 @@ export function attack() {
   const p = G.p;
   if (!playing() || p.atkCd > 0) return false;
   p.atkCd = PLAYER.atkCd; p.spinT = 0.28; p.pendingSwing = 0.07;
-  p.sq = 0.12; SFX.swing();
+  p.sq = 0.12; SFX.swing({ tier: ["stick", "wood", "crystal", "star", "rainbow"].indexOf(weaponOf(p.atk).key) });
   G.tutFlags.attack = true;
   return true;
 }
@@ -326,7 +326,7 @@ function doSwing() {
   const p = G.p;
   const R = PLAYER.atkRadius + (p.atk > 6 ? 0.6 : 0);
   ring(p.x, p.y, R, "#fff6d0", 0.32, 1.1);
-  let hits = 0, kills = 0;
+  let hits = 0, kills = 0, crits = 0, heavy = false;
   for (const e of G.ents.slice()) {
     const d = Math.hypot(e.x - p.x, e.y - p.y);
     if (d < R + e.r * 0.5) {
@@ -334,19 +334,20 @@ function doSwing() {
       const dx = (e.x - p.x) / (d || 1), dy = (e.y - p.y) / (d || 1);
       const before = G.ents.length;
       hurtEnt(e, p.atk * (crit ? 2 : 1), dx, dy, crit);
-      hits++; if (G.ents.length < before) kills++;
+      hits++; if (G.ents.length < before) kills++; if (crit) crits++; if (p.atk * (crit ? 2 : 1) >= 6) heavy = true;
     }
   }
   for (const pr of G.L.props) if (pr.kind === "pot" && !pr.broken && Math.hypot(pr.x - p.x, pr.y - p.y) < R) breakPot(pr);
   if (hits) {
-    hitstop(kills ? 70 : 45); shake(0.14 + Math.min(0.2, hits * 0.04)); vibrate(15);
+    hitstop(kills ? 70 : 45); shake(0.14 + Math.min(0.2, hits * 0.04));
+    haptic(crits ? "crit" : kills ? "kill" : heavy ? "heavy" : "hit");
     FX.zoomPunch = Math.max(FX.zoomPunch, 0.35);
   }
 }
 function breakPot(pr) {
   pr.broken = true;
   const i = G.L.props.indexOf(pr); if (i >= 0) G.L.props.splice(i, 1);
-  P.poof(pr.x, pr.y, "#e8c090"); SFX.pot();
+  P.poof(pr.x, pr.y, "#e8c090"); SFX.pot({ x: pr.x, y: pr.y });
   burst(pr.x, pr.y, 8, { kind: "dot", col: "#c98a5a", add: false, s0: 7, s1: 3, sp0: 1, sp1: 3, z: 14, vz0: 80, vz1: 200, g: -500, l0: 0.4, l1: 0.7, bounce: 0.3 });
   const n = Math.random() < 0.6 ? randi(1, 3) : 0;
   for (let k = 0; k < n; k++) G.items.push(flyItem("coin", pr.x, pr.y));
@@ -387,7 +388,7 @@ export function dodge() {
   p.dashT = PLAYER.dashTime; p.dashDx = dx; p.dashDy = dy; p.dashCd = PLAYER.dashCd;
   p.invulT = Math.max(p.invulT, PLAYER.dashInvul);
   p.path = null; p.foe = null; p.sq = -0.25;
-  SFX.dodge(); vibrate(10);
+  SFX.dodge(); haptic("dodge");
   for (let k = 0; k < 6; k++) P.dust(p.x, p.y, "#f0e6ff");
   G.tutFlags.dodge = true;
   return true;
@@ -416,7 +417,7 @@ function playerHurt(dmg, fromX, fromY) {
   const p = G.p;
   if (!p || p.invulT > 0 || G.screen !== "play" || G.god) return;
   p.hp -= dmg; p.hurtT = 0.35; p.flashT = 0.1; p.invulT = PLAYER.hurtInvul; p.blinkT = PLAYER.hurtInvul; p.sq = 0.25;
-  FX.hurtA = 0.55; shake(0.38); hitstop(60); vibrate(45);
+  FX.hurtA = 0.55; shake(0.38); hitstop(60); haptic("hurt");
   SFX.hurt();
   text(p.x, p.y, "-" + fmt(dmg), "#ff6f8a", 22, 100);
   burst(p.x, p.y, 8, { kind: "heart", col: "#ff5d73", add: false, s0: 10, s1: 2, sp0: 1, sp1: 2.5, z: 40, vz0: 60, vz1: 160, g: -400, l0: 0.4, l1: 0.7 });
@@ -426,7 +427,7 @@ function playerHurt(dmg, fromX, fromY) {
 function die() {
   const p = G.p;
   p.hp = 0; G.screen = "dead";
-  SFX.die(); P.poof(p.x, p.y, "#ff9ab8", true); vibrate([80, 60, 80]);
+  SFX.die(); P.poof(p.x, p.y, "#ff9ab8", true); haptic("die");
   H().dead();
 }
 export function reviveInTown() {
@@ -448,7 +449,7 @@ export function winGame(how) {
   G.prof.won = true;
   save();
   G.screen = "win";
-  SFX.victory(); flash("#fff6c0", 0.8);
+  SFX.victory(); flash("#fff6c0", 0.8); haptic("win");
   for (let k = 0; k < 4; k++) setTimeout(() => P.levelUp(p.x + rand(-2, 2), p.y + rand(-2, 2)), k * 250);
   H().win(rec, hall);
 }
@@ -606,27 +607,27 @@ function triggers(dt) {
   if (L.portals) for (const po of L.portals) {
     if (Math.hypot(po.x - p.x, po.y - p.y) < 0.75) {
       if (po.locked) { if (G.lockToastT <= 0) { H().toast("🔒 Dieses Portal öffnet sich, wenn du Ebene " + po.depth + " erreicht hast!"); G.lockToastT = 3; } }
-      else { G.portalCd = 2; G.runFrom = po.depth; G.runSecs = 0; SFX.portal(); P.levelUp(po.x, po.y); enterLevel(po.depth); G.tutFlags.portal = true; if (G.tutStep >= 0) finishTut(); return; }
+      else { G.portalCd = 2; G.runFrom = po.depth; G.runSecs = 0; SFX.portal(); haptic("stairs"); P.levelUp(po.x, po.y); enterLevel(po.depth); G.tutFlags.portal = true; if (G.tutStep >= 0) finishTut(); return; }
     }
   }
   // Heimportal (erst nach Verlassen scharf)
   if (L.homePortal) {
     const d = Math.hypot(L.homePortal.x - p.x, L.homePortal.y - p.y);
     if (d > 1.6) L.homeArmed = true;
-    if (L.homeArmed && d < 0.6) { G.portalCd = 2; SFX.portal(); enterLevel(0); return; }
+    if (L.homeArmed && d < 0.6) { G.portalCd = 2; SFX.portal(); haptic("stairs"); enterLevel(0); return; }
   }
   // Treppe / 20. Portal
   if (L.stairs && Math.hypot(L.stairs.x - p.x, L.stairs.y - p.y) < 0.6) {
     G.portalCd = 2;
     if (G.depth >= MAX_DEPTH) { SFX.portal(); winGame("portal"); }
-    else { SFX.stairs(); enterLevel(G.depth + 1); }
+    else { SFX.stairs(); haptic("stairs"); enterLevel(G.depth + 1); }
   }
   // Truhen
   for (const pr of L.props) if (pr.kind === "chest" && !pr.open && Math.hypot(pr.x - p.x, pr.y - p.y) < 0.95) openChest(pr);
 }
 function openChest(pr) {
   pr.open = true;
-  SFX.chest(); shake(0.2); vibrate(20);
+  SFX.chest({ x: pr.x, y: pr.y }); shake(0.2); haptic("chest");
   P.sparkle(pr.x, pr.y, "#ffe36e", 14, 30); part({ x: pr.x, y: pr.y, z: 20, kind: "glow", col: "#ffd75e", s0: 120, s1: 30, life: 0.5 });
   const n = randi(8, 14);
   for (let k = 0; k < n; k++) G.items.push(flyItem("coin", pr.x, pr.y));
@@ -676,15 +677,15 @@ function updateShots(dt) {
       for (const e of G.ents) if (Math.hypot(e.x - s.x, e.y - s.y) < 0.45 + e.r * 0.6) { pop = true; break; }
       if (!pop && Math.random() < 0.3) part({ x: s.x, y: s.y, z: s.z, kind: "dot", col: "#dff6ff", s0: 5, s1: 0, life: 0.3, g: 0 });
       if (pop) {
-        P.bubblePop(s.x, s.y); SFX.pop();
+        P.bubblePop(s.x, s.y); SFX.pop({ x: s.x, y: s.y });
         const R = 1.25 * s.size;
         let hit = false;
         for (const e of G.ents.slice()) {
           const d = Math.hypot(e.x - s.x, e.y - s.y);
-          if (d < R + e.r * 0.5) { hurtEnt(e, s.dmg, (e.x - s.x) / (d || 1) * 0.5, (e.y - s.y) / (d || 1) * 0.5); hit = true; }
+          if (d < R + e.r * 0.5) { hurtEnt(e, s.dmg, (e.x - s.x) / (d || 1) * 0.5, (e.y - s.y) / (d || 1) * 0.5, false, "bubble"); hit = true; }
         }
         for (const pr of G.L.props) if (pr.kind === "pot" && Math.hypot(pr.x - s.x, pr.y - s.y) < R) { breakPot(pr); break; }
-        if (hit) { hitstop(30); shake(0.08); }
+        if (hit) { hitstop(30); shake(0.08); haptic("hitL"); }
         G.shots.splice(i, 1);
       }
     } else {
@@ -872,7 +873,7 @@ function strike(e) {
       const fire = e.type === "flamme";
       const sp = fire ? 3.8 : 3.2;
       G.shots.push({ kind: fire ? "fire" : "orb", x: e.x, y: e.y, z: 34, vx: dx / d * sp, vy: dy / d * sp, life: 3, t: 0, col: fire ? "#ff9a3a" : (e.tint || "#8fe9ff"), dmg: e.dmg });
-      SFX.shoot(); e.sq = -0.2; e.state = "recover"; e.st = 0.3; e.atkCd = (e.tame ? 3 : 2.2) + Math.random();
+      SFX.shoot({ x: e.x, y: e.y, fire }); e.sq = -0.2; e.state = "recover"; e.st = 0.3; e.atkCd = (e.tame ? 3 : 2.2) + Math.random();
       break;
     }
   }
@@ -882,7 +883,7 @@ function strike(e) {
 function wakeBoss(e) {
   if (e.awake) return;
   e.awake = true; e.state = "chase"; e.st = 1.4;
-  SFX.boss(); shake(0.45); vibrate([50, 40, 50]);
+  SFX.boss({ x: e.x, y: e.y }); shake(0.45); haptic("boss");
   text(e.x, e.y, "❗", "#ff5d73", 34, 200 * e.scale / 1.75);
   H().banner(e.isKing ? "KELLERKÖNIG" : BOSS_NAMES[G.biome].toUpperCase(), e.isKing ? "👑🔥 Herrscher des Koboldkellers" : "👑 der Boss-Kobold ist erwacht!", "boss");
   H().boss(e);
@@ -902,17 +903,17 @@ function bossAI(e, dt) {
       if (e.st <= 0) {
         e.cycle++; e.moving = false;
         const minions = G.ents.filter(o => o.minion).length;
-        if (d < RS - 0.4) { e.state = "spinWind"; e.st = e.stMax = 0.85 * fast; G.teles.push({ x: e.x, y: e.y, r: RS, t: 0, max: e.st, follow: e }); SFX.tele(); }
+        if (d < RS - 0.4) { e.state = "spinWind"; e.st = e.stMax = 0.85 * fast; G.teles.push({ x: e.x, y: e.y, r: RS, t: 0, max: e.st, follow: e }); SFX.tele({ x: e.x, y: e.y }); }
         else if (e.cycle % 4 === 3 && minions < 4) { e.state = "summon"; e.st = 0.6; }
-        else if (e.isKing && e.cycle % 2 === 1) { e.state = "fireWind"; e.st = e.stMax = 0.9 * fast; SFX.tele(); }
-        else { e.state = "slamWind"; e.st = 0.35 * fast; e.jx = p.x; e.jy = p.y; e.jt = 0; G.teles.push({ x: p.x, y: p.y, r: RJ, t: 0, max: 0.35 * fast + 0.7 }); SFX.tele(); }
+        else if (e.isKing && e.cycle % 2 === 1) { e.state = "fireWind"; e.st = e.stMax = 0.9 * fast; SFX.tele({ x: e.x, y: e.y }); }
+        else { e.state = "slamWind"; e.st = 0.35 * fast; e.jx = p.x; e.jy = p.y; e.jt = 0; G.teles.push({ x: p.x, y: p.y, r: RJ, t: 0, max: 0.35 * fast + 0.7 }); SFX.tele({ x: e.x, y: e.y }); }
       }
       break;
     }
     case "spinWind":
       e.st -= dt; e.tele = 1 - e.st / e.stMax; e.sq = 0.1 * e.tele;
       if (e.st <= 0) {
-        e.state = "spin"; e.st = 0.5; e.tele = 0; SFX.swing(); SFX.slam(); shake(0.3);
+        e.state = "spin"; e.st = 0.5; e.tele = 0; SFX.swing({ x: e.x, y: e.y, big: true }); SFX.slam({ x: e.x, y: e.y }); shake(0.3); haptic("slam");
         ring(e.x, e.y, RS, "#ffd0e0", 0.4, 1.6);
         if (Math.hypot(p.x - e.x, p.y - e.y) < RS + 0.2) playerHurt(e.dmg, e.x, e.y);
       }
@@ -932,7 +933,7 @@ function bossAI(e, dt) {
       e.z = Math.sin(Math.PI * k) * (e.isKing ? 160 : 120);
       if (e.st <= 0) {
         e.z = 0; e.state = "recover"; e.st = 1.0; e.sq = 0.35;
-        SFX.slam(); shake(0.6); vibrate(40); FX.zoomPunch = 0.8;
+        SFX.slam({ x: e.x, y: e.y }); shake(0.6); haptic("slam"); FX.zoomPunch = 0.8;
         ring(e.x, e.y, RJ, "#fff0d0", 0.45, 1.8);
         burst(e.x, e.y, 18, { kind: "puff", col: "#ffffff", add: false, s0: 26, s1: 6, sp0: 1.5, sp1: 4, z: 6, vz0: 10, vz1: 60, g: 0, drag: 3, l0: 0.4, l1: 0.8, fade: 0.8 });
         if (Math.hypot(p.x - e.x, p.y - e.y) < RJ + 0.2) playerHurt(e.dmg, e.x, e.y);
@@ -945,7 +946,7 @@ function bossAI(e, dt) {
       if (e.st <= 0) {
         e.tele = 0; const n = G.mega ? 16 : 12, off = Math.random() * TAU;
         for (let k = 0; k < n; k++) { const a = off + k * TAU / n; G.shots.push({ kind: "fire", x: e.x, y: e.y, z: 60, vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2, life: 3.2, t: 0, col: "#ff8a3a", dmg: Math.max(1, e.dmg - 1) }); }
-        SFX.shoot(); SFX.slam(); shake(0.3); e.state = "recover"; e.st = 1.0;
+        SFX.shoot({ x: e.x, y: e.y, fire: true }); SFX.slam({ x: e.x, y: e.y }); shake(0.3); haptic("slam"); e.state = "recover"; e.st = 1.0;
       }
       break;
     case "summon": {
@@ -958,7 +959,7 @@ function bossAI(e, dt) {
           const mi = makeEnt(weighted(pool), f.x, f.y); mi.minion = true; mi.state = "chase"; mi.xp = Math.ceil(mi.xp / 2);
           G.ents.push(mi); P.poof(f.x, f.y, "#c9a0ff");
         }
-        SFX.poof(); e.state = "recover"; e.st = 0.6;
+        SFX.poof({ x: e.x, y: e.y }); e.state = "recover"; e.st = 0.6;
       }
       break;
     }

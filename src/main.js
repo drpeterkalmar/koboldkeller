@@ -3,7 +3,7 @@ import { VERSION, SPECIES, PLAYER, MAX_DEPTH } from "./config.js";
 import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, killEnt, winGame, makeEnt, gainXp, finishTut } from "./game.js";
 import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality } from "./render.js";
 import { FX, updateFx } from "./fx.js";
-import { AUDIO, unlockAudio, suspendAudio } from "./audio.js";
+import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
 import { hardenTouch, wakeLock, watchVisibility } from "./platform.js";
 import { sanitize } from "./save.js";
 import { IN, initInput, resetInput } from "./input.js";
@@ -16,6 +16,8 @@ let last = performance.now();
 let jsU = 0, jsD = 0, jsN = 0;
 hardenTouch();
 initRender(cv);
+// Effekte/Instrumente/Stadtmelodie schon im Menü vor-rendern (OfflineAudioContext braucht keine Geste)
+setTimeout(initAudio, 250);
 
 // ---------- Hooks game → UI/Render ----------
 G.hooks = {
@@ -116,6 +118,7 @@ function frame(now) {
   const t1 = performance.now();
   UI.hud(rd);
   draw(G, rd);
+  audioFrame(G, rd);
   const t2 = performance.now();
   jsU += t1 - t0; jsD += t2 - t1; jsN++;
   adapt(rd);
@@ -158,6 +161,7 @@ window.KK = {
   give: (kind, n = 1) => { const p = G.p; for (let i = 0; i < n; i++) { if (kind === "gold") G.gold++; else if (kind === "xp") gainXp(1); else if (kind === "sword") p.atk++; else if (kind === "wand") p.projN++; else if (kind === "gem") p.magic++; else if (kind === "potion") p.potions++; else if (kind === "hat") { p.hats.push(n); p.hat = n; break; } } return window.KK.state(); },
   attack, bubbles, dodge, potion,
   spawn: (type, dx = 1.5, dy = 0) => { const e = makeEnt(type, G.p.x + dx, G.p.y + dy); G.ents.push(e); return e.hp; },
+  audio: () => audioStats(),
   perf: (reset) => { if (reset) perfReset(); return perfStats(); },
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },
   quality: (q) => { if (q !== undefined) setQuality(q); return R.q; },
