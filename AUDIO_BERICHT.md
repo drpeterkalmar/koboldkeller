@@ -1,5 +1,7 @@
 # Koboldkeller 2 · v3 — Klang & Haptik (Bericht)
 
+> **v4:** neue Welt-Musiken, Stadt Tag/Abend, Boss-Themen je Welt — Aufbau und Messwerte siehe [V4_BERICHT.md](V4_BERICHT.md).
+
 Stand: 26.09.2026 · Live: https://drpeterkalmar.github.io/koboldkeller/ (Startmenü zeigt „v3")
 
 ## Was ist neu
