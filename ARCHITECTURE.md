@@ -41,18 +41,19 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 |---|---|
 | `index.html` | DOM-Overlays (Menüs, HUD, Buttons), CSS, Import-Map, `window.KK_VER` |
 | `src/main.js` | Boot, Game-Loop (rAF, dt-Clamp, Hit-Stop/Zeitlupe), Screen-Wechsel |
-| `src/config.js` | Konstanten, Version, Spezies, Biome, Gegner-Tabellen, Namen |
+| `src/config.js` | Konstanten, Version, Spezies + Editor-Optionen, Biome, **Ebenen-Namen/-Farben (`LEVELS`)**, **Schwierigkeitskurve (`DIFF`)**, Bosse, Obergrenzen (`CAP`), Munition, Talente, Gegner-Tabellen |
 | `src/rng.js` | mulberry32, Hilfsfunktionen |
 | `src/world.js` | Stadt- und Dungeon-Generator, Kollision, BFS + Pfadglättung, freie Plätze |
 | `src/art.js` | Prozedurale Sprites (Kobolde, Gegner, Bosse, Items, Kacheln, Wände, Props, FX) + Cache |
 | `src/render.js` | Kamera, Iso-Projektion, Chunk-Cache, sortiertes Zeichnen, Licht, Post-FX |
 | `src/fx.js` | Partikel-Pool, Screenshake (Trauma), Hit-Stop, Schadenszahlen, Blitze |
-| `src/game.js` | Zustand, Spieler, Gegner-KI, Kampf, Loot, Level-Aufbau, Fortschritt, Sieg |
+| `src/game.js` | Zustand, Spieler (Talente, Munition, Spezial), Gegner-KI (Elite, neue Muster), Kampf, Loot + Obergrenzen, Magnet, Fallen, Level-Aufbau, Heim-Portal, Sieg |
+| `src/boss.js` | Bosse: Intro, 3 Phasen, Signatur-Angriffe je Welt (Warnkreise/-linien), Arena-Effekte, Sieg-Spektakel |
 | `src/input.js` | Tap-to-Move, Halten-Folgen, virtueller Joystick, Tastatur |
-| `src/ui.js` | Menüs, Charakterwahl, HUD, Toasts, Rucksack, Ehrenhall, Tutorial-Blasen |
+| `src/ui.js` | Menüs, Charakter-Editor (Live-Vorschau), HUD (Munition, Spezial, Talentpunkte), Toasts, Rucksack mit Talenten, Ehrenhall, Tutorial, Boss-Karte |
 | `src/audio.js` | Audio-Engine: Vor-Rendern, Busse/Mastering, Hall, Stimmen-Verwaltung, Ambience, SFX-API, Unlock, Mute |
 | `src/sfxlib.js` | Klang-Rezepte (Effekte, Instrumente, Ambience) für das einmalige Offline-Rendern |
-| `src/music.js` | Adaptive Musik: Look-ahead-Scheduler, Akkordkarte der Stadtmelodie, Biom-/Kampf-/Boss-Schichten, Stinger |
+| `src/music.js` | Adaptive Musik: Abschnitts-Scheduler mit Tempo je Abschnitt, Welt-Songs (Tonart/Akkorde/Melodien A/B), Leitmotiv-Zwischenspiele, Stadt Tag/Abend, Kampf-/Boss-Schichten, Stinger in laufender Tonart |
 | `src/save.js` | Save/Load, v20-Migration, Ehrenhall (`koboldkeller_hall_v1` weitergenutzt) |
 | `src/platform.js` | Vollbild, Wake-Lock, Vibration, Sichtbarkeit, Kontextmenü-Sperre |
 | `tools/check.mjs` | Playwright-Testlauf (Flow, Screenshots, FPS, Fehler) |
@@ -64,7 +65,9 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 
 Datenfluss: `input` → Befehle an `game` → `game.update(dt)` → `fx` → `render.draw(state)`;
 `ui` liest den Zustand (HUD nur bei Änderung neu schreiben). `game` kennt UI/Render nur über
-`G.hooks` (toast, banner, level, boss, win, dead, tut, fade, saved) — verdrahtet in `main.js`.
+`G.hooks` (toast, banner, level, boss, bossIntro, editor, win, dead, tut, fade, saved) — verdrahtet in `main.js`.
+Zeitversetzte Spiel-Ereignisse (Konfetti-Wellen, Münzregen, Boss-Helfer) laufen über `later(sec, fn)` in Spielzeit
+(stehen in Pause/Hit-Stop still).
 
 Juice-Bausteine: Hit-Stop (`FX.hitstop`, Welt steht, Kamera/Shake laufen), Zeitlupe beim Boss-Kill,
 Trauma-Screenshake, Zoom-Punch, Squash & Stretch per Feder, Treffer-Blitz (weiße Silhouette aus dem
@@ -75,9 +78,13 @@ der Bosse (bekommen eigenes Licht, Rand über den Figuren), Titelkarten für Wel
 `G = { screen, depth, biome, map, ents[], items[], shots[], props[], p (Spieler), gold, run, … }`
 Screens: `menu → create → play ⇄ pause/bag/hall → dead → play`, `win`.
 
-## Save-Format (`koboldkeller2_save`)
-`{ v:1, name, species, lvl, xp, xpNext, maxHp, hp, atk, projN, magic, gold, potions, shrooms,
-hats[], hat, deepest, depth, mega, tut, runSecs, won, seed }` — Position wird **nicht** gespeichert.
+## Save-Format (`koboldkeller2_save`, v4 = `v:2`)
+`{ v:2, name, species, look{species,skin,outfit,eye,hair,style,earsV,acc}, lvl, xp, xpNext, maxHp (Grundwert ohne Talente), hp,
+atk (Grundwert), projN, magic, gold, potions, ammo, spec (0…1), sk{kraft,leben,tempo,blasen,magnet}, skPts,
+hats[], hat, deepest, depth, mega, tut, runSecs, won, seed, kills, capNote, giftNote }` — Position wird **nicht** gespeichert.
+**Migration v3 → v4** (`sanitize`, alles mit `v < 2`, also auch v20-Umzüge): Pilze → Spezial-Ladung (3 = voll), Überzähliges über
+den Obergrenzen (Max-❤️ > 60, Tränke > 5, Pilze über voller Leiste) → Gold (`capNote`, einmaliger Toast „Dein Rucksack war zu voll …"),
+bisherige Level → Talentpunkte als Willkommensgeschenk (`giftNote`). Nichts, was sichtbar war, geht verloren.
 Migration: existiert nur `koboldkeller_save_v1` (v20), werden Name, Look (Spezies), Level, Gold,
 Waffenwerte, tiefste Ebene übernommen + Geschenk (Veteranen-Hut). Der alte Key bleibt unangetastet.
 Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompatibel mit v20).
@@ -100,7 +107,22 @@ Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompa
 | `KK.speed(k)` | Zeitraffer (k Update-Schritte pro Frame, nur für Bot/Tests) |
 | `KK.quality(q)` | Render-Qualitätsstufe 0–3 setzen (Scale 1 · 0.8 · 0.65 · 0.5 × DPR) |
 
-## Audio (v3)
+## Spielregeln v4 (Überblick)
+- **Munition:** `bubbles()` kostet 1 🫧 pro Schuss (egal wie viele Blasen); `gainAmmo` bei jedem Kill (normal 2, Elite 4, Boss 12,
+  König 20, Strohwichtel 1). Voll → +1 🪙 statt Verfall. Leer → Knopf grau, sanfter „plopp", Hinweis-Toast höchstens alle 6 s.
+- **Obergrenzen (`CAP`)**: Max-❤️ 60 (Level, Hüte, Talent), 🧪 5, 🫧 20 + 4 je Blasen-Talent (max. 60). Pickups über der Grenze → 🪙.
+- **Spezial:** 🍄 lädt ⅓ der Leiste. `special()` → 0,42 s Aufladen (Zeitlupe, unverwundbar) → Welle Radius 5,5, Schaden 4·⚔️+6,
+  löst feindliche Geschosse auf. Stil je Tierart (`SPECIAL_STYLE`), Klang je Stil (`special`-Varianten).
+- **Magnet:** Münzen 3,5, Sachen 2,5 Kacheln (+0,35 je 🧲), Zug weich am Rand, schnell in der Nähe, gleitet an Wänden entlang.
+- **Heim-Portal:** `G.homeHideT = 20` nach jedem Betreten; nur in echter Spielzeit (Pause/Rucksack/Editor zählen nicht). Versteckt =
+  nicht gezeichnet, kein Licht/Label/Minikarte, kein Auslösen, kein Tap-Einrasten. Danach Einblenden + leiser Klang; scharf erst nach
+  Entfernen (> 1,6 Kacheln).
+- **Schwierigkeit:** `DIFF[tiefe]` (Anzahl, Leben, Schaden, Tempo, Angriffspause, Elite-Chance, Fallen, Raumgröße, neue Muster).
+- **Bosse (`boss.js`):** Zustände sleep → intro (Kamera-Schwenk, Titelkarte, 1,9 s unverwundbar) → chase ⇄ atk/recover; Phasenwechsel
+  bei 66 %/33 % (räumt Warnungen ab, Schockwelle schiebt weg, Banner, Stinger). Angriffe legen Warnungen (`G.teles`: Kreis oder Linie,
+  mit Verzögerung) an; Schaden entsteht erst am Ende einer Warnung.
+
+## Audio (v3/v4)
 **Grundregel (Lehre aus v13):** Zur Laufzeit wird **nichts** synthetisiert. Jeder Effekt = `AudioBufferSourceNode` → `GainNode`
 (→ `StereoPannerNode`). Alle Klänge entstehen einmalig per **OfflineAudioContext** aus Rezepten in `src/sfxlib.js`.
 
@@ -140,8 +162,15 @@ Ambience ─► ambLvl ─► (ambSend ─► Hall) ─────────�
   ±1,2 dB Pegel-Streuung. Räumlich: Panorama nach Bildschirm-x (Iso `x−y`), leichte Dämpfung ab 2,5 Kacheln Abstand.
 - Knoten werden in `ended` getrennt und aus der Liste entfernt (idempotent). Beleg: `node tools/bot.mjs 8731 20 4 --secs=120 --audio`.
 
-### Musik-Scheduler (`src/music.js`)
-- Uhr = `AudioContext.currentTime`. `setInterval(50 ms)` weckt nur; geplant wird 300 ms voraus, 16tel-genau.
+### Musik-Scheduler (`src/music.js`, v4)
+- Uhr = `AudioContext.currentTime`. `setInterval(50 ms)` weckt nur; geplant wird 300 ms voraus, 16tel-genau. Die Musik besteht aus
+  **Abschnitten** mit eigenem Tempo (`sec.bpm`), Tempowechsel nur an Abschnittsgrenzen; Orts-/Boss-Wechsel an der nächsten Takt-Eins.
+- **Welten** (`WORLDS`): Moos F-Dur 84 BPM (Flöte/Celesta/Kalimba) · Kristall a-Moll 96 (Celesta/Lead/Kristall) · Zucker C-Dur 108
+  (Flöte/Spieluhr) · Frost D-Dur 76 (Glocke/Flöte/Harfe) · Glut g-Moll 92 (Flöte/Lead/Marimba). Form: Intro · A · A' · B · A'' (Takt 5 =
+  Stadt-Motiv) · Pause, jeder 2. Durchgang + 8 Takte Stadtaufnahme im Höhlenklang (wechselnde Stelle). Noten als Stufen-Notation.
+- **Stadt:** Aufnahme (28 Takte) ⇄ Zwischenspiel über das Motiv; 18–7 Uhr „Abend": Aufnahme gedämpft + Pad + Spieluhr.
+- **Boss:** Vorlage in c-Moll, je Welt transponiert (Tempo/Lead/Verdopplung eigen), A/B-Teil, Wut-Phase +8 % Tempo + Rhythmus-Schicht.
+- Die folgenden v3-Punkte gelten weiter:
 - Vermessene Stadtmelodie: **Es-Dur, 90 BPM, 4/4, 28 Takte**. Pro Halbtakt sind Basston und die tatsächlich klingenden
   Tonklassen hinterlegt (FFT-Chroma-Analyse); Schichten spielen nur diese Töne (ohne kleine None/Tritonus zum Bass).
 - **Stadt:** Aufnahme pur. **Keller:** Aufnahme leiser + Tiefpass („Höhlenklang") + Biom-Pad + Biom-Ornament

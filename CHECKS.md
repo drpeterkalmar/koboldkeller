@@ -22,6 +22,8 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | A13 | Kaputte Saves | Müll in allen `koboldkeller*`-Keys ⇒ kein Absturz, Menü erscheint | ja |
 | A14 | Querformat 915×412 | Flow läuft, Buttons sichtbar, kein Überlappen HUD/Buttons | ja |
 | A15 | Effekt-Dauerfeuer vs. Effekte aus (Kampfszene, Throttle 4×, 3 A/B-Paare, Median) | FPS-Differenz + Main-Thread-ms der Audio-Engine | < 5 %, FPS ≥ 45 |
+| A3b | Boss-Kampf Kellerkönig in Wut-Phase mit allen Effekten, CPU-Throttle 4× | wie A2 | ≥ 45 |
+| A14b | Querformat: Munition + Spezial-Leiste + ✨-Knopf sichtbar, kein Überlappen | Bounding-Boxen | ja |
 | A16 | Vor-Rendern im Menü | Dauer, längster Main-Thread-Happen, längster Menü-Frame währenddessen | Happen < 16 ms, Frame < 50 ms, < 12 s |
 
 ## D — Audio (Skripte)
@@ -31,6 +33,23 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | D2 | Pegel (`tools/audiorender.mjs`, ffmpeg ebur128) | Gesamtmix Kampf LUFS integriert, True-Peak je Zustand | ≈ −16 LUFS, < −1 dBTP |
 | D3 | Kein Dröhn-Bass | Anteil < 80 Hz je Musikzustand (RMS relativ) | ≤ −30 dB |
 | D4 | Knoten-Leck (`tools/bot.mjs … --secs=120 --audio`) | aktive Stimmen über 2 min, offen == aktiv | kein Wachstum |
+
+| D5 | Musik je Welt (`check.mjs`) | Stadt = Leitmotiv-Aufnahme, 5 Welten mit verschiedener Tonart + Tempo | ja |
+
+## V — v4-Wünsche (automatisch, `check.mjs`, Screenshots in `shots/neubau/v4/`)
+| # | Check | Ziel |
+|---|---|---|
+| V1 | Munition: 1 Schuss = 1 🫧 bei 3 Blasen, Kill +2 / Elite +4 / Boss +12, voll → +1 🪙 + „VOLL", leer = Knopf grau + genau 1 Hinweis, Schwert unbegrenzt | ja |
+| V2 | Obergrenzen: 🧪 5 (Extra → +10 🪙), ❤️-Pickup bei voll → +2 🪙, Max-❤️ 60, Leben-Talent sperrt | ja |
+| V3 | Magnet: Münze 3,5 / Sachen 2,5 Kacheln (innen wird angezogen, außen nicht), 🧲 vergrößert | ja |
+| V4 | Editor: 10 Frisuren für alle 8 Tierarten, Frisurwechsel ändert die Vorschau, Spiegel öffnet Editor, Aussehen im Spiel + gespeichert | ja |
+| V5 | Talente wirken (💪 +0,5, ❤️ +2, 🫧 +4, 👟 +5 %), Rucksack-„+", Umverteilen nur in der Stadt | ja |
+| V6 | 3 Pilze → Spezial voll, Pilze heilen nicht, ✨ leuchtet, Flächenangriff trifft nah, nicht fern | ja |
+| V7 | 20 eindeutige Ebenen-Namen (Titelkarte + HUD), 20 verschiedene Paletten, Screenshot jeder Ebene | ja |
+| V8 | Jeder Boss: Phasen 1→2→3, Signatur-Angriffe erzeugen Warnkreise/-linien, Screenshot je Phase | ja |
+| V9 | v3-Spielstand → v4: nichts verloren, Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte, Datei v2 | ja |
+| V10 | Heim-Portal 20 s weg (nicht auslösbar, Pause friert Timer), danach sichtbar, erst nach Weggehen/Zurück → Stadt | ja |
+| Bot | `tools/bot.mjs … [--mega]`: Schwierigkeitskurve pro Ebene (Zeit, Schaden, Tode), Normal durchspielbar | Tabelle im Bericht |
 
 ## B — Kids-UX (automatisch + Screenshot)
 | # | Check | Ziel |
@@ -50,7 +69,7 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | B13 | Erste Gegner zahm: Fledermaus Ebene 1 braucht ≥ 4 Treffer auf volle HP | ja |
 | B14 | Tap-Laufen mit BFS um Wände; Auto-Befreiung aus Wand | Ziel erreicht / befreit |
 | B15 | ⏸️ immer erreichbar, jedes Menü hat einen Rückweg | ja |
-| B16 | Musik: dieselbe Glockenspiel-Melodie (Leitmotiv) in Stadt und Keller | gleiche Quelle |
+| B16 | Musik: Stadtmelodie bleibt Leitmotiv (Stadt + Zwischenspiel im Keller), Welten mit eigener Musik | Quelle + D5 |
 | B17 | UI komplett Deutsch | Sichtprüfung |
 
 ## C — Look & Juice (Vision-Loop, Screenshots)
