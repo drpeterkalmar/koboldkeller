@@ -82,6 +82,7 @@ voller Leiste (5 🪙) → Gold + Toast; bisherige Level → Talentpunkte als Wi
 | A16 Vor-Rendern im Menü | 66 Sätze, 24,4 MB, längster Happen 10 ms |
 | `node tools/audiotest.mjs` (ohne Autoplay-Flag) | PASS: läuft nach Tap, 0 Live-Oszillatoren, 0 Fehler |
 | Leck-Test `bot.mjs … --secs=120 --audio` | PASS: 5005 Stimmen gestartet, max. 63 → 43, offen == aktiv |
+| Live-URL headless nach Deploy | „v4" im Menü, Editor → Bär mit Zöpfchen, AudioContext „running", Stadt = Aufnahme, Moosbart-Boss-Thema 100 BPM, Heim-Portal versteckt, 66/66 Klang-Sätze vor-gerendert, **0 Fehler, 0 fremde Requests** |
 
 Hinweis A15: Der FPS-A/B-Vergleich „Effekte an/aus" ist headless nicht aussagekräftig (identische Einstellungen streuen
 303–433 fps). A15 prüft deshalb jetzt den stabilen Wert: Audio-Engine **1,15 % Main-Thread** bei 30 Effekt-Aufrufen/s, FPS
