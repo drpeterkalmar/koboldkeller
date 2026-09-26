@@ -10,9 +10,26 @@ export function hardenTouch() {
   document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
   document.addEventListener("selectstart", e => { if (!(e.target instanceof HTMLInputElement)) e.preventDefault(); });
 }
+// iPhone kennt navigator.vibrate nicht — Safari ≥ 17.4 gibt aber beim Umschalten eines
+// <input type=checkbox switch> einen System-Haptik-Tick ab. Den nutzen wir als Ersatz.
+let hapLabel = null;
+function iosTick() {
+  if (!hapLabel) {
+    const id = "kkHap";
+    const inp = document.createElement("input"); inp.type = "checkbox"; inp.id = id; inp.setAttribute("switch", "");
+    hapLabel = document.createElement("label"); hapLabel.htmlFor = id;
+    for (const el of [inp, hapLabel]) { el.setAttribute("aria-hidden", "true"); el.style.cssText = "position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:0;pointer-events:none"; document.body.appendChild(el); }
+  }
+  hapLabel.click();
+}
 export function vibrate(pattern) {
   if (!PF.vibrate) return;
-  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { }
+  try {
+    if (typeof navigator.vibrate === "function") { navigator.vibrate(pattern); return; }
+    iosTick();
+    // Muster → bis zu 2 weitere Ticks für „starke" Ereignisse (Boss, Tod)
+    if (Array.isArray(pattern)) for (let i = 2, t = 0; i < pattern.length && i < 5; i += 2) { t += pattern[i - 2] + pattern[i - 1]; setTimeout(iosTick, t); }
+  } catch (e) { }
 }
 export function canFullscreen() {
   const d = document.documentElement;

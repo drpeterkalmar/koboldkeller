@@ -45,7 +45,9 @@ function gesture() {
 }
 UI.initUI(gesture);
 initInput(cv, { gesture, pause: () => UI.openPause(), bag: () => UI.openBag() });
-document.addEventListener("pointerdown", gesture, { passive: true });
+// Touch: „pointerdown" zählt am Handy NICHT als Nutzer-Aktivierung (erst pointerup/touchend/click) —
+// Audio-Entsperren & Vibration brauchen aber genau diese Aktivierung.
+for (const ev of ["pointerdown", "pointerup", "touchend", "click", "keydown"]) document.addEventListener(ev, gesture, { passive: true, capture: true });
 
 // ---------- Hintergrund-Stadt fürs Menü ----------
 function demoWorld() {

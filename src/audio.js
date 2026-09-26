@@ -11,6 +11,8 @@ function trackUrl() {
 export function unlockAudio() {
   try {
     if (!AUDIO.ctx) {
+      // iPhone: ohne „playback" schaltet der Lautlos-Schalter WebAudio (und damit alles) stumm
+      try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) { }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       const ac = new AC();
@@ -28,7 +30,11 @@ export function unlockAudio() {
       el = new Audio(); el.loop = true; el.preload = "auto"; el.src = AUDIO.track = trackUrl();
       try { elSrc = ac.createMediaElementSource(el); elSrc.connect(lp); } catch (e) { elSrc = null; el.volume = 0.34; }
     }
-    if (AUDIO.ctx.state === "suspended" && !AUDIO.suspended) AUDIO.ctx.resume();
+    if (AUDIO.ctx.state !== "running" && !AUDIO.suspended) {
+      AUDIO.ctx.resume().catch(() => { });
+      // stiller 1-Sample-Puffer IN der Geste: entsperrt Safari/ältere Android-WebViews zuverlässig
+      try { const b = AUDIO.ctx.createBufferSource(); b.buffer = AUDIO.ctx.createBuffer(1, 1, 22050); b.connect(AUDIO.ctx.destination); b.start(0); } catch (e) { }
+    }
     if (AUDIO.where !== "none") playMusic(AUDIO.where);
   } catch (e) { /* still scheitern */ }
 }

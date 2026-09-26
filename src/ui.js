@@ -5,7 +5,7 @@ import { portrait } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
 import { esc, pick } from "./util.js";
 import { SFX, setMusic, setSfx } from "./audio.js";
-import { toggleFullscreen, canFullscreen, PF } from "./platform.js";
+import { toggleFullscreen, canFullscreen, PF, vibrate } from "./platform.js";
 import { IN, resetInput } from "./input.js";
 import { drawMini } from "./render.js";
 
@@ -56,6 +56,7 @@ function settingsHtml(box) {
     const k = el.dataset.k; s[k] = !s[k];
     el.querySelector(".sw").classList.toggle("on", s[k]);
     applySettings(); saveSettings(s); SFX.click();
+    if (k === "vibrate" && s[k]) vibrate([30, 60, 30]);   // sofort fühlbare Rückmeldung
   }));
 }
 export function applySettings() {
