@@ -67,9 +67,19 @@ async function measureFps(page, label, secs = 5, warm = 1500) {
 // =====================================================================
 // 1) Hochformat: kompletter Flow
 // =====================================================================
-const { ctx, page } = await newPage();
+const { ctx, page } = await newPage(412, 915, `window.__rafT = []; (function f(t) { window.__rafT.push(t); requestAnimationFrame(f); })(0);`);
 const st0 = await S(page);
 R("A10", "Audio erst nach Geste (vor Tap kein AudioContext)", st0.audio === "none", st0.audio);
+{ // Vor-Rendern im Menü: Dauer, längster Main-Thread-Happen, Frame-Zeiten des Menüs WÄHRENDDESSEN
+  await page.waitForFunction(() => KK.audio().pre.done, null, { timeout: 30000 });
+  const pre = await page.evaluate(() => {
+    const p = KK.audio().pre, ts = window.__rafT.filter(t => t >= p.t0 && t <= p.t1);
+    let worst = 0; for (let i = 1; i < ts.length; i++) worst = Math.max(worst, ts[i] - ts[i - 1]);
+    const before = window.__rafT.filter(t => t < p.t0); let wb = 0; for (let i = 1; i < before.length; i++) wb = Math.max(wb, before[i] - before[i - 1]);
+    return { ...p, frames: ts.length, fps: +(ts.length / ((p.t1 - p.t0) / 1000)).toFixed(1), worst: +worst.toFixed(1), worstBoot: +wb.toFixed(1) };
+  });
+  R("A16", "Vor-Rendern im Menü blockiert nicht (längster Happen < 16 ms, kein Frame > 50 ms, fertig < 12 s)", pre.done && pre.errors === 0 && pre.maxJob < 16 && pre.worst < 50 && pre.ms < 12000, `${pre.ms} ms, ${pre.jobs} Sätze, ${(pre.bytes / 1e6).toFixed(1)} MB, max. Happen ${pre.maxJob} ms, Menü währenddessen ${pre.fps} fps (längster Frame ${pre.worst} ms; Boot davor ${pre.worstBoot} ms), Aufnahme ${pre.recMs} ms`);
+}
 const ver = await page.textContent("#verLabel");
 const kver = await page.evaluate(() => window.KK_VER);
 R("B1", "Versionslabel im Startmenü", /Koboldkeller 2 · v\d+/.test(ver) && ver.endsWith("v" + kver), ver);
@@ -224,6 +234,32 @@ if (PERF) {
     R("A3", "FPS mit CPU-Throttle " + THROTTLE + "× ≥ 45", fpsT.fps >= 45, fpsT.fps + " fps (p5 " + fpsT.p5 + ", Scale " + fpsT.scale + ", q" + fpsT.q + ")");
     await page.evaluate(() => KK.quality(0));
   }
+}
+
+// Audio-Performance: Effekt-Dauerfeuer vs. Effekte aus (A/B/A/B, gleiche Kampfszene, CPU-Throttle)
+if (PERF) {
+  const cdp = await ctx.newCDPSession(page);
+  if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
+  await page.evaluate(async () => {
+    const A = await import("./src/audio.js"); window.__A = A;
+    // Dauerfeuer: 30 Effekt-Aufrufe/s (≈ 5× mehr als echtes Spiel) über alle Kampf-Effekte, räumlich verteilt
+    window.__spam = (on) => { clearInterval(window.__spT); A.setSfx(!!on); if (on) window.__spT = setInterval(() => { const p = KK.G.p, n = ["hit", "poof", "coin", "pop", "swing", "slam", "shoot", "pot", "tele"]; for (let i = 0; i < 3; i++) { const k = n[(Math.random() * n.length) | 0]; A.SFX[k]({ x: p.x + Math.random() * 6 - 3, y: p.y + Math.random() * 6 - 3, dmg: 1 + Math.random() * 8, crit: Math.random() < 0.2 }); } }, 100); };
+  });
+  const ab = { on: [], off: [] }, cpuOn = [];
+  for (const mode of ["off", "on", "off", "on", "off", "on"]) {
+    await page.evaluate((m) => window.__spam(m === "on"), mode);
+    const c0 = await page.evaluate(() => KK.audio().cpuMs), w0 = Date.now();
+    const f = await measureFps(page, "Audio " + mode + (THROTTLE > 1 ? " @" + THROTTLE + "×" : ""), 4, 1000);
+    const c1 = await page.evaluate(() => KK.audio().cpuMs);
+    ab[mode].push(f.fps); if (mode === "on") cpuOn.push((c1 - c0) / ((Date.now() - w0) / 1000));
+  }
+  await page.evaluate(() => window.__spam(false));
+  await page.evaluate(() => window.__A.setSfx(true));
+  if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  const med = a => a.slice().sort((x, y) => x - y)[a.length >> 1], fOn = med(ab.on), fOff = med(ab.off), diff = (fOff - fOn) / fOff * 100;
+  const as = await page.evaluate(() => KK.audio()), cpuMs = med(cpuOn);
+  R("A15", "Effekt-Dauerfeuer vs. aus: FPS-Differenz < 5 %" + (THROTTLE > 1 ? " (Throttle " + THROTTLE + "×)" : ""), diff < 5 && fOn >= 45, `Median aus ${fOff.toFixed(1)} / an ${fOn.toFixed(1)} fps → ${diff.toFixed(1)} % (Einzelwerte aus ${ab.off.join("/")}, an ${ab.on.join("/")}) · Audio-Engine Main-Thread ${cpuMs.toFixed(1)} ms/s = ${(cpuMs / 10).toFixed(2)} % · Stimmen jetzt ${as.voices}, gestartet ${as.started}, gestohlen ${as.stolen}`);
+  await page.evaluate(() => KK.quality(0));
 }
 
 // Boss Ebene 4

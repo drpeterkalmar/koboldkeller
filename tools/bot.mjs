@@ -1,14 +1,18 @@
 // Autoplay-Bot: spielt wie ein Kind (Tap auf Gegner, Tap zur Treppe) durch alle Ebenen.
-// node tools/bot.mjs [port] [bisEbene] [speed]
+// node tools/bot.mjs [port] [bisEbene] [speed] [--secs=120] [--audio]
+// --audio: Audio entsperren (Tap) und alle 10 s die Stimmen-Zähler (KK.audio()) protokollieren → Knoten-Leck-Test
 import { loadPlaywright } from "./pw.mjs";
-const port = process.argv[2] || 8731, maxD = +(process.argv[3] || 20), speed = +(process.argv[4] || 4);
+const pos = process.argv.slice(2).filter(a => !a.startsWith("--")), flag = k => process.argv.find(a => a.startsWith("--" + k));
+const port = pos[0] || 8731, maxD = +(pos[1] || 20), speed = +(pos[2] || 4);
+const SECS = flag("secs") ? +flag("secs").split("=")[1] : 30 * 60, AUD = !!flag("audio");
 const { chromium } = loadPlaywright();
-const flags = ["--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding"];
+const flags = ["--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", ...(AUD ? ["--autoplay-policy=no-user-gesture-required"] : [])];
 const b = await chromium.launch({ channel: "chromium", args: flags });
 const page = await (await b.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true })).newPage();
 const errs = []; page.on("pageerror", e => errs.push(e.message));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.KK && KK.G.L);
+if (AUD) { await page.touchscreen.tap(200, 300); await page.waitForFunction(() => KK.audio().pre.done && KK.audio().state === "running", null, { timeout: 30000 }); }
 await page.evaluate((sp) => {
   KK.start({ tut: false, name: "Bot" }); KK.speed(sp);
   const G = KK.G;
@@ -41,9 +45,16 @@ await page.evaluate((sp) => {
 }, speed);
 await page.evaluate(async () => { const m = await import("./src/game.js"); window.__tap = (x, y) => m.tapWorld(x, y, null); });
 const start = Date.now();
-let last = "";
-while (Date.now() - start < 30 * 60 * 1000) {
-  await page.waitForTimeout(3000);
+let last = "", nextA = 10;
+const samples = [];
+while (Date.now() - start < SECS * 1000) {
+  await page.waitForTimeout(AUD ? 1000 : 3000);
+  if (AUD && (Date.now() - start) / 1000 >= nextA) {
+    nextA += 10;
+    const a = await page.evaluate(() => KK.audio());
+    samples.push({ t: Math.round((Date.now() - start) / 1000), voices: a.voices, loops: a.loops, open: a.started - a.ended, started: a.started, stolen: a.stolen, song: a.music.song, comb: a.music.comb });
+    console.log("  Audio t=" + samples.at(-1).t + "s Stimmen " + a.voices + " (sfx " + a.byCat.sfx + ", mus " + a.byCat.mus + ", amb " + a.byCat.amb + ") Schleifen " + a.loops + " offen " + (a.started - a.ended) + " gestartet " + a.started + " Musik " + a.music.song + "/" + a.music.comb);
+  }
   const s = await page.evaluate(() => ({ st: KK.state(), bot: window.__bot }));
   const line = `E${s.st.depth} Lv${s.st.lvl} HP${s.st.hp}/${s.st.maxHp} Gold${s.st.gold} Tode${s.bot.deaths} screen=${s.st.screen}`;
   if (line !== last) { console.log(((Date.now() - start) / 1000).toFixed(0) + "s " + line); last = line; }
@@ -52,5 +63,11 @@ while (Date.now() - start < 30 * 60 * 1000) {
 const r = await page.evaluate(() => window.__bot);
 console.log(JSON.stringify(r.log));
 console.log("Tode:", r.deaths, "Fehler:", errs.length ? errs.join(" | ") : 0);
+if (AUD && samples.length >= 4) {
+  const h = Math.floor(samples.length / 2), mx = a => Math.max(...a.map(x => x.voices)), first = mx(samples.slice(0, h)), second = mx(samples.slice(h));
+  const leak = samples.some(x => x.open !== x.voices) || second > Math.max(first * 1.5, first + 12);
+  console.log(`LECKTEST ${leak ? "FAIL" : "PASS"}: max. Stimmen 1. Hälfte ${first}, 2. Hälfte ${second}, offen==aktiv: ${samples.every(x => x.open === x.voices)}, gestartet gesamt ${samples.at(-1).started}`);
+  if (leak) process.exitCode = 1;
+}
 await page.screenshot({ path: "shots/neubau/_bot_end.png" });
 await b.close();
