@@ -64,6 +64,7 @@ leiser als v2 relativ zu den Effekten. Spektrogramme + WAVs: `shots/audio/` (nic
 | A16 Vor-Rendern im Menü | 0,4 s (GPU-Profil) bzw. 4,9 s (Software-Headless), längster Main-Thread-Happen 11 ms, längster Menü-Frame währenddessen 14 ms |
 | `node tools/audiotest.mjs` (ohne Autoplay-Flag) | PASS: nach Tap „running", Effekte gespielt, 0 Live-Oszillatoren, 0 Fehler |
 | Leck-Test `node tools/bot.mjs 8731 20 4 --secs=120 --audio` | PASS: 3640 Stimmen gestartet, aktive Stimmen 11–49 ohne Wachstum (2. Hälfte max. 29), offen == aktiv |
+| Live-URL headless (nach Deploy) | v3 im Menü, AudioContext „running", Stadtmelodie geladen, 58/58 Sätze vor-gerendert (7,1 s Software-Headless), Kampfmusik schaltet auf Stufe 2, **0 Fehler** |
 | Haptik (Browser-Test mit Stub) | leichte Impulse ≥ 70 ms Abstand, Münzen ≤ 1/s, Budget ≤ 350 ms/s, Vorrang + „Vibration aus" greifen |
 
 ## Offene Punkte
