@@ -263,6 +263,65 @@ export const SFX_DEFS = {
     K.noise(t, 0.55, 0.7, { type: "lowpass", f: 1800, f1: 300, g: 0.5, q: 0.5, a: 0.03, pink: true });
     K.osc("sine", 700, t + 0.05, 0.5, 0.18, { f1: 300, g: 0.5, a: 0.05, vib: [6, 30, 0.1] });
   } },
+  // ---------- v4 ----------
+  empty: { n: 2, len: 0.35, fn(K, t, v, r) {          // Munition leer: sanftes hohles „plopp", nie nervig
+    const p = [1, 0.9][v];
+    K.osc("sine", 420 * p, t, 0.12, 0.55, { f1: 250 * p, g: 0.09, a: 0.004 });
+    K.noise(t, 0.05, 0.18, { type: "bandpass", f: 900 * p, q: 2.2, pink: true });
+    K.osc("triangle", 840 * p, t + 0.01, 0.05, 0.08, { f1: 520 * p });
+  } },
+  special: { n: 4, len: 1.7, ch: 2, fn(K, t, v, r) {   // Spezialangriff, 4 Klangfarben (Glitzer / Brüller / Strudel / Feuer)
+    if (v === 0) {
+      K.noise(t, 0.6, 0.45, { type: "bandpass", f: 600, f1: 5000, g: 0.45, q: 1.2, a: 0.25, pink: true });
+      [75, 79, 82, 87, 91, 94, 99].forEach((m, i) => K.bell(mtof(m), t + 0.05 + i * 0.05, 0.9, 0.22, { to: K.pan(-0.6 + i * 0.2) }));
+      K.osc("sine", 180, t + 0.42, 0.5, 0.7, { f1: 120, g: 0.3 });
+    } else if (v === 1) {
+      const fo = K.gain(0.9), f1 = K.filter("bandpass", 520, 4, fo), f2 = K.filter("bandpass", 900, 5, fo);
+      const s = K.osc("sawtooth", 150, t, 0.45, 0.9, { f1: 240, g: 0.35, a: 0.06, hold: 0.15, to: f1, vib: [9, 60, 0.05] }); s.g.connect(f2);
+      K.noise(t + 0.3, 0.6, 0.6, { type: "lowpass", f: 2400, f1: 400, g: 0.5, pink: true });
+      K.osc("sine", 170, t + 0.42, 0.55, 0.8, { f1: 110, g: 0.35 });
+      [79, 84, 87].forEach((m, i) => K.bell(mtof(m), t + 0.5 + i * 0.06, 0.7, 0.16, { to: K.pan(-0.4 + i * 0.4) }));
+    } else if (v === 2) {
+      for (let i = 0; i < 9; i++) { const f0 = 300 + r() * 300, ti = t + i * 0.045; K.osc("sine", f0, ti, 0.09, 0.4, { f1: f0 * 2.6, g: 0.06 }); }
+      const sw = K.noise(t, 0.9, 0.5, { type: "bandpass", f: 400, f1: 2600, g: 0.5, q: 5, a: 0.2, pink: true });
+      K.osc("sine", 200, t + 0.42, 0.5, 0.65, { f1: 120, g: 0.3 });
+      [82, 87, 91, 94].forEach((m, i) => K.bell(mtof(m), t + 0.45 + i * 0.05, 0.8, 0.18, { to: K.pan(0.5 - i * 0.33) }));
+    } else {
+      K.noise(t, 0.7, 0.8, { type: "bandpass", f: 500, f1: 2200, g: 0.45, q: 0.8, a: 0.15, pink: true });
+      for (let i = 0; i < 12; i++) K.noise(t + 0.3 + r() * 0.6, 0.01, 0.22, { type: "highpass", f: 2600 });
+      K.osc("sine", 190, t + 0.42, 0.55, 0.8, { f1: 115, g: 0.35 });
+      [79, 82, 87, 91].forEach((m, i) => K.bell(mtof(m), t + 0.46 + i * 0.05, 0.7, 0.16, { to: K.pan(-0.5 + i * 0.33) }));
+    }
+    K.noise(t + 0.42, 0.9, 0.08, { type: "highpass", f: 6500, a: 0.1 });
+  } },
+  reveal: { n: 1, len: 1.3, ch: 2, fn(K, t, v, r) {    // Heim-Portal glimmt wieder auf (leise)
+    K.noise(t, 0.6, 0.25, { type: "bandpass", f: 1200, f1: 5200, g: 0.6, q: 2, a: 0.25 });
+    [87, 91, 94].forEach((m, i) => K.bell(mtof(m), t + 0.15 + i * 0.09, 0.9, 0.2, { to: K.pan(-0.3 + i * 0.3) }));
+  } },
+  phase: { n: 2, len: 2.0, ch: 2, fn(K, t, v, r) {     // Boss-Phasenwechsel: „Da-da-DAA" + Pauke (v1 = Wut)
+    const chords = v ? [[48, 51, 55], [50, 53, 56], [55, 59, 62]] : [[51, 55, 58], [53, 56, 60], [58, 62, 65]];
+    chords.forEach((notes, k) => {
+      const ti = t + k * 0.17, fl = K.filter("lowpass", 500, 0.9);
+      fl.frequency.setValueAtTime(500, ti); fl.frequency.linearRampToValueAtTime(3000, ti + 0.04); fl.frequency.setTargetAtTime(900, ti + 0.05, 0.12);
+      for (const m of notes) for (const d of [-7, 7]) K.osc("sawtooth", mtof(m), ti, k === 2 ? 0.7 : 0.14, 0.12, { a: 0.015, hold: k === 2 ? 0.35 : 0.06, det: d, to: fl });
+    });
+    K.osc("sine", 131, t + 0.34, 0.8, 0.8, { f1: 123, g: 0.4 });
+    K.noise(t + 0.34, 1.4, 0.22, { type: "highpass", f: 4500, a: 0.004, to: K.pan(0.3) });
+    K.noise(t + 0.34, 0.4, 0.3, { type: "lowpass", f: 1400, pink: true });
+  } },
+  trap: { n: 3, len: 0.4, fn(K, t, v, r) {             // Pieks-Platte schnappt hoch
+    const p = J(r, 0.2);
+    K.noise(t, 0.02, 0.4, { type: "highpass", f: 3000 });
+    K.osc("triangle", 900 * p, t, 0.08, 0.3, { f1: 1500 * p, g: 0.02 });
+    K.osc("sine", 2600 * p, t + 0.01, 0.25, 0.08);
+    K.noise(t + 0.005, 0.06, 0.25, { type: "bandpass", f: 1800 * p, q: 3 });
+  } },
+  impact: { n: 3, len: 0.5, fn(K, t, v, r) {           // Einschlag einer Boss-Warnung (weich)
+    const p = J(r, 0.2);
+    K.osc("sine", 210 * p, t, 0.22, 0.8, { f1: 115, g: 0.12, a: 0.003 });
+    K.noise(t, 0.2, 0.5, { type: "lowpass", f: 2200, f1: 400, g: 0.2, pink: true });
+    K.bell(mtof(pentHigh[(r() * 5) | 0] - 12), t + 0.02, 0.3, 0.08);
+  } },
   arrive: { n: 2, len: 1.0, ch: 2, fn(K, t, v, r) {
     K.noise(t, 0.45, 0.35, { type: "bandpass", f: 500, f1: 2400, g: 0.4, q: 0.9, a: 0.12, pink: true });
     [[82, 87, 91], [84, 87, 94]][v].forEach((m, i) => K.bell(mtof(m), t + 0.12 + i * 0.07, 0.6, 0.18, { to: K.pan(-0.3 + i * 0.3) }));

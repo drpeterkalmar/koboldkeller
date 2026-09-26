@@ -123,43 +123,56 @@ function eyeHurt(c, x, y, s = 1, side = 0) {
 // =====================================================================
 const HX = 60, HY = 80, HR = 34;
 export function head(look, mood = "open") {
-  const key = "head:" + look.id + ":" + look.skin + ":" + mood;
+  const key = "head:" + (look.id || look.species) + ":" + look.skin + ":" + mood;
   return spr(key, 120, 132, 60, 112, (c) => drawHead(c, look, mood));
 }
 function drawHead(c, o, mood) {
   const skin = o.skin, line = shade(skin, -0.55), inner = "#ffb3c7";
-  const dk = shade(skin, -0.18);
-  // --- Ohren hinten ---
+  const v = o.earsV || 0;
+  // --- Ohren hinten (2 Varianten je Tierart) ---
   const ear = (path, fillIn) => { ol(c, path, skin, line, 3.2); if (fillIn) { c.beginPath(); fillIn(c); c.fillStyle = inner; c.fill(); } };
   switch (o.ears) {
-    case "pointy":
-      for (const s of [-1, 1]) ear((c) => { c.moveTo(HX + s * 24, HY - 16); c.quadraticCurveTo(HX + s * 58, HY - 34, HX + s * 60, HY - 42); c.quadraticCurveTo(HX + s * 48, HY - 12, HX + s * 28, HY + 4); c.closePath(); },
-        (c) => { c.moveTo(HX + s * 30, HY - 12); c.quadraticCurveTo(HX + s * 50, HY - 28, HX + s * 54, HY - 36); c.quadraticCurveTo(HX + s * 44, HY - 14, HX + s * 32, HY - 2); c.closePath(); });
+    case "pointy": {
+      const tx = v ? 66 : 60, ty = v ? 52 : 42;
+      for (const s of [-1, 1]) ear((c) => { c.moveTo(HX + s * 24, HY - 16); c.quadraticCurveTo(HX + s * (tx - 2), HY - ty + 8, HX + s * tx, HY - ty); c.quadraticCurveTo(HX + s * 48, HY - 12, HX + s * 28, HY + 4); c.closePath(); },
+        (c) => { c.moveTo(HX + s * 30, HY - 12); c.quadraticCurveTo(HX + s * (tx - 10), HY - ty + 14, HX + s * (tx - 6), HY - ty + 6); c.quadraticCurveTo(HX + s * 44, HY - 14, HX + s * 32, HY - 2); c.closePath(); });
       break;
-    case "round":
-      for (const s of [-1, 1]) ear(ell(HX + s * 24, HY - 28, 12, 12), ell(HX + s * 24, HY - 27, 6.5, 6.5));
+    }
+    case "round": {
+      const r = v ? 8.5 : 12, ox = v ? 26 : 24, oy = v ? 29 : 28;
+      for (const s of [-1, 1]) ear(ell(HX + s * ox, HY - oy, r, r), ell(HX + s * ox, HY - oy + 1, r * 0.54, r * 0.54));
       break;
+    }
     case "bunny":
-      for (const s of [-1, 1]) ear(ell(HX + s * 15, HY - 52, 10, 27, s * 0.18), ell(HX + s * 15, HY - 50, 5, 20, s * 0.18));
-      break;
-    case "panda":
       for (const s of [-1, 1]) {
-        ol(c, (c) => { c.moveTo(HX + s * 12, HY - 28); c.quadraticCurveTo(HX + s * 34, HY - 58, HX + s * 36, HY - 22); c.closePath(); }, "#fff6ee", line, 3.2);
-        c.beginPath(); c.moveTo(HX + s * 16, HY - 28); c.quadraticCurveTo(HX + s * 32, HY - 50, HX + s * 33, HY - 24); c.closePath(); c.fillStyle = skin; c.fill();
+        if (v && s > 0) ear(ell(HX + 34, HY - 30, 9.5, 25, 1.05), ell(HX + 34, HY - 29, 4.8, 18, 1.05));   // Schlappohr
+        else ear(ell(HX + s * 15, HY - 52, 10, 27, s * 0.18), ell(HX + s * 15, HY - 50, 5, 20, s * 0.18));
       }
       break;
-    case "cat":
-      for (const s of [-1, 1]) ear((c) => { c.moveTo(HX + s * 10, HY - 28); c.quadraticCurveTo(HX + s * 30, HY - 64, HX + s * 34, HY - 18); c.closePath(); },
-        (c) => { c.moveTo(HX + s * 16, HY - 27); c.quadraticCurveTo(HX + s * 29, HY - 52, HX + s * 30, HY - 22); c.closePath(); });
-      break;
-    case "fox":
+    case "panda": {
+      const k = v ? 0.78 : 1;
       for (const s of [-1, 1]) {
-        ear((c) => { c.moveTo(HX + s * 6, HY - 26); c.quadraticCurveTo(HX + s * 34, HY - 78, HX + s * 38, HY - 14); c.closePath(); },
-          (c) => { c.moveTo(HX + s * 13, HY - 26); c.quadraticCurveTo(HX + s * 32, HY - 62, HX + s * 33, HY - 20); c.closePath(); });
-        c.save(); c.beginPath(); c.moveTo(HX + s * 6, HY - 26); c.quadraticCurveTo(HX + s * 34, HY - 78, HX + s * 38, HY - 14); c.closePath(); c.clip();
-        c.fillStyle = "#4a2a1a"; c.fillRect(HX + (s < 0 ? -44 : 14), HY - 80, 30, 24); c.restore();
+        ol(c, (c) => { c.moveTo(HX + s * 12, HY - 28); c.quadraticCurveTo(HX + s * (12 + 22 * k), HY - 28 - 30 * k, HX + s * (12 + 24 * k), HY - 22); c.closePath(); }, "#fff6ee", line, 3.2);
+        c.beginPath(); c.moveTo(HX + s * 16, HY - 28); c.quadraticCurveTo(HX + s * (14 + 18 * k), HY - 28 - 22 * k, HX + s * (13 + 20 * k), HY - 24); c.closePath(); c.fillStyle = skin; c.fill();
       }
       break;
+    }
+    case "cat": {
+      const h = v ? 54 : 64;
+      for (const s of [-1, 1]) ear((c) => { c.moveTo(HX + s * 10, HY - 28); c.quadraticCurveTo(HX + s * (v ? 26 : 30), HY - h, HX + s * 34, HY - 18); c.closePath(); },
+        (c) => { c.moveTo(HX + s * 16, HY - 27); c.quadraticCurveTo(HX + s * (v ? 26 : 29), HY - h + 12, HX + s * 30, HY - 22); c.closePath(); });
+      break;
+    }
+    case "fox": {
+      const k = v ? 0.78 : 1;
+      for (const s of [-1, 1]) {
+        const outer = (c) => { c.moveTo(HX + s * 6, HY - 26); c.quadraticCurveTo(HX + s * (6 + 28 * k), HY - 26 - 52 * k, HX + s * (6 + 32 * k), HY - 14); c.closePath(); };
+        ear(outer, (c) => { c.moveTo(HX + s * 13, HY - 26); c.quadraticCurveTo(HX + s * (8 + 24 * k), HY - 26 - 36 * k, HX + s * (6 + 27 * k), HY - 20); c.closePath(); });
+        c.save(); c.beginPath(); outer(c); c.clip();
+        c.fillStyle = "#4a2a1a"; c.fillRect(HX + (s < 0 ? -44 : 14), HY - 80, 30, 24 + (1 - k) * 26); c.restore();
+      }
+      break;
+    }
     case "dragon":
       for (const s of [-1, 1]) {
         ol(c, (c) => { c.moveTo(HX + s * 34, HY + 2); c.lineTo(HX + s * 52, HY - 8); c.lineTo(HX + s * 46, HY + 6); c.lineTo(HX + s * 54, HY + 12); c.lineTo(HX + s * 34, HY + 14); c.closePath(); }, o.hair, shade(o.hair, -0.5), 2.6);
@@ -180,24 +193,22 @@ function drawHead(c, o, mood) {
     c.fillStyle = "#fff4e6";
     c.beginPath(); c.moveTo(HX - 36, HY + 6); c.quadraticCurveTo(HX, HY - 2, HX + 36, HY + 6); c.lineTo(HX + 36, HY + 40); c.lineTo(HX - 36, HY + 40); c.fill();
   } else if (o.ears === "octo") {
-    c.fillStyle = shade(skin, 0.35);
-    for (const [dx, dy, r] of [[-20, -18, 4], [-11, -25, 3], [19, -20, 3.6], [26, -9, 2.4]]) { c.beginPath(); c.arc(HX + dx, HY + dy, r, 0, TAU); c.fill(); }
+    if (!v) { c.fillStyle = shade(skin, 0.35); for (const [dx, dy, r] of [[-20, -18, 4], [-11, -25, 3], [19, -20, 3.6], [26, -9, 2.4]]) { c.beginPath(); c.arc(HX + dx, HY + dy, r, 0, TAU); c.fill(); } }
   } else if (o.ears === "bunny" || o.ears === "cat") {
     c.fillStyle = "rgba(255,255,255,.35)"; c.beginPath(); c.ellipse(HX, HY + 20, 14, 9, 0, 0, TAU); c.fill();
   }
   c.restore();
-  // Haar-Locke / Hörner
-  if (o.ears === "pointy" || o.ears === "round") {
-    ol(c, (c) => { c.moveTo(HX - 10, HY - 30); c.quadraticCurveTo(HX - 6, HY - 50, HX + 8, HY - 46); c.quadraticCurveTo(HX - 2, HY - 42, HX + 4, HY - 30); c.closePath(); }, o.hair, shade(o.hair, -0.5), 2.6);
-  } else if (o.ears === "octo") {
-    c.strokeStyle = line; c.lineWidth = 5.5; c.beginPath(); c.moveTo(HX, HY - 32); c.quadraticCurveTo(HX + 2, HY - 48, HX + 12, HY - 46); c.stroke();
-    c.strokeStyle = skin; c.lineWidth = 3; c.stroke();
-  } else if (o.ears === "dragon") {
-    for (const s of [-1, 1]) ol(c, (c) => { c.moveTo(HX + s * 10, HY - 30); c.quadraticCurveTo(HX + s * 18, HY - 52, HX + s * 24, HY - 50); c.quadraticCurveTo(HX + s * 20, HY - 40, HX + s * 22, HY - 26); c.closePath(); }, "#fff2c9", "#8a6a2a", 2.6);
+  // Frisur
+  drawHair(c, o, hp);
+  // Hörner (Drache)
+  if (o.ears === "dragon") {
+    if (!v) for (const s of [-1, 1]) ol(c, (c) => { c.moveTo(HX + s * 10, HY - 30); c.quadraticCurveTo(HX + s * 18, HY - 52, HX + s * 24, HY - 50); c.quadraticCurveTo(HX + s * 20, HY - 40, HX + s * 22, HY - 26); c.closePath(); }, "#fff2c9", "#8a6a2a", 2.6);
+    else for (const s of [-1, 1]) { c.lineCap = "round"; c.strokeStyle = "#8a6a2a"; c.lineWidth = 9; c.beginPath(); c.moveTo(HX + s * 16, HY - 28); c.bezierCurveTo(HX + s * 22, HY - 50, HX + s * 44, HY - 44, HX + s * 36, HY - 30); c.stroke(); c.strokeStyle = "#fff2c9"; c.lineWidth = 5.5; c.stroke(); }
   }
   // Wangen
   c.fillStyle = "rgba(255,105,150,.42)";
   for (const s of [-1, 1]) { c.beginPath(); c.ellipse(HX + s * 23, HY + 15, 7, 4.5, 0, 0, TAU); c.fill(); }
+  if (o.acc === "sommersprossen") { c.fillStyle = shade(skin, -0.35); for (const s of [-1, 1]) for (const [dx, dy] of [[19, 11], [24, 14], [28, 10], [22, 18]]) { c.beginPath(); c.arc(HX + s * dx, HY + dy, 1.5, 0, TAU); c.fill(); } }
   // Augen
   const ey = HY + 4, ex = 14.5;
   if (mood === "blink") { eyeClosed(c, HX - ex, ey); eyeClosed(c, HX + ex, ey); }
@@ -223,6 +234,128 @@ function drawHead(c, o, mood) {
   if (o.ears === "cat") {
     c.strokeStyle = "rgba(60,30,20,.55)"; c.lineWidth = 1.4;
     for (const s of [-1, 1]) for (const d of [-3, 3]) { c.beginPath(); c.moveTo(HX + s * 28, HY + 14 + d * 0.6); c.lineTo(HX + s * 42, HY + 12 + d); c.stroke(); }
+  }
+  drawAcc(c, o, mood);
+}
+/** Frisuren — alle Tierarten können jede wählen */
+function drawHair(c, o, hp) {
+  const h = o.hair, hl = shade(h, -0.5), hi = shade(h, 0.4);
+  switch (o.style) {
+    case "wuschel": {   // weiche Wuschel-Wolke oben auf dem Kopf
+      const puffs = [[44, 49, 8.5], [76, 49, 8.5], [52, 44, 10], [68, 44, 10], [60, 41, 11]];
+      for (const [x, y, r] of puffs) { c.beginPath(); c.arc(x, y, r + 1.6, 0, TAU); c.fillStyle = hl; c.fill(); }
+      for (const [x, y, r] of puffs) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fillStyle = h; c.fill(); }
+      c.fillStyle = hi; for (const [x, y, r] of [[56, 37, 3.4], [47, 45, 2.6], [70, 40, 2.4]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+      break;
+    }
+    case "locke": {     // echte Ringellocke statt Wurst
+      const curl = (c) => { c.moveTo(57, 50); c.bezierCurveTo(52, 38, 58, 28, 67, 31); c.bezierCurveTo(75, 34, 73, 45, 65, 44); c.bezierCurveTo(59, 43, 61, 36, 66, 37); };
+      c.lineCap = "round"; c.beginPath(); curl(c); c.strokeStyle = hl; c.lineWidth = 9; c.stroke();
+      c.beginPath(); curl(c); c.strokeStyle = h; c.lineWidth = 5.6; c.stroke();
+      c.beginPath(); c.moveTo(56, 42); c.bezierCurveTo(56, 36, 60, 32, 64, 32); c.strokeStyle = hi; c.lineWidth = 1.6; c.stroke();
+      break;
+    }
+    case "ringel": {    // dünnes Ringel-Schwänzchen
+      c.lineCap = "round";
+      const r = (c) => { c.moveTo(HX, HY - 32); c.quadraticCurveTo(HX + 2, HY - 48, HX + 12, HY - 46); c.quadraticCurveTo(HX + 18, HY - 40, HX + 10, HY - 38); };
+      c.beginPath(); r(c); c.strokeStyle = shade(o.skin, -0.55); c.lineWidth = 6; c.stroke();
+      c.beginPath(); r(c); c.strokeStyle = o.ears === "octo" ? o.skin : h; c.lineWidth = 3.4; c.stroke();
+      break;
+    }
+    case "pony": case "seite": {   // Pony / Seitenscheitel: folgt der Kopfform
+      c.save(); c.beginPath(); hp(c); c.clip();
+      const path = o.style === "pony"
+        ? (c) => { c.moveTo(18, 40); c.lineTo(102, 40); c.lineTo(102, 70); for (let i = 0; i < 5; i++) { const x1 = 96 - i * 15.6, x0 = x1 - 15.6; c.quadraticCurveTo((x0 + x1) / 2, 72 - (i % 2) * 4, x0, 62 + (i === 4 ? 8 : 0)); } c.closePath(); }
+        : (c) => { c.moveTo(18, 70); c.quadraticCurveTo(22, 38, 60, 42); c.quadraticCurveTo(96, 44, 102, 66); c.quadraticCurveTo(82, 52, 64, 56); c.quadraticCurveTo(40, 60, 18, 70); c.closePath(); };
+      c.beginPath(); path(c); c.fillStyle = h; c.fill(); c.strokeStyle = hl; c.lineWidth = 2.6; c.stroke();
+      c.strokeStyle = hi; c.lineWidth = 2; c.beginPath(); c.moveTo(40, 52); c.quadraticCurveTo(50, 46, 62, 47); c.stroke();
+      c.restore();
+      c.beginPath(); hp(c); c.strokeStyle = shade(o.skin, -0.55); c.lineWidth = 3.4; c.stroke();
+      break;
+    }
+    case "zoepfe": {    // zwei Zöpfchen-Knödel + Haarkappe
+      for (const s of [-1, 1]) {
+        ol(c, ell(HX + s * 36, HY - 16, 10, 10), h, hl, 2.6);
+        c.fillStyle = hi; c.beginPath(); c.arc(HX + s * 34, HY - 20, 2.6, 0, TAU); c.fill();
+        ol(c, ell(HX + s * 29, HY - 12, 3.6, 3.6), "#ff6fae", "#9a1f5e", 1.8);
+      }
+      c.save(); c.beginPath(); hp(c); c.clip();
+      c.beginPath(); c.moveTo(18, 30); c.lineTo(102, 30); c.lineTo(102, 58); c.quadraticCurveTo(80, 50, 60, 56); c.quadraticCurveTo(40, 50, 18, 58); c.closePath();
+      c.fillStyle = h; c.fill(); c.strokeStyle = hl; c.lineWidth = 2.4; c.stroke();
+      c.strokeStyle = hl; c.lineWidth = 1.6; c.beginPath(); c.moveTo(60, 44); c.lineTo(60, 55); c.stroke();
+      c.restore();
+      c.beginPath(); hp(c); c.strokeStyle = shade(o.skin, -0.55); c.lineWidth = 3.4; c.stroke();
+      break;
+    }
+    case "dutt": {
+      c.save(); c.beginPath(); hp(c); c.clip();
+      c.beginPath(); c.moveTo(18, 30); c.lineTo(102, 30); c.lineTo(102, 54); c.quadraticCurveTo(60, 44, 18, 54); c.closePath(); c.fillStyle = h; c.fill(); c.strokeStyle = hl; c.lineWidth = 2.4; c.stroke();
+      c.restore();
+      ol(c, ell(HX, HY - 40, 12, 11), h, hl, 2.8);
+      c.fillStyle = hi; c.beginPath(); c.arc(HX - 4, HY - 44, 3, 0, TAU); c.fill();
+      ol(c, (c) => c.roundRect(HX - 9, HY - 32, 18, 5, 2.5), "#ffd75e", "#8a6212", 1.8);
+      break;
+    }
+    case "irokese": {
+      for (const [x, h0, tip] of [[48, 44, 30], [60, 40, 22], [72, 44, 30]]) {
+        ol(c, (c) => { c.moveTo(x - 8, h0 + 6); c.quadraticCurveTo(x - 4, tip + 4, x + 1, tip); c.quadraticCurveTo(x + 6, tip + 6, x + 8, h0 + 6); c.closePath(); }, h, hl, 2.6);
+      }
+      c.fillStyle = hi; c.beginPath(); c.arc(59, 30, 2.4, 0, TAU); c.fill();
+      break;
+    }
+    case "schopf": {    // Blatt-Schopf (wie ein Keimling)
+      ol(c, (c) => { c.moveTo(60, 48); c.quadraticCurveTo(52, 30, 66, 20); c.quadraticCurveTo(76, 34, 60, 48); c.closePath(); }, h, hl, 2.6);
+      ol(c, (c) => { c.moveTo(59, 47); c.quadraticCurveTo(46, 40, 44, 30); c.quadraticCurveTo(56, 32, 59, 47); c.closePath(); }, shade(h, 0.15), hl, 2.4);
+      c.strokeStyle = hl; c.lineWidth = 1.4; c.beginPath(); c.moveTo(61, 44); c.quadraticCurveTo(62, 32, 66, 24); c.stroke();
+      break;
+    }
+  }
+}
+/** Accessoires (Spieler) + Boss-Merkmale */
+function drawAcc(c, o, mood) {
+  const ey = HY + 4, ex = 14.5;
+  switch (o.acc) {
+    case "brille":
+      c.strokeStyle = "#3a2a4a"; c.lineWidth = 2.6;
+      for (const s of [-1, 1]) { c.beginPath(); c.arc(HX + s * ex, ey, 12.5, 0, TAU); c.stroke(); }
+      c.beginPath(); c.moveTo(HX - 3, ey - 2); c.quadraticCurveTo(HX, ey - 5, HX + 3, ey - 2); c.stroke();
+      c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 2; for (const s of [-1, 1]) { c.beginPath(); c.arc(HX + s * ex, ey, 9, -2.4, -1.7); c.stroke(); }
+      break;
+    case "blume": {
+      const x = HX + 28, y = HY - 24;
+      for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; ol(c, ell(x + Math.cos(a) * 6, y + Math.sin(a) * 6, 5, 5), "#ffb3d8", "#c0407a", 1.6); }
+      ol(c, ell(x, y, 4, 4), "#ffd75e", "#8a6212", 1.4);
+      break;
+    }
+    case "schleife": {
+      const x = HX + 26, y = HY - 26;
+      for (const s of [-1, 1]) ol(c, (c) => { c.moveTo(x, y); c.bezierCurveTo(x + s * 6, y - 12, x + s * 18, y - 8, x + s * 14, y + 2); c.bezierCurveTo(x + s * 10, y + 8, x + s * 4, y + 4, x, y); }, "#ff6fae", "#9a1f5e", 2.2);
+      ol(c, ell(x, y, 4, 3.6), "#ff4f9a", "#9a1f5e", 2);
+      break;
+    }
+    case "stern": { c.beginPath(); star5(c, HX + 27, HY - 24, 9, 4); c.fillStyle = "#ffe36e"; c.fill(); c.strokeStyle = "#8a6212"; c.lineWidth = 1.8; c.stroke(); break; }
+    // --- Bosse ---
+    case "bart": {
+      ol(c, (c) => { c.moveTo(HX - 24, HY + 16); c.quadraticCurveTo(HX - 28, HY + 42, HX - 10, HY + 46); c.quadraticCurveTo(HX - 4, HY + 56, HX, HY + 48); c.quadraticCurveTo(HX + 4, HY + 56, HX + 10, HY + 46); c.quadraticCurveTo(HX + 28, HY + 42, HX + 24, HY + 16); c.quadraticCurveTo(HX + 12, HY + 26, HX, HY + 25); c.quadraticCurveTo(HX - 12, HY + 26, HX - 24, HY + 16); c.closePath(); }, "#6fbf4a", "#2f5a2a", 2.8);
+      c.fillStyle = "#a8e878"; for (const [dx, dy] of [[-14, 32], [8, 36], [-2, 42], [16, 26]]) { c.beginPath(); c.arc(HX + dx, HY + dy, 2.6, 0, TAU); c.fill(); }
+      c.fillStyle = "#ff9ae0"; c.beginPath(); c.arc(HX - 16, HY + 24, 2.6, 0, TAU); c.fill();
+      break;
+    }
+    case "zahn": {
+      ol(c, (c) => c.roundRect(HX + 3, HY + 19, 8, 11, 3), "#ffffff", "#6a7aa0", 2);
+      c.globalAlpha = 0.9; star4(c, HX + 12, HY + 20, 5, "#bff4ff"); c.globalAlpha = 1;
+      break;
+    }
+    case "schnute": {
+      ol(c, ell(HX, HY + 21, 7, 4.6), "#ff5aa0", "#8a1a4e", 2);
+      c.fillStyle = "rgba(255,255,255,.7)"; c.beginPath(); c.ellipse(HX - 2, HY + 19.5, 2.4, 1.2, 0, 0, TAU); c.fill();
+      break;
+    }
+    case "frostnase": {
+      ol(c, ell(HX, HY + 13, 6.5, 5.5), "#bfe9ff", "#3a6a9a", 2.2);
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(HX - 2, HY + 11, 1.8, 0, TAU); c.fill();
+      break;
+    }
   }
 }
 
@@ -405,6 +538,28 @@ export function portrait(cv, look, hatId, px = 96) {
   if (hatId) put(hat(hatId), gx, gy + RIG.neck - 32 - 26);
   K = kSave;
 }
+/** Live-Vorschau im Charakter-Editor: dreht sich langsam, wippt, blinzelt (Sprites in eigener Auflösung gecacht) */
+export function previewRig(cv, look, hatId, t) {
+  const c = cv.getContext("2d"), W = cv.width, Hh = cv.height;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, Hh);
+  const kSave = K; K = Math.round(Hh / 190 * 100) / 100;
+  const turn = Math.cos(t * 0.9), fx = (turn >= 0 ? 1 : -1) * Math.max(0.3, Math.abs(turn));
+  const bob = Math.abs(Math.sin(t * 2.4)) * 3, mood = (t % 3.2) < 0.14 ? "blink" : "open";
+  const gx = W / 2 / K, gy = Hh / K - 16;
+  c.save(); c.scale(K, K);
+  // Bodenschatten
+  c.fillStyle = "rgba(20,8,30,.28)"; c.beginPath(); c.ellipse(gx, gy + 2, 34 * Math.max(0.6, Math.abs(turn)), 9, 0, 0, TAU); c.fill();
+  const put = (s, x, y) => c.drawImage(s.cv, x - s.ax, y - s.ay, s.w, s.h);
+  const fl = foot(shade(look.outfit, -0.35));
+  put(fl, gx - RIG.footX, gy + RIG.footY); put(fl, gx + RIG.footX, gy + RIG.footY);
+  c.translate(gx, gy - bob); c.scale(fx, 1);
+  put(body(look, look.outfit), 0, 0);
+  c.translate(0, RIG.neck); c.rotate(Math.sin(t * 1.3) * 0.05);
+  put(head(look, mood), 0, 0);
+  if (hatId) put(hat(hatId), 0, -58);
+  c.restore();
+  K = kSave;
+}
 
 // =====================================================================
 // Gegner — alle niedlich-frech. Anker = Bodenmitte (Flieger schweben per z)
@@ -558,6 +713,12 @@ export function itemSprite(kind, v = "") {
       c.fillStyle = g; c.fillRect(0, 21, 34, 20); c.restore();
       c.beginPath(); heartPath(c, 17, 29, 4); c.fillStyle = "#fff"; c.fill();
       c.fillStyle = "rgba(255,255,255,.8)"; c.beginPath(); c.ellipse(11, 24, 2, 4, 0.3, 0, TAU); c.fill();
+    });
+    case "heart": return spr(key, 32, 32, 16, 29, (c) => {
+      c.beginPath(); heartPath(c, 16, 17, 11); c.fillStyle = "#e8305f"; c.fill(); c.lineWidth = 2.4; c.strokeStyle = "#7a1030"; c.stroke();
+      c.beginPath(); heartPath(c, 16, 16, 8.5); c.fillStyle = "#ff5d86"; c.fill();
+      c.fillStyle = "rgba(255,255,255,.8)"; c.beginPath(); c.ellipse(11.5, 11.5, 3, 2, -0.6, 0, TAU); c.fill();
+      star4(c, 24, 7, 3.5, "#fff6c0");
     });
     case "mushroom": return spr(key, 34, 34, 17, 31, (c) => {
       ol(c, (c) => c.roundRect(12, 16, 10, 15, 4), "#fff1dc", "#8a6a4a", 2.2);
@@ -739,6 +900,41 @@ export function torchSprite() {
   });
 }
 
+/** Pieks-Platte (Falle): Platte mit Löchern; Stacheln separat (werden hochgeschoben) */
+export function trapPlate(col) {
+  return spr("trap:p:" + col, 64, 36, 32, 18, (c) => {
+    const d = (c, i) => { c.moveTo(32, 3 + i); c.lineTo(58 - i * 2, 18); c.lineTo(32, 33 - i); c.lineTo(6 + i * 2, 18); c.closePath(); };
+    ol(c, (c) => d(c, 0), shade(col, -0.25), shade(col, -0.6), 2.2);
+    c.beginPath(); d(c, 3); c.fillStyle = shade(col, -0.05); c.fill();
+    c.fillStyle = shade(col, -0.65);
+    for (const [x, y] of [[32, 11], [22, 18], [42, 18], [32, 25], [32, 18]]) { c.beginPath(); c.ellipse(x, y, 3.2, 1.8, 0, 0, TAU); c.fill(); }
+  });
+}
+export function trapSpikes(col) {
+  return spr("trap:s:" + col, 64, 50, 32, 42, (c) => {
+    for (const [x, y] of [[32, 29], [22, 36], [42, 36], [32, 43], [32, 36]]) {
+      ol(c, (c) => { c.moveTo(x - 5, y); c.quadraticCurveTo(x - 3, y - 14, x, y - 20); c.quadraticCurveTo(x + 3, y - 14, x + 5, y); c.closePath(); }, col, shade(col, -0.6), 1.8);
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(x, y - 18, 2.2, 0, TAU); c.fill();
+    }
+  });
+}
+/** Friseur-Spiegel in der Stadt (Charakter-Editor) */
+export function mirrorSprite() {
+  return spr("mirror", 90, 160, 45, 148, (c) => {
+    const X = 45;
+    c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(X, 148, 30, 10, 0, 0, TAU); c.fill();
+    ol(c, (c) => { c.moveTo(X - 22, 148); c.lineTo(X - 10, 118); c.lineTo(X + 10, 118); c.lineTo(X + 22, 148); c.closePath(); }, "#c07a3a", "#4a2410", 3);
+    const fr = ell(X, 70, 34, 50);
+    ol(c, fr, "#ffd75e", "#8a6212", 3.4);
+    const g = c.createLinearGradient(X - 26, 30, X + 26, 110); g.addColorStop(0, "#e8f8ff"); g.addColorStop(0.5, "#9fd8f0"); g.addColorStop(1, "#6fa8d8");
+    c.beginPath(); c.ellipse(X, 70, 26, 41, 0, 0, TAU); c.fillStyle = g; c.fill();
+    c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 4; c.beginPath(); c.moveTo(X - 14, 44); c.lineTo(X - 2, 34); c.stroke(); c.beginPath(); c.moveTo(X - 16, 60); c.lineTo(X + 6, 40); c.stroke();
+    for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; c.beginPath(); c.arc(X + Math.cos(a) * 30, 70 + Math.sin(a) * 45.5, 2.6, 0, TAU); c.fillStyle = "#ff8fb8"; c.fill(); }
+    ol(c, (c) => { c.moveTo(X - 18, 18); c.quadraticCurveTo(X, 2, X + 18, 18); c.quadraticCurveTo(X, 12, X - 18, 18); }, "#ff6f91", "#8a1a2e", 2.6);
+    star4(c, X + 14, 50, 6, "#ffffff");
+  });
+}
+
 // =====================================================================
 // FX-Sprites (weiß → werden eingefärbt)
 // =====================================================================
@@ -760,6 +956,7 @@ export function fx(kind) {
       c.fillStyle = "#fff";
       for (const [x, y, r] of [[16, 22, 12], [28, 16, 13], [34, 25, 10], [22, 28, 9]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
     });
+    case "conf": return spr("fx:conf", 16, 16, 8, 8, (c) => { c.fillStyle = "#fff"; c.beginPath(); c.roundRect(2, 5, 12, 6, 2); c.fill(); });
     case "heart": return spr("fx:heart", 28, 26, 14, 13, (c) => { c.beginPath(); heartPath(c, 14, 13, 9); c.fillStyle = "#fff"; c.fill(); });
     case "ring": return spr("fx:ring", 128, 128, 64, 64, (c) => {
       c.strokeStyle = "#fff"; c.lineWidth = 7; c.beginPath(); c.arc(64, 64, 58, 0, TAU); c.stroke();
@@ -930,7 +1127,7 @@ function crystals(c, x, y, col, s, r) {
 }
 /** Wandblock: Box 64 × (32+WALL_H), Anker = Kachel-Bodenmitte */
 export function wallSprite(B, bi, v) {
-  return spr("wall:" + bi + ":" + (v % 4), 64, 32 + WALL_H + 14, 32, 16 + WALL_H + 14, (c) => {
+  return spr("wall:" + (B.key || bi) + ":" + (v % 4), 64, 32 + WALL_H + 14, 32, 16 + WALL_H + 14, (c) => {
     c.translate(0, 14);
     const H = WALL_H;
     const top = (c) => diamondPath(c, 32, 0, 0);

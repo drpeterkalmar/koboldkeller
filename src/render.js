@@ -8,7 +8,7 @@ export const R = {
   cv: null, ctx: null, VW: 0, VH: 0, RS: 1, U: 64, Z: 1, q: 0, qScales: [1, 0.8, 0.65, 0.5],
   camX: 0, camY: 0, camDX: 0, camDY: 0, shx: 0, shy: 0, zp: 1,
   lcv: null, lctx: null, LS: 4, lw: 0, lh: 0, vign: null,
-  chunks: new Map(), chunkOrder: [], walls: [], wallTorch: new Map(), L: null, biome: 0, t: 0,
+  chunks: new Map(), chunkOrder: [], walls: [], wallTorch: new Map(), L: null, biome: 0, B: BIOMES[0], t: 0,
   lightSpr: new Map(), drawn: 0, focusY: 0.5,
 };
 const CH = 8, CH_MAX = 28;
@@ -59,8 +59,8 @@ function lightSprite(col) {
 }
 
 // ---------- Level-Setup ----------
-export function setLevel(L, biome) {
-  R.L = L; R.biome = biome;
+export function setLevel(L, biome, B) {
+  R.L = L; R.biome = biome; R.B = B || BIOMES[biome];
   R.chunks.clear(); R.chunkOrder.length = 0;
   const m = L.map; R.walls = [];
   for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
@@ -92,7 +92,7 @@ function chunk(cx, cy) {
   const key = cy * 64 + cx;
   let c = R.chunks.get(key);
   if (c !== undefined) return c;
-  const L = R.L, m = L.map, B = BIOMES[R.biome];
+  const L = R.L, m = L.map, B = R.B;
   const x0 = cx * CH, y0 = cy * CH;
   let any = false;
   for (let y = y0; y < y0 + CH && !any; y++) for (let x = x0; x < x0 + CH; x++) if (x < m.w && y < m.h && !m.solid[y * m.w + x]) { any = true; break; }
@@ -129,15 +129,18 @@ export function prewarm(G) {
   list.sort((a, b) => a[2] - b[2]);
   for (const [cx, cy] of list.slice(0, CH_MAX - 4)) chunk(cx, cy);
   // Sprites vorwärmen (sonst Mini-Ruckler beim ersten Auftauchen)
-  const B = BIOMES[R.biome];
+  const B = R.B;
   for (let v = 0; v < 4; v++) A.wallSprite(B, R.biome, v);
+  for (const k of ["heart", "coin"]) A.itemSprite(k);
+  if (R.L.traps && R.L.traps.length) { A.trapPlate(B.left); A.trapSpikes(B.top); }
   for (const e of G.ents) {
-    if (e.isBoss) { A.body(e.rig.look, e.rig.outfit, e.rig.cape); for (const m of ["angry", "hurt"]) A.head(e.rig.look, m); A.hat("krone", e.rig.hatRed); continue; }
+    if (e.isBoss) { A.flashOf(A.body(e.rig.look, e.rig.outfit, e.rig.cape)); for (const m of ["angry", "hurt"]) A.flashOf(A.head(e.rig.look, m)); A.hat("krone", e.rig.hatRed); A.weapon(e.rig.wpn); continue; }
     for (const m of ["open", "hurt"]) A.flashOf(A.enemySprite(e.type, e.tint, m));
     if (e.type === "bat") A.flashOf(A.enemySprite("wing", e.tint));
   }
   for (const k of ["coin", "potion", "mushroom", "sword", "wand", "gem"]) A.itemSprite(k);
-  for (const k of ["glow", "dot", "star", "star5", "puff", "heart", "ring", "slash", "shadow", "flame"]) A.fx(k);
+  for (const k of ["glow", "dot", "star", "star5", "puff", "heart", "ring", "slash", "shadow", "flame", "conf"]) A.fx(k);
+  A.hat("krone", false);
   const lk = G.p.rig.look;
   for (const m of ["open", "blink", "hurt"]) A.flashOf(A.head(lk, m));
   A.flashOf(A.body(lk, G.p.rig.outfit)); A.potSprite(POT_COL[R.biome]); A.chestSprite(false); A.chestSprite(true);
@@ -222,9 +225,10 @@ export function draw(G, dt) {
   R.G = G;
   if (!L || !p) return;
   R.t += dt;
-  const B = BIOMES[R.biome];
-  // Kamera
-  const tx = p.x + (p.vx || 0) * 0.3, ty = p.y + (p.vy || 0) * 0.3;
+  const B = R.B;
+  // Kamera (Boss-Intro/Phasenwechsel/Sieg: kurz zum Boss schwenken)
+  const cf = G.camFocus;
+  const tx = cf ? p.x + (cf.x - p.x) * 0.7 : p.x + (p.vx || 0) * 0.3, ty = cf ? p.y + (cf.y - p.y) * 0.7 : p.y + (p.vy || 0) * 0.3;
   const f = Math.min(1, dt * 6);
   R.camX += (tx - R.camX) * f; R.camY += (ty - R.camY) * f;
   R.camDX = (R.camX - R.camY) * 32; R.camDY = (R.camX + R.camY) * 16 - 44;
@@ -250,11 +254,26 @@ export function draw(G, dt) {
   // --- Boden-Ebene: Treppe, Portal-Ringe, Warnkreise, Schockwellen, Schatten ---
   if (L.stairs && G.depth < 20) { const [sx, sy] = toScreen(L.stairs.x, L.stairs.y); blit(ctx, A.stairsSprite(R.biome), sx, sy); }
   const portals = allPortals(G);
-  for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy)) blit(ctx, A.portalRing(po.locked), sx, sy, po.small ? 0.7 : 1); }
+  for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy)) blit(ctx, A.portalRing(po.locked), sx, sy, (po.small ? 0.7 : 1) * appear(po)); }
+  // Fallen (Pieks-Platten)
+  if (L.traps) for (const tr of L.traps) {
+    const [sx, sy] = toScreen(tr.x, tr.y);
+    if (!onScreen(sx, sy)) continue;
+    blit(ctx, A.trapPlate(B.left), sx, sy);
+    if (tr.st > 0) {
+      const ph = ((G.t + tr.ph) % 3.4), k = tr.st === 2 ? 1 : 0.18 + 0.12 * Math.sin(R.t * 30);
+      if (tr.st === 1) { ctx.globalAlpha = 0.35 + 0.25 * Math.sin(R.t * 16); ctx.fillStyle = "#ff5a7a"; ctx.beginPath(); ctx.ellipse(sx, sy, 0.5 * R.U * 0.707, 0.25 * R.U * 0.707, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
+      const sp = A.trapSpikes(B.top);
+      ctx.save(); ctx.translate(sx, sy); ctx.scale(R.Z, R.Z * k); put(ctx, sp, 0, 0); ctx.restore();
+    }
+  }
   for (const t of G.teles) {
+    if (t.t < 0) continue;
+    const k = Math.min(1, t.t / t.max), pulse = 0.24 + 0.1 * Math.sin(R.t * 18);
+    if (t.kind === "line") { telePoly(ctx, t, 1, "rgba(255,60,90," + pulse + ")"); telePoly(ctx, t, k, "rgba(255,40,70,.42)"); continue; }
     const [sx, sy] = toScreen(t.x, t.y);
-    const rx = 0.707 * t.r * R.U, ry = rx * 0.5, k = Math.min(1, t.t / t.max);
-    ctx.fillStyle = "rgba(255,60,90," + (0.24 + 0.1 * Math.sin(R.t * 18)) + ")";
+    const rx = 0.707 * t.r * R.U, ry = rx * 0.5;
+    ctx.fillStyle = "rgba(255,60,90," + pulse + ")";
     ctx.beginPath(); ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU); ctx.fill();
     ctx.fillStyle = "rgba(255,40,70,.42)";
     ctx.beginPath(); ctx.ellipse(sx, sy, rx * k, ry * k, 0, 0, TAU); ctx.fill();
@@ -341,7 +360,7 @@ export function draw(G, dt) {
         break;
       }
       case 8: {
-        const po = e.o, sc = po.small ? 0.7 : 1;
+        const po = e.o, sc = (po.small ? 0.7 : 1) * appear(po);
         ctx.save(); ctx.translate(e.sx, e.sy - 52 * Z * sc);
         ctx.scale(Z * sc * 0.62, Z * sc); ctx.rotate(R.t * 2.2);
         ctx.globalAlpha = 0.95; put(ctx, A.swirlSprite(po.col), 0, 0);
@@ -353,10 +372,12 @@ export function draw(G, dt) {
   ctx.globalAlpha = 1;
   // Warnkreis-Rand über den Figuren (bleibt auch hinter Bossen sichtbar)
   for (const t of G.teles) {
-    const [sx, sy] = toScreen(t.x, t.y);
-    const rx = 0.707 * t.r * R.U, ry = rx * 0.5;
+    if (t.t < 0) continue;
     ctx.setLineDash([10 * R.Z, 7 * R.Z]); ctx.lineDashOffset = -R.t * 40;
-    ctx.strokeStyle = "rgba(255,90,120,.9)"; ctx.lineWidth = 5 * R.Z; ctx.beginPath(); ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU); ctx.stroke();
+    ctx.beginPath();
+    if (t.kind === "line") telePath(ctx, t, 1);
+    else { const [sx, sy] = toScreen(t.x, t.y), rx = 0.707 * t.r * R.U; ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); }
+    ctx.strokeStyle = "rgba(255,90,120,.9)"; ctx.lineWidth = 5 * R.Z; ctx.stroke();
     ctx.strokeStyle = "rgba(255,240,245,.95)"; ctx.lineWidth = 2 * R.Z; ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -386,11 +407,22 @@ export function draw(G, dt) {
   }
 }
 
+/** Warnlinie als Iso-Rechteck (k = Füllstand von der Quelle aus) */
+function telePath(ctx, t, k) {
+  const dx = t.x2 - t.x, dy = t.y2 - t.y, l = Math.hypot(dx, dy) || 1, nx = -dy / l * t.w / 2, ny = dx / l * t.w / 2;
+  const ex = t.x + dx * k, ey = t.y + dy * k;
+  const a = toScreen(t.x + nx, t.y + ny), b = toScreen(ex + nx, ey + ny), c = toScreen(ex - nx, ey - ny), d = toScreen(t.x - nx, t.y - ny);
+  ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.closePath();
+}
+function telePoly(ctx, t, k, col) { ctx.fillStyle = col; ctx.beginPath(); telePath(ctx, t, k); ctx.fill(); }
+/** Heim-Portal blendet nach dem Verstecken weich ein */
+const appear = po => po.appearT === undefined ? 1 : Math.max(0.05, 1 - Math.pow(1 - po.appearT, 3));
+
 function allPortals(G) {
   const L = R.L, out = G._portals || (G._portals = []);
   out.length = 0;
   if (L.portals) for (const po of L.portals) out.push(po);
-  if (L.homePortal) out.push(L.homePortal);
+  if (L.homePortal && !L.homePortal.hidden) out.push(L.homePortal);
   if (G.depth === 20 && L.stairs) out.push(L.exitPortal || (L.exitPortal = { x: L.stairs.x, y: L.stairs.y, col: "#ffd75e", label: "✨ 20. Portal", exit: true }));
   return out;
 }
@@ -448,11 +480,15 @@ function drawEnemy(ctx, e, sx, sy) {
   }
   put(ctx, s, 0, 0);
   ctx.restore();
+  if (e.elite) {   // Elite: kleine goldene Krone über dem Kopf
+    const hh = (e.type === "wichtel" || e.type === "pilzling" || e.type === "geist" || e.type === "flamme" ? 80 : 58) * sc + z * Z + Math.sin(t * 3) * 3 * Z;
+    ctx.save(); ctx.translate(sx, sy - hh); ctx.scale(Z * 0.42, Z * 0.42); ctx.rotate(Math.sin(t * 2) * 0.12); put(ctx, A.hat("krone", false), 0, 0); ctx.restore();
+  }
   if (e.hp < e.maxHp && e.type !== "dummy" && e.hp > 0) {
-    const h = (e.type === "wichtel" || e.type === "pilzling" || e.type === "geist" || e.type === "flamme" ? 78 : 60) * (e.scale || 1) + z;
-    const w = 34 * Z, x = sx - w / 2, y = sy - h * Z - 6;
+    const h = (e.type === "wichtel" || e.type === "pilzling" || e.type === "geist" || e.type === "flamme" ? 78 : 60) * (e.scale || 1) + z + (e.elite ? 26 : 0);
+    const w = 34 * Z * (e.elite ? 1.3 : 1), x = sx - w / 2, y = sy - h * Z - 6;
     ctx.fillStyle = "rgba(30,10,40,.7)"; ctx.beginPath(); ctx.roundRect(x - 2, y - 2, w + 4, 8, 4); ctx.fill();
-    ctx.fillStyle = e.hp / e.maxHp > 0.4 ? "#7cf29a" : "#ffb35e"; ctx.beginPath(); ctx.roundRect(x, y, Math.max(2, w * e.hp / e.maxHp), 4, 2); ctx.fill();
+    ctx.fillStyle = e.elite ? "#ffd75e" : e.hp / e.maxHp > 0.4 ? "#7cf29a" : "#ffb35e"; ctx.beginPath(); ctx.roundRect(x, y, Math.max(2, w * e.hp / e.maxHp), 4, 2); ctx.fill();
   }
 }
 
@@ -473,6 +509,7 @@ function drawProp(ctx, pr, sx, sy, G) {
     }
     case "lantern": blit(ctx, A.lanternSprite(), sx, sy); break;
     case "fountain": blit(ctx, A.fountainSprite(), sx, sy); break;
+    case "mirror": blit(ctx, A.mirrorSprite(), sx, sy, 0.8); break;
   }
 }
 function drawItem(ctx, it, sx, sy) {
@@ -494,6 +531,21 @@ function drawShot(ctx, s, sx, sy) {
   if (s.kind === "bubble") {
     const w = 1 + Math.sin(s.t * 14) * 0.08, sp = A.bubbleSprite(s.tier);
     ctx.save(); ctx.translate(sx, sy - s.z * Z); ctx.scale(Z * w * s.size, Z / w * s.size); put(ctx, sp, 0, 0); ctx.restore();
+  } else if (s.kind === "snow") {
+    const sp = A.bubbleSprite(0);
+    ctx.save(); ctx.translate(sx, sy - s.z * Z); ctx.rotate(s.rot || 0);
+    ctx.fillStyle = "#f8fcff"; ctx.strokeStyle = "#8ab8dc"; ctx.lineWidth = 3 * Z;
+    ctx.beginPath(); ctx.arc(0, 0, 20 * Z, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#dcefff"; ctx.beginPath(); ctx.arc(6 * Z, 5 * Z, 6 * Z, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.arc(-7 * Z, -4 * Z, 4 * Z, 0, TAU); ctx.fill();
+    ctx.restore();
+  } else if (s.kind === "lob") {
+    const bw = 13 * Z;
+    ctx.save(); ctx.translate(sx, sy - s.z * Z); ctx.rotate(s.t * 8);
+    ctx.fillStyle = s.col; ctx.strokeStyle = "rgba(80,20,60,.7)"; ctx.lineWidth = 2 * Z;
+    ctx.beginPath(); ctx.ellipse(0, 0, bw, bw * 0.8, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(k * bw, 0); ctx.lineTo(k * bw * 1.6, -bw * 0.5); ctx.lineTo(k * bw * 1.6, bw * 0.5); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.beginPath(); ctx.arc(-bw * 0.35, -bw * 0.3, bw * 0.25, 0, TAU); ctx.fill();
+    ctx.restore();
   } else {
     blit(ctx, A.orbSprite(s.col), sx, sy - s.z * Z, s.kind === "fire" ? 1.3 : 1);
   }
@@ -512,7 +564,7 @@ function drawParticles(ctx, additive) {
     const s = p.col === "#fff" || p.col === "#ffffff" ? base : A.tinted(base, p.col);
     ctx.globalAlpha = Math.min(1, k * (1 + (1 - p.fade) * 4));
     const w = size, h = size * s.h / s.w;
-    if (p.kind === "star" || p.kind === "star5") {
+    if (p.kind === "star" || p.kind === "star5" || p.kind === "conf") {
       ctx.save(); ctx.translate(sx, sy); ctx.rotate(p.rot); ctx.drawImage(s.cv, -w / 2, -h / 2, w, h); ctx.restore();
     } else ctx.drawImage(s.cv, sx - w / 2, sy - h / 2, w, h);
   }
@@ -544,16 +596,19 @@ function lighting(G, B, portals) {
   for (const li of L.lights) light(li.x, li.y, li.r, li.c, li.a * (1 - li.flick + li.flick * Math.sin(T * 7 + li.x)));
   for (const po of portals) if (!po.locked) light(po.x, po.y, po.small ? 2.4 : 3.4, po.col, 0.8);
   if (L.stairs && G.depth < 20) light(L.stairs.x, L.stairs.y, 2.6, "#ffe9a8", 0.55);
-  for (const s of G.shots) light(s.x, s.y, s.kind === "bubble" ? 1.6 : 2.0, s.kind === "bubble" ? "#bfefff" : s.col, 0.7);
+  for (const s of G.shots) if (s.kind !== "lob") light(s.x, s.y, s.kind === "bubble" ? 1.6 : 2.0, s.kind === "bubble" ? "#bfefff" : s.col, 0.7);
   for (const e of G.ents) {
     if (e.type === "wisp") light(e.x, e.y, 2.6, e.tint || "#8fe9ff", 0.8);
     else if (e.type === "flamme") light(e.x, e.y, 2.6, "#ff9a4a", 0.85);
     else if (e.isKing) light(e.x, e.y, 7, "#ff5a3a", 1);
-    else if (e.isBoss) light(e.x, e.y, 3.2, "#ffd0a0", 0.45);
+    else if (e.isBoss) light(e.x, e.y, e.awake ? 4 + e.phase * 0.8 : 3.2, e.phase >= 3 ? "#ff8a7a" : e.aura || "#ffd0a0", e.awake ? 0.6 + 0.1 * Math.sin(T * 5) : 0.45);
+    else if (e.elite) light(e.x, e.y, 2.2, "#ffe08a", 0.55);
   }
+  if (G.specFx) { const f = G.specFx, k = f.t / f.max; light(f.x, f.y, f.r * (0.6 + k * 0.8), f.c1, 1 - k); }
   for (const it of G.items) if (it.kind !== "coin") light(it.x, it.y, 1.3, "#fff0c0", 0.45);
   if (p.spinT > 0) light(p.x, p.y, 3.4, "#fff8e0", p.spinT / 0.28 * 0.7);
-  for (const t of G.teles) light(t.x, t.y, t.r * 1.5, "#ffe0e6", 0.95);
+  for (const t of G.teles) { if (t.t < 0) continue; if (t.kind === "line") light((t.x + t.x2) / 2, (t.y + t.y2) / 2, Math.hypot(t.x2 - t.x, t.y2 - t.y) * 0.55, "#ffe0e6", 0.6); else light(t.x, t.y, t.r * 1.5, "#ffe0e6", 0.95); }
+  if (L.traps) for (const tr of L.traps) if (tr.st === 1) light(tr.x, tr.y, 1.4, "#ff9ab0", 0.6);
   l.globalAlpha = 1;
   l.globalCompositeOperation = "multiply";
   l.drawImage(R.vign, 0, 0);
@@ -591,7 +646,7 @@ function glowPass(ctx, G, B, portals) {
   }
   for (const po of portals) if (!po.locked) g(po.x, po.y, 52 * (po.small ? 0.7 : 1), po.small ? 90 : 130, po.col, 0.4 + Math.sin(T * 3) * 0.08);
   if (L.stairs && G.depth < 20) g(L.stairs.x, L.stairs.y, 4, 70, "#ffe9a8", 0.3 + Math.sin(T * 2.5) * 0.1);
-  for (const s of G.shots) g(s.x, s.y, s.z, s.kind === "bubble" ? 34 * s.size : 44, s.kind === "bubble" ? "#bfefff" : s.col, 0.45);
+  for (const s of G.shots) g(s.x, s.y, s.z, s.kind === "bubble" ? 34 * s.size : s.kind === "snow" ? 70 : 44, s.kind === "bubble" ? "#bfefff" : s.col, s.kind === "lob" ? 0.3 : 0.45);
   for (const e of G.ents) {
     if (e.type === "wisp") g(e.x, e.y, 36 + Math.sin(e.t * 3) * 4, 60, e.tint || "#8fe9ff", 0.55);
     else if (e.type === "flamme") g(e.x, e.y, 30, 64, "#ff9a4a", 0.5);
@@ -608,12 +663,27 @@ function glowPass(ctx, G, B, portals) {
         ctx.drawImage((k % 2 ? fl : fr).cv, kx + rx - w / 2, ky + ry - h * 0.92, w, h);
       }
     }
+    else if (e.isBoss && e.awake) {
+      const col = e.phase >= 3 ? "#ff5a4a" : e.aura, pul = 0.5 + 0.5 * Math.sin(T * (e.phase >= 3 ? 9 : 4));
+      g(e.x, e.y, 60 * e.scale / 1.9, (150 + e.phase * 30) * e.scale / 1.9, col, 0.16 + 0.08 * e.phase * pul);
+      if (e.state === "phase") g(e.x, e.y, 70, 320, col, 0.35 + 0.2 * Math.sin(T * 20));
+    }
+    else if (e.elite) g(e.x, e.y, 34, 70, "#ffd75e", 0.22 + Math.sin(T * 4 + e.t) * 0.08);
     if (e.tele > 0) g(e.x, e.y, 40 * (e.scale || 1), 90 * (e.scale || 1), "#ff5a7a", e.tele * 0.6);
+  }
+  if (G.specFx) {   // Spezialangriff: große Licht-Welle
+    const f = G.specFx, k = f.t / f.max, [sx, sy] = toScreen(f.x, f.y);
+    const rx = 0.707 * f.r * R.U * (0.3 + k * 0.9);
+    ctx.globalAlpha = (1 - k) * 0.8; ctx.strokeStyle = f.c1; ctx.lineWidth = (26 - 18 * k) * Z;
+    ctx.beginPath(); ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = (1 - k) * 0.5; ctx.strokeStyle = f.c2; ctx.lineWidth = 10 * Z;
+    ctx.beginPath(); ctx.ellipse(sx, sy, rx * 0.7, rx * 0.35, 0, 0, TAU); ctx.stroke();
+    g(f.x, f.y, 30, 420 * (0.5 + k), f.c1, (1 - k) * 0.45);
   }
   for (const it of G.items) {
     const z = it.z + 5 + Math.sin((R.t + it.seed) * 3) * 3;
     if (it.kind === "coin") g(it.x, it.y, z, 22, "#ffd75e", 0.3);
-    else g(it.x, it.y, z + 12, 54, it.kind === "potion" ? "#ff8fb8" : it.kind === "mushroom" ? "#ff9ae0" : "#fff3a0", 0.45 + Math.sin(T * 4 + it.seed) * 0.12);
+    else g(it.x, it.y, z + 12, 54, it.kind === "potion" || it.kind === "heart" ? "#ff8fb8" : it.kind === "mushroom" ? "#ff9ae0" : "#fff3a0", 0.45 + Math.sin(T * 4 + it.seed) * 0.12);
   }
   // Rundumschlag-Sichel
   if (p.spinT > 0) {
@@ -639,6 +709,14 @@ function textPass(ctx, G, portals) {
     ctx.font = "800 " + Math.round(13 * Math.max(1, Z)) + "px system-ui, sans-serif";
     ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(txt, sx, sy + Math.sin(R.t * 2 + po.x) * 3);
     ctx.fillStyle = po.locked ? "#c8c0d8" : "#fff8e0"; ctx.fillText(txt, sx, sy + Math.sin(R.t * 2 + po.x) * 3);
+  }
+  if (R.L.mirror) {
+    const [sx, sy] = toScreen(R.L.mirror.x, R.L.mirror.y, 128);
+    if (onScreen(sx, sy)) {
+      ctx.font = "800 " + Math.round(13 * Math.max(1, Z)) + "px system-ui, sans-serif";
+      const t = "🪞 Spiegel", yy = sy + Math.sin(R.t * 2 + 1) * 3;
+      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(t, sx, yy); ctx.fillStyle = "#ffe0f0"; ctx.fillText(t, sx, yy);
+    }
   }
   if (R.L.stairs && G.depth < 20) {
     const [sx, sy] = toScreen(R.L.stairs.x, R.L.stairs.y, 58);
@@ -676,7 +754,7 @@ export function drawMini(cv, G) {
   }
   const dot = (x, y, col, r) => { c.fillStyle = col; c.beginPath(); c.arc((x - ox) * s * 1.4, (y - oy) * s * 1.4, r, 0, TAU); c.fill(); };
   if (L.stairs && m.seen[Math.floor(L.stairs.y) * m.w + Math.floor(L.stairs.x)]) dot(L.stairs.x, L.stairs.y, "#ffd75e", s * 2.4);
-  if (L.homePortal) dot(L.homePortal.x, L.homePortal.y, "#7fffd4", s * 2);
+  if (L.homePortal && !L.homePortal.hidden) dot(L.homePortal.x, L.homePortal.y, "#7fffd4", s * 2);
   for (const e of G.ents) if (e.isBoss && m.seen[Math.floor(e.y) * m.w + Math.floor(e.x)]) dot(e.x, e.y, "#ff4a5a", s * 2.6);
   dot(ox, oy, "#ff6fae", s * 2.2);
   c.restore();

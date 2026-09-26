@@ -177,18 +177,23 @@ export function buildTown(seed) {
     const x = 3 + ((rnd() * (W - 6)) | 0), y = 3 + ((rnd() * (H - 6)) | 0), k = y * W + x;
     if (!m.block[k] && !m.deco[k]) m.deco[k] = 2 + ((rnd() * 4) | 0);
   }
+  // Friseur-Spiegel (Charakter-Editor) vor dem linken Haus
+  const mirror = { x: 10.5, y: 9.5 };
+  setBlock(m, 10, 9, 1);
+  props.push({ kind: "mirror", x: mirror.x, y: mirror.y });
+  lights.push({ x: mirror.x, y: mirror.y + 0.6, r: 2.2, c: "#ffe9f4", a: 0.45, flick: 0.04 });
   // Übungspuppen + Oma
   const dummies = [{ x: cx - 4.5, y: cy + 6.5 }, { x: cx + 5.5, y: cy + 6.5 }];
   const npc = { x: cx + 2.6, y: cy + 5.2 };
   return {
-    kind: "town", map: m, props, lights, portals, dummies, npc,
+    kind: "town", map: m, props, lights, portals, dummies, npc, mirror,
     fountain: { x: cx + 0.5, y: cy + 0.5 }, entry: { x: cx + 0.5, y: cy + 5.5 },
     stairs: null, homePortal: null, torches: [], rooms: [],
   };
 }
 
 // ================= DUNGEON =================
-export function buildDungeon(seed, depth, biome) {
+export function buildDungeon(seed, depth, biome, room = [5, 10]) {
   const rnd = mulberry32((seed | 0) + depth * 7717);
   const isBoss = depth % 4 === 0;
   const S = 44 + Math.min(6, depth >> 2);
@@ -206,7 +211,7 @@ export function buildDungeon(seed, depth, biome) {
   }
   const want = 8 + Math.min(4, Math.floor(depth / 3));
   for (let t = 0; t < 400 && rooms.length < want; t++) {
-    const w = 5 + ((rnd() * 6) | 0), h = 5 + ((rnd() * 6) | 0);
+    const span = room[1] - room[0] + 1, w = room[0] + ((rnd() * span) | 0), h = room[0] + ((rnd() * span) | 0);
     const r = { x: 2 + ((rnd() * (S - w - 4)) | 0), y: 2 + ((rnd() * (S - h - 4)) | 0), w, h };
     if (fits(r)) rooms.push(r);
   }

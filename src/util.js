@@ -36,6 +36,11 @@ export function shade(h, t) {
   const f = c => Math.round(t >= 0 ? c + (255 - c) * t : c * (1 + t));
   return "rgb(" + f(r) + "," + f(g) + "," + f(b) + ")";
 }
+/** zwei Farben mischen (k = 0 … 1) → #rrggbb */
+export function mixHex(a, b, k) {
+  const x = hexRgb(a), y = hexRgb(b), f = i => Math.round(x[i] + (y[i] - x[i]) * k).toString(16).padStart(2, "0");
+  return "#" + f(0) + f(1) + f(2);
+}
 export function rgba(h, a) {
   const [r, g, b] = hexRgb(h);
   return "rgba(" + r + "," + g + "," + b + "," + a + ")";

@@ -1,6 +1,6 @@
 /* main.js — Boot, Game-Loop, Verdrahtung, Debug-API window.KK (MIT) */
-import { VERSION, SPECIES, PLAYER, MAX_DEPTH } from "./config.js";
-import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, killEnt, winGame, makeEnt, gainXp, finishTut } from "./game.js";
+import { VERSION, SPECIES, PLAYER, MAX_DEPTH, levelName, makeLook } from "./config.js";
+import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, special, killEnt, winGame, makeEnt, makeElite, gainXp, finishTut, recalc, skillUp, skillReset, setLook, magnetOf } from "./game.js";
 import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality } from "./render.js";
 import { FX, updateFx } from "./fx.js";
 import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
@@ -22,9 +22,11 @@ setTimeout(initAudio, 250);
 // ---------- Hooks game → UI/Render ----------
 G.hooks = {
   toast: (m) => { if (!G.demo) UI.toast(m); },
-  banner: (t, s, k) => { if (!G.demo) UI.banner(t, s, k); },
+  banner: (t, s, k, lvl) => { if (!G.demo) UI.banner(t, s, k, lvl); },
+  bossIntro: (e) => { if (!G.demo) UI.bossIntro(e); },
+  editor: () => { if (!G.demo) UI.openMirror(); },
   level: () => {
-    setLevel(G.L, G.biome);
+    setLevel(G.L, G.biome, G.B);
     snapCamera(G.p.x, G.p.y);
     prewarm(G);
     UI.showBoss(null);
@@ -110,7 +112,7 @@ function frame(now) {
   let dt = rd;
   if (FX.hitstop > 0) { FX.hitstop -= rd; dt = 0; }
   if (FX.slowT > 0) { FX.slowT -= rd; dt *= FX.slowF; }
-  if (G.screen === "pause" || G.screen === "bag") dt = 0;
+  if (G.screen === "pause" || G.screen === "bag" || G.screen === "edit") dt = 0;
   if (IN.attackHeld && G.screen === "play") attack();
   const t0 = performance.now();
   for (let k = 0; k < (G.dbgSpeed || 1); k++) { update(dt, rd); updateFx(dt, rd); }
@@ -135,6 +137,9 @@ window.KK = {
     mega: G.mega, secs: Math.round(G.runSecs), won: !!(G.prof && G.prof.won), demo: !!G.demo, deepest: G.deepest,
     x: G.p && +G.p.x.toFixed(2), y: G.p && +G.p.y.toFixed(2), tut: G.tutStep, potions: G.p && G.p.potions, atk: G.p && G.p.atk,
     name: G.p && G.p.name, species: G.p && G.p.species, hat: G.p && G.p.hat, audio: AUDIO.ctx ? AUDIO.ctx.state : "none", track: AUDIO.track, where: AUDIO.where,
+    ammo: G.p && G.p.ammo, ammoMax: G.p && G.p.ammoMax, spec: G.p && +G.p.spec.toFixed(3), skPts: G.p && G.p.skPts, sk: G.p && { ...G.p.sk },
+    look: G.p && { ...G.p.look }, homeHidden: !!(G.L && G.L.homePortal && G.L.homePortal.hidden), homeHideT: +(G.homeHideT || 0).toFixed(2),
+    levelName: levelName(G.depth), phase: G.boss ? G.boss.phase : 0,
   }),
   start: (o = {}) => {
     const prof = sanitize({ name: o.name || "Testi", species: o.species || "kobold", mega: !!o.mega, tut: o.tut !== false, seed: o.seed || 777, depth: 0 });
@@ -158,9 +163,11 @@ window.KK = {
   win: (how = "boss") => { winGame(how); return true; },
   god: (on = true) => { G.god = !!on; return G.god; },
   heal: () => { G.p.hp = G.p.maxHp; },
-  give: (kind, n = 1) => { const p = G.p; for (let i = 0; i < n; i++) { if (kind === "gold") G.gold++; else if (kind === "xp") gainXp(1); else if (kind === "sword") p.atk++; else if (kind === "wand") p.projN++; else if (kind === "gem") p.magic++; else if (kind === "potion") p.potions++; else if (kind === "hat") { p.hats.push(n); p.hat = n; break; } } return window.KK.state(); },
-  attack, bubbles, dodge, potion,
-  spawn: (type, dx = 1.5, dy = 0) => { const e = makeEnt(type, G.p.x + dx, G.p.y + dy); G.ents.push(e); return e.hp; },
+  give: (kind, n = 1) => { const p = G.p; for (let i = 0; i < n; i++) { if (kind === "gold") G.gold++; else if (kind === "xp") gainXp(1); else if (kind === "sword") { p.atkBase++; recalc(p); } else if (kind === "wand") p.projN++; else if (kind === "gem") p.magic++; else if (kind === "potion") p.potions++; else if (kind === "ammo") p.ammo = Math.min(p.ammoMax, p.ammo + 1); else if (kind === "spec") p.spec = 1; else if (kind === "skpt") p.skPts++; else if (kind === "hat") { p.hats.push(n); p.hat = n; break; } } return window.KK.state(); },
+  attack, bubbles, dodge, potion, special,
+  skill: (id) => skillUp(id), respec: () => skillReset(), look: (o) => { setLook(o); return G.p.look; }, magnet: (k) => magnetOf(k),
+  item: (kind, dx = 1, dy = 0, v) => { G.items.push({ kind, x: G.p.x + dx, y: G.p.y + dy, z: 0, vx: 0, vy: 0, vz: 0, seed: 0, v: v || "", flyT: 0 }); return G.items.length; },
+  spawn: (type, dx = 1.5, dy = 0, elite = false) => { const e = makeEnt(type, G.p.x + dx, G.p.y + dy); if (elite) makeElite(e); G.ents.push(e); return e.hp; },
   audio: () => audioStats(),
   perf: (reset) => { if (reset) perfReset(); return perfStats(); },
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },

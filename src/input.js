@@ -1,6 +1,6 @@
 /* input.js — Tap-to-Move, Halten-Folgen, schwebender Joystick, Tastatur (MIT) */
 import { R, toWorld, toScreen } from "./render.js";
-import { G, tapWorld, holdWorld, releaseHold, setJoy, attack, bubbles, dodge, potion } from "./game.js";
+import { G, tapWorld, holdWorld, releaseHold, setJoy, attack, bubbles, dodge, potion, special } from "./game.js";
 
 export const IN = { joyOn: true, joy: null, hold: null, keys: {}, attackHeld: false, cb: {} };
 let base, knob;
@@ -101,6 +101,7 @@ function key(e) {
   else if (c === "Digit2" || c === "KeyK") bubbles();
   else if (c === "Digit3" || c === "ShiftLeft" || c === "ShiftRight" || c === "KeyL") dodge();
   else if (c === "KeyR" || c === "KeyQ" || c === "Digit4") potion();
+  else if (c === "KeyE" || c === "Digit5") special();
   keyMove();
 }
 function keyMove() {

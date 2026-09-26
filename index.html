@@ -8,28 +8,29 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Koboldkeller 2</title>
-<link rel="manifest" href="manifest.webmanifest?v=3">
-<link rel="icon" href="icons/icon-192.png?v=3">
-<link rel="apple-touch-icon" href="icons/icon-192.png?v=3">
-<link rel="stylesheet" href="style.css?v=3">
-<script>window.KK_VER = 3;</script>
+<link rel="manifest" href="manifest.webmanifest?v=4">
+<link rel="icon" href="icons/icon-192.png?v=4">
+<link rel="apple-touch-icon" href="icons/icon-192.png?v=4">
+<link rel="stylesheet" href="style.css?v=4">
+<script>window.KK_VER = 4;</script>
 <script type="importmap">
 { "imports": {
-  "./src/main.js": "./src/main.js?v=3",
-  "./src/util.js": "./src/util.js?v=3",
-  "./src/config.js": "./src/config.js?v=3",
-  "./src/world.js": "./src/world.js?v=3",
-  "./src/art.js": "./src/art.js?v=3",
-  "./src/fx.js": "./src/fx.js?v=3",
-  "./src/render.js": "./src/render.js?v=3",
-  "./src/audio.js": "./src/audio.js?v=3",
-  "./src/sfxlib.js": "./src/sfxlib.js?v=3",
-  "./src/music.js": "./src/music.js?v=3",
-  "./src/save.js": "./src/save.js?v=3",
-  "./src/platform.js": "./src/platform.js?v=3",
-  "./src/game.js": "./src/game.js?v=3",
-  "./src/input.js": "./src/input.js?v=3",
-  "./src/ui.js": "./src/ui.js?v=3"
+  "./src/main.js": "./src/main.js?v=4",
+  "./src/util.js": "./src/util.js?v=4",
+  "./src/config.js": "./src/config.js?v=4",
+  "./src/world.js": "./src/world.js?v=4",
+  "./src/art.js": "./src/art.js?v=4",
+  "./src/fx.js": "./src/fx.js?v=4",
+  "./src/render.js": "./src/render.js?v=4",
+  "./src/audio.js": "./src/audio.js?v=4",
+  "./src/sfxlib.js": "./src/sfxlib.js?v=4",
+  "./src/music.js": "./src/music.js?v=4",
+  "./src/save.js": "./src/save.js?v=4",
+  "./src/platform.js": "./src/platform.js?v=4",
+  "./src/game.js": "./src/game.js?v=4",
+  "./src/boss.js": "./src/boss.js?v=4",
+  "./src/input.js": "./src/input.js?v=4",
+  "./src/ui.js": "./src/ui.js?v=4"
 } }
 </script>
 </head>
@@ -39,19 +40,23 @@
 <div id="hud" class="hidden">
   <div id="hudTL">
     <div id="hpRow"><span class="heart" id="hpHeart">❤️</span><div id="hpBar"><div id="hpFill"></div><div id="hpTxt">6/6</div></div></div>
-    <div id="xpRow"><span id="lvlBadge">⭐ 1</span><div id="xpBar"><div id="xpFill"></div></div></div>
+    <div id="xpRow"><button id="lvlBadge" aria-label="Talente">⭐ 1</button><span id="skPill" class="hidden">+2</span><div id="xpBar"><div id="xpFill"></div></div></div>
+    <div id="resRow"><div id="ammoRow"><span class="ic">🫧</span><div id="ammoBar"><div id="ammoFill"></div><div id="ammoTxt">15/20</div></div></div><div id="specRow"><span class="ic">🍄</span><div id="specBar"><div id="specFill"></div><div id="specTxt">0/3</div></div></div></div>
     <div id="chips"><span class="chip" id="goldChip">🪙 0</span><span class="chip" id="depthChip">🏠 Stadt</span><span class="chip mega hidden" id="megaChip">🔥 MEGA</span><span class="chip saved" id="saveChip">💾</span></div>
   </div>
   <div id="hudTR">
     <button class="round" id="btnPause" aria-label="Pause">⏸️</button>
     <button class="round" id="btnBag" aria-label="Rucksack">🎒</button>
     <canvas id="mini" width="180" height="180"></canvas>
+    <div id="mapName"></div>
   </div>
-  <div id="bossBar" class="hidden"><div id="bossName">Boss</div><div id="bossTrack"><div id="bossFill"></div></div></div>
+  <div id="bossBar" class="hidden"><div id="bossName">Boss</div><div id="bossTrack"><div id="bossGhost"></div><div id="bossFill"></div><i class="tick" style="left:33%"></i><i class="tick" style="left:66%"></i></div><div id="bossPhase">Phase 1 / 3</div></div>
+  <div id="bossCard" class="hidden"><div class="bcSmall">⚠️ BOSS ⚠️</div><div class="bcName" id="bcName"></div><div class="bcEpi" id="bcEpi"></div><div class="bcTip">Rote Kreise &amp; Streifen = gleich knallt's! 💨 schnell raus!</div></div>
   <div id="tut" class="hidden"><div class="oma">🍄</div><div id="tutText"></div><button id="tutSkip" aria-label="Tutorial überspringen">✕</button></div>
   <div id="skills">
     <button class="skill big" id="bAtk" aria-label="Rundumschlag"><span class="ic">⚔️</span><span class="cd"></span></button>
-    <button class="skill" id="bBub" aria-label="Seifenblasen"><span class="ic">🫧</span><span class="cd"></span></button>
+    <button class="skill" id="bBub" aria-label="Seifenblasen"><span class="ic">🫧</span><span class="cd"></span><span class="cnt" id="ammoCnt">15</span></button>
+    <button class="skill spec" id="bSpec" aria-label="Spezialangriff"><span class="fill"></span><span class="ic">✨</span></button>
     <button class="skill" id="bDash" aria-label="Ausweichsprung"><span class="ic">💨</span><span class="cd"></span></button>
     <button class="skill small" id="bPot" aria-label="Trank"><span class="ic">🧪</span><span class="cnt" id="potCnt">3</span></button>
   </div>
@@ -78,18 +83,29 @@
       <button class="btn blue" id="btnSet">⚙️ Einstellungen</button>
     </div>
     <button class="btn ghost" id="btnFull1">⛶ Vollbild</button>
-    <div class="foot">Tipp auf den Boden zum Laufen · ⚔️ Rundumschlag · 🫧 Blasen · 💨 Sprung</div>
+    <div class="foot">Tipp auf den Boden zum Laufen · ⚔️ Rundumschlag · 🫧 Blasen · 💨 Sprung · ✨ Spezial</div>
   </div>
 </div>
 
 <!-- Charakter erstellen -->
 <div id="scrCreate" class="screen hidden">
-  <div class="card">
-    <h2>Wähle deinen Kobold</h2>
-    <div id="looks"></div>
-    <div class="nameRow"><input id="nameInput" maxlength="12" autocomplete="off" spellcheck="false" aria-label="Name"><button class="round dice" id="btnDice" aria-label="Zufallsname">🎲</button></div>
-    <label class="toggle"><input type="checkbox" id="megaNew"><span>🔥 MEGASCHWER (Gegner 2× schnell, 10× Schaden)</span></label>
-    <button class="btn gold" id="btnGo">🍄 Los geht's!</button>
+  <div class="card edit">
+    <h2 id="editTitle">Wähle deinen Kobold</h2>
+    <div class="editWrap">
+      <div class="editLeft">
+        <div class="prevBox"><canvas id="editPrev"></canvas></div>
+        <div class="nameRow"><input id="nameInput" maxlength="12" autocomplete="off" spellcheck="false" aria-label="Name"><button class="round dice" id="btnDice" aria-label="Zufallsname">🎲</button></div>
+      </div>
+      <div class="editRight">
+        <div class="tabs" id="editTabs"></div>
+        <div id="editBody"><div id="looks"></div><div id="editOpts"></div></div>
+      </div>
+    </div>
+    <div id="createOnly">
+      <label class="toggle"><input type="checkbox" id="megaNew"><span>🔥 MEGASCHWER (Gegner 2× schnell, 10× Schaden)</span></label>
+      <button class="btn gold" id="btnGo">🍄 Los geht's!</button>
+    </div>
+    <button class="btn gold hidden" id="btnEditOk">✔️ So gefällt's mir!</button>
     <button class="btn ghost" id="btnBack1">⬅️ Zurück</button>
   </div>
 </div>
@@ -108,6 +124,7 @@
 <div id="scrPause" class="screen hidden">
   <div class="card">
     <h2>⏸️ Pause</h2>
+    <div class="pauseWhere" id="pauseWhere"></div>
     <button class="btn gold" id="btnResume">▶️ Weiterspielen</button>
     <button class="btn blue" id="btnTown">🏠 Zurück in die Stadt</button>
     <div id="setBox"></div>
@@ -164,6 +181,6 @@
 </div>
 
 <noscript>Koboldkeller braucht JavaScript.</noscript>
-<script type="module" src="./src/main.js?v=3"></script>
+<script type="module" src="./src/main.js?v=4"></script>
 </body>
 </html>

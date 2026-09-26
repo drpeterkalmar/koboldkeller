@@ -1,5 +1,5 @@
 /* save.js — Spielstand, v20-Migration, Ehrenhall, Einstellungen (MIT) */
-import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS } from "./config.js";
+import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave } from "./config.js";
 
 const num = (v, d, lo = -Infinity, hi = Infinity) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
 const str = (v, d, max = 14) => typeof v === "string" && v.trim() ? v.trim().slice(0, max) : d;
@@ -9,24 +9,51 @@ function readJson(key) {
 }
 function writeJson(key, o) { try { localStorage.setItem(key, JSON.stringify(o)); return true; } catch (e) { return false; } }
 
-/** normalisiert einen Spielstand — alles Unbekannte wird sicher ersetzt */
+/** normalisiert einen Spielstand — alles Unbekannte wird sicher ersetzt.
+    Spielstände vor v4 (v < 2, auch aus der v20-Migration) werden umgerechnet: Pilze → Spezial-Ladung,
+    Überzähliges über den Obergrenzen → Gold (capNote), bisherige Level → Talentpunkte als Willkommensgeschenk. */
 export function sanitize(s) {
   if (!s || typeof s !== "object") return null;
+  const old = (num(s.v, 1) | 0) < SAVE_V;
   const species = SPECIES.some(x => x.id === s.species) ? s.species : "kobold";
   const lvl = Math.round(num(s.lvl, 1, 1, 99));
-  const maxHp = Math.round(num(s.maxHp, 6 + (lvl - 1) * 2, 1, 400));
   const hats = Array.isArray(s.hats) ? s.hats.filter(h => typeof h === "string" && HATS[h]).slice(0, 12) : [];
+  let gold = Math.round(num(s.gold, 0, 0, 1e9)), capGold = 0;
+  // Max-❤️ (Grundwert ohne Talente)
+  let maxHp = Math.round(num(s.maxHp, 6 + (lvl - 1), 1, 400));
+  if (maxHp > CAP.hp) { capGold += (maxHp - CAP.hp) * CAP_GOLD.hp; maxHp = CAP.hp; }
+  let potions = Math.round(num(s.potions, 3, 0, 99));
+  if (potions > CAP.potions) { capGold += (potions - CAP.potions) * CAP_GOLD.potion; potions = CAP.potions; }
+  // Talente
+  const sk = {}; let spent = 0;
+  for (const k of SKILLS) { sk[k.id] = Math.round(num(s.sk && s.sk[k.id], 0, 0, SKILL_MAX)); spent += sk[k.id]; }
+  let skPts = Math.round(num(s.skPts, 0, 0, 999));
+  // Spezial-Leiste (0 … 1); alte Pilze laden sie auf
+  let spec = num(s.spec, 0, 0, 1);
+  const shrooms = Math.round(num(s.shrooms, 0, 0, 99));
+  let gift = 0;
+  if (old) {
+    const need = Math.ceil((1 - spec) / SPECIAL.perShroom - 1e-6), use = Math.min(shrooms, need);
+    spec = Math.min(1, spec + use * SPECIAL.perShroom);
+    capGold += (shrooms - use) * CAP_GOLD.shroom;
+    gift = Math.max(0, lvl - 1); skPts += gift;
+  }
+  gold += capGold;
+  const lk = makeLook({ species, ...(s.look && typeof s.look === "object" ? s.look : {}) });
+  const ammoMax = Math.min(CAP.ammoMax, CAP.ammoBase + sk.blasen * 4);
   return {
-    v: 1, name: str(s.name, "Kobold"), species, lvl,
+    v: SAVE_V, name: str(s.name, "Kobold"), species, look: lookSave(lk), lvl,
     xp: num(s.xp, 0, 0, 1e9), xpNext: num(s.xpNext, 10, 1, 1e9),
-    maxHp, hp: Math.round(num(s.hp, maxHp, 1, maxHp)),
+    maxHp, hp: Math.round(num(s.hp, maxHp, 1, CAP.hp)),
     atk: num(s.atk, 4, 1, 500), projN: Math.round(num(s.projN, 1, 1, 12)), magic: num(s.magic, 1, 0.5, 500),
-    gold: Math.round(num(s.gold, 0, 0, 1e9)), potions: Math.round(num(s.potions, 3, 0, 99)),
-    shrooms: Math.round(num(s.shrooms, 0, 0, 99)), hats, hat: hats.includes(s.hat) ? s.hat : null,
+    gold, potions, ammo: Math.round(num(s.ammo, AMMO.start, 0, ammoMax)), spec, sk, skPts,
+    hats, hat: hats.includes(s.hat) ? s.hat : null,
     deepest: Math.round(num(s.deepest, 1, 1, MAX_DEPTH)), depth: Math.round(num(s.depth, 0, 0, MAX_DEPTH)),
     mega: !!s.mega, tut: !!s.tut, runSecs: num(s.runSecs, 0, 0, 1e7), won: !!s.won,
     seed: Math.round(num(s.seed, (Math.random() * 1e9) | 0, 0, 2 ** 31)), migrated: !!s.migrated,
     kills: Math.round(num(s.kills, 0, 0, 1e9)),
+    // einmalige Hinweise nach dem Umzug (werden beim ersten Spielstart als Toast gezeigt und dann gelöscht)
+    capNote: Math.round(num(s.capNote, 0, 0, 1e9)) + capGold, giftNote: Math.round(num(s.giftNote, 0, 0, 999)) + gift,
   };
 }
 export function loadSave() {
@@ -50,7 +77,7 @@ export function migrateOld() {
       deepest: o.deepest || o.depth, depth: 0, mega: o.mega, tut: true, seed: o.seed,
       hats: ["veteran"], hat: "veteran", migrated: true,
     });
-    if (s) { s.maxHp += 2; s.hp = s.maxHp; }
+    if (s) { s.maxHp = Math.min(CAP.hp, s.maxHp + 2); s.hp = s.maxHp; }
     return s;
   } catch (e) { return null; }
 }

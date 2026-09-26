@@ -45,6 +45,12 @@ const MIX = {
   spark: { vol: 0.32, max: 2, cents: 0, prio: 2 },
   diePoof: { vol: 0.55, max: 1, cents: 0, prio: 3 },
   arrive: { vol: 0.38, max: 1, cents: 0, prio: 1 },
+  empty: { vol: 0.4, max: 1, gap: 0.15, cents: 20, dry: 1 },
+  special: { vol: 0.85, max: 1, cents: 0, prio: 3 },
+  reveal: { vol: 0.34, max: 1, cents: 0, prio: 1 },
+  phase: { vol: 0.8, max: 1, cents: 0, prio: 3 },
+  trap: { vol: 0.34, max: 2, gap: 0.08, cents: 60 },
+  impact: { vol: 0.5, max: 3, gap: 0.05, cents: 40, prio: 1 },
 };
 const AMBMIX = { bird: 0.35, drip: 0.5, chime: 0.3, fizz: 0.35, tink: 0.3, blub: 0.45, crackle: 0.3 };
 // Ort → Hall (Länge s, Helligkeit Hz) + Sends; Ambience-Bett
@@ -117,7 +123,7 @@ async function renderSet(kind, name) {
   LIB[kind][name] = kind === "inst" ? { bufs: bufs.map((b, i) => ({ ref: def.refs[i], buf: b })) } : { bufs, last: -1 };
   return { sync: Math.max(s1, performance.now() - t0), bytes };
 }
-const FIRST = ["click", "swing", "hitM", "hitL", "poof", "coin", "pop", "bubble", "dodge", "hurt", "pickup", "arrive", "stairs", "portal"];
+const FIRST = ["click", "swing", "hitM", "hitL", "poof", "coin", "pop", "bubble", "dodge", "hurt", "pickup", "arrive", "stairs", "portal", "empty"];
 const FIRST_INST = ["harp", "bell", "pizz", "shaker", "knock", "snap", "padWarm", "kalimba", "crash", "lead", "brass", "timp"];
 function jobList() {
   const J = [];
@@ -269,7 +275,7 @@ function createEngine(ac) {
     if (same >= (mx.max || 3)) { steal(oldest, when); act--; }
     if (act >= MAX_SFX) { if (low.prio > (mx.prio || 0)) { E.st.dropped++; return null; } steal(low, when); }
     E.last[name] = when;
-    const nb = S.bufs.length, i = nb > 1 ? (S.last + 1 + Math.floor(Math.random() * (nb - 1))) % nb : 0; S.last = i;   // Round-Robin, nie zweimal dieselbe
+    const nb = S.bufs.length, i = o.v !== undefined ? o.v % nb : nb > 1 ? (S.last + 1 + Math.floor(Math.random() * (nb - 1))) % nb : 0; S.last = i;   // Round-Robin, nie zweimal dieselbe
     const rate = (o.rate || 1) * Math.pow(2, (Math.random() * 2 - 1) * (mx.cents ?? 35) / 1200);
     let gain = mx.vol * (o.vol ?? 1) * gm * Math.pow(10, (Math.random() * 2 - 1) * 1.2 / 20), pan = o.pan || 0;
     if (o.x !== undefined && o.x !== null) { const s = E.spat(o.x, o.y); pan = s.pan; gain *= s.gain; }
@@ -498,6 +504,12 @@ export const SFX = {
   click() { P("click"); },
   victory() { P("spark"); ST("victory"); },
   die() { P("diePoof"); ST("die"); },
+  empty() { P("empty"); },
+  special(o = {}) { P("special", { v: o.v || 0 }); ST("special"); if (ok()) E.duck(-5, AUDIO.ctx.currentTime, 0.9, 0.8); },
+  reveal(o = {}) { P("reveal", { x: o.x, y: o.y }); },
+  phase(o = {}) { P("phase", { x: o.x, y: o.y, v: o.rage ? 1 : 0 }); ST(o.rage ? "rage" : "phase"); if (ok()) E.duck(-7, AUDIO.ctx.currentTime, 1.2, 1.0); },
+  trap(o = {}) { P("trap", { x: o.x, y: o.y }); },
+  impact(o = {}) { P("impact", { x: o.x, y: o.y }); },
 };
 
 // =====================================================================

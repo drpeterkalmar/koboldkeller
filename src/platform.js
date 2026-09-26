@@ -38,7 +38,7 @@ const HAP = {
   ui: { p: 8, prio: 0 }, hitL: { p: 7, prio: 0 }, hit: { p: 14, prio: 0 }, heavy: { p: 22, prio: 1 }, crit: { p: [18, 35, 12], prio: 1 },
   kill: { p: 20, prio: 1 }, pickup: { p: 10, prio: 0, gap: 250 }, coin: { p: 5, prio: 0, gap: 900 }, dodge: { p: 10, prio: 0 },
   hurt: { p: 38, prio: 2 }, chest: { p: [12, 30, 20], prio: 1 }, stairs: { p: [10, 40, 10], prio: 1 }, slam: { p: [45, 25, 25], prio: 2 },
-  boss: { p: [40, 60, 70], prio: 3 }, bossKill: { p: [60, 40, 90], prio: 3 }, levelup: { p: [15, 40, 15, 40, 35], prio: 2 },
+  boss: { p: [40, 60, 70], prio: 3 }, special: { p: [25, 30, 70], prio: 2 }, bossKill: { p: [60, 40, 90], prio: 3 }, levelup: { p: [15, 40, 15, 40, 35], prio: 2 },
   die: { p: [60, 80, 40, 80, 120], prio: 3 }, win: { p: [20, 50, 20, 50, 20, 50, 80], prio: 3 }, probe: { p: [30, 60, 30], prio: 3 },
 };
 let hBusy = 0, hPrio = -1, hLastLight = 0;
