@@ -389,10 +389,12 @@ export function unlockAudio() {
   } catch (e) { /* still scheitern */ }
 }
 /** Ort wechseln: Stadt = Aufnahme pur; Keller = Aufnahme gedämpft + Biom-Schichten (Wechsel taktgenau) */
+/** Abend in der Stadt (18–7 Uhr Ortszeit): sanftere Stadtmusik. AUDIO.eveForce (true/false) überschreibt für Tests */
+export function isEvening() { if (AUDIO.eveForce !== undefined && AUDIO.eveForce !== null) return !!AUDIO.eveForce; const h = new Date().getHours(); return h >= 18 || h < 7; }
 export function playMusic(where, biome = 0) {
   AUDIO.where = where; AUDIO.biome = biome;
   if (!E) return;
-  M.want.where = where; M.want.biome = biome;
+  M.want.where = where; M.want.biome = biome; M.want.eve = where === "town" && isEvening();
   E.place(where, biome);
 }
 export function setMusic(on) {
@@ -440,6 +442,7 @@ function frameWork(G, dt) {
   const target = Math.min(1, n / 3);
   M.inten += (target - M.inten) * (1 - Math.exp(-fdt / (target > M.inten ? 0.35 : 3.5)));
   M.want.boss = G.boss && G.boss.awake && G.boss.hp > 0 && G.screen !== "win" ? (G.boss.isKing ? 2 : 1) : 0;
+  M.want.phase = G.boss ? G.boss.phase || 1 : 1;
   M.setDead(G.screen === "dead");
   const muff = G.screen === "pause" || G.screen === "bag";
   if (muff !== E.muffled) { E.muffled = muff; E.muffle.frequency.setTargetAtTime(muff ? 700 : 20000, AUDIO.ctx.currentTime, 0.15); }
@@ -516,12 +519,12 @@ export const SFX = {
 // Offline-Rendern für Messungen (tools/audiorender.mjs) — exakt derselbe Mix-Graph
 // =====================================================================
 export function sfxBuffers() { return Object.fromEntries(Object.entries(LIB.sfx).map(([k, v]) => [k, v.bufs])); }
-export async function renderScene({ secs = 60, sr = 48000, where = "town", biome = 0, inten = 0, boss = 0, sfx = null, amb = false, music = true } = {}) {
+export async function renderScene({ secs = 60, sr = 48000, where = "town", biome = 0, inten = 0, boss = 0, phase = 1, eve = false, sfx = null, amb = false, music = true } = {}) {
   await audioReady();
   const oac = OAC(2, Math.ceil(secs * sr), sr), e = createEngine(oac), m = createMusic(e);
   e.musicOn = music; e.rec = LIB.rec; e.place(where, biome); e.hasListener = true;
   if (!music) e.musicOut.gain.value = 0;
-  m.want.where = where; m.want.biome = biome; m.want.boss = boss; m.inten = inten;
+  m.want.where = where; m.want.biome = biome; m.want.boss = boss; m.want.phase = phase; m.want.eve = eve; m.inten = inten;
   m.start(0.05); m.tick(0, secs);
   if (sfx) for (const [t, name, o = {}] of sfx) {
     if (name.startsWith("sting:")) m.stinger(name.slice(6), t);

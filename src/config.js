@@ -58,7 +58,7 @@ export const HAIR_STYLES = [
 ];
 export const ACCESSORIES = [
   { id: "none", name: "Nichts", emoji: "🙂" }, { id: "brille", name: "Brille", emoji: "👓" }, { id: "blume", name: "Blume", emoji: "🌸" },
-  { id: "schleife", name: "Schleife", emoji: "🎀" }, { id: "sommersprossen", name: "Sommersprossen", emoji: "✨" }, { id: "stern", name: "Sternspange", emoji: "⭐" },
+  { id: "schleife", name: "Schleife", emoji: "🎀" }, { id: "sommersprossen", name: "Sommer\u00adsprossen", emoji: "✨" }, { id: "stern", name: "Sternspange", emoji: "⭐" },
 ];
 export const PAL = {
   fur: ["#86dc5c", "#cf9460", "#f6eee0", "#b98ff0", "#ea7a4c", "#f3aa62", "#ff9a42", "#6fd8c4", "#9a7058", "#ffc6dc", "#9fc8ff", "#fff0a0", "#c8c8d4", "#6a5a7a"],

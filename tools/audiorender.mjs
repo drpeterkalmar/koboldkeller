@@ -89,22 +89,33 @@ function combatScript(secs) {   // realistische Kampf-Sekunde für den Gesamtmix
   return S.sort((a, b) => a[0] - b[0]);
 }
 const STATES = [
-  ["musik_stadt", { where: "town" }],
+  ["musik_stadt_tag", { where: "town", eve: false }],
+  ["musik_stadt_abend", { where: "town", eve: true }],
   ["musik_keller1_moos", { where: "dungeon", biome: 1 }],
   ["musik_keller2_kristall", { where: "dungeon", biome: 2 }],
   ["musik_keller3_zucker", { where: "dungeon", biome: 3 }],
   ["musik_keller4_frost", { where: "dungeon", biome: 4 }],
   ["musik_keller5_glut", { where: "dungeon", biome: 5 }],
   ["musik_kampf_keller1", { where: "dungeon", biome: 1, inten: 1 }],
+  ["musik_kampf_keller2", { where: "dungeon", biome: 2, inten: 1 }],
+  ["musik_kampf_keller3", { where: "dungeon", biome: 3, inten: 1 }],
+  ["musik_kampf_keller4", { where: "dungeon", biome: 4, inten: 1 }],
+  ["musik_kampf_keller5", { where: "dungeon", biome: 5, inten: 1 }],
   ["musik_boss_keller1", { where: "dungeon", biome: 1, boss: 1 }],
+  ["musik_boss_keller2", { where: "dungeon", biome: 2, boss: 1 }],
+  ["musik_boss_keller3", { where: "dungeon", biome: 3, boss: 1 }],
+  ["musik_boss_keller4", { where: "dungeon", biome: 4, boss: 1 }],
+  ["musik_boss_keller1_wut", { where: "dungeon", biome: 1, boss: 1, phase: 3 }],
   ["musik_boss_koenig", { where: "dungeon", biome: 5, boss: 2 }],
+  ["musik_boss_koenig_wut", { where: "dungeon", biome: 5, boss: 2, phase: 3 }],
   ["ambience_stadt", { where: "town", amb: true, music: false }],
   ["ambience_keller2_kristall", { where: "dungeon", biome: 2, amb: true, music: false }],
   ["mix_stadt_ambience", { where: "town", amb: true }],
   ["mix_kampf_gesamt", { where: "dungeon", biome: 1, inten: 1, amb: true, sfx: combatScript(SECS) }],
 ];
+const ONLY = arg("only", "");
 const rows = [];
-for (const [name, o] of STATES) {
+for (const [name, o] of STATES.filter(([n]) => !ONLY || ONLY.split(",").some(k => n.includes(k)))) {
   const t0 = Date.now();
   await page.evaluate(async ([n, o, secs]) => { window.__bufs = { [n]: await __A.renderScene({ ...o, secs }) }; }, [name, o, SECS]);
   const ms = Date.now() - t0;

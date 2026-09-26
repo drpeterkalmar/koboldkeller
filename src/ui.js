@@ -160,7 +160,7 @@ function renderEditBody() {
       items = [0, 1].map(v => ({ key: "earsV", val: v, label: sp.earsN[v], on: L.earsV === v, look: makeLook({ ...ed.look, earsV: v }) }));
       h = optGrid(items); break;
     case "extra":
-      items = ACCESSORIES.map(a => ({ key: "acc", val: a.id, label: a.emoji + " " + a.name, on: L.acc === a.id, look: makeLook({ ...ed.look, acc: a.id }) }));
+      items = ACCESSORIES.map(a => ({ key: "acc", val: a.id, label: a.name, on: L.acc === a.id, look: makeLook({ ...ed.look, acc: a.id }) }));
       h = optGrid(items); break;
   }
   opts.innerHTML = h;

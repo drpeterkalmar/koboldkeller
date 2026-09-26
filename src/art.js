@@ -542,8 +542,10 @@ export function portrait(cv, look, hatId, px = 96) {
 export function previewRig(cv, look, hatId, t) {
   const c = cv.getContext("2d"), W = cv.width, Hh = cv.height;
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, Hh);
-  const kSave = K; K = Math.round(Hh / 190 * 100) / 100;
-  const turn = Math.cos(t * 0.9), fx = (turn >= 0 ? 1 : -1) * Math.max(0.3, Math.abs(turn));
+  const kSave = K; K = Math.round(Hh / 175 * 100) / 100;
+  // sanftes Wiegen, alle 4 s ein schneller Dreher zur anderen Seite
+  const per = Math.floor(t / 4), u = t - per * 4, dir = per % 2 ? -1 : 1;
+  const fx = u > 3.7 ? dir * Math.cos((u - 3.7) / 0.3 * Math.PI) : dir * (0.93 + 0.07 * Math.cos(t * 1.6)), turn = fx;
   const bob = Math.abs(Math.sin(t * 2.4)) * 3, mood = (t % 3.2) < 0.14 ? "blink" : "open";
   const gx = W / 2 / K, gy = Hh / K - 16;
   c.save(); c.scale(K, K);
