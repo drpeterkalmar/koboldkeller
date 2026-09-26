@@ -520,8 +520,8 @@ mkdirSync(V4, { recursive: true });
     KK.goto(0); await w(50); out.respecTown = KK.respec(); out.after = { pts: p.skPts, atk: +(p.atk - a0).toFixed(2), hp: p.maxHp - h0 };
     return out;
   });
-  R("V5", "Talente: Punkte verteilen wirken (💪 +0,6 ⚔️, ❤️ +2, 🫧 +4 Platz, 👟 +5 %), Rucksack zeigt „+“, Umverteilen nur in der Stadt (kostenlos)",
-    sk.k && sk.l && sk.b && sk.t && sk.atk === 0.6 && sk.hp === 2 && sk.ammo === 4 && sk.spd === 0.05 && sk.left === 0 && sk.noMore && sk.bagPlus === 5 && sk.respecDungeon === 0 && sk.respecTown === 4 && sk.after.pts === 4 && sk.after.atk === 0 && sk.after.hp === 0, JSON.stringify(sk));
+  R("V5", "Talente: Punkte verteilen wirken (💪 +0,5 ⚔️, ❤️ +2, 🫧 +4 Platz, 👟 +5 %), Rucksack zeigt „+“, Umverteilen nur in der Stadt (kostenlos)",
+    sk.k && sk.l && sk.b && sk.t && sk.atk === 0.5 && sk.hp === 2 && sk.ammo === 4 && sk.spd === 0.05 && sk.left === 0 && sk.noMore && sk.bagPlus === 5 && sk.respecDungeon === 0 && sk.respecTown === 4 && sk.after.pts === 4 && sk.after.atk === 0 && sk.after.hp === 0, JSON.stringify(sk));
   // --- V6 Spezialangriff über Pilze, Pilze heilen nicht ---
   const sp = await p7.evaluate(async () => {
     const G = KK.G, p = G.p, out = {}, w = ms => new Promise(r => setTimeout(r, ms));
@@ -541,7 +541,7 @@ mkdirSync(V4, { recursive: true });
   // --- V7 Ebenen: Namen + Farbnuancen, Screenshot jeder Ebene ---
   const names = [], floors = [];
   for (let d = 1; d <= 20; d++) {
-    await p7.evaluate((d) => { KK.goto(d); KK.god(true); KK.G.portalCd = 1e9; }, d);
+    await p7.evaluate((d) => { KK.goto(d); KK.god(true); KK.G.portalCd = 1e9; KK.heal(); }, d);
     await sleep(d % 4 === 0 ? 700 : 450);
     const info = await p7.evaluate(() => ({ n: KK.state().levelName, b: document.getElementById("bannerT").textContent, f: KK.R.B.floor[0], t: KK.R.B.top, amb: KK.R.B.amb.join(","), map: document.getElementById("mapName").textContent }));
     names.push(info); floors.push(info.f + "|" + info.t + "|" + info.amb);
@@ -568,7 +568,7 @@ mkdirSync(V4, { recursive: true });
     bossRes.push(r);
   }
   const bossOk = bossRes.every(r => r.phases.join() === "1,2,3" && r.teles.every(t => +t.split(":")[1].replace(/\D.*/, "") > 0));
-  R("V8", "Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️", bossOk && bossRes[0].hpMax >= 150, bossRes.map(r => r.name + " ❤️" + r.hpMax + " " + r.phases.join("→") + " [" + r.teles.join(" ") + "]").join(" · "));
+  R("V8", "Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️", bossOk && bossRes[0].hpMax >= 260, bossRes.map(r => r.name + " ❤️" + r.hpMax + " " + r.phases.join("→") + " [" + r.teles.join(" ") + "]").join(" · "));
   // --- D5 Musik je Welt ---
   const mus = [];
   for (const d of [0, 1, 5, 9, 13, 17]) {

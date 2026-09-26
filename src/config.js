@@ -25,7 +25,7 @@ export const SPECIAL = { perShroom: 1 / 3, radius: 5.5 };       // 3 Glitzerpilz
 // ---------- v4: Talente (Skillpunkte) ----------
 export const SKILL_MAX = 10, SKILL_PER_LEVEL = 2;
 export const SKILLS = [
-  { id: "kraft", icon: "💪", name: "Kraft", per: 0.6, what: "+0,6 Schwert-Schaden" },
+  { id: "kraft", icon: "💪", name: "Kraft", per: 0.5, what: "+0,5 Schwert-Schaden" },
   { id: "leben", icon: "❤️", name: "Leben", per: 2, what: "+2 Max-❤️" },
   { id: "tempo", icon: "👟", name: "Tempo", per: 0.05, what: "+5 % schneller laufen" },
   { id: "blasen", icon: "🫧", name: "Blasen", per: 4, what: "+4 Munition-Platz · +10 % Blasen-Kraft" },
@@ -159,8 +159,8 @@ export function levelBiome(depth) {
 // MEGASCHWER kommt obendrauf (Gegner 2× Tempo, 10× Schaden). Tiefe 1–2 bleiben „zahm" (Einstieg).
 const DT = {
   n:     [0, 7, 8, 9, 7, 10, 11, 12, 9, 12, 13, 14, 10, 14, 15, 16, 11, 16, 17, 18, 12],
-  hp:    [1, 1.0, 1.06, 1.12, 1.12, 1.22, 1.28, 1.34, 1.34, 1.44, 1.5, 1.56, 1.56, 1.66, 1.74, 1.82, 1.82, 1.92, 2.0, 2.1, 2.1],
-  dmg:   [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6],
+  hp:    [1, 1.0, 1.06, 1.14, 1.2, 1.3, 1.4, 1.5, 1.55, 1.7, 1.8, 1.9, 2.0, 2.15, 2.3, 2.45, 2.55, 2.7, 2.85, 3.0, 3.1],
+  dmg:   [1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 7],
   spd:   [1, 0.94, 0.98, 1.0, 1.02, 1.05, 1.07, 1.09, 1.1, 1.12, 1.14, 1.16, 1.17, 1.19, 1.21, 1.23, 1.24, 1.26, 1.28, 1.3, 1.3],
   cd:    [1, 1.3, 1.22, 1.12, 1.1, 1.05, 1.0, 0.98, 0.96, 0.94, 0.92, 0.9, 0.9, 0.88, 0.86, 0.84, 0.84, 0.82, 0.8, 0.78, 0.78],
   elite: [0, 0, 0, 0.03, 0.04, 0.06, 0.08, 0.1, 0.1, 0.12, 0.14, 0.16, 0.16, 0.18, 0.2, 0.22, 0.22, 0.24, 0.26, 0.28, 0.3],
@@ -177,11 +177,11 @@ export const diffOf = d => DIFF[Math.max(1, Math.min(MAX_DEPTH, d | 0))];
 // ---------- v4: Bosse — eigene Signatur-Angriffe je Welt, 3 Phasen (ab 66 % / 33 % neue Muster, Wut-Phase) ----------
 // hp = Grund + proLevel·Spielerlevel · dmg = Schaden pro Treffer · sig = Signatur-Angriffe (Phase 1 / ab Phase 2)
 export const BOSSES = [null,
-  { name: "Moosbart", epi: "Hüter der Moosgärten", hp: [150, 8], dmg: 2, speed: 1.35, sig: ["spores", "vines"], acc: "bart", aura: "#9aff6a", arena: "leaf" },
-  { name: "Glitzerzahn", epi: "Herr der Funkelkristalle", hp: [260, 10], dmg: 3, speed: 1.4, sig: ["crystals", "prism"], acc: "zahn", aura: "#8fe9ff", arena: "crystal" },
-  { name: "Zuckerschnute", epi: "Königin der Naschereien", hp: [380, 12], dmg: 4, speed: 1.45, sig: ["candy", "rush"], acc: "schnute", aura: "#ff9ae0", arena: "candy" },
-  { name: "Frostnase", epi: "Wächter des Gletschers", hp: [520, 14], dmg: 5, speed: 1.4, sig: ["icicles", "snowball"], acc: "frostnase", aura: "#bfe9ff", arena: "snow" },
-  { name: "Kellerkönig", epi: "Herrscher des Koboldkellers", hp: [900, 20], dmg: 6, speed: 1.25, sig: ["fireRing", "meteors", "flameCross"], acc: "none", aura: "#ff5a3a", arena: "ember" },
+  { name: "Moosbart", epi: "Hüter der Moosgärten", hp: [260, 12], dmg: 2, speed: 1.35, sig: ["spores", "vines"], acc: "bart", aura: "#9aff6a", arena: "leaf" },
+  { name: "Glitzerzahn", epi: "Herr der Funkelkristalle", hp: [480, 16], dmg: 3, speed: 1.4, sig: ["crystals", "prism"], acc: "zahn", aura: "#8fe9ff", arena: "crystal" },
+  { name: "Zuckerschnute", epi: "Königin der Naschereien", hp: [700, 20], dmg: 4, speed: 1.45, sig: ["candy", "rush"], acc: "schnute", aura: "#ff9ae0", arena: "candy" },
+  { name: "Frostnase", epi: "Wächter des Gletschers", hp: [950, 24], dmg: 5, speed: 1.4, sig: ["icicles", "snowball"], acc: "frostnase", aura: "#bfe9ff", arena: "snow" },
+  { name: "Kellerkönig", epi: "Herrscher des Koboldkellers", hp: [1500, 30], dmg: 7, speed: 1.25, sig: ["fireRing", "meteors", "flameCross"], acc: "none", aura: "#ff5a3a", arena: "ember" },
 ];
 export const BOSS_PHASES = [0.66, 0.33];
 

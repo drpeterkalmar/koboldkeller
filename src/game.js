@@ -55,7 +55,7 @@ export function makePlayer(prof) {
 export function recalc(p) {
   const sk = p.sk;
   p.maxHp = Math.min(CAP.hp, p.hpBase + sk.leben * 2);
-  p.atk = p.atkBase + sk.kraft * 0.6;
+  p.atk = p.atkBase + sk.kraft * 0.5;
   p.spdMul = 1 + sk.tempo * 0.05;
   p.ammoMax = Math.min(CAP.ammoMax, CAP.ammoBase + sk.blasen * 4);
   p.bubMul = 1 + sk.blasen * 0.1;
@@ -341,7 +341,7 @@ export function gainXp(n) {
   while (p.xp >= p.xpNext) {
     p.xp -= p.xpNext;
     p.lvl++; p.xpNext = Math.floor(p.xpNext * 1.4) + 4;
-    p.hpBase = Math.min(CAP.hp, p.hpBase + 1); p.atkBase += 0.25; p.skPts += SKILL_PER_LEVEL;
+    p.hpBase = Math.min(CAP.hp, p.hpBase + 1); p.skPts += SKILL_PER_LEVEL;
     recalc(p); p.hp = p.maxHp;
     const bub = p.lvl % 3 === 0;
     if (bub) p.projN++;
@@ -479,9 +479,10 @@ export function bubbles() {
   else { const lm = Math.hypot(p.lastMx, p.lastMy) || 1; ang = Math.atan2(p.lastMy / lm, p.lastMx / lm); }
   const N = p.projN;
   const tier = Math.min(3, Math.floor((p.magic - 1) / 2));
+  const share = 1 / (1 + 0.25 * (N - 1));                 // mehr Blasen = breiter + insgesamt stärker, aber jede einzelne etwas schwächer
   for (let k = 0; k < N; k++) {
     const a = ang + (N > 1 ? (k - (N - 1) / 2) * 0.36 : 0);
-    G.shots.push({ kind: "bubble", x: p.x + Math.cos(a) * 0.3, y: p.y + Math.sin(a) * 0.3, z: 34, vx: Math.cos(a) * 6.2, vy: Math.sin(a) * 6.2, life: 1.3, t: 0, tier, lock: best, size: 1 + Math.min(0.5, p.magic * 0.04), dmg: (1 + p.magic + p.atk * 0.25) * p.bubMul });
+    G.shots.push({ kind: "bubble", x: p.x + Math.cos(a) * 0.3, y: p.y + Math.sin(a) * 0.3, z: 34, vx: Math.cos(a) * 6.2, vy: Math.sin(a) * 6.2, life: 1.3, t: 0, tier, lock: best, size: 1 + Math.min(0.5, p.magic * 0.04), dmg: (1 + p.magic + p.atk * 0.25) * p.bubMul * share });
   }
   return true;
 }
@@ -675,7 +676,7 @@ export function update(dt, realDt) {
   if (G.homeHideT > 0 && G.screen === "play") { G.homeHideT -= dt; if (G.homeHideT <= 0) revealHome(); }
   if (L.homePortal && L.homePortal.appearT < 1 && !L.homePortal.hidden) L.homePortal.appearT = Math.min(1, L.homePortal.appearT + dt * 1.6);
   if (G.camFocus) { G.camFocus.t -= realDt; if (G.camFocus.t <= 0) G.camFocus = null; }
-  for (let i = G.later.length - 1; i >= 0; i--) { const l = G.later[i]; l.t -= dt; if (l.t <= 0) { G.later.splice(i, 1); l.fn(); } }
+  for (let i = G.later.length - 1; i >= 0; i--) { const l = G.later[i]; if (!l) continue; l.t -= dt; if (l.t <= 0) { const j = G.later.indexOf(l); if (j >= 0) G.later.splice(j, 1); l.fn(); } }
   p.t += dt;
   if (G.screen === "play") updatePlayer(dt);
   // Squash-Feder
@@ -865,6 +866,7 @@ function updateShots(dt) {
   const p = G.p, m = G.L.map;
   for (let i = G.shots.length - 1; i >= 0; i--) {
     const s = G.shots[i];
+    if (!s) continue;                                     // Boss-Phase/-Sieg kann Geschosse mitten in der Schleife entfernen
     s.t += dt; s.life -= dt;
     let pop = s.life <= 0;
     if (s.kind === "bubble") {
@@ -888,12 +890,12 @@ function updateShots(dt) {
         }
         for (const pr of G.L.props) if (pr.kind === "pot" && Math.hypot(pr.x - s.x, pr.y - s.y) < R) { breakPot(pr); break; }
         if (hit) { hitstop(30); shake(0.08); haptic("hitL"); }
-        G.shots.splice(i, 1);
+        const j = G.shots.indexOf(s); if (j >= 0) G.shots.splice(j, 1);
       }
     } else if (s.kind === "lob") {                         // Bonbon-Bombe: reine Flugkurve, Treffer über den Warnkreis
       const k = Math.min(1, s.t / s.dur);
       s.x = s.x0 + (s.tx - s.x0) * k; s.y = s.y0 + (s.ty - s.y0) * k; s.z = 40 + Math.sin(Math.PI * k) * s.h;
-      if (k >= 1) G.shots.splice(i, 1);
+      if (k >= 1) { const j = G.shots.indexOf(s); if (j >= 0) G.shots.splice(j, 1); }
     } else {
       s.x += s.vx * dt; s.y += s.vy * dt;
       if (s.kind === "snow") { s.rot = (s.rot || 0) + dt * 6; if (Math.random() < 0.5) P.dust(s.x, s.y, "#ffffff"); }
@@ -904,7 +906,7 @@ function updateShots(dt) {
       if (pop) {
         burst(s.x, s.y, s.kind === "snow" ? 14 : 6, { kind: s.kind === "snow" ? "puff" : "dot", col: s.col, add: s.kind !== "snow", s0: s.kind === "snow" ? 18 : 8, s1: 0, sp0: 0.5, sp1: 2, z: s.z, vz0: 0, vz1: 50, g: 0, l0: 0.2, l1: 0.5 });
         if (s.kind === "snow") SFX.slam({ x: s.x, y: s.y });
-        G.shots.splice(i, 1);
+        const j = G.shots.indexOf(s); if (j >= 0) G.shots.splice(j, 1);
       }
     }
   }
@@ -1125,10 +1127,11 @@ function updateTeles(dt) {
   const p = G.p;
   for (let i = G.teles.length - 1; i >= 0; i--) {
     const t = G.teles[i];
+    if (!t) continue;
     t.t += dt;
     if (t.follow) { t.x = t.follow.x; t.y = t.follow.y; if (!G.ents.includes(t.follow)) { G.teles.splice(i, 1); continue; } }
     if (t.t >= t.max) {
-      G.teles.splice(i, 1);
+      const j = G.teles.indexOf(t); if (j >= 0) G.teles.splice(j, 1);
       if (t.dmg && G.screen === "play" && p.z < 20) {
         const hit = t.kind === "line" ? segDist(p.x, p.y, t.x, t.y, t.x2, t.y2) < t.w / 2 + 0.18 : Math.hypot(p.x - t.x, p.y - t.y) < t.r + 0.2;
         if (hit) playerHurt(t.dmg, t.kind === "line" ? p.x - (t.x2 - t.x) * 0.01 : t.x, t.kind === "line" ? p.y - (t.y2 - t.y) * 0.01 : t.y);
