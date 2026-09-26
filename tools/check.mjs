@@ -51,7 +51,7 @@ async function waitFor(page, fn, arg, ms = 4000) { try { await page.waitForFunct
 
 async function measureFps(page, label, secs = 5, warm = 1500) {
   await page.evaluate(() => {
-    KK.god(true); KK.goto(3); KK.G.p.potions = 99; KK.G.portalCd = 1e9;
+    KK.god(true); KK.goto(3); KK.G.p.potions = 5; KK.G.portalCd = 1e9;
     const types = ["bat", "slime", "wichtel", "wisp", "kaefer", "pilzling"];
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; KK.spawn(types[i % types.length], Math.cos(a) * 3.2, Math.sin(a) * 3.2); }
     window.__fpsT = setInterval(() => { KK.attack(); if (Math.random() < 0.3) KK.bubbles(); for (const e of KK.G.ents) if (e.hp < 3) e.hp = 30; }, 280);
@@ -246,7 +246,7 @@ if (PERF) {
     window.__spam = (on) => { clearInterval(window.__spT); A.setSfx(!!on); if (on) window.__spT = setInterval(() => { const p = KK.G.p, n = ["hit", "poof", "coin", "pop", "swing", "slam", "shoot", "pot", "tele"]; for (let i = 0; i < 3; i++) { const k = n[(Math.random() * n.length) | 0]; A.SFX[k]({ x: p.x + Math.random() * 6 - 3, y: p.y + Math.random() * 6 - 3, dmg: 1 + Math.random() * 8, crit: Math.random() < 0.2 }); } }, 100); };
   });
   const ab = { on: [], off: [] }, cpuOn = [];
-  for (const mode of ["off", "on", "off", "on", "off", "on"]) {
+  for (const mode of ["off", "on", "on", "off", "off", "on", "on", "off", "off", "on"]) {
     await page.evaluate((m) => window.__spam(m === "on"), mode);
     const c0 = await page.evaluate(() => KK.audio().cpuMs), w0 = Date.now();
     const f = await measureFps(page, "Audio " + mode + (THROTTLE > 1 ? " @" + THROTTLE + "×" : ""), 4, 1000);
@@ -258,7 +258,7 @@ if (PERF) {
   if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   const med = a => a.slice().sort((x, y) => x - y)[a.length >> 1], fOn = med(ab.on), fOff = med(ab.off), diff = (fOff - fOn) / fOff * 100;
   const as = await page.evaluate(() => KK.audio()), cpuMs = med(cpuOn);
-  R("A15", "Effekt-Dauerfeuer vs. aus: FPS-Differenz < 5 %" + (THROTTLE > 1 ? " (Throttle " + THROTTLE + "×)" : ""), diff < 5 && fOn >= 45, `Median aus ${fOff.toFixed(1)} / an ${fOn.toFixed(1)} fps → ${diff.toFixed(1)} % (Einzelwerte aus ${ab.off.join("/")}, an ${ab.on.join("/")}) · Audio-Engine Main-Thread ${cpuMs.toFixed(1)} ms/s = ${(cpuMs / 10).toFixed(2)} % · Stimmen jetzt ${as.voices}, gestartet ${as.started}, gestohlen ${as.stolen}`);
+  R("A15", "Effekt-Dauerfeuer (30 Aufrufe/s) vs. aus: Audio-Engine < 3 % Main-Thread, FPS mit Effekten ≥ 45" + (THROTTLE > 1 ? " (Throttle " + THROTTLE + "×)" : ""), cpuMs < 30 && Math.min(...ab.on) >= 45, `Main-Thread ${cpuMs.toFixed(1)} ms/s = ${(cpuMs / 10).toFixed(2)} % · FPS-Median aus ${fOff.toFixed(1)} / an ${fOn.toFixed(1)} (${diff.toFixed(1)} %, Einzelwerte aus ${ab.off.join("/")}, an ${ab.on.join("/")} — headless-FPS schwankt ±20 % auch ohne Änderung) · Stimmen jetzt ${as.voices}, gestartet ${as.started}, gestohlen ${as.stolen}`);
   await page.evaluate(() => KK.quality(0));
 }
 
@@ -321,7 +321,7 @@ await waitFor(page, () => KK.state().screen === "play" && !KK.state().demo);
 await sleep(700);
 st = await S(page);
 const entry = await page.evaluate(() => KK.G.L.entry);
-R("B4", "Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang", st.depth === saved.depth && st.gold === saved.gold && st.lvl === saved.lvl && Math.hypot(st.x - entry.x, st.y - entry.y) < 0.6, `Tiefe ${st.depth}, Gold ${st.gold}, Lv ${st.lvl} | ${info}`);
+R("B4", "Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang", st.depth === saved.depth && st.gold === saved.gold && st.lvl === saved.lvl && Math.hypot(st.x - entry.x, st.y - entry.y) < 0.6, `Tiefe ${st.depth}, Gold ${st.gold}, Lv ${st.lvl} (gespeichert: ${saved.depth}/${saved.gold}/${saved.lvl}), Abstand Eingang ${Math.hypot(st.x - entry.x, st.y - entry.y).toFixed(2)} | ${info}`);
 // App-Wechsel
 await page.evaluate(() => { Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
 await sleep(300);

@@ -21,7 +21,7 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | A12 | Alte v20-Saves | injiziertes `koboldkeller_save_v1` ⇒ kein Absturz, Name/Level/Gold übernommen | ja |
 | A13 | Kaputte Saves | Müll in allen `koboldkeller*`-Keys ⇒ kein Absturz, Menü erscheint | ja |
 | A14 | Querformat 915×412 | Flow läuft, Buttons sichtbar, kein Überlappen HUD/Buttons | ja |
-| A15 | Effekt-Dauerfeuer vs. Effekte aus (Kampfszene, Throttle 4×, 3 A/B-Paare, Median) | FPS-Differenz + Main-Thread-ms der Audio-Engine | < 5 %, FPS ≥ 45 |
+| A15 | Effekt-Dauerfeuer vs. Effekte aus (Kampfszene, Throttle 4×, 5 A/B-Paare) | Main-Thread-Anteil der Audio-Engine (stabil); FPS-Median nur Info — headless-FPS schwankt bei identischen Einstellungen ±20 % (Messreihe v4: 303–433 fps) | < 3 %, FPS ≥ 45 |
 | A3b | Boss-Kampf Kellerkönig in Wut-Phase mit allen Effekten, CPU-Throttle 4× | wie A2 | ≥ 45 |
 | A14b | Querformat: Munition + Spezial-Leiste + ✨-Knopf sichtbar, kein Überlappen | Bounding-Boxen | ja |
 | A16 | Vor-Rendern im Menü | Dauer, längster Main-Thread-Happen, längster Menü-Frame währenddessen | Happen < 16 ms, Frame < 50 ms, < 12 s |

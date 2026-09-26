@@ -1,10 +1,53 @@
 {
-  "date": "2026-09-26T16:49:10.640Z",
+  "date": "2026-09-26T17:47:19.052Z",
   "profile": "gpu",
   "throttle": 4,
-  "fpsNormal": null,
-  "fpsThrottled": null,
-  "software": null,
+  "fpsNormal": {
+    "fps": 296.4,
+    "p5": 178.6,
+    "frames": 1650,
+    "jsUpdate": 0.05,
+    "jsDraw": 0.47,
+    "avgAll": 329.7,
+    "scale": 2,
+    "q": 0,
+    "budget": 1
+  },
+  "fpsThrottled": {
+    "fps": 214.1,
+    "p5": 108.7,
+    "frames": 1302,
+    "jsUpdate": 0.21,
+    "jsDraw": 1.7,
+    "avgAll": 216.2,
+    "scale": 2,
+    "q": 0,
+    "budget": 1
+  },
+  "software": {
+    "normal": {
+      "fps": 53.8,
+      "p5": 45.5,
+      "frames": 270,
+      "jsUpdate": 0.09,
+      "jsDraw": 0.85,
+      "avgAll": 53.9,
+      "scale": 2,
+      "q": 0,
+      "budget": 1
+    },
+    "throttled": {
+      "fps": 52.7,
+      "p5": 41.5,
+      "frames": 265,
+      "jsUpdate": 0.23,
+      "jsDraw": 2.24,
+      "avgAll": 52.7,
+      "scale": 1,
+      "q": 3,
+      "budget": 0.6
+    }
+  },
   "results": [
     {
       "id": "A10",
@@ -16,7 +59,7 @@
       "id": "A16",
       "name": "Vor-Rendern im Menü blockiert nicht (längster Happen < 16 ms, kein Frame > 50 ms, fertig < 12 s)",
       "pass": true,
-      "value": "509 ms, 66 Sätze, 24.4 MB, max. Happen 9.6 ms, Menü währenddessen 532.6 fps (längster Frame 21.2 ms; Boot davor 26.1 ms), Aufnahme 228 ms"
+      "value": "470 ms, 66 Sätze, 24.4 MB, max. Happen 11.5 ms, Menü währenddessen 828.5 fps (längster Frame 15 ms; Boot davor 33.2 ms), Aufnahme 221 ms"
     },
     {
       "id": "B1",
@@ -34,7 +77,7 @@
       "id": "B3",
       "name": "Namensfeld mit Zufallsnamen vorbelegt",
       "pass": true,
-      "value": "Blubber"
+      "value": "Krümel"
     },
     {
       "id": "A10b",
@@ -46,13 +89,13 @@
       "id": "B14a",
       "name": "Tap-to-Move bewegt den Kobold",
       "pass": true,
-      "value": "(17.5,20.5) → (14.34,17.34)"
+      "value": "(17.5,20.5) → (14.35,17.35)"
     },
     {
       "id": "B18",
       "name": "Virtueller Joystick bewegt den Kobold",
       "pass": true,
-      "value": "(14.24,17.24) → (12.08,8.49)"
+      "value": "(14.25,17.25) → (12.18,8.57)"
     },
     {
       "id": "B12t",
@@ -106,7 +149,25 @@
       "id": "B14",
       "name": "Auto-Befreiung aus Wand + BFS-Weg zur Treppe",
       "pass": true,
-      "value": "{\"freed\":true,\"wall\":\"27,3\",\"ok\":true,\"n\":9,\"direct\":\"15.8\"}"
+      "value": "{\"freed\":true,\"wall\":\"9,2\",\"ok\":true,\"n\":8,\"direct\":\"26.2\"}"
+    },
+    {
+      "id": "A2",
+      "name": "FPS normal ≥ 55 (Kampf, 12 Gegner)",
+      "pass": true,
+      "value": "296.4 fps (p5 178.6, Scale 2)"
+    },
+    {
+      "id": "A3",
+      "name": "FPS mit CPU-Throttle 4× ≥ 45",
+      "pass": true,
+      "value": "214.1 fps (p5 108.7, Scale 2, q0)"
+    },
+    {
+      "id": "A15",
+      "name": "Effekt-Dauerfeuer (30 Aufrufe/s) vs. aus: Audio-Engine < 3 % Main-Thread, FPS mit Effekten ≥ 45 (Throttle 4×)",
+      "pass": true,
+      "value": "Main-Thread 11.5 ms/s = 1.15 % · FPS-Median aus 241.6 / an 283.0 (-17.1 %, Einzelwerte aus 176/283.1/248.1/241.6/231.6, an 323.8/260/255.6/283/311.9 — headless-FPS schwankt ±20 % auch ohne Änderung) · Stimmen jetzt 31, gestartet 2827, gestohlen 451"
     },
     {
       "id": "B7a",
@@ -124,7 +185,7 @@
       "id": "B7c",
       "name": "Ebene 20: Kellerkönig riesig & knallrot mit Krone",
       "pass": true,
-      "value": "{\"name\":\"Kellerkönig\",\"hp\":980,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
+      "value": "{\"name\":\"Kellerkönig\",\"hp\":1860,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
     },
     {
       "id": "B8a",
@@ -136,7 +197,7 @@
       "id": "B9",
       "name": "Namen in Ehrenhall HTML-escaped",
       "pass": true,
-      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.202640 🪙⏱️ Schnellster "
+      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.2026349 🪙⏱️ Schnellster"
     },
     {
       "id": "B8c",
@@ -154,7 +215,7 @@
       "id": "B4",
       "name": "Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang",
       "pass": true,
-      "value": "Tiefe 7, Gold 1234, Lv 7 | <b>Zoe</b> · ⭐ 7 · 🪙 1234 · Ebene 7"
+      "value": "Tiefe 7, Gold 1234, Lv 12 (gespeichert: 7/1234/12), Abstand Eingang 0.00 | <b>Zoe</b> · ⭐ 12 · 🪙 1234 · Ebene 7"
     },
     {
       "id": "A9",
@@ -229,6 +290,12 @@
       "value": "{\"skillsIn\":true,\"hudIn\":true,\"overlap\":false,\"btns\":[86,64,62,64,58]}"
     },
     {
+      "id": "A2q",
+      "name": "FPS normal Querformat ≥ 55",
+      "pass": true,
+      "value": "653.4 fps (p5 400)"
+    },
+    {
       "id": "C7",
       "name": "Skill-Buttons ≥ 56 px im Daumenbereich rechts unten",
       "pass": true,
@@ -254,15 +321,15 @@
     },
     {
       "id": "V5",
-      "name": "Talente: Punkte verteilen wirken (💪 +0,6 ⚔️, ❤️ +2, 🫧 +4 Platz, 👟 +5 %), Rucksack zeigt „+“, Umverteilen nur in der Stadt (kostenlos)",
+      "name": "Talente: Punkte verteilen wirken (💪 +0,5 ⚔️, ❤️ +2, 🫧 +4 Platz, 👟 +5 %), Rucksack zeigt „+“, Umverteilen nur in der Stadt (kostenlos)",
       "pass": true,
-      "value": "{\"k\":true,\"l\":true,\"b\":true,\"t\":true,\"atk\":0.6,\"hp\":2,\"ammo\":4,\"spd\":0.05,\"left\":0,\"noMore\":true,\"bagPlus\":5,\"bagPts\":true,\"respecDungeon\":0,\"respecTown\":4,\"after\":{\"pts\":4,\"atk\":0,\"hp\":0}}"
+      "value": "{\"k\":true,\"l\":true,\"b\":true,\"t\":true,\"atk\":0.5,\"hp\":2,\"ammo\":4,\"spd\":0.05,\"left\":0,\"noMore\":true,\"bagPlus\":5,\"bagPts\":true,\"respecDungeon\":0,\"respecTown\":4,\"after\":{\"pts\":4,\"atk\":0,\"hp\":0}}"
     },
     {
       "id": "V6",
       "name": "Spezial: 3 Glitzerpilze füllen die Leiste (❤️ bleibt gleich), ✨-Knopf leuchtet, Flächenangriff trifft rundum (nicht in 11 Kacheln Ferne), danach leer",
       "pass": true,
-      "value": "{\"spec\":1,\"hpUnchanged\":true,\"btnFull\":true,\"fired\":true,\"hitNear\":[28,28,28],\"farUntouched\":true,\"specAfter\":0,\"again\":false}"
+      "value": "{\"spec\":1,\"hpUnchanged\":true,\"btnFull\":true,\"fired\":true,\"hitNear\":[22,22,22],\"farUntouched\":true,\"specAfter\":0,\"again\":false}"
     },
     {
       "id": "V7",
@@ -274,7 +341,7 @@
       "id": "V8",
       "name": "Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️",
       "pass": true,
-      "value": "Moosbart ❤️206 1→2→3 [spores:4C vines:3L spores:5C] · Glitzerzahn ❤️330 1→2→3 [crystals:15C prism:4L crystals:7C] · Zuckerschnute ❤️464 1→2→3 [candy:6C rush:1L candy:4C] · Frostnase ❤️618 1→2→3 [icicles:6L snowball:2L icicles:3L] · Kellerkönig ❤️1040 1→2→3 [meteors:5C flameCross:4L meteors:5C]"
+      "value": "Moosbart ❤️344 1→2→3 [spores:4C vines:3L spores:6C] · Glitzerzahn ❤️592 1→2→3 [crystals:15C prism:4L crystals:7C] · Zuckerschnute ❤️840 1→2→3 [candy:6C rush:1L candy:4C] · Frostnase ❤️1118 1→2→3 [icicles:6L snowball:2L icicles:4L] · Kellerkönig ❤️1710 1→2→3 [meteors:6C flameCross:4L meteors:5C]"
     },
     {
       "id": "D5",
@@ -305,6 +372,12 @@
       "name": "Querformat: Munition + Spezial-Leiste sichtbar, ✨-Knopf im Bild, kein Überlappen",
       "pass": true,
       "value": "{\"hudBottom\":136,\"specIn\":true,\"ov\":false}"
+    },
+    {
+      "id": "A3b",
+      "name": "Boss-Kampf (Kellerkönig, Wut-Phase, alle Effekte) mit CPU-Throttle 4× ≥ 45 FPS",
+      "pass": true,
+      "value": "211.7 fps (p5 120.5, Scale 2, q0)"
     },
     {
       "id": "A1",
