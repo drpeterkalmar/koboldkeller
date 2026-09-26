@@ -21,6 +21,16 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | A12 | Alte v20-Saves | injiziertes `koboldkeller_save_v1` ⇒ kein Absturz, Name/Level/Gold übernommen | ja |
 | A13 | Kaputte Saves | Müll in allen `koboldkeller*`-Keys ⇒ kein Absturz, Menü erscheint | ja |
 | A14 | Querformat 915×412 | Flow läuft, Buttons sichtbar, kein Überlappen HUD/Buttons | ja |
+| A15 | Effekt-Dauerfeuer vs. Effekte aus (Kampfszene, Throttle 4×, 3 A/B-Paare, Median) | FPS-Differenz + Main-Thread-ms der Audio-Engine | < 5 %, FPS ≥ 45 |
+| A16 | Vor-Rendern im Menü | Dauer, längster Main-Thread-Happen, längster Menü-Frame währenddessen | Happen < 16 ms, Frame < 50 ms, < 12 s |
+
+## D — Audio (Skripte)
+| # | Check | Messung | Ziel |
+|---|---|---|---|
+| D1 | Handy-Regeln ohne Autoplay-Flag (`tools/audiotest.mjs`) | Tap → `running`, Effekte gestartet, Live-Oszillatoren, Fehler | läuft, > 0, 0, 0 |
+| D2 | Pegel (`tools/audiorender.mjs`, ffmpeg ebur128) | Gesamtmix Kampf LUFS integriert, True-Peak je Zustand | ≈ −16 LUFS, < −1 dBTP |
+| D3 | Kein Dröhn-Bass | Anteil < 80 Hz je Musikzustand (RMS relativ) | ≤ −30 dB |
+| D4 | Knoten-Leck (`tools/bot.mjs … --secs=120 --audio`) | aktive Stimmen über 2 min, offen == aktiv | kein Wachstum |
 
 ## B — Kids-UX (automatisch + Screenshot)
 | # | Check | Ziel |
@@ -40,7 +50,7 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | B13 | Erste Gegner zahm: Fledermaus Ebene 1 braucht ≥ 4 Treffer auf volle HP | ja |
 | B14 | Tap-Laufen mit BFS um Wände; Auto-Befreiung aus Wand | Ziel erreicht / befreit |
 | B15 | ⏸️ immer erreichbar, jedes Menü hat einen Rückweg | ja |
-| B16 | Musik: dieselbe Glockenspiel-Melodie in Stadt und Keller | gleiche Quelle |
+| B16 | Musik: dieselbe Glockenspiel-Melodie (Leitmotiv) in Stadt und Keller | gleiche Quelle |
 | B17 | UI komplett Deutsch | Sichtprüfung |
 
 ## C — Look & Juice (Vision-Loop, Screenshots)

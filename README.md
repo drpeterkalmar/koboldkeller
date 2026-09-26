@@ -50,7 +50,8 @@ additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md).
 | `src/game.js` | Spiellogik, Kampf, KI, Bosse, Loot, Ebenen, Sieg |
 | `src/world.js` | Stadt-/Dungeon-Generator, Kollision, BFS-Wegfindung |
 | `src/ui.js` · `src/input.js` | Menüs/HUD · Touch/Joystick/Tastatur |
-| `src/audio.js` · `src/fx.js` | weiche WebAudio-SFX + Musik · Partikel, Shake, Hit-Stop |
+| `src/audio.js` · `src/music.js` · `src/sfxlib.js` | Audio-Engine (vor-gerenderte Effekte, Busse, Hall, Limiter) · adaptive Musik · Klang-Rezepte |
+| `src/fx.js` | Partikel, Shake, Hit-Stop |
 | `src/save.js` · `src/platform.js` | Speichern/Migration/Ehrenhall · Vollbild, Wake-Lock, Vibration |
 
 **Version erhöhen:** in `index.html` alle `?v=N` (Import-Map, CSS, Manifest) und `window.KK_VER` anpassen.
@@ -66,11 +67,16 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 python3 -m http.server 8731          # freien Port wählen
 node tools/check.mjs --port=8731 --throttle=4   # Flow hoch+quer, FPS, Saves → shots/neubau/
 node tools/icons.mjs 8731            # PWA-Icons aus eigenem Art-Code neu erzeugen
+node tools/audiotest.mjs http://localhost:8731/   # Handy-Regeln (ohne Autoplay-Flag): Tap → Audio läuft
+node tools/audiorender.mjs --port=8731            # Effekte + Musikzustände → shots/audio/*.wav + Messtabelle
+node tools/bot.mjs 8731 20 4 --secs=120 --audio   # 2 min Kampf-Bot + Knoten-Leck-Test
 ```
 `check.mjs` misst im Profil „gpu" (Chromium new-headless mit GPU-Raster, ungedrosselter Frame-Takt) und
 zusätzlich im reinen Software-Raster (Worst Case). Playwright wird global gesucht (`npm root -g`, nvm).
 
 ## Credits
-- Musik: „Town Theme 1" (Geomancer) — CC0 / Public Domain via OpenGameArt.org. Läuft in Stadt **und** Keller
-  (Kinderwunsch: dieselbe entspannte Melodie; im Keller nur leicht gedämpft). `audio/dungeon.*` ist ebenfalls CC0.
+- Musik: „Town Theme 1" (Geomancer) — CC0 / Public Domain via OpenGameArt.org. Läuft in Stadt **und** Keller als Leitmotiv
+  (Kinderwunsch: dieselbe entspannte Melodie). Darüber adaptive, selbst synthetisierte Schichten je Welt, Kampf-Schicht,
+  eigenes Boss-Thema (zitiert das Motiv) und Stinger — alles eigener Code. `audio/dungeon.*` ist ebenfalls CC0 (ungenutzt).
+- Alle Effekte, Instrumente, Ambience und die Hall-Impulsantworten werden im Browser aus eigenem Code erzeugt (keine Samples).
 - Alles andere: eigener Code, MIT.
