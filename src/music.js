@@ -390,7 +390,7 @@ export function createMusic(E) {
     if (on === M.dead) return;
     M.dead = on; E.life.gain.setTargetAtTime(on ? 0 : 1, ac.currentTime, on ? 0.3 : 0.5);
   };
-  M.info = () => ({ song: M.cur.song, where: M.cur.where, biome: M.cur.biome, comb: M.cur.comb, inten: +M.inten.toFixed(2), sec: M.sec && M.sec.kind, bpm: M.sec && M.sec.bpm, key: M.cur.key, cycle: M.cycle, sections: M.nSec, phase: M.cur.phase, eve: M.cur.eve, running: M.running, bar: Math.floor(M.si / 16) });
+  M.info = () => ({ song: M.cur.song, where: M.cur.where, biome: M.cur.biome, comb: M.cur.comb, inten: +M.inten.toFixed(2), sec: M.sec && M.sec.kind, bpm: M.sec && M.sec.bpm, key: M.cur.key, cycle: M.cycle, sections: M.nSec, queue: M.queue.slice(), phase: M.cur.phase, eve: M.cur.eve, running: M.running, bar: Math.floor(M.si / 16) });
 
   // ---------- Stinger: in der Tonart der laufenden Musik, auf das nächste 16tel quantisiert ----------
   M.stinger = (kind, at) => {

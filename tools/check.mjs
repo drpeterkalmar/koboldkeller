@@ -142,7 +142,7 @@ await waitFor(page, () => KK.state().depth === 1, null, 5000);
 await sleep(700);
 st = await S(page);
 R("B6", "Portal triggert beim Draufsteigen (Stadt → Ebene 1)", st.depth === 1, "Tiefe " + st.depth);
-R("B16", "Dieselbe Melodie in Stadt & Keller", st.track.includes("town") && st.where === "dungeon", st.track + " @ " + st.where);
+R("B16", "Stadtmelodie bleibt Leitmotiv (Stadt-Aufnahme geladen, Keller spielt Welt-Musik)", st.track.includes("town") && st.where === "dungeon", st.track + " @ " + st.where);
 await shot(page, "06_ebene1");
 
 // Kampf
@@ -438,6 +438,274 @@ await ctx.close();
   const sz = await p5.evaluate(() => [...document.querySelectorAll(".skill")].map(e => { const q = e.getBoundingClientRect(); return { id: e.id, s: Math.round(Math.min(q.width, q.height)), right: Math.round(innerWidth - q.right), bottom: Math.round(innerHeight - q.bottom) }; }));
   R("C7", "Skill-Buttons ≥ 56 px im Daumenbereich rechts unten", sz.every(b => b.s >= 56 && b.right < 200 && b.bottom < 220), sz.map(b => b.id + ":" + b.s).join(" "));
   await c5.close();
+}
+
+// =====================================================================
+// 4) v4 — die 8 Wünsche (Munition, Bosse, Musik, Kurve + Caps, Magnet, Editor/Talente/Spezial, Ebenen, Heim-Portal)
+// =====================================================================
+const V4 = "shots/neubau/v4/";
+mkdirSync(V4, { recursive: true });
+{
+  const { ctx: c7, page: p7 } = await newPage();
+  await p7.touchscreen.tap(200, 300);   // Audio entsperren (Musik-Checks)
+  await p7.evaluate(() => KK.start({ tut: false, name: "Vier" }));
+  await sleep(400);
+  const W = (ms) => `await new Promise(r => setTimeout(r, ${ms}))`;
+  // --- V1 Munition ---
+  const am = await p7.evaluate(async () => {
+    const G = KK.G, p = G.p, out = {}, w = ms => new Promise(r => setTimeout(r, ms));
+    KK.goto(3); await w(50); G.portalCd = 1e9; KK.god(true); G.ents.length = 0; G.items.length = 0;
+    p.projN = 3; p.ammo = 5; p.bubCd = 0;
+    KK.bubbles(); out.afterShot = p.ammo; out.bubbles = G.shots.filter(s => s.kind === "bubble").length;
+    KK.spawn("slime", 1.2, 0); let a0 = p.ammo; KK.kill("near"); out.killGain = p.ammo - a0;
+    KK.spawn("slime", 1.2, 0, true); a0 = p.ammo; KK.kill("near"); out.eliteGain = p.ammo - a0;
+    p.ammo = p.ammoMax; const g0 = G.gold; KK.spawn("slime", 1.2, 0); KK.kill("near"); out.capAmmo = p.ammo === p.ammoMax; out.capGold = G.gold - g0;
+    await w(120); out.hudFull = document.getElementById("ammoTxt").textContent;
+    p.ammo = 0; p.bubCd = 0; const n0 = G.shots.length; const r = KK.bubbles(); out.emptyNoShot = !r && G.shots.length === n0;
+    await w(150); out.btnEmpty = document.getElementById("bBub").classList.contains("empty");
+    out.toast = [...document.querySelectorAll(".toast")].some(t => t.textContent.includes("Keine Blasen"));
+    p.bubCd = 0; KK.bubbles(); p.bubCd = 0; KK.bubbles(); await w(80);
+    out.toasts = [...document.querySelectorAll(".toast")].filter(t => t.textContent.includes("Keine Blasen")).length;
+    p.atkCd = 0; out.swordOk = KK.attack();
+    KK.goto(4); await w(50); p.ammo = 0; KK.kill("boss"); out.bossGain = p.ammo;
+    return out;
+  });
+  R("V1", "Munition: 1 Schuss = 1 🫧 (egal wie viele Blasen), Kill/Elite/Boss geben 🫧, Cap → Gold + „VOLL“, leer = grau + 1 Hinweis, Schwert unbegrenzt",
+    am.afterShot === 4 && am.bubbles === 3 && am.killGain === 2 && am.eliteGain === 4 && am.bossGain === 12 && am.capAmmo && am.capGold === 1 && /VOLL/.test(am.hudFull) && am.emptyNoShot && am.btnEmpty && am.toast && am.toasts === 1 && am.swordOk, JSON.stringify(am));
+  await p7.evaluate(() => { KK.goto(5); KK.god(true); const p = KK.G.p; p.ammo = 7; p.spec = 0.67; KK.G.ents.length = 0; });
+  await sleep(900);
+  await shot(p7, "v4/hud_hoch"); await shot(p7, "29_v4_hud_hoch");
+  // --- V2 Obergrenzen ---
+  const cp = await p7.evaluate(async () => {
+    const G = KK.G, p = G.p, out = {}, w = ms => new Promise(r => setTimeout(r, ms));
+    KK.goto(0); await w(60); G.ents.length = 0; G.portalCd = 1e9;
+    p.potions = 5; let g0 = G.gold; KK.item("potion", 0.1, 0); await w(250); out.potCap = p.potions; out.potGold = G.gold - g0;
+    p.hp = p.maxHp; g0 = G.gold; KK.item("heart", 0.1, 0); await w(250); out.heartGold = G.gold - g0;
+    p.hp = 1; KK.item("heart", 0.1, 0); await w(250); out.heartHeal = p.hp > 1;
+    p.hpBase = 59; KK.give("xp", Math.ceil(p.xpNext - p.xp) + 1); out.hpAfter1 = p.hpBase; KK.give("xp", Math.ceil(p.xpNext - p.xp) + 1); out.hpAfter2 = p.hpBase; out.maxHp = p.maxHp;
+    out.lebenBlocked = !KK.skill("leben");
+    return out;
+  });
+  R("V2", "Obergrenzen: 🧪 max 5 (Extra → +10 🪙), ❤️ bei voll → +2 🪙, Max-❤️ max 60, Leben-Talent sperrt bei voll",
+    cp.potCap === 5 && cp.potGold === 10 && cp.heartGold === 2 && cp.heartHeal && cp.hpAfter1 === 60 && cp.hpAfter2 === 60 && cp.maxHp <= 60 && cp.lebenBlocked, JSON.stringify(cp));
+  // --- V3 Magnet ---
+  const mg = await p7.evaluate(async () => {
+    const G = KK.G, p = G.p, out = {}, w = ms => new Promise(r => setTimeout(r, ms));
+    KK.goto(0); await w(60); G.ents.length = 0; G.items.length = 0; G.portalCd = 1e9; p.sk.magnet = 0;
+    KK.G.p.x = 17.5; KK.G.p.y = 22.5; p.vx = p.vy = 0;
+    out.rCoin = KK.magnet("coin"); out.rItem = KK.magnet("potion");
+    const mk = (kind, dx, dy) => { KK.item(kind, dx, dy); return G.items[G.items.length - 1]; };
+    const c1 = mk("coin", 0, -3.3), c2 = mk("coin", 0, 4.3), i1 = mk("gem", 2.3, 0), i2 = mk("gem", -3.1, 0);
+    const d = it => Math.hypot(it.x - p.x, it.y - p.y), d0 = [c1, c2, i1, i2].map(d);
+    await w(160);
+    out.coin33 = d(c1) < d0[0] - 0.2 || !G.items.includes(c1); out.coin43 = Math.abs(d(c2) - d0[1]) < 0.01; out.item23 = d(i1) < d0[2] - 0.2 || !G.items.includes(i1); out.item31 = Math.abs(d(i2) - d0[3]) < 0.01;
+    p.sk.magnet = 5; KK.G.p.magBonus = 5 * 0.35; out.withSkill = KK.magnet("coin");
+    p.sk.magnet = 0; KK.G.p.magBonus = 0;
+    return out;
+  });
+  R("V3", "Magnet: Münzen 3,5 / Sachen 2,5 Kacheln (Münze bei 3,3 kommt, bei 4,3 nicht; Stein bei 2,3 kommt, bei 3,1 nicht), 🧲-Talent vergrößert",
+    mg.rCoin === 3.5 && mg.rItem === 2.5 && mg.coin33 && mg.coin43 && mg.item23 && mg.item31 && mg.withSkill > 5, JSON.stringify(mg));
+  // --- V5 Talente ---
+  const sk = await p7.evaluate(async () => {
+    const G = KK.G, p = G.p, out = {}, w = ms => new Promise(r => setTimeout(r, ms));
+    KK.goto(0); await w(60);
+    p.hpBase = 20; p.sk = { kraft: 0, leben: 0, tempo: 0, blasen: 0, magnet: 0 }; KK.respec(); p.skPts = 4;
+    const a0 = p.atk, h0 = p.maxHp, am0 = p.ammoMax, s0 = p.spdMul;
+    out.k = KK.skill("kraft"); out.l = KK.skill("leben"); out.b = KK.skill("blasen"); out.t = KK.skill("tempo");
+    out.atk = +(p.atk - a0).toFixed(2); out.hp = p.maxHp - h0; out.ammo = p.ammoMax - am0; out.spd = +(p.spdMul - s0).toFixed(2); out.left = p.skPts; out.noMore = !KK.skill("kraft");
+    KK.G.screen = "play"; document.getElementById("btnBag").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); await w(250);
+    out.bagPlus = document.querySelectorAll(".skPlus").length; out.bagPts = /Talente/.test(document.getElementById("bagBody").textContent);
+    document.getElementById("btnBagClose").click(); await w(100);
+    KK.goto(3); await w(50); out.respecDungeon = KK.respec();
+    KK.goto(0); await w(50); out.respecTown = KK.respec(); out.after = { pts: p.skPts, atk: +(p.atk - a0).toFixed(2), hp: p.maxHp - h0 };
+    return out;
+  });
+  R("V5", "Talente: Punkte verteilen wirken (💪 +0,6 ⚔️, ❤️ +2, 🫧 +4 Platz, 👟 +5 %), Rucksack zeigt „+“, Umverteilen nur in der Stadt (kostenlos)",
+    sk.k && sk.l && sk.b && sk.t && sk.atk === 0.6 && sk.hp === 2 && sk.ammo === 4 && sk.spd === 0.05 && sk.left === 0 && sk.noMore && sk.bagPlus === 5 && sk.respecDungeon === 0 && sk.respecTown === 4 && sk.after.pts === 4 && sk.after.atk === 0 && sk.after.hp === 0, JSON.stringify(sk));
+  // --- V6 Spezialangriff über Pilze, Pilze heilen nicht ---
+  const sp = await p7.evaluate(async () => {
+    const G = KK.G, p = G.p, out = {}, w = ms => new Promise(r => setTimeout(r, ms));
+    KK.goto(2); await w(60); G.portalCd = 1e9; KK.god(true); G.ents.length = 0; G.items.length = 0;
+    p.spec = 0; p.hp = 2; p.maxHp = Math.max(p.maxHp, 6);
+    for (let i = 0; i < 3; i++) { KK.item("mushroom", 0.1, 0); await w(120); }
+    out.spec = p.spec; out.hpUnchanged = p.hp === 2; await w(80);
+    out.btnFull = document.getElementById("bSpec").classList.contains("full");
+    const es = []; for (const [dx, dy] of [[2, 0], [0, 3], [-3.5, 0], [8, 8]]) { KK.spawn("slime", dx, dy); const e = G.ents[G.ents.length - 1]; e.hp = e.maxHp = 999; es.push(e); }
+    out.fired = KK.special(); await w(1400);
+    out.hitNear = es.slice(0, 3).map(e => 999 - e.hp); out.farUntouched = es[3].hp === 999; out.specAfter = p.spec;
+    out.again = KK.special();
+    return out;
+  });
+  R("V6", "Spezial: 3 Glitzerpilze füllen die Leiste (❤️ bleibt gleich), ✨-Knopf leuchtet, Flächenangriff trifft rundum (nicht in 11 Kacheln Ferne), danach leer",
+    sp.spec === 1 && sp.hpUnchanged && sp.btnFull && sp.fired && sp.hitNear.every(x => x > 10) && sp.farUntouched && sp.specAfter === 0 && !sp.again, JSON.stringify(sp));
+  // --- V7 Ebenen: Namen + Farbnuancen, Screenshot jeder Ebene ---
+  const names = [], floors = [];
+  for (let d = 1; d <= 20; d++) {
+    await p7.evaluate((d) => { KK.goto(d); KK.god(true); KK.G.portalCd = 1e9; }, d);
+    await sleep(d % 4 === 0 ? 700 : 450);
+    const info = await p7.evaluate(() => ({ n: KK.state().levelName, b: document.getElementById("bannerT").textContent, f: KK.R.B.floor[0], t: KK.R.B.top, amb: KK.R.B.amb.join(","), map: document.getElementById("mapName").textContent }));
+    names.push(info); floors.push(info.f + "|" + info.t + "|" + info.amb);
+    await shot(p7, "v4/ebene_" + String(d).padStart(2, "0"));
+  }
+  const uniqN = new Set(names.map(x => x.n)).size, uniqF = new Set(floors).size, bannerOk = names.every(x => x.b === x.n), mapOk = names.every(x => x.map === x.n);
+  R("V7", "20 Ebenen: 20 eindeutige Namen (Titelkarte + unter der Karte), 20 verschiedene Farbnuancen", uniqN === 20 && uniqF === 20 && bannerOk && mapOk, `${uniqN} Namen, ${uniqF} Paletten, Titelkarte ok ${bannerOk}, HUD ok ${mapOk} · z. B. „${names[0].n}“, „${names[9].n}“, „${names[19].n}“`);
+  // --- V8 Boss-Phasen + Signatur-Angriffe (Screenshot jeder Boss in jeder Phase) ---
+  const bossRes = [];
+  for (const [d, sigs] of [[4, ["spores", "vines"]], [8, ["crystals", "prism"]], [12, ["candy", "rush"]], [16, ["icicles", "snowball"]], [20, ["meteors", "flameCross"]]]) {
+    await p7.evaluate((d) => { KK.goto(d); KK.god(true); KK.G.portalCd = 1e9; KK.teleport("boss"); KK.G.p.x -= 3.2; KK.G.p.y -= 3.2; }, d);
+    await sleep(2600);
+    const r = { d, phases: [], teles: [] };
+    for (let ph = 1; ph <= 3; ph++) {
+      if (ph > 1) { await p7.evaluate((ph) => { const b = KK.G.boss; b.hp = b.maxHp * (ph === 2 ? 0.6 : 0.3); KK.bossHit(); }, ph); await sleep(1800); }
+      const k = sigs[(ph - 1) % 2];
+      const tl = await p7.evaluate((k) => { KK.bossAtk(k); return new Promise(res => setTimeout(() => res(KK.G.teles.filter(t => t.t >= 0).map(t => t.kind)), 450)); }, k);
+      r.teles.push(k + ":" + tl.length + (tl.includes("line") ? "L" : "") + (tl.includes("circle") ? "C" : ""));
+      r.phases.push(await p7.evaluate(() => KK.G.boss.phase));
+      await shot(p7, "v4/boss_e" + d + "_phase" + ph);
+      await sleep(1300);
+    }
+    r.name = await p7.evaluate(() => KK.G.boss.name); r.hpMax = await p7.evaluate(() => KK.G.boss.maxHp);
+    bossRes.push(r);
+  }
+  const bossOk = bossRes.every(r => r.phases.join() === "1,2,3" && r.teles.every(t => +t.split(":")[1].replace(/\D.*/, "") > 0));
+  R("V8", "Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️", bossOk && bossRes[0].hpMax >= 150, bossRes.map(r => r.name + " ❤️" + r.hpMax + " " + r.phases.join("→") + " [" + r.teles.join(" ") + "]").join(" · "));
+  // --- D5 Musik je Welt ---
+  const mus = [];
+  for (const d of [0, 1, 5, 9, 13, 17]) {
+    await p7.evaluate((d) => { KK.goto(d); KK.god(true); KK.G.ents.length = 0; KK.G.portalCd = 1e9; }, d);
+    await sleep(3600);
+    mus.push(await p7.evaluate(() => { const m = KK.audio().music; return { sec: m.sec, bpm: m.bpm, key: m.key.root + (m.key.minor ? "m" : ""), q: m.queue.join("") }; }));
+  }
+  const worldsDistinct = new Set(mus.slice(1).map(m => m.key + "@" + m.bpm)).size === 5;
+  R("D5", "Musik: Stadt = Leitmotiv-Aufnahme, jede Welt eigene Tonart + Tempo + Abschnitte (A/B/Pause, Leitmotiv kehrt wieder)", mus[0].sec === "rec" && worldsDistinct && mus.slice(1).every(m => ["intro", "A0", "A1", "B"].includes(m.sec)), mus.map(m => m.sec + " " + m.key + " " + m.bpm + "bpm").join(" | "));
+  // --- V10 Heim-Portal 20 s weg ---
+  const hp = await p7.evaluate(async () => {
+    const G = KK.G, p = G.p, out = {}, w = ms => new Promise(r => setTimeout(r, ms));
+    KK.goto(2); await w(80); KK.god(true); G.ents.length = 0; G.portalCd = 0;
+    const hpo = G.L.homePortal; out.hidden0 = hpo.hidden;
+    p.x = hpo.x; p.y = hpo.y; p.path = null; await w(900); out.depthOnPortal = G.depth; out.stillHidden = hpo.hidden;
+    out.minimap = true; out.inPortals = (G._portals || []).includes(hpo);
+    KK.pause(); const tp = G.homeHideT; await w(1500); out.pausedFrozen = Math.abs(G.homeHideT - tp) < 0.01; KK.resume();
+    KK.speed(8); const t0 = performance.now();
+    while (G.homeHideT > 0 && performance.now() - t0 < 20000) await w(100);
+    KK.speed(1); out.visibleAfter = !hpo.hidden; out.stillHere = G.depth === 2;
+    await w(400); out.stillHere2 = G.depth === 2;
+    const { nearestFree, findPath } = await import("./src/world.js");
+    let f = null;
+    for (const [dx, dy] of [[3, 0], [-3, 0], [0, 3], [0, -3], [2.5, 2.5], [-2.5, -2.5]]) { const c = nearestFree(G.L.map, hpo.x + dx, hpo.y + dy, 0.35); if (Math.hypot(c.x - hpo.x, c.y - hpo.y) > 1.9) { f = c; break; } }
+    p.path = findPath(G.L.map, p.x, p.y, f.x, f.y, p.r); const t2 = performance.now();
+    while (Math.hypot(p.x - f.x, p.y - f.y) > 0.4 && performance.now() - t2 < 3000) await w(100);
+    out.armed = G.L.homeArmed;
+    p.path = findPath(G.L.map, p.x, p.y, hpo.x, hpo.y, p.r); const t1 = performance.now();
+    while (G.depth !== 0 && performance.now() - t1 < 4000) await w(100);
+    out.town = G.depth === 0;
+    return out;
+  });
+  R("V10", "Heim-Portal: nach Betreten 20 s weg (nicht gezeichnet, nicht auslösbar, Pause zählt nicht), dann sichtbar; erst nach Weggehen/Zurückkommen → Stadt",
+    hp.hidden0 && hp.depthOnPortal === 2 && !hp.inPortals && hp.pausedFrozen && hp.visibleAfter && hp.stillHere2 && hp.town, JSON.stringify(hp));
+  await c7.close();
+}
+// --- V4 Editor: Frisuren je Tierart, Spiegel in der Stadt, gespeichert ---
+{
+  const { ctx: c8, page: p8 } = await newPage();
+  await tapEl(p8, "#btnNew"); await sleep(500);
+  const hairs = [];
+  for (let i = 0; i < 8; i++) {
+    await p8.evaluate((i) => { document.querySelector("[data-t=tier]").click(); document.querySelectorAll("#looks .look")[i].click(); document.querySelector("[data-t=frisur]").click(); }, i);
+    await sleep(350);
+    await shot(p8, "v4/editor_frisuren_" + i);
+    hairs.push(await p8.evaluate(() => document.querySelectorAll(".opt").length));
+  }
+  // Bär: Frisur wechseln → Vorschau ändert sich sichtbar
+  const hashPrev = () => p8.evaluate(() => { const c = document.getElementById("editPrev"), d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let h = 0; for (let i = 0; i < d.length; i += 97) h = (h * 31 + d[i]) >>> 0; return h; });
+  await p8.evaluate(() => { document.querySelector("[data-t=tier]").click(); document.querySelectorAll("#looks .look")[1].click(); document.querySelector("[data-t=frisur]").click(); });
+  await sleep(200);
+  const before = await p8.evaluate(() => KK.G.screen);
+  await p8.evaluate(() => { document.querySelector('.opt[data-v="wuschel"]').click(); });
+  await sleep(120); const h1 = await p8.evaluate(() => { const c = document.getElementById("editPrev"); return c.width; });
+  // Preview-Hash zu gleicher Animationszeit vergleichen: Zeit anhalten
+  const cmp = await p8.evaluate(async () => {
+    const { previewRig } = await import("./src/art.js"); const { makeLook } = await import("./src/config.js");
+    const cv = document.createElement("canvas"); cv.width = 300; cv.height = 340;
+    const hash = () => { const d = cv.getContext("2d").getImageData(0, 0, 300, 340).data; let h = 0, n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; for (let i = 0; i < d.length; i += 53) h = (h * 31 + d[i]) >>> 0; return [h, n]; };
+    previewRig(cv, makeLook({ species: "baer", style: "wuschel" }), null, 0.5); const a = hash();
+    previewRig(cv, makeLook({ species: "baer", style: "irokese" }), null, 0.5); const b = hash();
+    return { a, b, differ: a[0] !== b[0] };
+  });
+  await p8.evaluate(() => { document.querySelector('.opt[data-v="irokese"]').click(); document.getElementById("nameInput").value = "Frisurtest"; });
+  await sleep(200);
+  await shot(p8, "v4/editor_baer_irokese");
+  await p8.locator("#btnGo").tap();
+  await waitFor(p8, () => KK.state().screen === "play" && !KK.state().demo);
+  await sleep(700);
+  const inGame = await p8.evaluate(() => ({ style: KK.state().look.style, sp: KK.state().species }));
+  // Spiegel in der Stadt öffnet den Editor, Änderung wird übernommen + gespeichert
+  await p8.evaluate(() => { KK.finishTut(); const m = KK.G.L.mirror; KK.G.p.x = m.x + 2.5; KK.G.p.y = m.y; KK.G.p.path = [{ x: m.x + 0.9, y: m.y }]; });
+  await waitFor(p8, () => KK.G.screen === "edit", null, 4000);
+  const opened = await p8.evaluate(() => KK.G.screen);
+  await sleep(300);
+  await shot(p8, "v4/spiegel_editor");
+  await p8.evaluate(() => { document.querySelector("[data-t=frisur]").click(); });
+  await sleep(150);
+  await p8.evaluate(() => { document.querySelector('.opt[data-v="zoepfe"]').click(); document.querySelector("[data-t=extra]").click(); });
+  await sleep(150);
+  await p8.evaluate(() => { document.querySelector('.opt[data-v="brille"]').click(); });
+  await sleep(150);
+  await p8.locator("#btnEditOk").tap(); await sleep(500);
+  const after = await p8.evaluate(() => ({ screen: KK.G.screen, style: KK.G.p.look.style, acc: KK.G.p.look.acc, rig: KK.G.p.rig.look.style }));
+  await shot(p8, "v4/spiegel_danach");
+  await p8.reload(); await p8.waitForFunction(() => window.KK && KK.G.L); await sleep(500);
+  const persisted = await p8.evaluate(async () => { const { loadSave } = await import("./src/save.js"); const s = loadSave(); return s && s.look; });
+  R("V4", "Charakter-Editor: 10 Frisuren je Tierart (alle 8), Frisurwechsel sichtbar, Spiegel in der Stadt, Aussehen im Spiel + gespeichert",
+    hairs.every(n => n === 10) && cmp.differ && inGame.style === "irokese" && inGame.sp === "baer" && opened === "edit" && after.screen === "play" && after.style === "zoepfe" && after.acc === "brille" && after.rig === "zoepfe" && persisted && persisted.style === "zoepfe" && persisted.acc === "brille",
+    JSON.stringify({ frisuren: hairs.join(","), vorschauUnterschied: cmp.differ, start: inGame, spiegel: opened, danach: after, gespeichert: persisted && persisted.style + "+" + persisted.acc }));
+  await c8.close();
+}
+// --- V9 Save-Migration v3 → v4 ---
+{
+  const v3 = { v: 1, name: "Mia3", species: "baer", lvl: 12, xp: 3, xpNext: 90, maxHp: 80, hp: 70, atk: 9, projN: 3, magic: 2, gold: 100, potions: 9, shrooms: 5, hats: ["pilz"], hat: "pilz", deepest: 9, depth: 6, mega: false, tut: true, runSecs: 100, won: false, seed: 1234, kills: 55 };
+  const { ctx: c9, page: p9 } = await newPage(412, 915, `localStorage.setItem("koboldkeller2_save", ${JSON.stringify(JSON.stringify(v3))});`);
+  const inf = await p9.textContent("#contInfo");
+  await tapEl(p9, "#btnCont");
+  await waitFor(p9, () => KK.state().screen === "play" && !KK.state().demo);
+  await sleep(2600);
+  const s9 = await p9.evaluate(() => ({ ...KK.state(), toasts: [...document.querySelectorAll(".toast")].map(t => t.textContent).join(" | ") }));
+  const raw = await p9.evaluate(() => JSON.parse(localStorage.getItem("koboldkeller2_save")));
+  await shot(p9, "v4/migration_v3");
+  R("V9", "Save-Migration v3 → v4: nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, v2 gespeichert",
+    s9.name === "Mia3" && s9.lvl === 12 && s9.depth === 6 && s9.hat === "pilz" && s9.gold >= 310 && s9.potions === 5 && s9.maxHp === 60 && s9.spec === 1 && s9.skPts === 11 && s9.look.style === "wuschel" && /Rucksack war zu voll/.test(s9.toasts) && raw.v === 2 && raw.capNote === 0,
+    `${inf} → Gold ${s9.gold} (+${s9.gold - 100}), 🧪 ${s9.potions}, Max-❤️ ${s9.maxHp}, Spezial ${s9.spec}, Punkte ${s9.skPts}, Frisur ${s9.look.style}, Datei v${raw.v}`);
+  await c9.close();
+}
+// --- HUD quer + Boss-Kampf-FPS mit allen Effekten ---
+{
+  const { ctx: c10, page: p10 } = await newPage(915, 412);
+  await p10.evaluate(() => { KK.start({ tut: false }); KK.goto(9); KK.god(true); const p = KK.G.p; p.ammo = 11; p.spec = 1; KK.G.portalCd = 1e9; });
+  await sleep(1200);
+  await shot(p10, "v4/hud_quer"); await shot(p10, "30_v4_hud_quer");
+  const layQ = await p10.evaluate(() => { const r = id => document.getElementById(id).getBoundingClientRect(); const a = r("hudTL"), b = r("skills"), s = r("bSpec"); return { hudBottom: Math.round(a.bottom), specIn: s.top >= 0 && s.right <= innerWidth, ov: !(a.right < b.left || b.right < a.left || a.bottom < b.top || b.bottom < a.top) }; });
+  R("A14b", "Querformat: Munition + Spezial-Leiste sichtbar, ✨-Knopf im Bild, kein Überlappen", layQ.specIn && !layQ.ov, JSON.stringify(layQ));
+  await c10.close();
+}
+if (PERF) {
+  const { ctx: c11, page: p11 } = await newPage();
+  await p11.evaluate(() => { KK.start({ tut: false }); });
+  const cdp = await c11.newCDPSession(p11);
+  if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
+  await p11.evaluate(() => {
+    KK.god(true); KK.goto(20); KK.G.portalCd = 1e9; KK.teleport("boss"); KK.G.p.x -= 2.5; KK.G.p.y -= 2.5;
+    setTimeout(() => { const b = KK.G.boss; b.hp = b.maxHp * 0.3; KK.bossHit(); }, 2500);
+    let i = 0; const atk = ["meteors", "flameCross", "fireRing", "meteors", "slam"];
+    window.__bf = setInterval(() => { const b = KK.G.boss; if (!b) return; b.hp = Math.max(b.hp, b.maxHp * 0.2); if (b.state !== "phase" && b.state !== "intro" && (b.state !== "atk" || Math.random() < 0.3)) KK.bossAtk(atk[i++ % atk.length]); KK.attack(); if (Math.random() < 0.3) { KK.G.p.ammo = 20; KK.bubbles(); } if (Math.random() < 0.08) { KK.G.p.spec = 1; KK.special(); } }, 300);
+  });
+  await sleep(4500);
+  await p11.evaluate(() => KK.perf(true));
+  await sleep(6000);
+  const fb = await p11.evaluate(() => { clearInterval(window.__bf); return { ...KK.perf(), teles: KK.G.teles.length, parts: KK.G && 0 }; });
+  await shot(p11, "v4/boss_kampf_perf");
+  if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  R("A3b", "Boss-Kampf (Kellerkönig, Wut-Phase, alle Effekte) mit CPU-Throttle " + THROTTLE + "× ≥ 45 FPS", fb.fps >= 45, fb.fps + " fps (p5 " + fb.p5 + ", Scale " + fb.scale + ", q" + fb.q + ")");
+  await c11.close();
 }
 
 // Info: reines Software-Raster (kein GPU) — Worst Case, adaptive Qualität darf greifen

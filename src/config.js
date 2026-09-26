@@ -53,7 +53,7 @@ export const SPECIES = [
 // ---------- v4: Charakter-Editor ----------
 export const HAIR_STYLES = [
   { id: "wuschel", name: "Wuschel" }, { id: "locke", name: "Locke" }, { id: "pony", name: "Pony" }, { id: "zoepfe", name: "Zöpfchen" },
-  { id: "dutt", name: "Dutt" }, { id: "irokese", name: "Irokese" }, { id: "schopf", name: "Blatt-Schopf" }, { id: "seite", name: "Seitenscheitel" },
+  { id: "dutt", name: "Dutt" }, { id: "irokese", name: "Irokese" }, { id: "schopf", name: "Blatt-Schopf" }, { id: "seite", name: "Scheitel" },
   { id: "ringel", name: "Ringel" }, { id: "ohne", name: "Ohne" },
 ];
 export const ACCESSORIES = [

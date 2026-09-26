@@ -141,6 +141,15 @@ function chooseAttack(e, d, RS) {
   ATK[k].start(e, e.cur);
 }
 
+/** Test-/Debug-Hilfe: bestimmten Angriff sofort starten */
+export function forceAttack(e, k) {
+  if (!e || !ATK[k]) return false;
+  if (!e.awake) { e.awake = true; H().boss(e); }
+  e.invulT = 0; e.state = "atk"; e.lastAtk = k; e.cur = { k, t: 0, dur: 1, rec: 0.8 };
+  ATK[k].start(e, e.cur);
+  return true;
+}
+
 // ---------- Warnungen ----------
 function circle(x, y, r, delay, max, e, fx, extra) {
   const m = G.L.map, f = canStand(m, x, y, 0.1) ? { x, y } : nearestFree(m, x, y, 0.1);

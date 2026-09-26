@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-26T16:23:43.726Z",
+  "date": "2026-09-26T16:49:10.640Z",
   "profile": "gpu",
   "throttle": 4,
   "fpsNormal": null,
@@ -16,7 +16,7 @@
       "id": "A16",
       "name": "Vor-Rendern im Menü blockiert nicht (längster Happen < 16 ms, kein Frame > 50 ms, fertig < 12 s)",
       "pass": true,
-      "value": "491 ms, 64 Sätze, 23.3 MB, max. Happen 10.8 ms, Menü währenddessen 751.1 fps (längster Frame 21.4 ms; Boot davor 29.7 ms), Aufnahme 253 ms"
+      "value": "509 ms, 66 Sätze, 24.4 MB, max. Happen 9.6 ms, Menü währenddessen 532.6 fps (längster Frame 21.2 ms; Boot davor 26.1 ms), Aufnahme 228 ms"
     },
     {
       "id": "B1",
@@ -34,7 +34,7 @@
       "id": "B3",
       "name": "Namensfeld mit Zufallsnamen vorbelegt",
       "pass": true,
-      "value": "Schnuffel"
+      "value": "Blubber"
     },
     {
       "id": "A10b",
@@ -46,13 +46,13 @@
       "id": "B14a",
       "name": "Tap-to-Move bewegt den Kobold",
       "pass": true,
-      "value": "(17.5,20.5) → (14.41,17.41)"
+      "value": "(17.5,20.5) → (14.34,17.34)"
     },
     {
       "id": "B18",
       "name": "Virtueller Joystick bewegt den Kobold",
       "pass": true,
-      "value": "(14.3,17.3) → (12.15,8.11)"
+      "value": "(14.24,17.24) → (12.08,8.49)"
     },
     {
       "id": "B12t",
@@ -74,7 +74,7 @@
     },
     {
       "id": "B16",
-      "name": "Dieselbe Melodie in Stadt & Keller",
+      "name": "Stadtmelodie bleibt Leitmotiv (Stadt-Aufnahme geladen, Keller spielt Welt-Musik)",
       "pass": true,
       "value": "audio/town.m4a @ dungeon"
     },
@@ -99,14 +99,14 @@
     {
       "id": "B12b",
       "name": "Rucksack öffnet & schließt",
-      "pass": false,
+      "pass": true,
       "value": ""
     },
     {
       "id": "B14",
       "name": "Auto-Befreiung aus Wand + BFS-Weg zur Treppe",
-      "pass": false,
-      "value": "{\"freed\":false,\"wall\":\"2,2\",\"ok\":true,\"n\":8,\"direct\":\"14.4\"}"
+      "pass": true,
+      "value": "{\"freed\":true,\"wall\":\"27,3\",\"ok\":true,\"n\":9,\"direct\":\"15.8\"}"
     },
     {
       "id": "B7a",
@@ -136,7 +136,7 @@
       "id": "B9",
       "name": "Namen in Ehrenhall HTML-escaped",
       "pass": true,
-      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.202638 🪙⏱️ Schnellster "
+      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.202640 🪙⏱️ Schnellster "
     },
     {
       "id": "B8c",
@@ -233,6 +233,78 @@
       "name": "Skill-Buttons ≥ 56 px im Daumenbereich rechts unten",
       "pass": true,
       "value": "bAtk:86 bBub:64 bSpec:62 bDash:64 bPot:58"
+    },
+    {
+      "id": "V1",
+      "name": "Munition: 1 Schuss = 1 🫧 (egal wie viele Blasen), Kill/Elite/Boss geben 🫧, Cap → Gold + „VOLL“, leer = grau + 1 Hinweis, Schwert unbegrenzt",
+      "pass": true,
+      "value": "{\"afterShot\":4,\"bubbles\":3,\"killGain\":2,\"eliteGain\":4,\"capAmmo\":true,\"capGold\":1,\"hudFull\":\"20 · VOLL\",\"emptyNoShot\":true,\"btnEmpty\":true,\"toast\":true,\"toasts\":1,\"swordOk\":true,\"bossGain\":12}"
+    },
+    {
+      "id": "V2",
+      "name": "Obergrenzen: 🧪 max 5 (Extra → +10 🪙), ❤️ bei voll → +2 🪙, Max-❤️ max 60, Leben-Talent sperrt bei voll",
+      "pass": true,
+      "value": "{\"potCap\":5,\"potGold\":10,\"heartGold\":2,\"heartHeal\":true,\"hpAfter1\":60,\"hpAfter2\":60,\"maxHp\":60,\"lebenBlocked\":true}"
+    },
+    {
+      "id": "V3",
+      "name": "Magnet: Münzen 3,5 / Sachen 2,5 Kacheln (Münze bei 3,3 kommt, bei 4,3 nicht; Stein bei 2,3 kommt, bei 3,1 nicht), 🧲-Talent vergrößert",
+      "pass": true,
+      "value": "{\"rCoin\":3.5,\"rItem\":2.5,\"coin33\":true,\"coin43\":true,\"item23\":true,\"item31\":true,\"withSkill\":5.25}"
+    },
+    {
+      "id": "V5",
+      "name": "Talente: Punkte verteilen wirken (💪 +0,6 ⚔️, ❤️ +2, 🫧 +4 Platz, 👟 +5 %), Rucksack zeigt „+“, Umverteilen nur in der Stadt (kostenlos)",
+      "pass": true,
+      "value": "{\"k\":true,\"l\":true,\"b\":true,\"t\":true,\"atk\":0.6,\"hp\":2,\"ammo\":4,\"spd\":0.05,\"left\":0,\"noMore\":true,\"bagPlus\":5,\"bagPts\":true,\"respecDungeon\":0,\"respecTown\":4,\"after\":{\"pts\":4,\"atk\":0,\"hp\":0}}"
+    },
+    {
+      "id": "V6",
+      "name": "Spezial: 3 Glitzerpilze füllen die Leiste (❤️ bleibt gleich), ✨-Knopf leuchtet, Flächenangriff trifft rundum (nicht in 11 Kacheln Ferne), danach leer",
+      "pass": true,
+      "value": "{\"spec\":1,\"hpUnchanged\":true,\"btnFull\":true,\"fired\":true,\"hitNear\":[28,28,28],\"farUntouched\":true,\"specAfter\":0,\"again\":false}"
+    },
+    {
+      "id": "V7",
+      "name": "20 Ebenen: 20 eindeutige Namen (Titelkarte + unter der Karte), 20 verschiedene Farbnuancen",
+      "pass": true,
+      "value": "20 Namen, 20 Paletten, Titelkarte ok true, HUD ok true · z. B. „Die Flüsternden Moosgärten“, „Der Bonbonbach“, „Der Thronsaal des Kellerkönigs“"
+    },
+    {
+      "id": "V8",
+      "name": "Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️",
+      "pass": true,
+      "value": "Moosbart ❤️206 1→2→3 [spores:4C vines:3L spores:5C] · Glitzerzahn ❤️330 1→2→3 [crystals:15C prism:4L crystals:7C] · Zuckerschnute ❤️464 1→2→3 [candy:6C rush:1L candy:4C] · Frostnase ❤️618 1→2→3 [icicles:6L snowball:2L icicles:3L] · Kellerkönig ❤️1040 1→2→3 [meteors:5C flameCross:4L meteors:5C]"
+    },
+    {
+      "id": "D5",
+      "name": "Musik: Stadt = Leitmotiv-Aufnahme, jede Welt eigene Tonart + Tempo + Abschnitte (A/B/Pause, Leitmotiv kehrt wieder)",
+      "pass": true,
+      "value": "rec 3 90bpm | intro 5 84bpm | intro 9m 96bpm | intro 0 108bpm | intro 2 76bpm | intro 7m 92bpm"
+    },
+    {
+      "id": "V10",
+      "name": "Heim-Portal: nach Betreten 20 s weg (nicht gezeichnet, nicht auslösbar, Pause zählt nicht), dann sichtbar; erst nach Weggehen/Zurückkommen → Stadt",
+      "pass": true,
+      "value": "{\"hidden0\":true,\"depthOnPortal\":2,\"stillHidden\":true,\"minimap\":true,\"inPortals\":false,\"pausedFrozen\":true,\"visibleAfter\":true,\"stillHere\":true,\"stillHere2\":true,\"armed\":true,\"town\":true}"
+    },
+    {
+      "id": "V4",
+      "name": "Charakter-Editor: 10 Frisuren je Tierart (alle 8), Frisurwechsel sichtbar, Spiegel in der Stadt, Aussehen im Spiel + gespeichert",
+      "pass": true,
+      "value": "{\"frisuren\":\"10,10,10,10,10,10,10,10\",\"vorschauUnterschied\":true,\"start\":{\"style\":\"irokese\",\"sp\":\"baer\"},\"spiegel\":\"edit\",\"danach\":{\"screen\":\"play\",\"style\":\"zoepfe\",\"acc\":\"brille\",\"rig\":\"zoepfe\"},\"gespeichert\":\"zoepfe+brille\"}"
+    },
+    {
+      "id": "V9",
+      "name": "Save-Migration v3 → v4: nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, v2 gespeichert",
+      "pass": true,
+      "value": "Mia3 · ⭐ 12 · 🪙 310 · Ebene 6 → Gold 310 (+210), 🧪 5, Max-❤️ 60, Spezial 1, Punkte 11, Frisur wuschel, Datei v2"
+    },
+    {
+      "id": "A14b",
+      "name": "Querformat: Munition + Spezial-Leiste sichtbar, ✨-Knopf im Bild, kein Überlappen",
+      "pass": true,
+      "value": "{\"hudBottom\":136,\"specIn\":true,\"ov\":false}"
     },
     {
       "id": "A1",

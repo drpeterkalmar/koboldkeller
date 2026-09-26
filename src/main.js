@@ -8,6 +8,7 @@ import { hardenTouch, wakeLock, watchVisibility } from "./platform.js";
 import { sanitize } from "./save.js";
 import { IN, initInput, resetInput } from "./input.js";
 import * as UI from "./ui.js";
+import { forceAttack, bossHit } from "./boss.js";
 import { pick } from "./util.js";
 
 const cv = document.getElementById("cv");
@@ -170,6 +171,7 @@ window.KK = {
   spawn: (type, dx = 1.5, dy = 0, elite = false) => { const e = makeEnt(type, G.p.x + dx, G.p.y + dy); if (elite) makeElite(e); G.ents.push(e); return e.hp; },
   audio: () => audioStats(),
   perf: (reset) => { if (reset) perfReset(); return perfStats(); },
+  bossAtk: (k) => forceAttack(G.boss, k), bossHit: () => { if (G.boss) bossHit(G.boss, false); return G.boss && G.boss.phase; },
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },
   quality: (q) => { if (q !== undefined) setQuality(q); return R.q; },
   save: () => { save(); return true; },
