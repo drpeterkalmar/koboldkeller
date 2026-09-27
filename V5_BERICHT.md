@@ -88,6 +88,7 @@ Zöpfe + Brille, Ebene 6, tiefste 9) → alles gleich, `bossDone` 2,4,6,8, Ebene
 | A3 Kampf 12 Gegner, 4× Throttle | 209,6 fps (p5 120,5) |
 | A3b größter Bosskampf (König, Arena 24, Wut-Phase, **9 Handlanger**, alle Effekte), 4× Throttle | 209,7 fps (p5 131,6), Zoom 0,8, Chunks 21 |
 | Leck-Test `bot.mjs 8731 20 4 --secs=120 --audio` | PASS: 4970 Stimmen gestartet, max. 40 → 47, offen == aktiv |
+| Live-URL headless nach Deploy (47 s) | „v5" im Menü, `KK_VER = 5`, `?v=5`, boss.js mit `despawnMinions`/`unsealStairs`; Ebene 2: Schlabbo, Arena 14, Treppe versiegelt (Draufstehen → bleibt Ebene 2), Tore zu, Musik `boss/3`, Handlanger 1 → nach Sieg 0, Treppe offen, AudioContext „running", **0 Fehler, 0 fremde Requests** |
 | `audiorender.mjs --only=boss` | Mini-Boss −18,0 / −19,5 / −18,1 / −18,6 / −18,1 LUFS (Welt 1–5), TP ≤ −4,1 dBTP |
 
 ## Schwierigkeitskurve (Autoplay-Bot Normal, `node tools/bot.mjs 8731 20 6`) — durchgespielt, 0 Tode, 0 Fehler
