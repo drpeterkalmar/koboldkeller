@@ -76,7 +76,7 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | B8 | Sieg per Boss-Kill UND (nach besiegtem König) per 20. Portal → Siegesbildschirm + Ehrenhall (Top-5 Münzen / Zeit, Medaillen, de-AT-Datum) | beide Wege |
 | B9 | Namen in Ehrenhall HTML-escaped | Name `<b>X</b>` erscheint als Text |
 | B10 | MEGASCHWER: Gegner 2× Tempo, 10× Schaden, 🔥-Badge | Werte + Badge |
-| B11 | Rundumschlag 360°, Radius 3, Cooldown 0.25 s, trifft auch hinten | Gegner hinter Spieler nimmt Schaden |
+| B11 | Rundumschlag 360°, Radius 3, Cooldown 0.6 s, trifft auch hinten | Gegner hinter Spieler nimmt Schaden |
 | B12 | Seifenblasen, Dodge weg vom Gegner (+ Unverwundbarkeit), Trank, Rucksack | funktionieren |
 | B13 | Erste Gegner zahm: Fledermaus Ebene 1 braucht ≥ 4 Treffer auf volle HP | ja |
 | B14 | Tap-Laufen mit BFS um Wände; Auto-Befreiung aus Wand | Ziel erreicht / befreit |

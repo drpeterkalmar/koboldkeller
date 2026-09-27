@@ -34,7 +34,7 @@ export const SKILLS = [
 
 // Spieler-Grundwerte (aus v20 übernommen / kinderfreundlich)
 export const PLAYER = {
-  hp: 6, speed: 3.6, atk: 4, atkCd: 0.25, atkRadius: 3.0,
+  hp: 6, speed: 3.6, atk: 4, atkCd: 0.6, atkRadius: 3.0,   // v6: Schlag-Pause 0,25 → 0,6 s (Peter: „wie eine Kreissäge“)
   bubbleCd: 0.7, dashCd: 0.9, dashTime: 0.3, dashDist: 4.4, dashInvul: 0.5,
   hurtInvul: 1.0, potions: 3,
 };

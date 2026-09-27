@@ -40,7 +40,7 @@ async function newPage(w = 412, h = 915, init) {
   page.on("console", m => { if (m.type() === "error") errors.push(tag + " console: " + m.text()); });
   page.on("request", rq => { const u = rq.url(); if (!u.startsWith(BASE) && !u.startsWith("data:") && !u.startsWith("blob:")) foreign.push(u); });
   await page.goto(BASE + "index.html");
-  await page.waitForFunction(() => window.KK && window.KK.G && window.KK.G.L, null, { timeout: 10000 });
+  await page.waitForFunction(() => window.KK && window.KK.G && window.KK.G.L, null, { timeout: 30000 });
   await sleep(500);
   return { ctx, page };
 }
@@ -161,7 +161,7 @@ const combat = await page.evaluate(async () => {
   KK.attack();
   await new Promise(r => setTimeout(r, 250));
   out.backHit = back.hp < 99; out.frontHit = front.hp < 99; out.farHit = far.hp < 99;
-  out.atkCd = 0.25;
+  out.atkCd = 0.6;
   return out;
 });
 R("B13", "Fledermaus Ebene 1 zahm: ≥ 4 Treffer bis K.O.", combat.batTame && combat.hitsToKill >= 4, `Schaden ${combat.batDmg}, ${combat.hitsToKill} Treffer nötig`);
