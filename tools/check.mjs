@@ -748,7 +748,7 @@ mkdirSync(V5, { recursive: true });
       const tw = performance.now(); while (st.sealed && performance.now() - tw < 8000) await w(50);
       r.opened = !st.sealed; r.openAfter = +(G.t - t0).toFixed(2); r.bossDone = G.bossDone.includes(d);
       r.portalShown = d === 20 ? (G._portals || []).some(po => po.exit) : true;
-      if (d === 20) { const t1 = performance.now(); while (G.screen !== "win" && performance.now() - t1 < 8000) await w(50); r.after = G.screen === "win"; document.getElementById("btnWinTown").click(); await w(300); return r; }
+      if (d === 20) { const t1 = performance.now(); while (G.screen !== "win" && performance.now() - t1 < 8000) await w(50); r.after = G.screen === "win"; await w(1600); document.getElementById("btnWinTown").click(); await w(300); return r; }
       // 5) erst jetzt: Treppe betreten → Ebene +1
       p.x = st.x - 1.6; p.y = st.y - 1.6; await w(300); p.path = [{ x: st.x, y: st.y }];
       const t2 = performance.now(); while (G.depth === d && performance.now() - t2 < 5000) await w(50);

@@ -48,7 +48,7 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 | `src/render.js` | Kamera, Iso-Projektion, Chunk-Cache, sortiertes Zeichnen, Licht, Post-FX |
 | `src/fx.js` | Partikel-Pool, Screenshake (Trauma), Hit-Stop, Schadenszahlen, Blitze |
 | `src/game.js` | Zustand, Spieler (Talente, Munition, Spezial), Gegner-KI (Elite, neue Muster), Kampf, Loot + Obergrenzen, Magnet, Fallen, Level-Aufbau, Heim-Portal, Sieg |
-| `src/boss.js` | Bosse: Intro, 3 Phasen, Signatur-Angriffe je Welt (Warnkreise/-linien), Arena-Effekte, Sieg-Spektakel |
+| `src/boss.js` | Bosse: Intro, 3 Phasen, Signatur-Angriffe je Welt (Warnkreise/-linien/-ringe), Arena-Effekte, Sieg-Spektakel; v5: Mini-Bosse (2 Phasen), Arena-Logik (Wecken, Tore, Handlanger-Wellen, Despawn, Entsiegeln) |
 | `src/input.js` | Tap-to-Move, Halten-Folgen, virtueller Joystick, Tastatur |
 | `src/ui.js` | Menüs, Charakter-Editor (Live-Vorschau), HUD (Munition, Spezial, Talentpunkte), Toasts, Rucksack mit Talenten, Ehrenhall, Tutorial, Boss-Karte |
 | `src/audio.js` | Audio-Engine: Vor-Rendern, Busse/Mastering, Hall, Stimmen-Verwaltung, Ambience, SFX-API, Unlock, Mute |
@@ -78,13 +78,15 @@ der Bosse (bekommen eigenes Licht, Rand über den Figuren), Titelkarten für Wel
 `G = { screen, depth, biome, map, ents[], items[], shots[], props[], p (Spieler), gold, run, … }`
 Screens: `menu → create → play ⇄ pause/bag/hall → dead → play`, `win`.
 
-## Save-Format (`koboldkeller2_save`, v4 = `v:2`)
-`{ v:2, name, species, look{species,skin,outfit,eye,hair,style,earsV,acc}, lvl, xp, xpNext, maxHp (Grundwert ohne Talente), hp,
+## Save-Format (`koboldkeller2_save`, v5 = `v:3`)
+`{ v:3, bossDone[] (Boss-Ebenen, deren Boss besiegt ist), name, species, look{species,skin,outfit,eye,hair,style,earsV,acc}, lvl, xp, xpNext, maxHp (Grundwert ohne Talente), hp,
 atk (Grundwert), projN, magic, gold, potions, ammo, spec (0…1), sk{kraft,leben,tempo,blasen,magnet}, skPts,
 hats[], hat, deepest, depth, mega, tut, runSecs, won, seed, kills, capNote, giftNote }` — Position wird **nicht** gespeichert.
 **Migration v3 → v4** (`sanitize`, alles mit `v < 2`, also auch v20-Umzüge): Pilze → Spezial-Ladung (3 = voll), Überzähliges über
 den Obergrenzen (Max-❤️ > 60, Tränke > 5, Pilze über voller Leiste) → Gold (`capNote`, einmaliger Toast „Dein Rucksack war zu voll …"),
 bisherige Level → Talentpunkte als Willkommensgeschenk (`giftNote`). Nichts, was sichtbar war, geht verloren.
+**Migration v4 → v5** (`v < 3`): `bossDone` = alle Boss-Ebenen (2, 4, …) unterhalb der tiefsten erreichten Ebene (+ 20, wenn schon gewonnen) —
+die Kinder waren dort schon vorbei, nichts wird nachträglich gesperrt. Sonst ändert sich nichts (keine erneuten Geschenke).
 Migration: existiert nur `koboldkeller_save_v1` (v20), werden Name, Look (Spezies), Level, Gold,
 Waffenwerte, tiefste Ebene übernommen + Geschenk (Veteranen-Hut). Der alte Key bleibt unangetastet.
 Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompatibel mit v20).
@@ -106,6 +108,7 @@ Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompa
 | `KK.save()` / `KK.pause()` / `KK.resume()` | Speichern / Pause |
 | `KK.speed(k)` | Zeitraffer (k Update-Schritte pro Frame, nur für Bot/Tests) |
 | `KK.quality(q)` | Render-Qualitätsstufe 0–3 setzen (Scale 1 · 0.8 · 0.65 · 0.5 × DPR) |
+| `KK.arena()` / `KK.wave(n)` | Arena-Zustand (Größe, Säulen, Tore zu?, Handlanger lebend/erscheinend, Deckel, Treppe versiegelt?) / Welle erzwingen (Deckel gilt) |
 
 ## Spielregeln v4 (Überblick)
 - **Munition:** `bubbles()` kostet 1 🫧 pro Schuss (egal wie viele Blasen); `gainAmmo` bei jedem Kill (normal 2, Elite 4, Boss 12,
@@ -119,8 +122,29 @@ Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompa
   Entfernen (> 1,6 Kacheln).
 - **Schwierigkeit:** `DIFF[tiefe]` (Anzahl, Leben, Schaden, Tempo, Angriffspause, Elite-Chance, Fallen, Raumgröße, neue Muster).
 - **Bosse (`boss.js`):** Zustände sleep → intro (Kamera-Schwenk, Titelkarte, 1,9 s unverwundbar) → chase ⇄ atk/recover; Phasenwechsel
-  bei 66 %/33 % (räumt Warnungen ab, Schockwelle schiebt weg, Banner, Stinger). Angriffe legen Warnungen (`G.teles`: Kreis oder Linie,
-  mit Verzögerung) an; Schaden entsteht erst am Ende einer Warnung.
+  bei 66 %/33 % (räumt Warnungen ab, Schockwelle schiebt weg, Banner, Stinger). Angriffe legen Warnungen (`G.teles`: Kreis, Linie oder
+  Ring mit Loch, mit Verzögerung) an; Schaden entsteht erst am Ende einer Warnung (Ausnahme: Glut-Pfütze `burn` brennt nach ihrer
+  angekündigten Warnung noch 1,6 s, max. 1 Treffer/s).
+
+## v5: Boss-Ebenen, Arena, Handlanger
+- **Boss-Ebenen:** `bossKindOf(d)` → `"main"` (4/8/12/16/20) · `"mini"` (2/6/10/14/18). Tabellen in `config.js`: `BOSSES` (+ `minions`),
+  `MINIS` (Mini-Bosse), `ARENA` (Größe, Säulen, Wellen-Takt/-Größe je Phase, Deckel), `MINION_CAP = 9`, `MINION` (Spawn-Kreis 0,8 s,
+  erste Welle 3 s nach dem Intro, Leben ×0,75, XP ×⅓).
+- **Generator (`world.js` → `buildArena`):** Arena = Raum 0 in der unteren Ecke, Karte wächst um `size − 12`. Säulen (4 bzw. 8) sind
+  blockierte, aber nicht massive Kacheln + Prop `pillar` (werden durchsichtig, wenn der Kobold dahinter steht). Tore = Gang-Kacheln
+  direkt vor der Arena (Prop `gate`, zu = `block`). Spawn-Punkte an Ecken/Kantenmitten (nicht an Treppe/Toren). Boden-Deko ≥ 5 =
+  Arena-Mosaik (Ring, Emblem, Spawn-Rune).
+- **Treppe:** hinterste Arena-Ecke. `L.stairs.sealed` (= Boss-Ebene und Ebene nicht in `G.bossDone`) → kein Auslösen, kein Tap-Einrasten,
+  statt Treppe eine versiegelte Platte, kein Licht/Glow, nicht auf der Minikarte, Ebene 20 ohne Portal. Sieg → `bossDone` + Speichern,
+  nach 1,3 s `unsealStairs()` (Effekt, Ton, Kamera-Schwenk). `armed`: wer gerade draufsteht, muss einmal herunter.
+- **`arenaTick` (jeder Frame):** Boss wacht auf, wenn der Kobold ≥ 1,5 Kacheln in der Arena steht; Tore schließen, wenn Kobold und Boss
+  drin sind und der Kobold ≥ 1,7 von jedem Tor entfernt ist (bereits besiegte Bosse: Tore bleiben offen). Wellen im Takt der Phase,
+  Spawn-Kreise (`G.spawns`) werden nach 0,8 s zu Handlangern (`minion`). Heimportal ist im Bosskampf aus.
+- **Sieg:** `despawnMinions()` entfernt alle Handlanger + Spawn-Kreise + feindliche Geschosse/Warnungen + alle `later(…, "boss")`-Timer;
+  `A.done` verhindert neue Wellen, Tore öffnen sich.
+- **Kamera:** `R.Z0` = Grund-Zoom (Art-Caches), `R.cz` = Kamera-Zoom (Bosskampf in der Arena: hoch 0,8 · quer 0,84), `R.Z = R.Z0·R.cz`.
+  Blick liegt dann bis 2,8 Kacheln in Richtung Boss. `R.chunksVis` (sichtbare Boden-Chunks) bleibt < 28 (Cache-Größe).
+- **Musik:** `want.boss` 1 = Boss · 2 = König · 3 = Mini-Boss (Boss-Material der Welt −8 BPM, Melodie auf dem Welt-Instrument, leichtere Besetzung).
 
 ## Audio (v3/v4)
 **Grundregel (Lehre aus v13):** Zur Laufzeit wird **nichts** synthetisiert. Jeder Effekt = `AudioBufferSourceNode` → `GainNode`

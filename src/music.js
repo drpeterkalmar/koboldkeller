@@ -86,7 +86,8 @@ const BOSS_KING = { tr: 0, bpm: 104, lead: "lead", dbl: "bell" };
 /** v5: Mini-Boss — dasselbe Boss-Material der Welt, abgewandelt: etwas langsamer, Melodie auf dem Welt-Instrument,
     weniger Blech/Pauke, leichteres Schlagzeug (sanft wie bisher) */
 const MINIB = [];
-function miniBoss(b) { const bw = BOSSW[b] || BOSSW[1], W = WORLDS[b] || WORLDS[1]; return MINIB[b] || (MINIB[b] = { tr: bw.tr, bpm: bw.bpm - 8, lead: W.melA, dbl: W.dbl || bw.dbl, mini: true }); }
+const MINI_LV = [1, 1, 1.9, 1, 1.5, 1];                // leise Welt-Instrumente (Celesta, Glocke) im Pegel angleichen
+function miniBoss(b) { const bw = BOSSW[b] || BOSSW[1], W = WORLDS[b] || WORLDS[1]; return MINIB[b] || (MINIB[b] = { tr: bw.tr, bpm: bw.bpm - 8, lead: W.melA, dbl: W.dbl || bw.dbl, mini: true, lv: MINI_LV[b] || 1 }); }
 // Biom-Klangfarbe im Leitmotiv-Abschnitt (Aufnahme im Höhlenklang)
 const BIO = [null,
   { pad: "padWarm", lp: 2400, orn: "moos" }, { pad: "padGlass", lp: 3200, orn: "kristall" }, { pad: "padSweet", lp: 2800, orn: "zucker" },
@@ -373,8 +374,8 @@ export function createMusic(E) {
       if (typeof v === "number") {
         let k = s / 2 + 1, n = 1; while (k < 8 && row[k] === "-") { n++; k++; }
         const m = v + tr;
-        N(bw.lead, m, t, 0.5, to, { dur: n * 2 * sec.sd - 0.05, rel: 0.14 });
-        N(bw.dbl, m + 12 > 98 ? m : m + 12, t, king ? 0.16 : 0.14, to, { pan: 0.35 });
+        N(bw.lead, m, t, 0.5 * (bw.lv || 1), to, { dur: n * 2 * sec.sd - 0.05, rel: 0.14 });
+        N(bw.dbl, m + 12 > 98 ? m : m + 12, t, (king ? 0.16 : 0.14) * (bw.lv || 1), to, { pan: 0.35 });
       }
     }
   }

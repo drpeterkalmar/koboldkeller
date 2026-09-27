@@ -1,48 +1,48 @@
 {
-  "date": "2026-09-26T17:47:19.052Z",
+  "date": "2026-09-27T01:45:25.243Z",
   "profile": "gpu",
   "throttle": 4,
   "fpsNormal": {
-    "fps": 296.4,
-    "p5": 178.6,
-    "frames": 1650,
-    "jsUpdate": 0.05,
-    "jsDraw": 0.47,
-    "avgAll": 329.7,
+    "fps": 280.2,
+    "p5": 285.7,
+    "frames": 1630,
+    "jsUpdate": 0.03,
+    "jsDraw": 0.51,
+    "avgAll": 325.6,
     "scale": 2,
     "q": 0,
     "budget": 1
   },
   "fpsThrottled": {
-    "fps": 214.1,
-    "p5": 108.7,
-    "frames": 1302,
-    "jsUpdate": 0.21,
-    "jsDraw": 1.7,
-    "avgAll": 216.2,
+    "fps": 209.6,
+    "p5": 120.5,
+    "frames": 1426,
+    "jsUpdate": 0.13,
+    "jsDraw": 1.79,
+    "avgAll": 237,
     "scale": 2,
     "q": 0,
     "budget": 1
   },
   "software": {
     "normal": {
-      "fps": 53.8,
-      "p5": 45.5,
-      "frames": 270,
-      "jsUpdate": 0.09,
-      "jsDraw": 0.85,
-      "avgAll": 53.9,
+      "fps": 54.7,
+      "p5": 44.4,
+      "frames": 274,
+      "jsUpdate": 0.1,
+      "jsDraw": 0.8,
+      "avgAll": 54.6,
       "scale": 2,
       "q": 0,
       "budget": 1
     },
     "throttled": {
-      "fps": 52.7,
-      "p5": 41.5,
-      "frames": 265,
-      "jsUpdate": 0.23,
-      "jsDraw": 2.24,
-      "avgAll": 52.7,
+      "fps": 64.5,
+      "p5": 55.2,
+      "frames": 323,
+      "jsUpdate": 0.1,
+      "jsDraw": 1.64,
+      "avgAll": 64.5,
       "scale": 1,
       "q": 3,
       "budget": 0.6
@@ -59,13 +59,13 @@
       "id": "A16",
       "name": "Vor-Rendern im Menü blockiert nicht (längster Happen < 16 ms, kein Frame > 50 ms, fertig < 12 s)",
       "pass": true,
-      "value": "470 ms, 66 Sätze, 24.4 MB, max. Happen 11.5 ms, Menü währenddessen 828.5 fps (längster Frame 15 ms; Boot davor 33.2 ms), Aufnahme 221 ms"
+      "value": "456 ms, 66 Sätze, 24.4 MB, max. Happen 6.7 ms, Menü währenddessen 774.8 fps (längster Frame 14.9 ms; Boot davor 51.9 ms), Aufnahme 240 ms"
     },
     {
       "id": "B1",
       "name": "Versionslabel im Startmenü",
       "pass": true,
-      "value": "🍄 Koboldkeller 2 · v4"
+      "value": "🍄 Koboldkeller 2 · v5"
     },
     {
       "id": "B2",
@@ -77,7 +77,7 @@
       "id": "B3",
       "name": "Namensfeld mit Zufallsnamen vorbelegt",
       "pass": true,
-      "value": "Krümel"
+      "value": "Tapsi"
     },
     {
       "id": "A10b",
@@ -89,13 +89,13 @@
       "id": "B14a",
       "name": "Tap-to-Move bewegt den Kobold",
       "pass": true,
-      "value": "(17.5,20.5) → (14.35,17.35)"
+      "value": "(17.5,20.5) → (14.36,17.36)"
     },
     {
       "id": "B18",
       "name": "Virtueller Joystick bewegt den Kobold",
       "pass": true,
-      "value": "(14.25,17.25) → (12.18,8.57)"
+      "value": "(14.26,17.26) → (12.34,9.42)"
     },
     {
       "id": "B12t",
@@ -149,25 +149,25 @@
       "id": "B14",
       "name": "Auto-Befreiung aus Wand + BFS-Weg zur Treppe",
       "pass": true,
-      "value": "{\"freed\":true,\"wall\":\"9,2\",\"ok\":true,\"n\":8,\"direct\":\"26.2\"}"
+      "value": "{\"freed\":true,\"wall\":\"2,2\",\"ok\":true,\"n\":8,\"direct\":\"25.2\"}"
     },
     {
       "id": "A2",
       "name": "FPS normal ≥ 55 (Kampf, 12 Gegner)",
       "pass": true,
-      "value": "296.4 fps (p5 178.6, Scale 2)"
+      "value": "280.2 fps (p5 285.7, Scale 2)"
     },
     {
       "id": "A3",
       "name": "FPS mit CPU-Throttle 4× ≥ 45",
       "pass": true,
-      "value": "214.1 fps (p5 108.7, Scale 2, q0)"
+      "value": "209.6 fps (p5 120.5, Scale 2, q0)"
     },
     {
       "id": "A15",
       "name": "Effekt-Dauerfeuer (30 Aufrufe/s) vs. aus: Audio-Engine < 3 % Main-Thread, FPS mit Effekten ≥ 45 (Throttle 4×)",
       "pass": true,
-      "value": "Main-Thread 11.5 ms/s = 1.15 % · FPS-Median aus 241.6 / an 283.0 (-17.1 %, Einzelwerte aus 176/283.1/248.1/241.6/231.6, an 323.8/260/255.6/283/311.9 — headless-FPS schwankt ±20 % auch ohne Änderung) · Stimmen jetzt 31, gestartet 2827, gestohlen 451"
+      "value": "Main-Thread 10.5 ms/s = 1.05 % · FPS-Median aus 257.0 / an 253.7 (1.3 %, Einzelwerte aus 241/257/269.1/351.3/220.4, an 253.7/226.4/236.1/275.6/263.9 — headless-FPS schwankt ±20 % auch ohne Änderung) · Stimmen jetzt 36, gestartet 2638, gestohlen 322"
     },
     {
       "id": "B7a",
@@ -185,7 +185,7 @@
       "id": "B7c",
       "name": "Ebene 20: Kellerkönig riesig & knallrot mit Krone",
       "pass": true,
-      "value": "{\"name\":\"Kellerkönig\",\"hp\":1860,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
+      "value": "{\"name\":\"Kellerkönig\",\"hp\":1770,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
     },
     {
       "id": "B8a",
@@ -197,13 +197,13 @@
       "id": "B9",
       "name": "Namen in Ehrenhall HTML-escaped",
       "pass": true,
-      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Sa 26.9.2026349 🪙⏱️ Schnellster"
+      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>So 27.9.2026129 🪙⏱️ Schnellster"
     },
     {
       "id": "B8c",
       "name": "Datum de-AT + Medaillen",
       "pass": true,
-      "value": "26.9.2026"
+      "value": "27.9.2026"
     },
     {
       "id": "B8b",
@@ -215,7 +215,7 @@
       "id": "B4",
       "name": "Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang",
       "pass": true,
-      "value": "Tiefe 7, Gold 1234, Lv 12 (gespeichert: 7/1234/12), Abstand Eingang 0.00 | <b>Zoe</b> · ⭐ 12 · 🪙 1234 · Ebene 7"
+      "value": "Tiefe 7, Gold 1234, Lv 9 (gespeichert: 7/1234/9), Abstand Eingang 0.00 | <b>Zoe</b> · ⭐ 9 · 🪙 1234 · Ebene 7"
     },
     {
       "id": "A9",
@@ -251,7 +251,7 @@
       "id": "A6",
       "name": "Cache-Buster ?v=N überall + KK_VER",
       "pass": true,
-      "value": "v4, 5 Tags, 16 Module"
+      "value": "v5, 5 Tags, 16 Module"
     },
     {
       "id": "A8",
@@ -293,7 +293,7 @@
       "id": "A2q",
       "name": "FPS normal Querformat ≥ 55",
       "pass": true,
-      "value": "653.4 fps (p5 400)"
+      "value": "799.7 fps (p5 454.5)"
     },
     {
       "id": "C7",
@@ -341,7 +341,7 @@
       "id": "V8",
       "name": "Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️",
       "pass": true,
-      "value": "Moosbart ❤️344 1→2→3 [spores:4C vines:3L spores:6C] · Glitzerzahn ❤️592 1→2→3 [crystals:15C prism:4L crystals:7C] · Zuckerschnute ❤️840 1→2→3 [candy:6C rush:1L candy:4C] · Frostnase ❤️1118 1→2→3 [icicles:6L snowball:2L icicles:4L] · Kellerkönig ❤️1710 1→2→3 [meteors:6C flameCross:4L meteors:5C]"
+      "value": "Moosbart ❤️344 1→2→3 [spores:4C vines:3L spores:6C] · Glitzerzahn ❤️592 1→2→3 [crystals:15C prism:4L crystals:7C] · Zuckerschnute ❤️840 1→2→3 [candy:4C rush:1L candy:4C] · Frostnase ❤️1118 1→2→3 [icicles:6L snowball:2L icicles:4L] · Kellerkönig ❤️1710 1→2→3 [meteors:6C flameCross:4L meteors:5C]"
     },
     {
       "id": "D5",
@@ -363,9 +363,9 @@
     },
     {
       "id": "V9",
-      "name": "Save-Migration v3 → v4: nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, v2 gespeichert",
+      "name": "Save-Migration v3 → v4 (→ v5): nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, Datei v3 gespeichert",
       "pass": true,
-      "value": "Mia3 · ⭐ 12 · 🪙 310 · Ebene 6 → Gold 310 (+210), 🧪 5, Max-❤️ 60, Spezial 1, Punkte 11, Frisur wuschel, Datei v2"
+      "value": "Mia3 · ⭐ 12 · 🪙 310 · Ebene 6 → Gold 310 (+210), 🧪 5, Max-❤️ 60, Spezial 1, Punkte 11, Frisur wuschel, Datei v3"
     },
     {
       "id": "A14b",
@@ -375,9 +375,51 @@
     },
     {
       "id": "A3b",
-      "name": "Boss-Kampf (Kellerkönig, Wut-Phase, alle Effekte) mit CPU-Throttle 4× ≥ 45 FPS",
+      "name": "Größter Boss-Kampf (Kellerkönig, Arena 24, Wut-Phase, alle Effekte, volle Handlanger-Zahl) mit CPU-Throttle 4× ≥ 45 FPS",
       "pass": true,
-      "value": "211.7 fps (p5 120.5, Scale 2, q0)"
+      "value": "209.7 fps (p5 131.6, Scale 2, q0) · Handlanger max 9/9 · Zoom 0.8 · sichtbare Boden-Chunks max 21 (< 28)"
+    },
+    {
+      "id": "V11",
+      "name": "Bug-Regression: Boss lebt → Treppe/20. Portal versiegelt (Draufstellen, Dodge drauf/drüber, Rückstoß: kein Wechsel/Sieg); Sieg → öffnet sichtbar → Betreten = Ebene +1 (E20: Sieg); Heimportal ≥ 4 Kacheln von der Arena",
+      "pass": true,
+      "value": "E4: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.33 s, danach ✓, Heimportal 26.5 Kacheln weg · E2: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.34 s, danach ✓, Heimportal 32.6 Kacheln weg · E8: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.35 s, danach ✓, Heimportal 33.3 Kacheln weg · E20: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.31 s, danach ✓, Heimportal 13.5 Kacheln weg"
+    },
+    {
+      "id": "V12",
+      "name": "Wiedereinstieg: besiegter Boss → Treppe offen + Tore bleiben offen (Kampf freiwillig), unbesiegter → versiegelt; Zustand im Spielstand (bossDone)",
+      "pass": true,
+      "value": "{\"e4Open\":true,\"e4Optional\":true,\"e4BossBack\":true,\"e8Sealed\":true,\"saved\":[4]}"
+    },
+    {
+      "id": "V13",
+      "name": "Mini-Bosse auf Ebene 2/6/10/14/18 (5 verschiedene Namen/Wesen/Angriffe), Hauptbosse auf 4/8/12/16/20, keiner auf ungeraden Ebenen, jeder Signatur-Angriff zeigt Warnungen, Mini klar kleiner + schwächer als Hauptboss, eigene Mini-Boss-Musik",
+      "pass": true,
+      "value": "E2 Schlabbo „der Riesen-Moosschleim“ [glibber+platsch] ❤️98 ⚔️1 Höhe 165 ♪boss/3@92 · E6 Funkelflatter „die Kristall-Fledermaus“ [echo+schall] ❤️211 ⚔️2 Höhe 125 ♪boss/3@100 · E10 Lolli-Lutz „der Zuckerpilz-Riese“ [streusel+brause] ❤️344 ⚔️3 Höhe 201 ♪boss/3@106 · E14 Bibber „das Schneegespenst“ [frostatem+blinzel] ❤️487 ⚔️4 Höhe 180 ♪boss/3@88 · E18 Glutpanzer Gustav „der Lava-Käfer“ [lava+horn] ❤️661 ⚔️5 Höhe 155 ♪boss/3@96 | Hauptboss-Höhe ≥ 307 | Angriffe: 2:glibber=7 2:platsch=1 6:echo=10 6:schall=2 10:streusel=15 10:brause=1 14:frostatem=6 14:blinzel=1 18:lava=8 18:horn=1"
+    },
+    {
+      "id": "V14",
+      "name": "Große Arena je Boss-Ebene: Größe ≥ Tabelle (config.ARENA) und mit der Tiefe steigend (v4: 12), Säulen + Tore + Spawn-Punkte, Tore zu sobald man drin ist, Kamera zoomt heraus (sichtbare Chunks < 28)",
+      "pass": true,
+      "value": "E2 14×14 (3 Säulen, 4 Tor-Kacheln, 5 Spawn-Punkte, Zoom 0.8, Chunks 17) · E4 16×16 (4 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 18) · E6 17×17 (4 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 18) · E8 18×18 (8 Säulen, 6 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 21) · E10 19×19 (8 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 20) · E12 20×20 (8 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 16) · E14 21×21 (8 Säulen, 2 Tor-Kacheln, 7 Spawn-Punkte, Zoom 0.8, Chunks 18) · E16 22×22 (8 Säulen, 8 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 18) · E18 23×23 (8 Säulen, 2 Tor-Kacheln, 7 Spawn-Punkte, Zoom 0.8, Chunks 18) · E20 24×24 (8 Säulen, 16 Tor-Kacheln, 5 Spawn-Punkte, Zoom 0.8, Chunks 21)"
+    },
+    {
+      "id": "V15",
+      "name": "Handlanger: spawnen laufend im Kampf (mit 0,8-s-Spawn-Kreis), Deckel nie überschritten (auch bei erzwungenen Wellen), wenig Beute (🫧 +1, ≤ ⅓ XP); Sieg → sofort 0 Handlanger/Spawn-Kreise/Timer, 10 s später immer noch 0, Tore offen",
+      "pass": true,
+      "value": "E12: in 10.6 s max 4/7 (erzwungen 7), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.31 · vor Sieg 7 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true · E2: in 10.6 s max 1/3 (erzwungen 3), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.29 · vor Sieg 3 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true"
+    },
+    {
+      "id": "V16",
+      "name": "Querformat: jede Arena mit herausgezoomter Kamera (Boss + Warnungen im Bild), sichtbare Chunks < 28",
+      "pass": true,
+      "value": "E2 Zoom 0.84 Chunks 17 · E4 Zoom 0.84 Chunks 16 · E6 Zoom 0.84 Chunks 17 · E8 Zoom 0.84 Chunks 23 · E10 Zoom 0.84 Chunks 22 · E12 Zoom 0.84 Chunks 12 · E14 Zoom 0.84 Chunks 16 · E16 Zoom 0.84 Chunks 19 · E18 Zoom 0.84 Chunks 19 · E20 Zoom 0.84 Chunks 19"
+    },
+    {
+      "id": "V17",
+      "name": "Save-Migration v4 → v5: nichts verloren (Level, Gold, Talente, Punkte, Spezial, Munition, Hüte, Aussehen, Tiefe), keine doppelten Geschenke, schon passierte Boss-Ebenen offen (bossDone), tiefere versiegelt, Datei v3",
+      "pass": true,
+      "value": "Vier4 · ⭐ 9 · 🪙 777 · Ebene 6 → Lv 9, 🪙 777, Punkte 3, Talente {\"kraft\":2,\"leben\":3,\"tempo\":1,\"blasen\":1,\"magnet\":1}, Spezial 0.67, 🫧 18, Hut diadem, Frisur zoepfe, Ebene 6 (Treppe offen), bossDone 2,4,6,8, E8 offen, E10 zu, Datei v3"
     },
     {
       "id": "A1",

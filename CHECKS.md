@@ -47,9 +47,21 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | V6 | 3 Pilze → Spezial voll, Pilze heilen nicht, ✨ leuchtet, Flächenangriff trifft nah, nicht fern | ja |
 | V7 | 20 eindeutige Ebenen-Namen (Titelkarte + HUD), 20 verschiedene Paletten, Screenshot jeder Ebene | ja |
 | V8 | Jeder Boss: Phasen 1→2→3, Signatur-Angriffe erzeugen Warnkreise/-linien, Screenshot je Phase | ja |
-| V9 | v3-Spielstand → v4: nichts verloren, Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte, Datei v2 | ja |
+| V9 | v3-Spielstand → v4 (→ v5): nichts verloren, Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte, Datei v3 | ja |
 | V10 | Heim-Portal 20 s weg (nicht auslösbar, Pause friert Timer), danach sichtbar, erst nach Weggehen/Zurück → Stadt | ja |
 | Bot | `tools/bot.mjs … [--mega]`: Schwierigkeitskurve pro Ebene (Zeit, Schaden, Tode), Normal durchspielbar | Tabelle im Bericht |
+
+## V5 — Boss-Runde (automatisch, `check.mjs`, Screenshots in `shots/neubau/v5/`)
+| # | Check | Ziel |
+|---|---|---|
+| V11 | Bug-Regression Ebene 4/2/8/20: Boss lebt → Draufstellen, Dodge drauf, Dodge drüber, Rückstoß ⇒ kein Ebenenwechsel/Sieg; Boss töten ⇒ Treppe öffnet sichtbar ⇒ Betreten = Ebene +1 (E20: Sieg); Heimportal ≥ 4 Kacheln von der Arena | ja |
+| V12 | Wiedereinstieg: besiegter Boss → Treppe offen, Tore bleiben offen; unbesiegter → versiegelt; `bossDone` im Spielstand | ja |
+| V13 | Mini-Bosse nur auf 2/6/10/14/18 (5 verschiedene Namen/Wesen/Angriffe), Hauptbosse 4/8/…/20, keiner auf ungeraden Ebenen, jeder Angriff mit Warnungen, Mini < 80 % Hauptboss-Höhe und weniger ❤️, Mini-Boss-Musik | ja |
+| V14 | Arena je Boss-Ebene ≥ `ARENA`-Tabelle und mit der Tiefe steigend, Säulen/Tore/Spawn-Punkte, Tore zu sobald man drin ist, Kamera-Zoom < 0,9, sichtbare Chunks < 28 | ja |
+| V15 | Handlanger spawnen im Kampf (Spawn-Kreis gesehen), Deckel nie überschritten (auch erzwungen), Beute 🫧 +1 / ≤ ⅓ XP; nach Sieg sofort 0 Handlanger/Spawn-Kreise/Boss-Timer und 10 s Spielzeit später immer noch 0, Tore offen | ja |
+| V16 | Querformat: jede Arena herausgezoomt, Chunks < 28 (Screenshots jeder Arena hoch + quer) | ja |
+| V17 | Save-Migration v4 → v5: nichts verloren, keine doppelten Geschenke, passierte Boss-Ebenen offen, tiefere versiegelt, Datei v3 | ja |
+| A3b | Größter Bosskampf (Kellerkönig, Arena 24, Wut-Phase, 9 Handlanger), CPU-Throttle 4× | ≥ 45 FPS |
 
 ## B — Kids-UX (automatisch + Screenshot)
 | # | Check | Ziel |
@@ -60,8 +72,8 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | B4 | Weiterspielen stellt Level/Gold/Tiefe her, Spawn am Ebenen-Eingang | Werte gleich nach Reload |
 | B5 | Stadt: Brunnen heilt | HP steigt auf Max |
 | B6 | Portal/Treppe triggern beim Draufsteigen (kein Menü) | Tiefe ändert sich |
-| B7 | 20 Ebenen, Boss auf 4/8/12/16/20; Ebene 20 = Kellerkönig (riesig, rot, Krone, Flammen-Aura) | Boss vorhanden + Screenshot |
-| B8 | Sieg per Boss-Kill UND per 20. Portal → Siegesbildschirm + Ehrenhall (Top-5 Münzen / Zeit, Medaillen, de-AT-Datum) | beide Wege |
+| B7 | 20 Ebenen, Boss auf 4/8/12/16/20 (+ Mini-Bosse 2/6/…/18, siehe V13); Ebene 20 = Kellerkönig (riesig, rot, Krone, Flammen-Aura) | Boss vorhanden + Screenshot |
+| B8 | Sieg per Boss-Kill UND (nach besiegtem König) per 20. Portal → Siegesbildschirm + Ehrenhall (Top-5 Münzen / Zeit, Medaillen, de-AT-Datum) | beide Wege |
 | B9 | Namen in Ehrenhall HTML-escaped | Name `<b>X</b>` erscheint als Text |
 | B10 | MEGASCHWER: Gegner 2× Tempo, 10× Schaden, 🔥-Badge | Werte + Badge |
 | B11 | Rundumschlag 360°, Radius 3, Cooldown 0.25 s, trifft auch hinten | Gegner hinter Spieler nimmt Schaden |

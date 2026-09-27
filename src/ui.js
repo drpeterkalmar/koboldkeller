@@ -313,6 +313,7 @@ function showHall(back) { UI.back = back; G.screen = "hall"; $("hallBody").inner
 export function showDead() { setTimeout(() => { if (G.screen === "dead") show("scrDead"); }, 900); }
 export function showWin(rec, hall) {
   setTimeout(() => {
+    if (G.screen !== "win") return;                      // schon weitergespielt → Karte nicht nachträglich zeigen
     const when = new Date(rec.ts).toLocaleDateString("de-AT", { day: "numeric", month: "long", year: "numeric" });
     $("winStats").innerHTML = "<b>" + esc(rec.name) + "</b> hat den Koboldkeller bezwungen" + (rec.how === "portal" ? " (durchs 20. Portal)" : " (Kellerkönig besiegt)") + "!<br>" +
       "⭐ Level " + rec.lvl + " · 🪙 " + rec.gold + " · ⏱️ " + fmtTime(rec.secs) + (rec.mega ? " · 🔥 MEGASCHWER" : "") + "<br><span style='opacity:.8'>Geschafft am " + esc(when) + "</span>";
@@ -343,6 +344,8 @@ const TIPS = [
   "Bosse lassen schicke Hüte fallen — und werden wütend, wenn sie wenig ❤️ haben!",
   "Die Portale hier bringen dich zu jeder Welt, die du schon erreicht hast.",
   "Das 🏠-Portal im Keller taucht erst nach ein paar Sekunden auf.",
+  "Jede zweite Ebene hat einen Boss! Die Treppe dort ist versiegelt 🔒, bis du ihn besiegt hast.",
+  "In der Boss-Arena kommen Handlanger — lila Kreise am Boden zeigen, wo gleich einer auftaucht.",
 ];
 export function showTut(step) {
   if (step === "tap") {

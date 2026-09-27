@@ -1,6 +1,7 @@
 /* game.js — Zustand, Spieler, Kampf, Gegner-KI, Loot, Ebenen, Sieg (MIT)
    v4: Munition aus Kills, Obergrenzen (❤️/🧪/🫧) mit Gold-Umtausch, großer Magnet, Talente, Spezialangriff über
-   Glitzerpilze, Heim-Portal 20 s unsichtbar, Ebenen-Paletten, Schwierigkeitskurve (Elite, Fallen, neue Muster). */
+   Glitzerpilze, Heim-Portal 20 s unsichtbar, Ebenen-Paletten, Schwierigkeitskurve (Elite, Fallen, neue Muster).
+   v5: Boss auf jeder 2. Ebene (Mini-Bosse), Treppe/20. Portal versiegelt bis zum Sieg (bossDone), Handlanger-Beute klein. */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,

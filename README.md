@@ -2,7 +2,7 @@
 
 Ein liebevolles Mobile-Action-RPG für Kinder (7–11): Chibi-Kobolde mit XXL-Glitzeraugen, Hades-Kampfgefühl
 in Kawaii-Optik — warmes Licht, flackernde Fackeln, Hit-Stop, Screenshake, Partikel, „Puff + Glitzer".
-20 Ebenen in 5 Welten, alle 4 Ebenen ein Boss, ganz unten der **Kellerkönig**.
+20 Ebenen in 5 Welten, **jede 2. Ebene ein Boss** (Mini-Bosse auf 2/6/10/14/18, Hauptbosse auf 4/8/12/16), ganz unten der **Kellerkönig**.
 100 % eigener Code (MIT), prozedurale Grafik, keine externen Requests, kein Build.
 
 **▶ Spielen:** https://drpeterkalmar.github.io/koboldkeller/ (nach Deploy durch den Auftraggeber)
@@ -28,12 +28,24 @@ in Kawaii-Optik — warmes Licht, flackernde Fackeln, Hit-Stop, Screenshake, Par
 - **Moosgrotte (1–4) · Kristallhöhle (5–8) · Zuckerkeller (9–12) · Frostkeller (13–16) · Glutkeller (17–20)** —
   jede Welt mit eigener Palette, Deko, Licht, Ambient-Partikeln und Gegnern
   (Fledermaus, Schleim, Wichtel, Irrlicht, Kristallkäfer, Pilzling, Gespenstchen, Flämmchen).
+- **Mini-Bosse** (v5) auf 2 / 6 / 10 / 14 / 18 — jeder ein eigenes Wesen mit zwei eigenen, angekündigten Angriffen und 2 Phasen:
+  Schlabbo (Riesen-Moosschleim: Glibber-Spucke, Bauchplatscher) · Funkelflatter (Kristall-Fledermaus: Kristall-Echo, Schallring) ·
+  Lolli-Lutz (Zuckerpilz-Riese: Streusel-Hüpfkästchen, Brause-Puff) · Bibber (Schneegespenst: Frost-Atem, Buh-Blinzeln) ·
+  Glutpanzer Gustav (Lava-Käfer: Lava-Kleckse mit Glut-Pfützen, Hornstoß). Kleinere Titelkarte/Leiste, eigene Musikvariante.
+- **Boss-Arenen** (v5): jede Boss-Ebene hat eine große Arena (14 → 24 Kacheln, mit der Tiefe wachsend) mit Säulen als Deckung,
+  Boden-Mosaik und Welt-Licht. Sobald man drin ist und der Boss erwacht, schließen sich die Tore (Ranken, Kristall-Gitter,
+  Zuckerstangen, Eiszapfen, Lava-Steine); **Handlanger** erscheinen laufend in Wellen am Rand (0,8 s vorher ein Spawn-Kreis),
+  Anzahl/Takt steigen mit Tiefe und Phase (höchstens 3–9 gleichzeitig). Beim Sieg verschwinden **alle** Handlanger mit Glitzer.
+- **Treppe auf Boss-Ebenen versiegelt** (v5-Bugfix): solange der Boss lebt, ist die Treppe (Ebene 20: das 20. Portal) eine
+  versiegelte Platte — nicht betretbar, kein Licht, nicht auf der Minikarte. Nach dem Sieg zerbricht das Siegel sichtbar.
+  Besiegte Bosse werden gespeichert: dort bleibt die Treppe offen und der Kampf ist freiwillig.
 - **Bosse** auf 4 / 8 / 12 / 16 (Moosbart, Glitzerzahn, Zuckerschnute, Frostnase): Intro-Titelkarte, große Lebensleiste,
   **3 Phasen** (ab 66 % neue Angriffe, ab 33 % Wut-Phase), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien
   (Sporen, Ranken, Kristallregen, Prisma-Strahlen, Bonbon-Bomben, Zuckerrausch, Eiszapfen, Schneebälle, Meteore, Flammenkreuz),
   Sieg mit Zeitlupe, Konfetti und Münzregen, Hut-Beute.
   **Ebene 20:** der riesige, knallrote Kellerkönig mit roter Krone und Flammen-Aura (+ Feuerring).
-  Sieg per Boss-Kill **oder** durch das 20. Portal → Siegesbildschirm + **Ehrenhall** (Top 5 Münzen / Zeit).
+  Sieg per Boss-Kill → Siegesbildschirm + **Ehrenhall** (Top 5 Münzen / Zeit). Das 20. Portal öffnet sich erst, wenn der
+  Kellerkönig einmal besiegt ist (danach auch als zweiter Siegesweg bei weiteren Durchläufen).
 - Loot mit sichtbarer Änderung: Waffenstufen (Knüppel → Holz- → Kristall- → Sternen- → Regenbogenschwert),
   Zauberstab (mehr Blasen), Glitzersteine (Blasenkraft), Boss-Hüte (+2 ❤️), ❤️-Herzen, Truhen, Töpfe, Glitzerpilze (laden ✨).
 - **Obergrenzen:** Max-❤️ 60, 🧪 5 Tränke, 🫧 20 Munition (+4 je Blasen-Talent). Überzähliges wird zu 🪙 (Anzeige „voll").
@@ -60,7 +72,8 @@ additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md).
 |---|---|
 | `src/art.js` | prozedurale Chibi-Grafik (Figuren, Gegner, Bosse, Items, Kacheln, Props) |
 | `src/render.js` | Iso-Renderer, Kamera, Chunk-Cache, Tiefensortierung, Licht, Glow, Minikarte |
-| `src/game.js` | Spiellogik, Kampf, KI, Bosse, Loot, Ebenen, Sieg |
+| `src/game.js` | Spiellogik, Kampf, KI, Loot, Ebenen, Treppen-Siegel, Sieg |
+| `src/boss.js` | Haupt- und Mini-Bosse, Arena (Tore, Handlanger-Wellen), Sieg/Entsiegeln |
 | `src/world.js` | Stadt-/Dungeon-Generator, Kollision, BFS-Wegfindung |
 | `src/ui.js` · `src/input.js` | Menüs/HUD · Touch/Joystick/Tastatur |
 | `src/audio.js` · `src/music.js` · `src/sfxlib.js` | Audio-Engine (vor-gerenderte Effekte, Busse, Hall, Limiter) · adaptive Musik · Klang-Rezepte |
@@ -74,7 +87,8 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.state()` (inkl. Munition, Spezial, Talente, Aussehen, Heim-Portal, Ebenen-Name, Boss-Phase), `KK.start({name,species,mega})`, `KK.goto(d)`, `KK.descend()`, `KK.teleport(x,y | 'stairs'|'boss'|'fountain'|'portal')`,
 `KK.kill('all'|'boss'|'near')`, `KK.win('boss'|'portal')`, `KK.god(on)`, `KK.heal()`, `KK.give(kind,n)`,
 `KK.attack()/bubbles()/dodge()/potion()/special()`, `KK.skill(id)/respec()/look(o)/magnet(kind)/item(kind,dx,dy)`,
-`KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`.
+`KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
+`KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen).
 
 ### Testen
 ```bash

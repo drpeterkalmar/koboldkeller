@@ -53,7 +53,7 @@ const dmgOf = e => e.dmg;
 export function wakeBoss(e) {
   if (e.awake) return;
   const p = G.p;
-  e.awake = true; e.state = "intro"; e.st = 1.9; e.invulT = 1.9; e.sq = 0.3;
+  e.awake = true; e.state = "intro"; e.st = 1.9; e.invulT = 1.9; e.sq = 0.3; e.wokeT = G.t;
   p.invulT = Math.max(p.invulT, 2.1);
   G.camFocus = { x: e.x, y: e.y, t: 1.5 };
   SFX.boss({ x: e.x, y: e.y }); shake(0.5); haptic("boss");
@@ -575,7 +575,9 @@ function closeGates(A, b) {
   }
   G.flowT = 0;
   SFX.slam({ x: G.p.x, y: G.p.y }); shake(0.3); haptic("slam");
-  H().toast("🚪 Die Tore sind zu — besiege " + b.name + ", dann gehen sie wieder auf!");
+  // Hinweis erst nach der Boss-Titelkarte (sonst überdecken sie sich)
+  const wait = Math.max(0, 2.7 - (G.t - (b.wokeT ?? G.t)));
+  later(wait, () => { if (A.closed && G.boss === b) H().toast("🚪 Die Tore sind zu — besiege " + b.name + ", dann gehen sie wieder auf!"); }, "boss");
 }
 function openGates(A) {
   if (!A.closed) return;
