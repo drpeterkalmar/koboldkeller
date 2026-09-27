@@ -83,6 +83,10 @@ const BOSSW = [null,
   { tr: -1, bpm: 96, lead: "lead", dbl: "bell" }, { tr: -5, bpm: 104, lead: "flute", dbl: "marimba" },
 ];
 const BOSS_KING = { tr: 0, bpm: 104, lead: "lead", dbl: "bell" };
+/** v5: Mini-Boss — dasselbe Boss-Material der Welt, abgewandelt: etwas langsamer, Melodie auf dem Welt-Instrument,
+    weniger Blech/Pauke, leichteres Schlagzeug (sanft wie bisher) */
+const MINIB = [];
+function miniBoss(b) { const bw = BOSSW[b] || BOSSW[1], W = WORLDS[b] || WORLDS[1]; return MINIB[b] || (MINIB[b] = { tr: bw.tr, bpm: bw.bpm - 8, lead: W.melA, dbl: W.dbl || bw.dbl, mini: true }); }
 // Biom-Klangfarbe im Leitmotiv-Abschnitt (Aufnahme im Höhlenklang)
 const BIO = [null,
   { pad: "padWarm", lp: 2400, orn: "moos" }, { pad: "padGlass", lp: 3200, orn: "kristall" }, { pad: "padSweet", lp: 2800, orn: "zucker" },
@@ -137,7 +141,7 @@ export function createMusic(E) {
   /** nächste Abschnitte für den aktuellen Ort planen */
   function planSongs(first) {
     const c = M.cur, q = M.queue; q.length = 0;
-    if (c.song === "boss") { q.push("bossA", "bossA", "bossB", "bossA", "bossB", "bossB"); return; }
+    if (c.song === "boss") { q.push(...(c.boss === 3 ? ["bossA", "bossB", "bossA", "bossA"] : ["bossA", "bossA", "bossB", "bossA", "bossB", "bossB"])); return; }
     if (c.where === "town") { q.push("rec", "town"); return; }
     if (c.where !== "dungeon") { q.push("silent"); return; }
     const cy = M.cycle;
@@ -156,7 +160,7 @@ export function createMusic(E) {
       case "BR": sec.bars = 4; break;
       case "LM": { sec.bars = 8; sec.bpm = BPM; sec.lmBar = [0, 8, 16, 20][(M.cycle >> 1) % 4]; sec.rec = sec.lmBar * BAR; sec.recDur = 8 * BAR; break; }
       case "bossA": case "bossB": {
-        const bw = c.boss === 2 ? BOSS_KING : (BOSSW[c.biome] || BOSSW[1]);
+        const bw = c.boss === 2 ? BOSS_KING : c.boss === 3 ? miniBoss(c.biome) : (BOSSW[c.biome] || BOSSW[1]);
         sec.bw = bw; sec.bpm = Math.round(bw.bpm * (c.phase >= 3 ? 1.08 : 1)); sec.K = { root: (bw.tr + 12) % 12, minor: true, tonic: 72 + bw.tr }; break;
       }
     }
@@ -341,6 +345,15 @@ export function createMusic(E) {
     const bw = sec.bw, tr = bw.tr, B = sec.kind === "bossB", C = B ? BOSSC_B : BOSSC, MEL = B ? BOSSMEL_B : BOSSMEL;
     const bb = bar % 8, [cr0, ct0] = C[bb], cr = (cr0 + tr + 12) % 12, ct = ct0.map(x => (x + tr + 12) % 12);
     const R = near(cr, 46), king = M.cur.boss === 2, rage = M.cur.phase >= 3, to = L.boss;
+    if (bw.mini) {                                       // Mini-Boss: leichter besetzt
+      if (s % 4 === 0) N("pizz", R + [0, 7, 0, 12][s / 4], t, s === 0 ? 0.62 : 0.44, to);
+      if (s === 0) for (const m of up(ct, 60)) N("brass", m, t, 0.2, to, { dur: 0.26, rel: 0.12, pan: (m % 3 - 1) * 0.3 });
+      if (s === 0 && bb % 2 === 0) N("timp", near(cr, 46), t, 0.5, to);
+      if (s === 0 || s === 8) N("knock", 60, t, s ? 0.34 : 0.5, to);
+      if (s === 4 || s === 12) N("snap", 60, t, 0.36, to, { pan: -0.1 });
+      if (s % 4 === 2) N("shaker", 60, t, 0.18, to, { pan: 0.25 });
+      if (M.cur.phase >= 2 && s % 2 === 1) N("shaker", 60, t, 0.1, to, { pan: -0.25 });
+    } else {
     if (s % 2 === 0) N("pizz", R + [0, 0, 7, 0, 0, 7, 12, 7][s / 2], t, s === 0 ? 0.75 : 0.52, to);
     if (s === 0 || s === 6 || (s === 12 && bb % 2 === 1)) for (const m of up(ct, 60)) N("brass", m, t, s === 0 ? 0.3 : 0.24, to, { dur: s === 0 ? 0.3 : 0.18, rel: 0.12, pan: (m % 3 - 1) * 0.3 });
     if (s === 0 || s === 8) N("timp", near(cr, 46), t, s ? 0.5 : 0.75, to);
@@ -353,6 +366,7 @@ export function createMusic(E) {
       if (s % 2 === 1) N("snap", 60, t, 0.16, to, { pan: 0.35 });
       if (s === 2 || s === 10) N("knock", 60, t, 0.42, to);
       if (s === 14) for (const m of up(ct, 62)) N("brass", m, t, 0.2, to, { dur: 0.12, rel: 0.1 });
+    }
     }
     if (s % 2 === 0) {
       const row = MEL[bb], v = row[s / 2];
@@ -390,7 +404,7 @@ export function createMusic(E) {
     if (on === M.dead) return;
     M.dead = on; E.life.gain.setTargetAtTime(on ? 0 : 1, ac.currentTime, on ? 0.3 : 0.5);
   };
-  M.info = () => ({ song: M.cur.song, where: M.cur.where, biome: M.cur.biome, comb: M.cur.comb, inten: +M.inten.toFixed(2), sec: M.sec && M.sec.kind, bpm: M.sec && M.sec.bpm, key: M.cur.key, cycle: M.cycle, sections: M.nSec, queue: M.queue.slice(), phase: M.cur.phase, eve: M.cur.eve, running: M.running, bar: Math.floor(M.si / 16) });
+  M.info = () => ({ song: M.cur.song, boss: M.cur.boss, where: M.cur.where, biome: M.cur.biome, comb: M.cur.comb, inten: +M.inten.toFixed(2), sec: M.sec && M.sec.kind, bpm: M.sec && M.sec.bpm, key: M.cur.key, cycle: M.cycle, sections: M.nSec, queue: M.queue.slice(), phase: M.cur.phase, eve: M.cur.eve, running: M.running, bar: Math.floor(M.si / 16) });
 
   // ---------- Stinger: in der Tonart der laufenden Musik, auf das nächste 16tel quantisiert ----------
   M.stinger = (kind, at) => {

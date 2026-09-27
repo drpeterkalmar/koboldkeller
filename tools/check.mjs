@@ -672,8 +672,8 @@ mkdirSync(V4, { recursive: true });
   const s9 = await p9.evaluate(() => ({ ...KK.state(), toasts: [...document.querySelectorAll(".toast")].map(t => t.textContent).join(" | ") }));
   const raw = await p9.evaluate(() => JSON.parse(localStorage.getItem("koboldkeller2_save")));
   await shot(p9, "v4/migration_v3");
-  R("V9", "Save-Migration v3 → v4: nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, v2 gespeichert",
-    s9.name === "Mia3" && s9.lvl === 12 && s9.depth === 6 && s9.hat === "pilz" && s9.gold >= 310 && s9.potions === 5 && s9.maxHp === 60 && s9.spec === 1 && s9.skPts === 11 && s9.look.style === "wuschel" && /Rucksack war zu voll/.test(s9.toasts) && raw.v === 2 && raw.capNote === 0,
+  R("V9", "Save-Migration v3 → v4 (→ v5): nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, Datei v3 gespeichert",
+    s9.name === "Mia3" && s9.lvl === 12 && s9.depth === 6 && s9.hat === "pilz" && s9.gold >= 310 && s9.potions === 5 && s9.maxHp === 60 && s9.spec === 1 && s9.skPts === 11 && s9.look.style === "wuschel" && /Rucksack war zu voll/.test(s9.toasts) && raw.v === 3 && raw.capNote === 0,
     `${inf} → Gold ${s9.gold} (+${s9.gold - 100}), 🧪 ${s9.potions}, Max-❤️ ${s9.maxHp}, Spezial ${s9.spec}, Punkte ${s9.skPts}, Frisur ${s9.look.style}, Datei v${raw.v}`);
   await c9.close();
 }
@@ -696,18 +696,206 @@ if (PERF) {
     KK.god(true); KK.goto(20); KK.G.portalCd = 1e9; KK.teleport("boss"); KK.G.p.x -= 2.5; KK.G.p.y -= 2.5;
     setTimeout(() => { const b = KK.G.boss; b.hp = b.maxHp * 0.3; KK.bossHit(); }, 2500);
     let i = 0; const atk = ["meteors", "flameCross", "fireRing", "meteors", "slam"];
-    window.__bf = setInterval(() => { const b = KK.G.boss; if (!b) return; b.hp = Math.max(b.hp, b.maxHp * 0.2); if (b.state !== "phase" && b.state !== "intro" && (b.state !== "atk" || Math.random() < 0.3)) KK.bossAtk(atk[i++ % atk.length]); KK.attack(); if (Math.random() < 0.3) { KK.G.p.ammo = 20; KK.bubbles(); } if (Math.random() < 0.08) { KK.G.p.spec = 1; KK.special(); } }, 300);
+    window.__bf = setInterval(() => { const b = KK.G.boss; if (!b) return; b.hp = Math.max(b.hp, b.maxHp * 0.2); if (b.state !== "phase" && b.state !== "intro" && (b.state !== "atk" || Math.random() < 0.3)) KK.bossAtk(atk[i++ % atk.length]); KK.attack(); if (Math.random() < 0.3) { KK.G.p.ammo = 20; KK.bubbles(); } if (Math.random() < 0.08) { KK.G.p.spec = 1; KK.special(); } for (const e of KK.G.ents) if (e.minion && e.hp < 3) e.hp = 30; KK.wave(9); window.__maxMin = Math.max(window.__maxMin || 0, KK.arena().count); window.__maxCh = Math.max(window.__maxCh || 0, KK.R.chunksVis || 0); }, 300);
   });
   await sleep(4500);
   await p11.evaluate(() => KK.perf(true));
   await sleep(6000);
-  const fb = await p11.evaluate(() => { clearInterval(window.__bf); return { ...KK.perf(), teles: KK.G.teles.length, parts: KK.G && 0 }; });
+  const fb = await p11.evaluate(() => { clearInterval(window.__bf); return { ...KK.perf(), teles: KK.G.teles.length, minions: window.__maxMin, cap: KK.arena().cap, zoom: KK.state().zoom, chunks: window.__maxCh }; });
   await shot(p11, "v4/boss_kampf_perf");
   if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
-  R("A3b", "Boss-Kampf (Kellerkönig, Wut-Phase, alle Effekte) mit CPU-Throttle " + THROTTLE + "× ≥ 45 FPS", fb.fps >= 45, fb.fps + " fps (p5 " + fb.p5 + ", Scale " + fb.scale + ", q" + fb.q + ")");
+  R("A3b", "Größter Boss-Kampf (Kellerkönig, Arena 24, Wut-Phase, alle Effekte, volle Handlanger-Zahl) mit CPU-Throttle " + THROTTLE + "× ≥ 45 FPS", fb.fps >= 45 && fb.minions >= fb.cap && fb.chunks < 28, fb.fps + " fps (p5 " + fb.p5 + ", Scale " + fb.scale + ", q" + fb.q + ") · Handlanger max " + fb.minions + "/" + fb.cap + " · Zoom " + fb.zoom + " · sichtbare Boden-Chunks max " + fb.chunks + " (< 28)");
   await c11.close();
 }
 
+
+// =====================================================================
+// 5) v5 — Boss-Runde: Treppen-Bug, Mini-Bosse, große Arenen, Handlanger (Screenshots in shots/neubau/v5/)
+// =====================================================================
+const V5 = "shots/neubau/v5/";
+mkdirSync(V5, { recursive: true });
+{
+  const { ctx: c12, page: p12 } = await newPage();
+  await p12.touchscreen.tap(200, 300);   // Audio entsperren (Mini-Boss-Musik)
+  await p12.evaluate(() => KK.start({ tut: false, name: "Fünf" }));
+  await sleep(300);
+  // --- V11 Bug-Regression: Treppe/20. Portal versiegelt, solange der Boss lebt (Draufstellen, Dodge, Rückstoß) ---
+  const bug = [];
+  for (const d of [4, 2, 8, 20]) {
+    const r = await p12.evaluate(async (d) => {
+      const G = KK.G, w = ms => new Promise(r => setTimeout(r, ms)), r = { d };
+      KK.start({ tut: false, name: "Fünf" }); KK.god(true); KK.goto(d); await w(80);
+      G.portalCd = 0; G.homeHideT = 999;
+      const st = G.L.stairs, p = G.p, A = G.L.arena;
+      r.sealed0 = st.sealed; r.bossAlive = !!G.boss;
+      // 1) direkt auf die Treppe / das Portal stellen
+      p.x = st.x; p.y = st.y; p.path = null; await w(900);
+      r.stand = G.depth === d && G.screen === "play";
+      r.drawnPortal = (G._portals || []).some(po => po.exit);
+      await w(1600);                                         // Boss-Intro abwarten
+      // 2) Dodge, der genau auf der Treppe landet, und Dodge quer darüber
+      const dash = async (fx, fy) => { p.x = st.x - fx; p.y = st.y - fy; p.vx = p.vy = 0; p.dashCd = 0; p.dashT = 0.3; p.dashDx = Math.SQRT1_2; p.dashDy = Math.SQRT1_2; p.invulT = 1; await w(700); };
+      await dash(3.1, 3.1); r.dodgeOn = G.depth === d && G.screen === "play";
+      await dash(1.6, 1.6); r.dodgeOver = G.depth === d && G.screen === "play";
+      // 3) Rückstoß (wie Boss-Schockwelle) über die Treppe
+      p.x = st.x - 0.7; p.y = st.y - 0.7; p.vx = 9; p.vy = 9; await w(700); r.knock = G.depth === d && G.screen === "play";
+      r.sealedStill = st.sealed;
+      // Heimportal weit weg von der Arena
+      const hp = G.L.homePortal, dx = Math.max(A.x - hp.x, 0, hp.x - (A.x + A.w)), dy = Math.max(A.y - hp.y, 0, hp.y - (A.y + A.h));
+      r.homeDist = +Math.hypot(dx, dy).toFixed(1);
+      // 4) Boss besiegen → Treppe öffnet sich sichtbar
+      const t0 = G.t; KK.kill("boss");
+      const tw = performance.now(); while (st.sealed && performance.now() - tw < 8000) await w(50);
+      r.opened = !st.sealed; r.openAfter = +(G.t - t0).toFixed(2); r.bossDone = G.bossDone.includes(d);
+      r.portalShown = d === 20 ? (G._portals || []).some(po => po.exit) : true;
+      if (d === 20) { const t1 = performance.now(); while (G.screen !== "win" && performance.now() - t1 < 8000) await w(50); r.after = G.screen === "win"; document.getElementById("btnWinTown").click(); await w(300); return r; }
+      // 5) erst jetzt: Treppe betreten → Ebene +1
+      p.x = st.x - 1.6; p.y = st.y - 1.6; await w(300); p.path = [{ x: st.x, y: st.y }];
+      const t2 = performance.now(); while (G.depth === d && performance.now() - t2 < 5000) await w(50);
+      r.after = G.depth === d + 1;
+      return r;
+    }, d);
+    bug.push(r);
+  }
+  R("V11", "Bug-Regression: Boss lebt → Treppe/20. Portal versiegelt (Draufstellen, Dodge drauf/drüber, Rückstoß: kein Wechsel/Sieg); Sieg → öffnet sichtbar → Betreten = Ebene +1 (E20: Sieg); Heimportal ≥ 4 Kacheln von der Arena",
+    bug.every(r => r.sealed0 && r.bossAlive && r.stand && !r.drawnPortal && r.dodgeOn && r.dodgeOver && r.knock && r.sealedStill && r.opened && r.bossDone && r.portalShown && r.after && r.homeDist >= 4),
+    bug.map(r => `E${r.d}: versiegelt ${r.sealed0 && r.sealedStill}, stehen/dodge/dodge-drüber/rückstoß ${[r.stand, r.dodgeOn, r.dodgeOver, r.knock].map(x => x ? "✓" : "✗").join("")}, offen nach ${r.openAfter} s, danach ${r.after ? "✓" : "✗"}, Heimportal ${r.homeDist} Kacheln weg`).join(" · "));
+  // --- Wiedereinstieg: besiegter Boss → offen, unbesiegter → versiegelt (auch nach Reload/Weiterspielen) ---
+  const re = await p12.evaluate(async () => {
+    const G = KK.G, w = ms => new Promise(r => setTimeout(r, ms)), r = {};
+    KK.start({ tut: false, name: "Fünf" }); KK.god(true);
+    KK.goto(4); await w(50); KK.kill("boss"); await w(100);
+    KK.goto(4); await w(50); r.e4Open = !G.L.stairs.sealed; r.e4Optional = G.L.arena.optional; r.e4BossBack = !!G.boss;
+    KK.goto(8); await w(50); r.e8Sealed = G.L.stairs.sealed;
+    KK.save(); r.saved = JSON.parse(localStorage.getItem("koboldkeller2_save")).bossDone;
+    return r;
+  });
+  R("V12", "Wiedereinstieg: besiegter Boss → Treppe offen + Tore bleiben offen (Kampf freiwillig), unbesiegter → versiegelt; Zustand im Spielstand (bossDone)",
+    re.e4Open && re.e4Optional && re.e8Sealed && Array.isArray(re.saved) && re.saved.includes(4) && !re.saved.includes(8), JSON.stringify(re));
+  // --- V13 Mini-Bosse auf 2/6/10/14/18 (alle verschieden), keiner auf ungeraden Ebenen, Signatur-Angriffe mit Warnungen ---
+  const lv = await p12.evaluate(async () => {
+    const out = [];
+    KK.start({ tut: false, name: "Fünf" }); KK.god(true);
+    const A = await import("./src/art.js"), C = await import("./src/config.js");
+    for (let d = 1; d <= 20; d++) {
+      KK.goto(d); const b = KK.G.boss;
+      out.push({ d, boss: b ? { name: b.name, epi: b.epi, mini: !!b.isMini, kind: b.kind || "rig", sig: b.def.sig.join("+"), h: b.isMini ? Math.round(A.miniSprite(b.kind).ay * b.scale) : Math.round((Math.abs(A.RIG.neck) + 112 + 40) * b.scale * 0.86), hp: b.maxHp, dmg: b.dmg } : null });
+    }
+    return out;
+  });
+  const minis = lv.filter(x => x.boss && x.boss.mini), mains = lv.filter(x => x.boss && !x.boss.mini), odd = lv.filter(x => x.d % 2 === 1 && x.boss);
+  const uniq = k => new Set(minis.map(x => x.boss[k])).size;
+  const miniSig = [];
+  for (const m of minis) {
+    await p12.evaluate((d) => { KK.goto(d); KK.god(true); KK.G.portalCd = 1e9; const A = KK.G.L.arena; KK.teleport(A.cx + 0.8, A.cy + 3.4); }, m.d);
+    await sleep(2600);
+    for (const k of m.boss.sig.split("+")) {
+      const tl = await p12.evaluate((k) => { const b = KK.G.boss; b.speed = 0; KK.bossAtk(k); return new Promise(res => setTimeout(() => res(KK.G.teles.length + KK.G.shots.filter(s => s.kind !== "bubble").length), 500)); }, k);
+      miniSig.push(m.d + ":" + k + "=" + tl);
+      await shot(p12, "v5/mini_e" + m.d + "_" + k);
+      await sleep(1700);
+    }
+    const mus = await p12.evaluate(() => KK.audio().music || {});
+    m.music = mus.song + "/" + mus.boss + "@" + mus.bpm;
+  }
+  R("V13", "Mini-Bosse auf Ebene 2/6/10/14/18 (5 verschiedene Namen/Wesen/Angriffe), Hauptbosse auf 4/8/12/16/20, keiner auf ungeraden Ebenen, jeder Signatur-Angriff zeigt Warnungen, Mini klar kleiner + schwächer als Hauptboss, eigene Mini-Boss-Musik",
+    minis.map(x => x.d).join() === "2,6,10,14,18" && mains.map(x => x.d).join() === "4,8,12,16,20" && odd.length === 0 && uniq("name") === 5 && uniq("kind") === 5 && uniq("sig") === 5 &&
+    miniSig.every(x => +x.split("=")[1] > 0) && minis.every(x => x.boss.h < 0.8 * Math.min(...mains.map(m => m.boss.h)) && x.boss.hp < lv[x.d + 1].boss.hp) && minis.every(m => /^boss\/3@\d+/.test(m.music)),
+    minis.map(x => `E${x.d} ${x.boss.name} „${x.boss.epi}“ [${x.boss.sig}] ❤️${x.boss.hp} ⚔️${x.boss.dmg} Höhe ${x.boss.h} ♪${x.music}`).join(" · ") + " | Hauptboss-Höhe ≥ " + Math.min(...mains.map(m => m.boss.h)) + " | Angriffe: " + miniSig.join(" "));
+  // --- V14 Arenen: Größe je Boss-Ebene ≥ Tabelle und steigend, Säulen/Tore/Spawn-Punkte, Kamera zoomt heraus (Chunks < Cache) ---
+  const ar = [];
+  for (const d of [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]) {
+    const r = await p12.evaluate(async (d) => {
+      const C = await import("./src/config.js"), w = ms => new Promise(r => setTimeout(r, ms));
+      KK.start({ tut: false, name: "Fünf" }); KK.god(true); KK.goto(d); KK.G.portalCd = 1e9; await w(50);
+      const a = KK.arena(), A = KK.G.L.arena;
+      KK.teleport(A.cx - 3, A.cy - 3);
+      return { d, size: a.size, want: C.ARENA[d].size, pillars: a.pillars, gates: a.gates, spawns: a.spawns };
+    }, d);
+    await sleep(2800);
+    Object.assign(r, await p12.evaluate(() => ({ zoom: KK.state().zoom, chunks: KK.R.chunksVis, closed: KK.arena().closed, blocked: KK.arena().gateBlocked })));
+    await shot(p12, "v5/arena_e" + d + "_hoch");
+    ar.push(r);
+  }
+  const incr = ar.every((r, i) => i === 0 || r.size > ar[i - 1].size);
+  R("V14", "Große Arena je Boss-Ebene: Größe ≥ Tabelle (config.ARENA) und mit der Tiefe steigend (v4: 12), Säulen + Tore + Spawn-Punkte, Tore zu sobald man drin ist, Kamera zoomt heraus (sichtbare Chunks < 28)",
+    ar.every(r => r.size >= r.want && r.pillars >= 3 && r.gates > 0 && r.spawns >= 3 && r.closed && r.blocked === r.gates && r.zoom < 0.9 && r.chunks < 28) && incr,
+    ar.map(r => `E${r.d} ${r.size}×${r.size} (${r.pillars} Säulen, ${r.gates} Tor-Kacheln, ${r.spawns} Spawn-Punkte, Zoom ${r.zoom}, Chunks ${r.chunks})`).join(" · "));
+  // --- V15 Handlanger: spawnen im Kampf mit Spawn-Kreis, Deckel eingehalten, wenig Beute, nach Sieg alle weg + 10 s später immer noch 0 ---
+  const mn = [];
+  for (const d of [12, 2]) {
+    const r = await p12.evaluate(async (d) => {
+      const G = KK.G, w = ms => new Promise(r => setTimeout(r, ms)), r = { d };
+      KK.start({ tut: false, name: "Fünf" }); KK.god(true); KK.goto(d); G.portalCd = 1e9; await w(50);
+      const A = G.L.arena; r.closedBefore = KK.arena().closed;
+      KK.teleport(A.cx - 3, A.cy - 3); G.boss.speed = 0;
+      KK.speed(4);
+      let maxC = 0, sawSpawn = false, sawMin = false, t0 = G.t;
+      while (G.t - t0 < 14) { const a = KK.arena(); maxC = Math.max(maxC, a.count); if (a.spawning) sawSpawn = true; if (a.minions) sawMin = true; G.boss.hp = G.boss.maxHp; await w(40); }
+      KK.speed(1);
+      r.cap = KK.arena().cap; r.maxNatural = maxC; r.sawSpawn = sawSpawn; r.sawMin = sawMin; r.secs = +(G.t - t0).toFixed(1);
+      KK.wave(30); r.afterForce = KK.arena().count;
+      // Beute eines Handlangers (wenig Munition/XP, kein Farmen)
+      await w(1000);
+      const mi = G.ents.find(e => e.minion);
+      if (mi) { const gm = await import("./src/game.js"); const ref = gm.makeEnt(mi.type, 0, 0); G.p.ammo = 0; gm.killEnt(mi); r.minionAmmo = G.p.ammo; r.xpRatio = +(mi.xp / ref.xp).toFixed(2); }
+      return r;
+    }, d);
+    await shot(p12, "v5/handlanger_e" + d);
+    // Spawn-Effekt fotografieren
+    await p12.evaluate(() => { for (const e of KK.G.ents.slice()) if (e.minion) KK.G.ents.splice(KK.G.ents.indexOf(e), 1); KK.wave(9); });
+    await sleep(350);
+    await shot(p12, "v5/spawn_kreis_e" + r.d);
+    const after = await p12.evaluate(async () => {
+      const G = KK.G, w = ms => new Promise(r => setTimeout(r, ms)), r = {};
+      await w(200);
+      r.before = KK.arena().count; r.laterBoss = G.later.filter(l => l.tag === "boss").length;
+      KK.kill("boss");
+      r.minions0 = KK.arena().minions; r.spawning0 = KK.arena().spawning; r.laterBoss0 = G.later.filter(l => l.tag === "boss").length; r.enemyShots0 = G.shots.filter(s => s.kind !== "bubble").length;
+      KK.speed(4); const t0 = G.t; let mx = 0;
+      while (G.t - t0 < 10.5) { mx = Math.max(mx, KK.arena().count); await w(40); }
+      KK.speed(1);
+      r.max10s = mx; r.secs = +(G.t - t0).toFixed(1); r.gatesOpen = KK.arena().gateBlocked === 0;
+      return r;
+    });
+    Object.assign(r, after);
+    mn.push(r);
+  }
+  R("V15", "Handlanger: spawnen laufend im Kampf (mit 0,8-s-Spawn-Kreis), Deckel nie überschritten (auch bei erzwungenen Wellen), wenig Beute (🫧 +1, ≤ ⅓ XP); Sieg → sofort 0 Handlanger/Spawn-Kreise/Timer, 10 s später immer noch 0, Tore offen",
+    mn.every(r => !r.closedBefore && r.sawSpawn && r.sawMin && r.maxNatural <= r.cap && r.afterForce <= r.cap && r.cap <= 9 && r.minionAmmo === 1 && r.xpRatio <= 0.4 && r.before > 0 && r.minions0 === 0 && r.spawning0 === 0 && r.laterBoss0 === 0 && r.enemyShots0 === 0 && r.max10s === 0 && r.secs >= 10 && r.gatesOpen),
+    mn.map(r => `E${r.d}: in ${r.secs} s max ${r.maxNatural}/${r.cap} (erzwungen ${r.afterForce}), Spawn-Kreis ${r.sawSpawn ? "✓" : "✗"}, Handlanger-Beute 🫧+${r.minionAmmo} XP×${r.xpRatio} · vor Sieg ${r.before} → nach Sieg ${r.minions0}+${r.spawning0} (Timer ${r.laterBoss0}), 10 s später max ${r.max10s}, Tore offen ${r.gatesOpen}`).join(" · "));
+  await c12.close();
+}
+// --- Querformat: Arenen (Haupt + Mini) ---
+{
+  const { ctx: c13, page: p13 } = await newPage(915, 412);
+  await p13.evaluate(() => KK.start({ tut: false, name: "Quer" }));
+  const q = [];
+  for (const d of [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]) {
+    await p13.evaluate((d) => { KK.start({ tut: false, name: "Quer" }); KK.god(true); KK.goto(d); KK.G.portalCd = 1e9; const A = KK.G.L.arena; KK.teleport(A.cx - 3, A.cy - 3); }, d);
+    await sleep(2700);
+    q.push(await p13.evaluate(() => ({ d: KK.state().depth, zoom: KK.state().zoom, chunks: KK.R.chunksVis, boss: (() => { const b = KK.G.boss; const [sx, sy] = [0, 0]; return !!b; })() })));
+    await shot(p13, "v5/arena_e" + q[q.length - 1].d + "_quer");
+  }
+  R("V16", "Querformat: jede Arena mit herausgezoomter Kamera (Boss + Warnungen im Bild), sichtbare Chunks < 28", q.every(r => r.zoom < 0.95 && r.chunks < 28), q.map(r => `E${r.d} Zoom ${r.zoom} Chunks ${r.chunks}`).join(" · "));
+  await c13.close();
+}
+// --- V17 Save-Migration v4 → v5 ---
+{
+  const v4 = { v: 2, name: "Vier4", species: "hase", look: { species: "hase", skin: "#f6eee0", outfit: "#ffcf4a", eye: "#6b2f5a", hair: "#ffc2d4", style: "zoepfe", earsV: 1, acc: "brille" }, lvl: 9, xp: 5, xpNext: 80, maxHp: 20, hp: 18, atk: 7, projN: 2, magic: 3, gold: 777, potions: 4, ammo: 18, spec: 0.67, sk: { kraft: 2, leben: 3, tempo: 1, blasen: 1, magnet: 1 }, skPts: 3, hats: ["pilz", "diadem"], hat: "diadem", deepest: 9, depth: 6, mega: false, tut: true, runSecs: 50, won: false, seed: 4321, kills: 99, capNote: 0, giftNote: 0 };
+  const { ctx: c14, page: p14 } = await newPage(412, 915, `localStorage.setItem("koboldkeller2_save", ${JSON.stringify(JSON.stringify(v4))});`);
+  const inf = await p14.textContent("#contInfo");
+  await tapEl(p14, "#btnCont");
+  await waitFor(p14, () => KK.state().screen === "play" && !KK.state().demo);
+  await sleep(1200);
+  const s = await p14.evaluate(() => ({ ...KK.state(), raw: JSON.parse(localStorage.getItem("koboldkeller2_save")), toasts: [...document.querySelectorAll(".toast")].map(t => t.textContent).join(" | ") }));
+  await shot(p14, "v5/migration_v4");
+  const e4 = await p14.evaluate(() => { KK.goto(8); const a = KK.G.L.stairs.sealed; KK.goto(10); const b = KK.G.L.stairs.sealed; return { e8: a, e10: b }; });
+  R("V17", "Save-Migration v4 → v5: nichts verloren (Level, Gold, Talente, Punkte, Spezial, Munition, Hüte, Aussehen, Tiefe), keine doppelten Geschenke, schon passierte Boss-Ebenen offen (bossDone), tiefere versiegelt, Datei v3",
+    s.name === "Vier4" && s.lvl === 9 && s.gold === 777 && s.skPts === 3 && s.sk.kraft === 2 && s.sk.leben === 3 && s.spec === 0.67 && s.ammo === 18 && s.hat === "diadem" && s.look.style === "zoepfe" && s.depth === 6 && s.bossDone.join() === "2,4,6,8" && !s.stairsSealed && !e4.e8 && e4.e10 && s.raw.v === 3 && s.raw.bossDone.join() === "2,4,6,8" && !/Willkommen in v4|zu voll/.test(s.toasts),
+    `${inf} → Lv ${s.lvl}, 🪙 ${s.gold}, Punkte ${s.skPts}, Talente ${JSON.stringify(s.sk)}, Spezial ${s.spec}, 🫧 ${s.ammo}, Hut ${s.hat}, Frisur ${s.look.style}, Ebene ${s.depth} (Treppe ${s.stairsSealed ? "zu" : "offen"}), bossDone ${s.bossDone.join(",")}, E8 ${e4.e8 ? "zu" : "offen"}, E10 ${e4.e10 ? "zu" : "offen"}, Datei v${s.raw.v}`);
+  await c14.close();
+}
 // Info: reines Software-Raster (kein GPU) — Worst Case, adaptive Qualität darf greifen
 let swInfo = null;
 if (PERF && PROFILE === "gpu") {

@@ -441,7 +441,7 @@ function frameWork(G, dt) {
   if (n && p && p.hp < p.maxHp * 0.3) n += 1;
   const target = Math.min(1, n / 3);
   M.inten += (target - M.inten) * (1 - Math.exp(-fdt / (target > M.inten ? 0.35 : 3.5)));
-  M.want.boss = G.boss && G.boss.awake && G.boss.hp > 0 && G.screen !== "win" ? (G.boss.isKing ? 2 : 1) : 0;
+  M.want.boss = G.boss && G.boss.awake && G.boss.hp > 0 && G.screen !== "win" ? (G.boss.isKing ? 2 : G.boss.isMini ? 3 : 1) : 0;
   M.want.phase = G.boss ? G.boss.phase || 1 : 1;
   M.setDead(G.screen === "dead");
   const muff = G.screen === "pause" || G.screen === "bag";

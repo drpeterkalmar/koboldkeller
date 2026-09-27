@@ -10,13 +10,13 @@ export const SETTINGS_KEY = "koboldkeller2_settings";
 
 export const MAX_DEPTH = 20;
 export const MEGA = { speed: 2, dmg: 10 };
-export const SAVE_V = 2;                 // v1 = Koboldkeller 2 bis v3, v2 = v4 (Munition, Talente, Spezial, Aussehen)
+export const SAVE_V = 3;                 // v1 = Koboldkeller 2 bis v3, v2 = v4 (Munition, Talente, Spezial, Aussehen), v3 = v5 (besiegte Bosse)
 
 // ---------- v4: Obergrenzen, Munition, Magnet, Heim-Portal ----------
 // hp = höchstens so viele Lebenspunkte (Max-❤️), potions = Tränke, ammo = Grund-Munitionsplatz (+ Talent 🫧)
 export const CAP = { hp: 60, potions: 5, ammoBase: 20, ammoMax: 60 };
 // Munition: 1 Schuss = 1 Munition (egal wie viele Blasen der Zauberstab wirft); Gewinn pro besiegtem Gegner
-export const AMMO = { start: 15, kill: 2, elite: 4, boss: 12, king: 20, minion: 1, dummy: 1, revive: 8 };
+export const AMMO = { start: 15, kill: 2, elite: 4, boss: 12, king: 20, mini: 8, minion: 1, dummy: 1, revive: 8 };
 export const CAP_GOLD = { potion: 10, heart: 2, ammo: 1, hp: 8, shroom: 5 };   // Gold für Überzähliges
 export const MAGNET = { coin: 3.5, item: 2.5 };                 // Kacheln (+ Talent 🧲)
 export const HOME_PORTAL_HIDE_S = 20;                           // 🏠-Portal nach Betreten einer Ebene so lange weg
@@ -168,22 +168,58 @@ const DT = {
   rmin:  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
   rmax:  [10, 10, 10, 10, 10, 10, 9, 9, 9, 9, 9, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7],
 };
+// v5: boss = "main" (Hauptboss 4/8/12/16/20) · "mini" (Mini-Boss 2/6/10/14/18, jede 2. Ebene hat damit einen Boss) · null
+export const bossKindOf = d => d > 0 && d <= MAX_DEPTH && d % 2 === 0 ? (d % 4 === 0 ? "main" : "mini") : null;
 export const DIFF = Array.from({ length: MAX_DEPTH + 1 }, (_, d) => d === 0 ? null : {
   n: DT.n[d], hp: DT.hp[d], dmg: DT.dmg[d], spd: DT.spd[d], cd: DT.cd[d], elite: DT.elite[d], traps: DT.traps[d], room: [DT.rmin[d], DT.rmax[d]],
-  split: d >= 6, fan: d >= 10, blink: d >= 13, double: d >= 15, tame: d <= 2,
+  split: d >= 6, fan: d >= 10, blink: d >= 13, double: d >= 15, tame: d <= 2, boss: bossKindOf(d),
 });
 export const diffOf = d => DIFF[Math.max(1, Math.min(MAX_DEPTH, d | 0))];
 
 // ---------- v4: Bosse — eigene Signatur-Angriffe je Welt, 3 Phasen (ab 66 % / 33 % neue Muster, Wut-Phase) ----------
 // hp = Grund + proLevel·Spielerlevel · dmg = Schaden pro Treffer · sig = Signatur-Angriffe (Phase 1 / ab Phase 2)
+// minions = Handlanger der Welt (Typ, Gewicht) — erscheinen in Wellen während des Kampfes (v5)
 export const BOSSES = [null,
-  { name: "Moosbart", epi: "Hüter der Moosgärten", hp: [260, 12], dmg: 2, speed: 1.35, sig: ["spores", "vines"], acc: "bart", aura: "#9aff6a", arena: "leaf" },
-  { name: "Glitzerzahn", epi: "Herr der Funkelkristalle", hp: [480, 16], dmg: 3, speed: 1.4, sig: ["crystals", "prism"], acc: "zahn", aura: "#8fe9ff", arena: "crystal" },
-  { name: "Zuckerschnute", epi: "Königin der Naschereien", hp: [700, 20], dmg: 4, speed: 1.45, sig: ["candy", "rush"], acc: "schnute", aura: "#ff9ae0", arena: "candy" },
-  { name: "Frostnase", epi: "Wächter des Gletschers", hp: [950, 24], dmg: 5, speed: 1.4, sig: ["icicles", "snowball"], acc: "frostnase", aura: "#bfe9ff", arena: "snow" },
-  { name: "Kellerkönig", epi: "Herrscher des Koboldkellers", hp: [1500, 30], dmg: 7, speed: 1.25, sig: ["fireRing", "meteors", "flameCross"], acc: "none", aura: "#ff5a3a", arena: "ember" },
+  { name: "Moosbart", epi: "Hüter der Moosgärten", hp: [260, 12], dmg: 2, speed: 1.35, sig: ["spores", "vines"], acc: "bart", aura: "#9aff6a", arena: "leaf", minions: [["slime", 2], ["wichtel", 2], ["bat", 1]] },
+  { name: "Glitzerzahn", epi: "Herr der Funkelkristalle", hp: [480, 16], dmg: 3, speed: 1.4, sig: ["crystals", "prism"], acc: "zahn", aura: "#8fe9ff", arena: "crystal", minions: [["wisp", 2], ["kaefer", 2], ["bat", 1]] },
+  { name: "Zuckerschnute", epi: "Königin der Naschereien", hp: [700, 20], dmg: 4, speed: 1.45, sig: ["candy", "rush"], acc: "schnute", aura: "#ff9ae0", arena: "candy", minions: [["pilzling", 2], ["slime", 2], ["wichtel", 1]] },
+  { name: "Frostnase", epi: "Wächter des Gletschers", hp: [950, 24], dmg: 5, speed: 1.4, sig: ["icicles", "snowball"], acc: "frostnase", aura: "#bfe9ff", arena: "snow", minions: [["geist", 2], ["kaefer", 1], ["bat", 2]] },
+  { name: "Kellerkönig", epi: "Herrscher des Koboldkellers", hp: [1500, 30], dmg: 7, speed: 1.25, sig: ["fireRing", "meteors", "flameCross"], acc: "none", aura: "#ff5a3a", arena: "ember", minions: [["flamme", 3], ["geist", 1], ["wichtel", 1]] },
 ];
 export const BOSS_PHASES = [0.66, 0.33];
+
+// ---------- v5: Mini-Bosse (Ebene 2/6/10/14/18) — jeder ein anderes Wesen, 2 Phasen (ab 50 % wild) ----------
+// Stärke zwischen Elite-Gegner und Hauptboss: Leben ≈ 35–50 % des nächsten Hauptbosses, Schaden = Hauptboss der Welt − 1.
+// hp = Grund + proLevel·Spielerlevel · sig = [Angriff Phase 1, ab Phase 2 dazu] · scale = Zeichengröße (Hauptboss-Kobold 1,9 ≈ doppelt so hoch)
+export const MINIS = {
+  2: { id: "schlabbo", name: "Schlabbo", epi: "der Riesen-Moosschleim", hp: [90, 8], dmg: 1, speed: 1.15, sig: ["glibber", "platsch"], aura: "#9aff6a", arena: "leaf", scale: 1.75, r: 0.75, col: "#7be07a", minions: [["slime", 2], ["bat", 1]] },
+  6: { id: "funkelflatter", name: "Funkelflatter", epi: "die Kristall-Fledermaus", hp: [200, 11], dmg: 2, speed: 1.55, sig: ["echo", "schall"], aura: "#c8b8ff", arena: "crystal", scale: 1.6, r: 0.7, col: "#8a6ae0", fly: true, minions: [["bat", 2], ["wisp", 1]] },
+  10: { id: "lutz", name: "Lolli-Lutz", epi: "der Zuckerpilz-Riese", hp: [330, 14], dmg: 3, speed: 1.2, sig: ["streusel", "brause"], aura: "#ff9ae0", arena: "candy", scale: 1.7, r: 0.75, col: "#ff6fae", minions: [["pilzling", 2], ["slime", 1]] },
+  14: { id: "bibber", name: "Bibber", epi: "das Schneegespenst", hp: [470, 17], dmg: 4, speed: 1.35, sig: ["frostatem", "blinzel"], aura: "#bfe9ff", arena: "snow", scale: 1.7, r: 0.72, col: "#eaf6ff", fly: true, minions: [["geist", 1], ["bat", 1]] },
+  18: { id: "gustav", name: "Glutpanzer Gustav", epi: "der Lava-Käfer", hp: [640, 21], dmg: 5, speed: 1.3, sig: ["lava", "horn"], aura: "#ff8a3a", arena: "ember", scale: 1.65, r: 0.8, col: "#d8502a", minions: [["flamme", 2], ["wichtel", 1]] },
+};
+export const MINI_PHASE = 0.5;
+
+// ---------- v5: Boss-Arenen + Handlanger ----------
+// Je Boss-Ebene: size = Kantenlänge der Arena in Kacheln (v4: 12 für alle, jetzt mit der Tiefe steigend), pillars = Säulen als Deckung (4 oder 8),
+// wave = Sekunden zwischen Handlanger-Wellen je Boss-Phase, n = Handlanger pro Welle je Phase,
+// cap = höchstens so viele Handlanger gleichzeitig (lebend + gerade erscheinend). Mini-Bosse: weniger, 2 Phasen.
+//            Ebene  size pillars wave (Ph1, Ph2, Ph3)   n (Ph1, Ph2, Ph3)  cap
+const AT = {
+  2: [14, 4, [9, 7], [1, 2], 3],
+  4: [16, 4, [8, 6.5, 5], [2, 2, 3], 5],
+  6: [17, 4, [8.5, 6.5], [1, 2], 4],
+  8: [18, 8, [7.5, 6, 5], [2, 3, 3], 6],
+  10: [19, 8, [8, 6], [2, 2], 4],
+  12: [20, 8, [7, 5.5, 4.5], [2, 3, 4], 7],
+  14: [21, 8, [7.5, 6], [2, 3], 5],
+  16: [22, 8, [6.5, 5, 4], [3, 3, 4], 8],
+  18: [23, 8, [7, 5.5], [2, 3], 5],
+  20: [24, 8, [6, 5, 4], [3, 4, 4], 9],
+};
+export const ARENA = Object.fromEntries(Object.entries(AT).map(([d, a]) => [d, { size: a[0], pillars: a[1], wave: a[2], n: a[3], cap: a[4] }]));
+export const MINION_CAP = 9;                 // Performance-Deckel: nie mehr Handlanger gleichzeitig (auch MEGASCHWER)
+export const MINION = { spawnT: 0.8, first: 3, hp: 0.75, xp: 1 / 3 };   // Spawn-Kreis 0,8 s vorher, erste Welle 3 s nach dem Intro
 
 // Gegner: hp/xp = a + b·Tiefe + c·Level
 export const ENEMIES = {
@@ -196,6 +232,7 @@ export const ENEMIES = {
   geist:   { name: "Gespenstchen", hp: [3, 0.9, 0.5], xp: [6, 2, 1], speed: 1.4, r: 0.32, fly: true },
   flamme:  { name: "Flämmchen",    hp: [4, 1.0, 0.6], xp: [7, 2, 1], speed: 1.6, r: 0.3, ranged: true },
   boss:    { name: "Boss-Kobold",  hp: [18, 5, 3], xp: [30, 8, 5], speed: 1.4, r: 0.7 },
+  mini:    { name: "Mini-Boss",    hp: [12, 3, 2], xp: [16, 4, 3], speed: 1.2, r: 0.75 },
   king:    { name: "Kellerkönig",  hp: [36, 10, 6], xp: [200, 0, 0], speed: 1.25, r: 1.2 },
   dummy:   { name: "Strohwichtel", hp: [6, 0, 0], xp: [0, 0, 0], speed: 0, r: 0.35 },
 };

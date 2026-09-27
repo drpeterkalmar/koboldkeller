@@ -21,7 +21,7 @@ await page.evaluate(async () => { const m = await import("./src/game.js"); windo
 await page.evaluate(([sp, mega]) => {
   KK.start({ tut: false, name: "Bot", mega }); KK.speed(sp);
   const G = KK.G;
-  window.__bot = { lv: {}, deaths: 0, cur: 0, stuck: 0, lastPos: null, log: [], specials: 0, dodges: 0 };
+  window.__bot = { lv: {}, deaths: 0, cur: 0, stuck: 0, lastPos: null, log: [], specials: 0, dodges: 0, fights: [], fight: null, maxMinions: 0 };
   const B = window.__bot, order = ["leben", "kraft", "leben", "blasen", "kraft", "tempo", "leben", "kraft", "magnet"];
   let oi = 0;
   const L = (d) => B.lv[d] || (B.lv[d] = { d, secs: 0, dmg: 0, deaths: 0, pots: 0, tries: 0, arriveLvl: 0, arriveHp: "", done: false });
@@ -40,6 +40,13 @@ await page.evaluate(([sp, mega]) => {
       if (G.depth > 0) { const r = L(G.depth); r.tries++; if (!r.arriveLvl) { r.arriveLvl = p.lvl; r.arriveHp = Math.ceil(p.hp) + "/" + p.maxHp; } }
     }
     if (G.depth > 0) { const r = L(G.depth); r.secs += G.t - B.t; r.dmg += G.stats.dmgTaken - B.dmg0; r.pots += G.stats.potionsUsed - B.pot0; B.t = G.t; B.dmg0 = G.stats.dmgTaken; B.pot0 = G.stats.potionsUsed; }
+    // Bosskampf-Protokoll (v5): Dauer (Spielzeit ab Erwachen) + erlittener Schaden je Boss, Handlanger-Höchststand
+    const bo = G.boss && G.ents.includes(G.boss) ? G.boss : null;
+    if (bo && bo.awake && !B.fight) B.fight = { d: G.depth, name: bo.name, mini: !!bo.isMini, t0: G.t, dmg0: G.stats.dmgTaken, maxMin: 0 };
+    if (B.fight) {
+      const nm = G.ents.filter(e => e.minion).length + G.spawns.length; B.fight.maxMin = Math.max(B.fight.maxMin, nm); B.maxMinions = Math.max(B.maxMinions, nm);
+      if (!bo || G.depth !== B.fight.d) { B.fights.push({ d: B.fight.d, name: B.fight.name, mini: B.fight.mini, secs: +(G.t - B.fight.t0).toFixed(1), dmg: Math.round(G.stats.dmgTaken - B.fight.dmg0), won: G.bossDone.includes(B.fight.d), maxMin: B.fight.maxMin }); B.fight = null; }
+    }
     if (G.depth === 0) { const po = Lv.portals.filter(x => !x.locked).pop(); p.path = null; p.x = po.x; p.y = po.y; return; }
     // aus Warnkreisen/-linien raus
     for (const t of G.teles) if (t.seen === undefined) t.seen = Math.random() < 0.7;   // Kind bemerkt ~70 % der Warnungen
@@ -48,6 +55,8 @@ await page.evaluate(([sp, mega]) => {
     if (p.hp < p.maxHp * 0.35 && p.potions > 0) KK.potion();
     let best = null, bd = 5, near = 0;
     for (const e of G.ents) { const d = Math.hypot(e.x - p.x, e.y - p.y); if (d < 5.5) near++; if (d < bd) { bd = d; best = e; } }
+    // wacher Boss: auf ihn gehen, außer ein Handlanger steht direkt daneben
+    if (bo && bo.awake && (!best || bd > 2.2)) { best = bo; bd = Math.hypot(bo.x - p.x, bo.y - p.y); }
     if (p.spec >= 1 && (near >= 3 || (G.boss && G.boss.awake && Math.hypot(G.boss.x - p.x, G.boss.y - p.y) < 5))) { if (KK.special()) B.specials++; }
     if (best) { if (p.foe !== best) { p.foe = best; p.path = null; } if (bd < 2.6) KK.attack(); if (p.ammo > 0 && Math.random() < 0.25) KK.bubbles(); return; }
     if (!p.path || !p.path.length) { p.foe = null; window.__tap(Lv.stairs.x, Lv.stairs.y); }
@@ -76,9 +85,11 @@ while (Date.now() - start < SECS * 1000) {
 const r = await page.evaluate(() => ({ ...window.__bot, st: KK.state(), stats: KK.G.stats }));
 const rows = Object.values(r.lv).sort((a, b) => a.d - b.d);
 const md = ["| Ebene | Versuche | Spielzeit s | Schaden | Tode | Tränke | Level bei Ankunft | ❤️ bei Ankunft |", "|---|---|---|---|---|---|---|---|",
-  ...rows.map(x => `| ${x.d} | ${x.tries} | ${x.secs.toFixed(0)} | ${Math.round(x.dmg)} | ${x.deaths} | ${x.pots} | ${x.arriveLvl} | ${x.arriveHp} |`)].join("\n");
+  ...rows.map(x => `| ${x.d} | ${x.tries} | ${x.secs.toFixed(0)} | ${Math.round(x.dmg)} | ${x.deaths} | ${x.pots} | ${x.arriveLvl} | ${x.arriveHp} |`),
+  "", "| Boss-Ebene | Boss | Art | Kampfdauer s | Schaden | besiegt | max. Handlanger |", "|---|---|---|---|---|---|---|",
+  ...r.fights.map(f => `| ${f.d} | ${f.name} | ${f.mini ? "Mini" : "Haupt"} | ${f.secs} | ${f.dmg} | ${f.won ? "ja" : "nein"} | ${f.maxMin} |`)].join("\n");
 mkdirSync("shots/neubau", { recursive: true });
-writeFileSync(`shots/neubau/bot_${OUT}.json`, JSON.stringify({ date: new Date().toISOString(), mega: MEGA, speed, won: !!r.won, deaths: r.deaths, specials: r.specials, dodges: r.dodges, final: r.st, rows, stuck: r.log, errors: errs }, null, 2));
+writeFileSync(`shots/neubau/bot_${OUT}.json`, JSON.stringify({ date: new Date().toISOString(), mega: MEGA, speed, won: !!r.won, deaths: r.deaths, specials: r.specials, dodges: r.dodges, final: r.st, rows, fights: r.fights, maxMinions: r.maxMinions, stuck: r.log, errors: errs }, null, 2));
 writeFileSync(`shots/neubau/bot_${OUT}.md`, md + "\n");
 console.log(md);
 console.log(`Ergebnis: ${r.won ? "GEWONNEN" : "nicht gewonnen"} · Tode ${r.deaths} · Spezial ${r.specials}× · Ausweichen ${r.dodges}× · Hänger ${r.log.length} · Fehler: ${errs.length ? errs.join(" | ") : 0}`);

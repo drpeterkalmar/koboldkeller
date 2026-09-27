@@ -1,5 +1,5 @@
 /* save.js — Spielstand, v20-Migration, Ehrenhall, Einstellungen (MIT) */
-import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave } from "./config.js";
+import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf } from "./config.js";
 
 const num = (v, d, lo = -Infinity, hi = Infinity) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
 const str = (v, d, max = 14) => typeof v === "string" && v.trim() ? v.trim().slice(0, max) : d;
@@ -11,10 +11,13 @@ function writeJson(key, o) { try { localStorage.setItem(key, JSON.stringify(o));
 
 /** normalisiert einen Spielstand — alles Unbekannte wird sicher ersetzt.
     Spielstände vor v4 (v < 2, auch aus der v20-Migration) werden umgerechnet: Pilze → Spezial-Ladung,
-    Überzähliges über den Obergrenzen → Gold (capNote), bisherige Level → Talentpunkte als Willkommensgeschenk. */
+    Überzähliges über den Obergrenzen → Gold (capNote), bisherige Level → Talentpunkte als Willkommensgeschenk.
+    v5 (Datei v3): bossDone = Boss-Ebenen, deren Boss schon besiegt ist (Treppe dort offen). Ältere Stände: jede Boss-Ebene
+    oberhalb der tiefsten erreichten Ebene gilt als geschafft (war schon passiert) — nichts wird nachträglich gesperrt. */
 export function sanitize(s) {
   if (!s || typeof s !== "object") return null;
-  const old = (num(s.v, 1) | 0) < SAVE_V;
+  const fileV = num(s.v, 1) | 0;
+  const old = fileV < 2;                                   // vor v4: Munition/Talente/Spezial umrechnen
   const species = SPECIES.some(x => x.id === s.species) ? s.species : "kobold";
   const lvl = Math.round(num(s.lvl, 1, 1, 99));
   const hats = Array.isArray(s.hats) ? s.hats.filter(h => typeof h === "string" && HATS[h]).slice(0, 12) : [];
@@ -40,6 +43,13 @@ export function sanitize(s) {
   }
   gold += capGold;
   const lk = makeLook({ species, ...(s.look && typeof s.look === "object" ? s.look : {}) });
+  const deepest = Math.round(num(s.deepest, 1, 1, MAX_DEPTH)), won = !!s.won;
+  let bossDone = Array.isArray(s.bossDone) ? s.bossDone.map(d => d | 0).filter(d => bossKindOf(d)) : [];
+  if (fileV < 3) {                                         // v4 und älter → v5: schon passierte Boss-Ebenen gelten als geschafft
+    for (let d = 2; d < deepest; d += 2) bossDone.push(d);
+    if (won) bossDone.push(MAX_DEPTH);
+  }
+  bossDone = [...new Set(bossDone)].sort((a, b) => a - b);
   const ammoMax = Math.min(CAP.ammoMax, CAP.ammoBase + sk.blasen * 4);
   return {
     v: SAVE_V, name: str(s.name, "Kobold"), species, look: lookSave(lk), lvl,
@@ -48,8 +58,8 @@ export function sanitize(s) {
     atk: num(s.atk, 4, 1, 500), projN: Math.round(num(s.projN, 1, 1, 12)), magic: num(s.magic, 1, 0.5, 500),
     gold, potions, ammo: Math.round(num(s.ammo, AMMO.start, 0, ammoMax)), spec, sk, skPts,
     hats, hat: hats.includes(s.hat) ? s.hat : null,
-    deepest: Math.round(num(s.deepest, 1, 1, MAX_DEPTH)), depth: Math.round(num(s.depth, 0, 0, MAX_DEPTH)),
-    mega: !!s.mega, tut: !!s.tut, runSecs: num(s.runSecs, 0, 0, 1e7), won: !!s.won,
+    deepest, depth: Math.round(num(s.depth, 0, 0, MAX_DEPTH)), bossDone,
+    mega: !!s.mega, tut: !!s.tut, runSecs: num(s.runSecs, 0, 0, 1e7), won,
     seed: Math.round(num(s.seed, (Math.random() * 1e9) | 0, 0, 2 ** 31)), migrated: !!s.migrated,
     kills: Math.round(num(s.kills, 0, 0, 1e9)),
     // einmalige Hinweise nach dem Umzug (werden beim ersten Spielstart als Toast gezeigt und dann gelöscht)

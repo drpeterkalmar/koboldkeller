@@ -1077,7 +1077,26 @@ export function drawFloorTile(c, sx, sy, B, bi, v, deco, ao) {
   if (v % 11 === 0) { c.strokeStyle = "rgba(0,0,0,.22)"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(sx - 6, sy + 10); c.lineTo(sx, sy + 16); c.lineTo(sx - 3, sy + 22); c.stroke(); }
   c.restore();
   if (ao) aoEdges(c, sx, sy, ao, 0.42);
+  if (deco >= 5) { arenaTile(c, sx, sy, B, deco); return; }
   if (deco >= 2) drawDeco(c, sx, sy + 16, B, deco, r);
+}
+/** v5: Boss-Arena-Mosaik — 5 = Ring-Platten, 6 = Mittel-Emblem, 7 = Spawn-Rune der Handlanger */
+function arenaTile(c, sx, sy, B, deco) {
+  const hi = B.top || "#ffffff";
+  if (deco !== 7) {
+    c.beginPath(); diamondPath(c, sx, sy, 5); c.fillStyle = rgba(hi, deco === 6 ? 0.34 : 0.26); c.fill();
+    c.strokeStyle = rgba(hi, 0.6); c.lineWidth = 1.4; c.stroke();
+    c.beginPath(); diamondPath(c, sx, sy, 10); c.strokeStyle = rgba("#ffffff", 0.18); c.lineWidth = 1; c.stroke();
+  }
+  if (deco === 6) {
+    c.strokeStyle = rgba("#fff3c0", 0.55); c.lineWidth = 1.6; c.beginPath(); c.ellipse(sx, sy + 16, 13, 6.5, 0, 0, TAU); c.stroke();
+    c.save(); c.translate(sx, sy + 16); c.scale(1, 0.5); c.beginPath(); star5(c, 0, 0, 9, 4); c.fillStyle = rgba("#fff3c0", 0.45); c.fill(); c.restore();
+  } else if (deco === 7) {
+    c.save(); c.setLineDash([3, 3]); c.strokeStyle = "rgba(210,170,255,.6)"; c.lineWidth = 1.6;
+    c.beginPath(); c.ellipse(sx, sy + 16, 16, 8, 0, 0, TAU); c.stroke(); c.restore();
+    c.fillStyle = "rgba(210,170,255,.55)";
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.4; c.beginPath(); c.arc(sx + Math.cos(a) * 11, sy + 16 + Math.sin(a) * 5.5, 1.6, 0, TAU); c.fill(); }
+  }
 }
 function aoEdges(c, sx, sy, ao, a) {
   c.save(); c.beginPath(); diamondPath(c, sx, sy, -0.6); c.clip();
@@ -1182,5 +1201,195 @@ export function wallSprite(B, bi, v) {
         c.beginPath(); c.moveTo(52 - o, 22 + H * 0.3); c.lineTo(46 - o, 26 + H * 0.6); c.stroke();
         break;
     }
+  });
+}
+
+// =====================================================================
+// v5: Mini-Bosse — jeder ein eigenes Wesen (Anker = Bodenmitte), deutlich kleiner als ein Hauptboss
+// =====================================================================
+export function miniSprite(id, mood = "open") {
+  const key = "mini:" + id + ":" + mood;
+  switch (id) {
+    // Schlabbo, der Riesen-Moosschleim: Moos-Schopf mit Blümchen, Blätterkrone, Tropfen
+    case "schlabbo": return spr(key, 112, 100, 56, 94, (c) => {
+      const col = "#7be07a", line = shade(col, -0.58);
+      const b = (c) => { c.moveTo(8, 90); c.bezierCurveTo(2, 44, 28, 20, 56, 20); c.bezierCurveTo(84, 20, 110, 44, 104, 90); c.quadraticCurveTo(56, 100, 8, 90); c.closePath(); };
+      c.globalAlpha = 0.94; ol(c, b, col, line, 3.4); c.globalAlpha = 1;
+      shadeIn(c, b, 56, 56, 46, 0.5, 0.28);
+      for (const [x, y] of [[18, 84], [92, 82], [70, 92]]) ol(c, ell(x, y, 6, 8), col, line, 2.2);
+      // Moos-Schopf
+      c.fillStyle = "#4f9a45"; for (const [x, y, r] of [[36, 26, 10], [50, 20, 12], [66, 21, 11], [79, 28, 9]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+      c.fillStyle = "#86c46a"; for (const [x, y, r] of [[40, 22, 6], [58, 16, 7], [73, 22, 5]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+      for (const [x, y, fc] of [[34, 20, "#ff7fb0"], [62, 12, "#ffffff"], [80, 22, "#ffd75e"]]) { c.fillStyle = fc; for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(x + Math.cos(k * 1.256) * 3, y + Math.sin(k * 1.256) * 3, 2.4, 0, TAU); c.fill(); } c.fillStyle = "#ffcf3a"; c.beginPath(); c.arc(x, y, 1.8, 0, TAU); c.fill(); }
+      // Blätterkrone
+      for (const k of [-1, 0, 1]) ol(c, (c) => { c.moveTo(56 + k * 12, 14); c.quadraticCurveTo(56 + k * 16 - 6, -2, 56 + k * 18, -2 + Math.abs(k) * 4); c.quadraticCurveTo(56 + k * 16 + 6, 6, 56 + k * 12, 14); c.closePath(); }, "#9be07a", "#2f6a2a", 2.2);
+      c.fillStyle = "rgba(255,255,255,.75)"; c.beginPath(); c.ellipse(26, 46, 9, 5, -0.7, 0, TAU); c.fill(); c.beginPath(); c.arc(36, 38, 3, 0, TAU); c.fill();
+      twoEyes(c, 56, 56, 15, "#1f5a2a", 0.95, mood); blush(c, 56, 70, 28, 1.2);
+      if (mood !== "hurt") brows(c, 56, 42, 15, 1.1);
+      ol(c, (c) => { c.moveTo(44, 72); c.quadraticCurveTo(56, 86, 68, 72); c.quadraticCurveTo(56, 76, 44, 72); c.closePath(); }, "#5a1a3a", line, 2.2);
+      c.fillStyle = "#fff"; c.beginPath(); c.moveTo(50, 73); c.lineTo(53, 78); c.lineTo(56, 74); c.fill();
+    });
+    // Funkelflatter, die Kristall-Fledermaus: Kristall-Ohren, Kristall-Krönchen, Edelstein am Bauch (Flügel extra, flattern)
+    case "funkelflatter": return spr(key, 96, 84, 48, 78, (c) => {
+      const col = "#8a6ae0", line = shade(col, -0.62), cr = "#9ff0ff";
+      for (const k of [-1, 1]) ol(c, (c) => { c.moveTo(48 + k * 12, 30); c.lineTo(48 + k * 20, 4); c.lineTo(48 + k * 28, 28); c.closePath(); }, cr, "#2e5a8a", 2.4);
+      for (const k of [-1, 1]) { c.fillStyle = "rgba(255,255,255,.7)"; c.beginPath(); c.moveTo(48 + k * 18, 12); c.lineTo(48 + k * 20, 6); c.lineTo(48 + k * 22, 16); c.fill(); }
+      const b = ell(48, 48, 30, 28); ol(c, b, col, line, 3.2); shadeIn(c, b, 48, 48, 28);
+      c.fillStyle = shade(col, 0.45); c.beginPath(); c.ellipse(48, 60, 15, 11, 0, 0, TAU); c.fill();
+      // Edelstein am Bauch
+      ol(c, (c) => { c.moveTo(48, 70); c.lineTo(41, 61); c.lineTo(44, 55); c.lineTo(52, 55); c.lineTo(55, 61); c.closePath(); }, "#ff9ae0", "#7a1a5a", 2);
+      star4(c, 51, 57, 3, "#fff");
+      // Kristall-Krönchen
+      for (const [x, h] of [[38, 10], [48, 15], [58, 10]]) ol(c, (c) => { c.moveTo(x - 4, 24); c.lineTo(x, 24 - h); c.lineTo(x + 4, 24); c.closePath(); }, "#c8b8ff", "#4a2a8a", 1.8);
+      twoEyes(c, 48, 42, 11, "#ff5d9a", 0.78, mood); if (mood !== "hurt") brows(c, 48, 30, 11, 0.85);
+      c.fillStyle = "#fff"; for (const k of [-1, 1]) { c.beginPath(); c.moveTo(48 + k * 3, 52); c.lineTo(48 + k * 5.5, 58); c.lineTo(48 + k * 8, 52); c.fill(); }
+      blush(c, 48, 52, 20, 1);
+    });
+    // Lolli-Lutz, der Zuckerpilz-Riese: Lolli-Spiralhut mit Streuseln, Ärmchen mit Lutscher
+    case "lutz": return spr(key, 116, 124, 58, 118, (c) => {
+      for (const k of [-1, 1]) ol(c, ell(58 + k * 13, 113, 10, 6), "#6a4a3a", "#2a1a10", 2.4);
+      const st = ell(58, 86, 24, 28); ol(c, st, "#fff1dc", "#8a6a4a", 3); shadeIn(c, st, 58, 86, 26);
+      // Ärmchen + Lutscher
+      ol(c, ell(30, 92, 7, 5, 0.5), "#fff1dc", "#8a6a4a", 2.2);
+      ol(c, (c) => c.roundRect(84, 64, 4, 34, 2), "#ffffff", "#aa8899", 1.6);
+      ol(c, ell(86, 60, 12, 12), "#8fe9ff", "#2a6a8a", 2.4);
+      c.strokeStyle = "#ffffff"; c.lineWidth = 3; c.beginPath(); for (let a = 0; a < 12; a += 0.3) { const r = 1 + a * 0.85; const x = 86 + Math.cos(a) * r, y = 60 + Math.sin(a) * r; a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
+      ol(c, ell(84, 92, 7, 5, -0.5), "#fff1dc", "#8a6a4a", 2.2);
+      twoEyes(c, 58, 84, 10, "#5a2a4a", 0.8, mood); blush(c, 58, 97, 17, 1);
+      if (mood !== "hurt") brows(c, 58, 73, 10, 0.8);
+      c.strokeStyle = "#8a4a5a"; c.lineWidth = 2.4; c.beginPath(); c.arc(58, 99, 4, 0.2, Math.PI - 0.2); c.stroke();
+      // Hut: Lolli-Spirale
+      const cp = (c) => { c.moveTo(4, 62); c.bezierCurveTo(2, 14, 30, 4, 58, 4); c.bezierCurveTo(86, 4, 114, 14, 112, 62); c.quadraticCurveTo(58, 50, 4, 62); c.closePath(); };
+      ol(c, cp, "#ff6fae", "#8a1a5e", 3.2);
+      c.save(); c.beginPath(); cp(c); c.clip();
+      c.strokeStyle = "#ffffff"; c.lineWidth = 7;
+      c.beginPath(); for (let a = 0; a < 16; a += 0.2) { const r = 2 + a * 3.6; const x = 58 + Math.cos(a) * r, y = 36 + Math.sin(a) * r * 0.62; a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
+      c.restore();
+      shadeIn(c, cp, 58, 34, 50, 0.35, 0.22);
+      const cs = ["#fff38a", "#8fe9ff", "#b3ff9a", "#c79bff"];
+      for (let k = 0; k < 10; k++) { const x = 18 + (k * 37) % 80, y = 14 + (k * 23) % 34; c.save(); c.translate(x, y); c.rotate(k * 0.9); c.fillStyle = cs[k % 4]; c.fillRect(-3, -1.2, 6, 2.4); c.restore(); }
+    });
+    // Bibber, das Schneegespenst: Eiszapfen-Krone, gestreifter Schal, Schneeflocke auf der Backe
+    case "bibber": return spr(key, 100, 112, 50, 106, (c) => {
+      const col = "#eaf6ff";
+      const b = (c) => { c.moveTo(10, 98); c.bezierCurveTo(4, 36, 26, 16, 50, 16); c.bezierCurveTo(74, 16, 96, 36, 90, 98); c.quadraticCurveTo(82, 88, 74, 100); c.quadraticCurveTo(66, 88, 58, 100); c.quadraticCurveTo(50, 88, 42, 100); c.quadraticCurveTo(34, 88, 26, 100); c.quadraticCurveTo(18, 88, 10, 98); c.closePath(); };
+      c.globalAlpha = 0.93; ol(c, b, col, "#7a94c8", 3); c.globalAlpha = 1;
+      shadeIn(c, b, 50, 50, 42, 0.5, 0.2);
+      // Eiszapfen-Krone
+      for (const [x, h] of [[34, 12], [42, 18], [50, 24], [58, 18], [66, 12]]) ol(c, (c) => { c.moveTo(x - 4, 22); c.lineTo(x, 22 - h); c.lineTo(x + 4, 22); c.closePath(); }, "#bfe9ff", "#4a7aa8", 1.8);
+      twoEyes(c, 50, 50, 13, "#2a4a8a", 0.85, mood); blush(c, 50, 62, 22, 1.1);
+      c.fillStyle = "#3a2a5a"; c.beginPath(); c.ellipse(50, 64, 5, 6.5, 0, 0, TAU); c.fill();
+      // Schal
+      const sc = (c) => { c.moveTo(16, 74); c.quadraticCurveTo(50, 86, 84, 74); c.lineTo(86, 82); c.quadraticCurveTo(50, 95, 14, 82); c.closePath(); };
+      ol(c, sc, "#e8434f", "#7a1a2a", 2.4);
+      c.save(); c.beginPath(); sc(c); c.clip(); c.fillStyle = "#ffffff"; for (let x = 10; x < 90; x += 12) c.fillRect(x, 70, 5, 30); c.restore();
+      ol(c, (c) => c.roundRect(68, 80, 9, 20, 3), "#e8434f", "#7a1a2a", 2.2);
+      // Schneeflocke
+      c.strokeStyle = "#9fd8ff"; c.lineWidth = 1.8;
+      for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3; c.beginPath(); c.moveTo(78 + Math.cos(a) * 5, 44 + Math.sin(a) * 5); c.lineTo(78 - Math.cos(a) * 5, 44 - Math.sin(a) * 5); c.stroke(); }
+    });
+    // Glutpanzer Gustav, der Lava-Käfer: dunkler Panzer mit glühenden Rissen, großes Horn
+    case "gustav": return spr(key, 124, 100, 62, 94, (c) => {
+      const col = "#8a3a2a", line = "#2a0e08";
+      c.strokeStyle = "#2a1a1a"; c.lineWidth = 3.6;
+      for (const k of [-1, 1]) for (const d of [-10, 2, 14]) { c.beginPath(); c.moveTo(62 + k * 34 + k * d * 0.4, 78); c.quadraticCurveTo(62 + k * 52 + k * d * 0.3, 80 + d * 0.2, 62 + k * 58 + k * d * 0.1, 92 + d * 0.15); c.stroke(); }
+      const sh = (c) => { c.moveTo(12, 78); c.bezierCurveTo(8, 30, 36, 18, 62, 18); c.bezierCurveTo(88, 18, 116, 30, 112, 78); c.quadraticCurveTo(62, 90, 12, 78); c.closePath(); };
+      ol(c, sh, col, line, 3.4); shadeIn(c, sh, 62, 50, 46, 0.35, 0.35);
+      // Lava-Risse
+      c.save(); c.beginPath(); sh(c); c.clip();
+      c.strokeStyle = "#ffb040"; c.lineWidth = 3; c.shadowColor = "#ff7a2a"; c.shadowBlur = 6;
+      for (const pts of [[[30, 34], [40, 46], [34, 60]], [[62, 22], [60, 40], [66, 56], [62, 76]], [[92, 34], [84, 48], [92, 62]], [[46, 66], [54, 58]], [[78, 70], [72, 60]]]) { c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); }
+      c.restore();
+      for (const [x, y] of [[40, 30], [84, 30], [62, 34]]) { c.fillStyle = "rgba(255,210,120,.5)"; c.beginPath(); c.ellipse(x, y, 5, 3, 0, 0, TAU); c.fill(); }
+      // Kopf + Horn
+      ol(c, ell(62, 78, 24, 14), "#3a1a14", "#150605", 2.6);
+      ol(c, (c) => { c.moveTo(54, 70); c.quadraticCurveTo(52, 44, 62, 34); c.quadraticCurveTo(64, 50, 70, 70); c.closePath(); }, "#ffd060", "#8a4a10", 2.4);
+      c.fillStyle = "rgba(255,255,255,.6)"; c.beginPath(); c.moveTo(58, 62); c.quadraticCurveTo(58, 48, 62, 40); c.lineTo(61, 56); c.fill();
+      twoEyes(c, 62, 80, 12, "#ffb040", 0.62, mood);
+      if (mood !== "hurt") brows(c, 62, 72, 12, 0.7);
+    });
+  }
+  return null;
+}
+// Säulen der Boss-Arena (Deckung) je Welt: Wurzel-Stumpf · Kristall-Säule · Zuckerstangen-Säule · Eis-Säule · Lava-Obelisk
+const PILLAR = [null,
+  { a: "#8a5a33", b: "#6a4428", top: "#86c46a", glow: "#b6ff8a" }, { a: "#8a7fe0", b: "#5a4ab0", top: "#bfefff", glow: "#9ff0ff" },
+  { a: "#ffffff", b: "#ff6fae", top: "#ffd1e6", glow: "#ffc2e8" }, { a: "#bfe9ff", b: "#8ac4e8", top: "#ffffff", glow: "#dff6ff" },
+  { a: "#4a2a28", b: "#2e1818", top: "#ff8a3a", glow: "#ffb040" },
+];
+export function pillarSprite(bi, v = 0) {
+  const P = PILLAR[bi] || PILLAR[1];
+  return spr("pillar:" + bi + ":" + v, 64, 124, 32, 108, (c) => {
+    c.fillStyle = "rgba(0,0,0,.25)"; c.beginPath(); c.ellipse(32, 108, 24, 11, 0, 0, TAU); c.fill();
+    const body = (c) => { c.moveTo(12, 104); c.lineTo(14, 34); c.quadraticCurveTo(32, 24, 50, 34); c.lineTo(52, 104); c.quadraticCurveTo(32, 114, 12, 104); c.closePath(); };
+    if (bi === 2) {   // Kristall-Säule: mehrere Prismen
+      for (const [x, w, h, cl] of [[20, 9, 70, "#6a5ac8"], [44, 9, 62, "#7a6ad8"], [32, 12, 92, P.a]]) {
+        ol(c, (c) => { c.moveTo(x - w, 106); c.lineTo(x - w, 106 - h * 0.8); c.lineTo(x, 106 - h); c.lineTo(x + w, 106 - h * 0.8); c.lineTo(x + w, 106); c.closePath(); }, cl, "#2a1a6a", 2.2);
+        c.fillStyle = "rgba(255,255,255,.45)"; c.fillRect(x - w * 0.5, 106 - h * 0.78, w * 0.35, h * 0.6);
+      }
+      star4(c, 36, 20, 5, "#ffffff");
+      return;
+    }
+    ol(c, body, P.a, shade(P.a, -0.6), 2.6);
+    c.save(); c.beginPath(); body(c); c.clip();
+    if (bi === 3) { c.strokeStyle = P.b; c.lineWidth = 8; for (let k = -4; k < 8; k++) { c.beginPath(); c.moveTo(0, 40 + k * 16); c.lineTo(64, 20 + k * 16); c.stroke(); } }
+    if (bi === 1) { c.strokeStyle = P.b; c.lineWidth = 2; for (const x of [20, 30, 40, 46]) { c.beginPath(); c.moveTo(x, 36); c.quadraticCurveTo(x + 3, 70, x - 2, 106); c.stroke(); } }
+    if (bi === 4) { c.fillStyle = "rgba(255,255,255,.45)"; c.fillRect(18, 36, 6, 64); c.fillRect(30, 40, 3, 56); }
+    if (bi === 5) { c.strokeStyle = "#ffa040"; c.lineWidth = 2.6; c.shadowColor = "#ff7a2a"; c.shadowBlur = 5; for (const pts of [[[20, 44], [28, 60], [22, 76], [30, 96]], [[44, 40], [38, 58], [44, 80]]]) { c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); } }
+    const g = c.createLinearGradient(12, 0, 52, 0); g.addColorStop(0, "rgba(255,255,255,.18)"); g.addColorStop(0.6, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.28)");
+    c.fillStyle = g; c.fillRect(0, 0, 64, 124);
+    c.restore();
+    // Kappe
+    const cap = ell(32, 33, 19, 8);
+    if (bi === 1) { ol(c, cap, "#c8905a", "#4a2a10", 2.2); c.strokeStyle = "#8a5a33"; c.lineWidth = 1.2; c.beginPath(); c.ellipse(32, 33, 11, 4.5, 0, 0, TAU); c.stroke(); c.beginPath(); c.ellipse(32, 33, 5, 2, 0, 0, TAU); c.stroke();
+      c.fillStyle = P.top; for (const [x, y, r] of [[18, 30, 6], [26, 26, 5], [44, 29, 6]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+      for (const [x, y] of [[44, 58], [16, 80]]) { ol(c, (c) => c.roundRect(x - 1.5, y - 5, 3, 5, 1), "#fff1dc", "#6a4a3a", 1); ol(c, (c) => { c.moveTo(x - 6, y - 4); c.quadraticCurveTo(x, y - 12, x + 6, y - 4); c.closePath(); }, v % 2 ? "#ff9a6a" : "#8fffcf", "#5a2a1a", 1.2); } }
+    else if (bi === 3) { ol(c, (c) => { c.moveTo(12, 36); c.quadraticCurveTo(14, 12, 32, 10); c.quadraticCurveTo(50, 12, 52, 36); c.quadraticCurveTo(32, 42, 12, 36); c.closePath(); }, "#b3ff9a", "#3a7a2a", 2.4); c.fillStyle = "#fff"; for (const [x, y] of [[24, 22], [36, 18], [42, 28]]) { c.beginPath(); c.arc(x, y, 2, 0, TAU); c.fill(); } }
+    else if (bi === 4) { ol(c, (c) => { c.moveTo(10, 36); c.quadraticCurveTo(16, 22, 32, 22); c.quadraticCurveTo(48, 22, 54, 36); c.quadraticCurveTo(32, 44, 10, 36); c.closePath(); }, "#ffffff", "#8ab0d0", 2.2);
+      for (const x of [16, 26, 40, 48]) ol(c, (c) => { c.moveTo(x - 3, 38); c.lineTo(x, 50 + (x % 3) * 4); c.lineTo(x + 3, 38); c.closePath(); }, "#dff6ff", "#6a9ac0", 1.4); }
+    else { ol(c, cap, shade(P.a, 0.2), shade(P.a, -0.6), 2.2); const gg = c.createRadialGradient(32, 32, 1, 32, 32, 14); gg.addColorStop(0, "#fff0a0"); gg.addColorStop(0.5, "#ff8a2a"); gg.addColorStop(1, "rgba(200,40,10,0)"); c.fillStyle = gg; c.beginPath(); c.ellipse(32, 32, 16, 7, 0, 0, TAU); c.fill(); }
+  });
+}
+/** Arena-Tor (steht auf einer Gang-Kachel): Ranken · Kristall-Gitter · Zuckerstangen · Eiszapfen · Lava-Steine */
+export function gateSprite(bi) {
+  return spr("gate:" + bi, 64, 76, 32, 58, (c) => {
+    c.fillStyle = "rgba(0,0,0,.22)"; c.beginPath(); c.ellipse(32, 58, 26, 12, 0, 0, TAU); c.fill();
+    const xs = [[12, 52, 44], [32, 60, 56], [52, 52, 44]];
+    for (const [x, y, h] of xs) {
+      if (bi === 1) {
+        c.strokeStyle = "#2f6a2a"; c.lineWidth = 7; c.beginPath(); c.moveTo(x, y); c.bezierCurveTo(x - 8, y - h * 0.3, x + 8, y - h * 0.6, x, y - h); c.stroke();
+        c.strokeStyle = "#7fd46a"; c.lineWidth = 4; c.stroke();
+        for (let k = 1; k < 4; k++) { const yy = y - h * k / 4, xx = x + (k % 2 ? 5 : -5); ol(c, ell(xx, yy, 5, 3, k % 2 ? 0.6 : -0.6), "#9be07a", "#2f6a2a", 1.4); }
+        c.fillStyle = "#ffffff"; c.beginPath(); c.moveTo(x - 2, y - h * 0.5); c.lineTo(x - 7, y - h * 0.52); c.lineTo(x - 2, y - h * 0.44); c.fill();
+      } else if (bi === 2) {
+        ol(c, (c) => { c.moveTo(x - 6, y); c.lineTo(x - 5, y - h * 0.75); c.lineTo(x, y - h); c.lineTo(x + 5, y - h * 0.75); c.lineTo(x + 6, y); c.closePath(); }, "#9a8aff", "#2a1a6a", 2);
+        c.fillStyle = "rgba(255,255,255,.5)"; c.fillRect(x - 3, y - h * 0.72, 2.4, h * 0.6);
+      } else if (bi === 3) {
+        ol(c, (c) => c.roundRect(x - 4, y - h + 8, 8, h - 8, 3), "#ffffff", "#aa6688", 1.8);
+        c.save(); c.beginPath(); c.roundRect(x - 4, y - h + 8, 8, h - 8, 3); c.clip(); c.strokeStyle = "#ff5a9a"; c.lineWidth = 3; for (let k = 0; k < 8; k++) { c.beginPath(); c.moveTo(x - 6, y - k * 7); c.lineTo(x + 6, y - k * 7 - 6); c.stroke(); } c.restore();
+        c.strokeStyle = "#ff5a9a"; c.lineWidth = 8; c.beginPath(); c.arc(x + 5, y - h + 8, 5, Math.PI, 0); c.stroke(); c.strokeStyle = "#ffffff"; c.lineWidth = 4; c.stroke();
+      } else if (bi === 4) {
+        ol(c, (c) => { c.moveTo(x - 7, y); c.quadraticCurveTo(x - 3, y - h * 0.6, x, y - h); c.quadraticCurveTo(x + 3, y - h * 0.6, x + 7, y); c.closePath(); }, "#dff6ff", "#5a8ab8", 2);
+        c.fillStyle = "rgba(255,255,255,.75)"; c.fillRect(x - 3, y - h * 0.7, 2, h * 0.55);
+      } else {
+        ol(c, (c) => { c.moveTo(x - 8, y); c.lineTo(x - 4, y - h * 0.7); c.lineTo(x + 1, y - h); c.lineTo(x + 6, y - h * 0.6); c.lineTo(x + 8, y); c.closePath(); }, "#4a2a28", "#150808", 2.2);
+        c.strokeStyle = "#ffa040"; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 2, y - 4); c.lineTo(x + 1, y - h * 0.5); c.lineTo(x - 1, y - h * 0.8); c.stroke();
+      }
+    }
+  });
+}
+/** Versiegelte Treppe: Steinplatte mit Schloss-Rune und Bändern in Welt-Farbe (keine Treppe sichtbar) */
+export function sealSprite(bi) {
+  const B = BIOME_COLS[bi] || BIOME_COLS[1], band = ["#c8a050", "#5fae4f", "#8a7fe0", "#ff6fae", "#8ac4e8", "#ff8a3a"][bi] || "#c8a050";
+  return spr("seal:" + bi, 72, 50, 36, 20, (c) => {
+    const d = (c, i) => { c.moveTo(36, 4 + i); c.lineTo(66 - i * 1.8, 20); c.lineTo(36, 36 - i); c.lineTo(6 + i * 1.8, 20); c.closePath(); };
+    ol(c, (c) => d(c, 0), shade(B.rim, -0.15), shade(B.rim, -0.6), 2.4);
+    c.beginPath(); d(c, 3); c.fillStyle = shade(B.rim, 0.12); c.fill();
+    c.strokeStyle = band; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(14, 14); c.lineTo(58, 26); c.moveTo(58, 14); c.lineTo(14, 26); c.stroke();
+    c.strokeStyle = shade(band, -0.5); c.lineWidth = 1.2; c.stroke();
+    // Schloss-Rune
+    ol(c, ell(36, 20, 9, 5), "#ffd75e", "#8a6212", 2);
+    c.fillStyle = "#5a3a10"; c.beginPath(); c.arc(36, 18.5, 1.8, 0, TAU); c.fill(); c.fillRect(35.2, 19, 1.6, 3);
   });
 }

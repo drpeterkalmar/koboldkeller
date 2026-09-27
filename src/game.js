@@ -4,6 +4,7 @@
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
+  ARENA, MINIS, BOSSES, bossKindOf,
 } from "./config.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
@@ -11,11 +12,11 @@ import { SFX, playMusic } from "./audio.js";
 import { haptic } from "./platform.js";
 import { writeSave, addHall } from "./save.js";
 import { rand, randi, pick, weighted, TAU, shade, clamp } from "./util.js";
-import { initBoss, bossAI, bossHit, bossKilled, wakeBoss } from "./boss.js";
+import { initBoss, bossAI, bossHit, bossKilled, wakeBoss, arenaTick, bossFight } from "./boss.js";
 
 export const G = {
   screen: "menu", depth: 0, biome: 0, B: BIOMES[0], L: null, p: null, prof: null,
-  ents: [], items: [], shots: [], teles: [],
+  ents: [], items: [], shots: [], teles: [], spawns: [], bossDone: [],
   gold: 0, mega: false, runSecs: 0, runFrom: 1, t: 0, boss: null, deepest: 1,
   god: false, winQueued: false, darkness: 0, joy: { x: 0, y: 0, m: 0 }, hold: null,
   flow: null, flowT: 0, seenT: 0, saveT: 0, portalCd: 0, lockToastT: 0, tutStep: -1, tutFlags: {},
@@ -24,8 +25,8 @@ export const G = {
   stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0 },
 };
 export const H = () => G.hooks;
-/** Ereignis nach sec Spielzeit (steht in Pause/Hit-Stop still) */
-export function later(sec, fn) { G.later.push({ t: sec, fn }); }
+/** Ereignis nach sec Spielzeit (steht in Pause/Hit-Stop still). tag = "boss": wird beim Boss-Sieg abgebrochen */
+export function later(sec, fn, tag) { G.later.push({ t: sec, fn, tag }); }
 
 // =====================================================================
 // Spieler
@@ -75,7 +76,7 @@ export function profileFromGame() {
     name: p.name, species: p.species, look: lookSave(p.look), lvl: p.lvl, xp: p.xp, xpNext: p.xpNext, maxHp: p.hpBase, hp: Math.max(1, Math.ceil(p.hp)),
     atk: p.atkBase, projN: p.projN, magic: p.magic, gold: G.gold, potions: p.potions, ammo: p.ammo, spec: p.spec, sk: { ...p.sk }, skPts: p.skPts,
     hats: p.hats.slice(), hat: p.hat, deepest: G.deepest, depth: G.depth, mega: G.mega, runSecs: G.runSecs,
-    kills: G.stats.kills,
+    kills: G.stats.kills, bossDone: G.bossDone.slice(),
   });
   return pr;
 }
@@ -124,6 +125,7 @@ export function startGame(prof) {
   G.prof = prof;
   G.p = makePlayer(prof);
   G.gold = prof.gold; G.mega = prof.mega; G.deepest = prof.deepest; G.runSecs = prof.runSecs || 0;
+  G.bossDone = Array.isArray(prof.bossDone) ? prof.bossDone.slice() : [];
   G.stats.kills = prof.kills || 0;
   G.winQueued = false;
   G.tutStep = prof.tut ? -1 : 0; G.tutFlags = {};
@@ -150,9 +152,15 @@ export function buildLevel(depth) {
   depth = clamp(depth | 0, 0, MAX_DEPTH);
   G.depth = depth; G.biome = biomeOf(depth); G.B = levelBiome(depth);
   const seed = G.prof.seed;
-  const L = depth === 0 ? buildTown(seed) : buildDungeon(seed, depth, G.biome, diffOf(depth).room);
+  const bk = bossKindOf(depth);
+  const L = depth === 0 ? buildTown(seed) : buildDungeon(seed, depth, G.biome, diffOf(depth).room, bk ? ARENA[depth] : null);
   G.L = L;
-  G.ents = []; G.items = []; G.shots = []; G.teles = []; G.boss = null; G.later = []; G.specFx = null; G.camFocus = null;
+  G.ents = []; G.items = []; G.shots = []; G.teles = []; G.spawns = []; G.boss = null; G.later = []; G.specFx = null; G.camFocus = null;
+  if (L.stairs) {
+    // v5: Auf Boss-Ebenen ist die Treppe (Ebene 20: das 20. Portal) versiegelt, solange der Boss dieser Ebene nicht besiegt ist
+    L.bossKind = bk; L.stairs.sealed = !!bk && !G.bossDone.includes(depth); L.stairs.armed = true;
+    if (L.arena) L.arena.optional = !L.stairs.sealed;           // schon besiegt: Tore bleiben offen, Kampf freiwillig
+  }
   resetFx();
   const p = G.p;
   p.x = L.entry.x; p.y = L.entry.y; p.vx = p.vy = 0; p.path = null; p.foe = null; p.dashT = 0; p.z = 0; p.specT = 0;
@@ -178,8 +186,9 @@ export function buildLevel(depth) {
   SFX.arrive();
   const B = BIOMES[G.biome], nm = levelName(depth);
   if (depth === 0) H().banner("Koboldstadt", "🏠 Willkommen zu Hause!");
-  else if (depth === 20) { H().banner(nm, "Ebene 20 · 👑 Der Kellerkönig wartet …", "", true); H().toast("Besiege den Kellerkönig — oder erreiche das ✨ 20. Portal!"); }
-  else if (depth % 4 === 0) H().banner(nm, "Ebene " + depth + " · " + B.name + " · ein Boss wartet!", "", true);
+  else if (depth === 20) { H().banner(nm, "Ebene 20 · 👑 Der Kellerkönig wartet …", "", true); H().toast(L.stairs.sealed ? "Besiege den Kellerkönig — dann öffnet sich das ✨ 20. Portal!" : "Das ✨ 20. Portal ist offen — oder fordere den Kellerkönig noch einmal heraus!"); }
+  else if (bk === "main") H().banner(nm, "Ebene " + depth + " · " + B.name + " · 👑 " + BOSSES[G.biome].name + " wartet in der Arena!", "", true);
+  else if (bk === "mini") H().banner(nm, "Ebene " + depth + " · " + B.name + " · ⚡ Mini-Boss " + MINIS[depth].name + " lauert!", "", true);
   else if ((depth - 1) % 4 === 0) H().banner(nm, "✨ Neue Welt: " + B.name + " · Ebene " + depth, "", true);
   else H().banner(nm, "Ebene " + depth + " · " + B.name, "", true);
   if (depth > 0) { G.deepest = Math.max(G.deepest, depth); save(); }
@@ -207,7 +216,7 @@ function populate(L, depth) {
   // Boss
   if (L.isBoss) {
     const a = L.arena;
-    const boss = makeEnt(depth >= 20 ? "king" : "boss", a.x + a.w / 2, a.y + a.h / 2);
+    const boss = makeEnt(depth >= 20 ? "king" : L.bossKind === "mini" ? "mini" : "boss", a.cx, a.cy);
     G.ents.push(boss); G.boss = boss;
   }
   // Fallen (Pieks-Platten): nicht am Eingang, nicht in der Boss-Arena
@@ -251,7 +260,7 @@ export function makeEnt(type, x, y) {
   if (type === "kaefer") e.tint = ["#6fb8ff", "#6fb8ff", "#7fd8ff", "#ff9ad8", "#bfe9ff", "#ff8a5a"][b];
   if (type === "pilzling") e.tint = ["#ff6fae", "#ff9a6a", "#b48cff", "#ff6fae", "#8fb8ff", "#ff7a4a"][b];
   if (type === "wichtel") e.tint = ["#e8434f", "#e8434f", "#5f86e0", "#ff6fae", "#4fb0e0", "#ff7a2a"][b];
-  if (type === "boss" || type === "king") initBoss(e, Lv);
+  if (type === "boss" || type === "king" || type === "mini") initBoss(e, Lv);
   if (type === "dummy") { e.speed = 0; e.state = "dummy"; }
   return e;
 }
@@ -303,7 +312,16 @@ export function killEnt(e) {
   shake(e.isBoss ? 0.8 : e.elite ? 0.35 : 0.22);
   if (e.isBoss) haptic("bossKill");
   // Munition: jeder besiegte Gegner füllt die Seifenblasen auf
-  gainAmmo(e.isKing ? AMMO.king : e.isBoss ? AMMO.boss : e.elite ? AMMO.elite : e.minion ? AMMO.minion : AMMO.kill, e.x, e.y);
+  gainAmmo(e.isKing ? AMMO.king : e.isMini ? AMMO.mini : e.isBoss ? AMMO.boss : e.elite ? AMMO.elite : e.minion ? AMMO.minion : AMMO.kill, e.x, e.y);
+  if (e.minion) {                                          // Handlanger: wenig Beute (kein Farmen)
+    if (Math.random() < 0.4) G.items.push(flyItem("coin", e.x, e.y));
+    if (Math.random() < 0.05) G.items.push(flyItem("heart", e.x, e.y));
+  } else if (e.isMini) {                                   // Mini-Boss: ordentlich, aber weniger als ein Hauptboss
+    for (let k = 0; k < 8; k++) G.items.push(flyItem("coin", e.x, e.y));
+    G.items.push(flyItem("mushroom", e.x, e.y)); G.items.push(flyItem("heart", e.x, e.y));
+    if (Math.random() < 0.5) G.items.push(flyItem("potion", e.x, e.y));
+    if (Math.random() < 0.5) G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y));
+  } else {
   // Münz-Explosion
   const nC = e.isKing ? 40 : e.isBoss ? 16 : e.elite ? randi(4, 7) : randi(1, 3);
   for (let k = 0; k < nC; k++) G.items.push(flyItem("coin", e.x, e.y));
@@ -313,7 +331,8 @@ export function killEnt(e) {
   else if (Math.random() < (e.elite ? 0.3 : 0.06)) G.items.push(flyItem("mushroom", e.x, e.y));
   const up = e.isBoss ? 1 : e.elite ? 0.25 : 0.07;
   if (Math.random() < up) G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y));
-  if (e.isBoss) {
+  }
+  if (e.isBoss && !e.isMini) {
     const h = BOSS_HAT[G.biome];
     if (h && !p.hats.includes(h)) G.items.push(flyItem("hat", e.x, e.y, h));
   }
@@ -639,7 +658,7 @@ export function tapWorld(wx, wy, hitEnt) {
   if (L.npc && Math.hypot(L.npc.x - wx, L.npc.y - wy) < 1.2) { H().tut("tap"); }
   if (L.mirror && Math.hypot(L.mirror.x - wx, L.mirror.y - wy) < 1.1) G.mirrorArmed = true;
   let tx = wx, ty = wy;
-  const snap = (pt, r) => { if (pt && !pt.hidden && Math.hypot(pt.x - wx, pt.y - wy) < r) { tx = pt.x; ty = pt.y; } };
+  const snap = (pt, r) => { if (pt && !pt.hidden && !pt.sealed && Math.hypot(pt.x - wx, pt.y - wy) < r) { tx = pt.x; ty = pt.y; } };
   snap(L.stairs, 1.5); snap(L.homePortal, 1.3);
   if (L.portals) for (const po of L.portals) snap(po, 1.4);
   const path = findPath(L.map, p.x, p.y, tx, ty, p.r);
@@ -686,6 +705,7 @@ export function update(dt, realDt) {
   updateEnts(dt);
   updateTeles(dt);
   updateTraps(dt);
+  if (L.arena) arenaTick(dt);
   // Sichtbarkeit (Minikarte)
   G.seenT -= dt;
   if (G.seenT <= 0) {
@@ -809,16 +829,25 @@ function triggers(dt) {
   }
   // Heimportal: unsichtbar/unbenutzbar, solange versteckt; danach erst nach Verlassen scharf
   const hp = L.homePortal;
-  if (hp && !hp.hidden) {
+  if (hp && !hp.hidden && !bossFight()) {                 // v5: kein Heimportal mitten im Bosskampf
     const d = Math.hypot(hp.x - p.x, hp.y - p.y);
     if (d > 1.6) L.homeArmed = true;
     if (L.homeArmed && d < 0.6) { G.portalCd = 2; SFX.portal(); haptic("stairs"); enterLevel(0); return; }
   }
-  // Treppe / 20. Portal
-  if (L.stairs && Math.hypot(L.stairs.x - p.x, L.stairs.y - p.y) < 0.6) {
-    G.portalCd = 2;
-    if (G.depth >= MAX_DEPTH) { SFX.portal(); winGame("portal"); }
-    else { SFX.stairs(); haptic("stairs"); enterLevel(G.depth + 1); }
+  // Treppe / 20. Portal — auf Boss-Ebenen erst nach dem Sieg (versiegelt), nach dem Öffnen erst scharf, wenn man einmal weg war
+  const st = L.stairs;
+  if (st) {
+    const d = Math.hypot(st.x - p.x, st.y - p.y);
+    if (st.sealed) {
+      if (d < 0.9 && G.lockToastT <= 0) { G.lockToastT = 3; H().toast("🔒 Versiegelt! Besiege zuerst " + (G.boss ? G.boss.name : "den Boss") + " — dann öffnet sich " + (G.depth >= MAX_DEPTH ? "das Portal." : "die Treppe.")); }
+    } else {
+      if (d > 1.2) st.armed = true;
+      if (st.armed && d < 0.6) {
+        G.portalCd = 2;
+        if (G.depth >= MAX_DEPTH) { SFX.portal(); winGame("portal"); }
+        else { SFX.stairs(); haptic("stairs"); enterLevel(G.depth + 1); }
+      }
+    }
   }
   // Truhen
   for (const pr of L.props) if (pr.kind === "chest" && !pr.open && Math.hypot(pr.x - p.x, pr.y - p.y) < 0.95) openChest(pr);
@@ -1130,10 +1159,13 @@ function updateTeles(dt) {
     if (!t) continue;
     t.t += dt;
     if (t.follow) { t.x = t.follow.x; t.y = t.follow.y; if (!G.ents.includes(t.follow)) { G.teles.splice(i, 1); continue; } }
+    // Glut-Pfütze (nach einer angekündigten Warnung): brennt kurz weiter, solange man drinsteht
+    if (t.burn && t.t >= 0 && t.dmg && G.screen === "play" && p.z < 20 && p.dashT <= 0 && Math.hypot(p.x - t.x, p.y - t.y) < t.r) playerHurt(t.dmg, t.x, t.y);
     if (t.t >= t.max) {
       const j = G.teles.indexOf(t); if (j >= 0) G.teles.splice(j, 1);
-      if (t.dmg && G.screen === "play" && p.z < 20) {
-        const hit = t.kind === "line" ? segDist(p.x, p.y, t.x, t.y, t.x2, t.y2) < t.w / 2 + 0.18 : Math.hypot(p.x - t.x, p.y - t.y) < t.r + 0.2;
+      if (t.dmg && !t.burn && G.screen === "play" && p.z < 20) {
+        const dc = Math.hypot(p.x - t.x, p.y - t.y);
+        const hit = t.kind === "line" ? segDist(p.x, p.y, t.x, t.y, t.x2, t.y2) < t.w / 2 + 0.18 : t.kind === "ring" ? dc < t.r + 0.2 && dc > t.r0 - 0.2 : dc < t.r + 0.2;
         if (hit) playerHurt(t.dmg, t.kind === "line" ? p.x - (t.x2 - t.x) * 0.01 : t.x, t.kind === "line" ? p.y - (t.y2 - t.y) * 0.01 : t.y);
       }
       if (t.onEnd) t.onEnd(t);

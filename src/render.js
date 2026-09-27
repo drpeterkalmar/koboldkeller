@@ -5,7 +5,7 @@ import { BIOMES, weaponOf, HATS } from "./config.js";
 import { clamp, TAU, rgba } from "./util.js";
 
 export const R = {
-  cv: null, ctx: null, VW: 0, VH: 0, RS: 1, U: 64, Z: 1, q: 0, qScales: [1, 0.8, 0.65, 0.5],
+  cv: null, ctx: null, VW: 0, VH: 0, RS: 1, U: 64, Z: 1, Z0: 1, cz: 1, q: 0, qScales: [1, 0.8, 0.65, 0.5],
   camX: 0, camY: 0, camDX: 0, camDY: 0, shx: 0, shy: 0, zp: 1,
   lcv: null, lctx: null, LS: 4, lw: 0, lh: 0, vign: null,
   chunks: new Map(), chunkOrder: [], walls: [], wallTorch: new Map(), L: null, biome: 0, B: BIOMES[0], t: 0,
@@ -24,13 +24,14 @@ export function setQuality(q) { q = clamp(q, 0, R.qScales.length - 1); if (q !==
 export function resize() {
   const VW = Math.max(200, window.innerWidth), VH = Math.max(200, window.innerHeight);
   R.VW = VW; R.VH = VH;
-  R.U = clamp(VW <= VH ? VW / 6.4 : Math.min(VW / 6.4, VH / 7.4), 50, 84);
-  R.Z = R.U / 64;
+  // Grund-Zoom (Art-Caches werden in dieser Größe gerendert); R.Z/R.U = Grund-Zoom × Kamera-Zoom (Bosskampf zoomt heraus)
+  const U0 = clamp(VW <= VH ? VW / 6.4 : Math.min(VW / 6.4, VH / 7.4), 50, 84);
+  R.Z0 = U0 / 64; R.Z = R.Z0 * R.cz; R.U = 64 * R.Z;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   R.RS = Math.max(1, dpr * R.qScales[R.q]);
   R.cv.width = Math.round(VW * R.RS); R.cv.height = Math.round(VH * R.RS);
   R.cv.style.width = VW + "px"; R.cv.style.height = VH + "px";
-  A.setArtScale(R.Z * R.RS);
+  A.setArtScale(R.Z0 * R.RS);
   R.lw = Math.ceil(VW / R.LS); R.lh = Math.ceil(VH / R.LS);
   R.lcv.width = R.lw; R.lcv.height = R.lh;
   R.vign = makeVignette(R.lw, R.lh);
@@ -134,6 +135,7 @@ export function prewarm(G) {
   for (const k of ["heart", "coin"]) A.itemSprite(k);
   if (R.L.traps && R.L.traps.length) { A.trapPlate(B.left); A.trapSpikes(B.top); }
   for (const e of G.ents) {
+    if (e.isMini) { for (const m of ["open", "hurt"]) A.flashOf(A.miniSprite(e.kind, m)); if (e.kind === "funkelflatter") A.flashOf(A.enemySprite("wing", "#8a6ae0")); continue; }
     if (e.isBoss) { A.flashOf(A.body(e.rig.look, e.rig.outfit, e.rig.cape)); for (const m of ["angry", "hurt"]) A.flashOf(A.head(e.rig.look, m)); A.hat("krone", e.rig.hatRed); A.weapon(e.rig.wpn); continue; }
     for (const m of ["open", "hurt"]) A.flashOf(A.enemySprite(e.type, e.tint, m));
     if (e.type === "bat") A.flashOf(A.enemySprite("wing", e.tint));
@@ -144,6 +146,12 @@ export function prewarm(G) {
   const lk = G.p.rig.look;
   for (const m of ["open", "blink", "hurt"]) A.flashOf(A.head(lk, m));
   A.flashOf(A.body(lk, G.p.rig.outfit)); A.potSprite(POT_COL[R.biome]); A.chestSprite(false); A.chestSprite(true);
+  if (R.L.arena) {
+    for (let v = 0; v < 3; v++) A.pillarSprite(R.biome, v);
+    A.gateSprite(R.biome); A.sealSprite(R.biome); A.stairsSprite(R.biome);
+    const mins = G.boss && G.boss.def && G.boss.def.minions;
+    if (mins) for (const [t] of mins) for (const m of ["open", "hurt"]) A.flashOf(A.enemySprite(t, null, m));
+  }
 }
 
 // ---------- Mini-Transform-Helfer ----------
@@ -226,9 +234,15 @@ export function draw(G, dt) {
   if (!L || !p) return;
   R.t += dt;
   const B = R.B;
+  // v5: Bosskampf in der großen Arena → Kamera zoomt heraus und schaut zwischen Kobold und Boss (Boss + Warnungen im Bild)
+  const bz = bossZoom(G);
+  R.cz += ((bz ? (R.VW > R.VH ? 0.84 : 0.8) : 1) - R.cz) * Math.min(1, dt * 2.2);
+  if (Math.abs(R.cz - 1) < 0.002) R.cz = 1;
+  R.Z = R.Z0 * R.cz; R.U = 64 * R.Z;
   // Kamera (Boss-Intro/Phasenwechsel/Sieg: kurz zum Boss schwenken)
   const cf = G.camFocus;
-  const tx = cf ? p.x + (cf.x - p.x) * 0.7 : p.x + (p.vx || 0) * 0.3, ty = cf ? p.y + (cf.y - p.y) * 0.7 : p.y + (p.vy || 0) * 0.3;
+  let tx = cf ? p.x + (cf.x - p.x) * 0.7 : p.x + (p.vx || 0) * 0.3, ty = cf ? p.y + (cf.y - p.y) * 0.7 : p.y + (p.vy || 0) * 0.3;
+  if (!cf && bz) { const b = G.boss, d = Math.hypot(b.x - p.x, b.y - p.y), k = d > 0.1 ? Math.min(d, 7) * 0.4 / d : 0; tx += (b.x - p.x) * k; ty += (b.y - p.y) * k; }
   const f = Math.min(1, dt * 6);
   R.camX += (tx - R.camX) * f; R.camY += (ty - R.camY) * f;
   R.camDX = (R.camX - R.camY) * 32; R.camDY = (R.camX + R.camY) * 16 - 44;
@@ -241,18 +255,28 @@ export function draw(G, dt) {
   ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
   ctx.fillStyle = B.void; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40);
 
-  // --- Boden-Chunks ---
+  // --- Boden-Chunks --- (R.chunksVis: sichtbare Chunks, muss unter CH_MAX bleiben, sonst würde der Cache flattern)
   const m = L.map;
+  let nCh = 0;
   for (let cy = 0; cy * CH < m.h; cy++) for (let cx = 0; cx * CH < m.w; cx++) {
     const ox = (cx * CH - cy * CH - CH) * 32 - 4, oy = (cx * CH + cy * CH) * 16 - 24;
     const sx = (ox - R.camDX) * Z + R.VW / 2 + R.shx, sy = (oy - R.camDY) * Z + R.VH * R.focusY + R.shy;
     if (sx > R.VW || sy > R.VH || sx + (CH * 64 + 8) * Z < 0 || sy + (CH * 32 + 30) * Z < 0) continue;
     const c = chunk(cx, cy);
-    if (c) ctx.drawImage(c.cv, sx, sy, c.W * Z, c.H * Z);
+    if (c) { ctx.drawImage(c.cv, sx, sy, c.W * Z, c.H * Z); nCh++; }
   }
+  R.chunksVis = nCh;
 
   // --- Boden-Ebene: Treppe, Portal-Ringe, Warnkreise, Schockwellen, Schatten ---
-  if (L.stairs && G.depth < 20) { const [sx, sy] = toScreen(L.stairs.x, L.stairs.y); blit(ctx, A.stairsSprite(R.biome), sx, sy); }
+  if (L.stairs) {
+    const st = L.stairs, [sx, sy] = toScreen(st.x, st.y);
+    if (st.sealed) blit(ctx, A.sealSprite(R.biome), sx, sy);        // versiegelt: keine Treppe/kein Portal sichtbar
+    else if (G.depth < 20) {
+      blit(ctx, A.stairsSprite(R.biome), sx, sy);
+      const ot = st.openT !== undefined ? G.t - st.openT : 9;      // Siegel zerbricht: Platte blendet aus
+      if (ot < 0.6) { ctx.globalAlpha = 1 - ot / 0.6; blit(ctx, A.sealSprite(R.biome), sx, sy - ot * 30 * R.Z); ctx.globalAlpha = 1; }
+    }
+  }
   const portals = allPortals(G);
   for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy)) blit(ctx, A.portalRing(po.locked), sx, sy, (po.small ? 0.7 : 1) * appear(po)); }
   // Fallen (Pieks-Platten)
@@ -267,10 +291,34 @@ export function draw(G, dt) {
       ctx.save(); ctx.translate(sx, sy); ctx.scale(R.Z, R.Z * k); put(ctx, sp, 0, 0); ctx.restore();
     }
   }
+  // Handlanger-Spawn-Kreise (lila/Welt-Farbe, nicht rot: kein Schaden, „gleich kommt einer")
+  for (const s of G.spawns) {
+    const [sx, sy] = toScreen(s.x, s.y), k = Math.min(1, s.t / s.max), rx = 0.707 * 0.9 * R.U;
+    ctx.globalAlpha = 0.25 + 0.35 * k; ctx.fillStyle = s.col;
+    ctx.beginPath(); ctx.ellipse(sx, sy, rx * (0.4 + 0.6 * k), rx * 0.5 * (0.4 + 0.6 * k), 0, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 0.9; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.5 * R.Z; ctx.setLineDash([6 * R.Z, 5 * R.Z]); ctx.lineDashOffset = R.t * 30;
+    ctx.beginPath(); ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
   for (const t of G.teles) {
     if (t.t < 0) continue;
     const k = Math.min(1, t.t / t.max), pulse = 0.24 + 0.1 * Math.sin(R.t * 18);
     if (t.kind === "line") { telePoly(ctx, t, 1, "rgba(255,60,90," + pulse + ")"); telePoly(ctx, t, k, "rgba(255,40,70,.42)"); continue; }
+    if (t.burn) {   // Glut-Pfütze
+      const [sx, sy] = toScreen(t.x, t.y), rx = 0.707 * t.r * R.U, f = 1 - Math.max(0, (t.t - t.max + 0.4) / 0.4);
+      ctx.globalAlpha = f * (0.45 + 0.15 * Math.sin(R.t * 12 + t.x)); ctx.fillStyle = "#ff7a2a";
+      ctx.beginPath(); ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); ctx.fill();
+      ctx.globalAlpha = f * 0.6; ctx.fillStyle = "#ffd060"; ctx.beginPath(); ctx.ellipse(sx, sy, rx * 0.55, rx * 0.27, 0, 0, TAU); ctx.fill();
+      ctx.globalAlpha = 1; continue;
+    }
+    if (t.kind === "ring") {   // Schallring: Ring mit Loch (innen + außen sicher)
+      const [sx, sy] = toScreen(t.x, t.y), ro = 0.707 * t.r * R.U, ri = 0.707 * t.r0 * R.U, rm = ri + (ro - ri) * k;
+      ctx.fillStyle = "rgba(255,60,90," + pulse + ")";
+      ctx.beginPath(); ctx.ellipse(sx, sy, ro, ro * 0.5, 0, 0, TAU); ctx.ellipse(sx, sy, ri, ri * 0.5, 0, TAU, 0, true); ctx.fill();
+      ctx.fillStyle = "rgba(255,40,70,.42)";
+      ctx.beginPath(); ctx.ellipse(sx, sy, rm, rm * 0.5, 0, 0, TAU); ctx.ellipse(sx, sy, ri, ri * 0.5, 0, TAU, 0, true); ctx.fill();
+      continue;
+    }
     const [sx, sy] = toScreen(t.x, t.y);
     const rx = 0.707 * t.r * R.U, ry = rx * 0.5;
     ctx.fillStyle = "rgba(255,60,90," + pulse + ")";
@@ -298,7 +346,7 @@ export function draw(G, dt) {
   };
   shadowAt(p.x, p.y, 0.8, 1); dirShadow(p.x, p.y, 0.8, 1.2);
   for (const e of G.ents) {
-    const r = (e.scale || 1) * (e.isBoss ? 1.1 : 0.7);
+    const r = (e.scale || 1) * (e.isMini ? 0.75 : e.isBoss ? 1.1 : 0.7);
     shadowAt(e.x, e.y, r, e.fly ? 0.55 : 1);
     if (!e.fly && e.type !== "dummy") dirShadow(e.x, e.y, r, e.isBoss ? 2 : 0.8);
   }
@@ -372,10 +420,11 @@ export function draw(G, dt) {
   ctx.globalAlpha = 1;
   // Warnkreis-Rand über den Figuren (bleibt auch hinter Bossen sichtbar)
   for (const t of G.teles) {
-    if (t.t < 0) continue;
+    if (t.t < 0 || t.burn) continue;
     ctx.setLineDash([10 * R.Z, 7 * R.Z]); ctx.lineDashOffset = -R.t * 40;
     ctx.beginPath();
     if (t.kind === "line") telePath(ctx, t, 1);
+    else if (t.kind === "ring") { const [sx, sy] = toScreen(t.x, t.y), ro = 0.707 * t.r * R.U, ri = 0.707 * t.r0 * R.U; ctx.ellipse(sx, sy, ro, ro * 0.5, 0, 0, TAU); ctx.moveTo(sx + ri, sy); ctx.ellipse(sx, sy, ri, ri * 0.5, 0, 0, TAU); }
     else { const [sx, sy] = toScreen(t.x, t.y), rx = 0.707 * t.r * R.U; ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); }
     ctx.strokeStyle = "rgba(255,90,120,.9)"; ctx.lineWidth = 5 * R.Z; ctx.stroke();
     ctx.strokeStyle = "rgba(255,240,245,.95)"; ctx.lineWidth = 2 * R.Z; ctx.stroke();
@@ -423,8 +472,14 @@ function allPortals(G) {
   out.length = 0;
   if (L.portals) for (const po of L.portals) out.push(po);
   if (L.homePortal && !L.homePortal.hidden) out.push(L.homePortal);
-  if (G.depth === 20 && L.stairs) out.push(L.exitPortal || (L.exitPortal = { x: L.stairs.x, y: L.stairs.y, col: "#ffd75e", label: "✨ 20. Portal", exit: true }));
+  if (G.depth === 20 && L.stairs && !L.stairs.sealed) out.push(L.exitPortal || (L.exitPortal = { x: L.stairs.x, y: L.stairs.y, col: "#ffd75e", label: "✨ 20. Portal", exit: true }));
   return out;
+}
+/** Bosskampf in der Arena (Kobold in/nahe der Arena, Boss wach) → Kamera zoomt heraus */
+function bossZoom(G) {
+  const b = G.boss, A = R.L && R.L.arena, p = G.p;
+  if (!b || !A || !b.awake || b.hp <= 0 || G.depth === 0) return false;
+  return p.x > A.x - 3 && p.y > A.y - 3 && p.x < A.x + A.w + 3 && p.y < A.y + A.h + 3;
 }
 
 function drawPlayer(ctx, p, sx, sy, G) {
@@ -440,6 +495,7 @@ function drawPlayer(ctx, p, sx, sy, G) {
 
 function drawEnemy(ctx, e, sx, sy) {
   const Z = R.Z;
+  if (e.isMini) return drawMiniBoss(ctx, e, sx, sy);
   if (e.isBoss) {
     const o = e.rig;
     o.flash = e.flashT > 0; o.mood = e.hurtT > 0 ? "hurt" : "angry"; o.t = e.t; o.sq = e.sq; o.face = e.face;
@@ -492,6 +548,36 @@ function drawEnemy(ctx, e, sx, sy) {
   }
 }
 
+/** Mini-Boss: eigenes Wesen aus art.js (Squash, Treffer-Blitz, Schweben, Flügel) */
+function drawMiniBoss(ctx, e, sx, sy) {
+  const Z = R.Z, t = e.t;
+  let s = A.miniSprite(e.kind, e.hurtT > 0 ? "hurt" : "open");
+  if (e.flashT > 0) s = A.flashOf(s);
+  let z = e.z || 0, rot = 0, jig = 0;
+  const sc = e.scale * Z;
+  if (e.kind === "funkelflatter") z += 34 + Math.sin(t * 5) * 6;
+  else if (e.kind === "bibber") z += 20 + Math.sin(t * 2.2) * 6;
+  else if (e.kind === "schlabbo") jig = Math.sin(t * 3.2) * 0.05;          // wabbelt ständig
+  else if (e.moving) rot = Math.sin(t * 9) * 0.06;
+  const sqx = 1 + e.sq + jig, sqy = 1 - e.sq - jig;
+  // Kobold hinter dem Mini-Boss → durchscheinend
+  const p = R.G && R.G.p;
+  let a = e.alpha ?? 1;
+  if (p && p.x + p.y < e.x + e.y) { const [px, py] = toScreen(p.x, p.y); if (Math.abs(px - sx) < 50 * sc && py < sy + 10 && py > sy - z * Z - 90 * sc) a *= 0.55; }
+  ctx.save();
+  ctx.translate(sx, sy - z * Z);
+  if (a < 1) ctx.globalAlpha = a;
+  ctx.rotate(rot);
+  ctx.scale(sc * sqx * e.face, sc * sqy);
+  if (e.kind === "funkelflatter") {
+    const w = A.enemySprite("wing", "#8a6ae0"), fl = 0.35 + 0.65 * Math.abs(Math.sin(t * 9));
+    for (const k of [-1, 1]) { ctx.save(); ctx.translate(k * 18, -50); ctx.scale(-k * 1.6, fl * 1.5); put(ctx, e.flashT > 0 ? A.flashOf(w) : w, 0, 0); ctx.restore(); }
+  }
+  put(ctx, s, 0, 0);
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
 const POT_COL = ["#d9a06a", "#9fd08a", "#9a9ae0", "#ffb3d8", "#bfe6ff", "#c98a6a"];
 function drawProp(ctx, pr, sx, sy, G) {
   const Z = R.Z;
@@ -510,6 +596,19 @@ function drawProp(ctx, pr, sx, sy, G) {
     case "lantern": blit(ctx, A.lanternSprite(), sx, sy); break;
     case "fountain": blit(ctx, A.fountainSprite(), sx, sy); break;
     case "mirror": blit(ctx, A.mirrorSprite(), sx, sy, 0.8); break;
+    case "pillar": {   // Säule vor dem Kobold → weich durchsichtig (wie Wände)
+      const p = G.p, dd = pr.x + pr.y - (p.x + p.y), lat = Math.abs((pr.x - pr.y) - (p.x - p.y));
+      const want = dd > 0 && dd < 4.5 && lat < 2.4 ? 0.38 : 1;
+      pr.a = (pr.a ?? 1) + (want - (pr.a ?? 1)) * 0.2;
+      ctx.globalAlpha = pr.a; blit(ctx, A.pillarSprite(pr.bi, pr.var), sx, sy); ctx.globalAlpha = 1;
+      break;
+    }
+    case "gate": {   // Arena-Tor: wächst hoch, wenn es sich schließt; sinkt nach dem Sieg wieder ein
+      if (pr.k < 0.02) break;
+      const sp = A.gateSprite(pr.bi);
+      ctx.save(); ctx.translate(sx, sy); ctx.scale(Z, Z * pr.k); put(ctx, sp, 0, 0); ctx.restore();
+      break;
+    }
   }
 }
 function drawItem(ctx, it, sx, sy) {
@@ -537,6 +636,13 @@ function drawShot(ctx, s, sx, sy) {
     ctx.fillStyle = "#f8fcff"; ctx.strokeStyle = "#8ab8dc"; ctx.lineWidth = 3 * Z;
     ctx.beginPath(); ctx.arc(0, 0, 20 * Z, 0, TAU); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#dcefff"; ctx.beginPath(); ctx.arc(6 * Z, 5 * Z, 6 * Z, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.arc(-7 * Z, -4 * Z, 4 * Z, 0, TAU); ctx.fill();
+    ctx.restore();
+  } else if (s.kind === "lob" && s.glob) {   // Glibber-Klumpen (Schlabbo)
+    const bw = 12 * Z, w = 1 + Math.sin(s.t * 18) * 0.12;
+    ctx.save(); ctx.translate(sx, sy - s.z * Z);
+    ctx.fillStyle = s.col; ctx.strokeStyle = "rgba(30,80,30,.75)"; ctx.lineWidth = 2 * Z;
+    ctx.beginPath(); ctx.ellipse(0, 0, bw * w, bw / w, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.beginPath(); ctx.arc(-bw * 0.35, -bw * 0.35, bw * 0.28, 0, TAU); ctx.fill();
     ctx.restore();
   } else if (s.kind === "lob") {
     const bw = 13 * Z;
@@ -595,7 +701,8 @@ function lighting(G, B, portals) {
   for (const t of L.torches) { const fl = 0.82 + 0.1 * Math.sin(T * 9 + t.x * 3) + 0.08 * Math.sin(T * 23 + t.y); light(t.x, t.y, 4.4 * (0.95 + fl * 0.05), B.torch, fl); }
   for (const li of L.lights) light(li.x, li.y, li.r, li.c, li.a * (1 - li.flick + li.flick * Math.sin(T * 7 + li.x)));
   for (const po of portals) if (!po.locked) light(po.x, po.y, po.small ? 2.4 : 3.4, po.col, 0.8);
-  if (L.stairs && G.depth < 20) light(L.stairs.x, L.stairs.y, 2.6, "#ffe9a8", 0.55);
+  if (L.stairs && G.depth < 20 && !L.stairs.sealed) light(L.stairs.x, L.stairs.y, 2.6, "#ffe9a8", 0.55);
+  for (const s of G.spawns) light(s.x, s.y, 2.2, s.col, 0.5 + 0.4 * s.t / s.max);
   for (const s of G.shots) if (s.kind !== "lob") light(s.x, s.y, s.kind === "bubble" ? 1.6 : 2.0, s.kind === "bubble" ? "#bfefff" : s.col, 0.7);
   for (const e of G.ents) {
     if (e.type === "wisp") light(e.x, e.y, 2.6, e.tint || "#8fe9ff", 0.8);
@@ -607,7 +714,7 @@ function lighting(G, B, portals) {
   if (G.specFx) { const f = G.specFx, k = f.t / f.max; light(f.x, f.y, f.r * (0.6 + k * 0.8), f.c1, 1 - k); }
   for (const it of G.items) if (it.kind !== "coin") light(it.x, it.y, 1.3, "#fff0c0", 0.45);
   if (p.spinT > 0) light(p.x, p.y, 3.4, "#fff8e0", p.spinT / 0.28 * 0.7);
-  for (const t of G.teles) { if (t.t < 0) continue; if (t.kind === "line") light((t.x + t.x2) / 2, (t.y + t.y2) / 2, Math.hypot(t.x2 - t.x, t.y2 - t.y) * 0.55, "#ffe0e6", 0.6); else light(t.x, t.y, t.r * 1.5, "#ffe0e6", 0.95); }
+  for (const t of G.teles) { if (t.t < 0) continue; if (t.burn) { light(t.x, t.y, t.r * 1.6, "#ff8a3a", 0.8); continue; } if (t.kind === "ring") { light(t.x, t.y, t.r * 1.2, "#ffe0e6", 0.8); continue; } if (t.kind === "line") light((t.x + t.x2) / 2, (t.y + t.y2) / 2, Math.hypot(t.x2 - t.x, t.y2 - t.y) * 0.55, "#ffe0e6", 0.6); else light(t.x, t.y, t.r * 1.5, "#ffe0e6", 0.95); }
   if (L.traps) for (const tr of L.traps) if (tr.st === 1) light(tr.x, tr.y, 1.4, "#ff9ab0", 0.6);
   l.globalAlpha = 1;
   l.globalCompositeOperation = "multiply";
@@ -645,7 +752,8 @@ function glowPass(ctx, G, B, portals) {
     else if (pr.kind === "chest" && !pr.open) g(pr.x, pr.y, 20, 50, "#ffd75e", 0.25 + Math.sin(T * 3) * 0.1);
   }
   for (const po of portals) if (!po.locked) g(po.x, po.y, 52 * (po.small ? 0.7 : 1), po.small ? 90 : 130, po.col, 0.4 + Math.sin(T * 3) * 0.08);
-  if (L.stairs && G.depth < 20) g(L.stairs.x, L.stairs.y, 4, 70, "#ffe9a8", 0.3 + Math.sin(T * 2.5) * 0.1);
+  if (L.stairs && G.depth < 20 && !L.stairs.sealed) g(L.stairs.x, L.stairs.y, 4, 70, "#ffe9a8", 0.3 + Math.sin(T * 2.5) * 0.1);
+  for (const s of G.spawns) g(s.x, s.y, 20, 80 * (0.5 + s.t / s.max), s.col, 0.35);
   for (const s of G.shots) g(s.x, s.y, s.z, s.kind === "bubble" ? 34 * s.size : s.kind === "snow" ? 70 : 44, s.kind === "bubble" ? "#bfefff" : s.col, s.kind === "lob" ? 0.3 : 0.45);
   for (const e of G.ents) {
     if (e.type === "wisp") g(e.x, e.y, 36 + Math.sin(e.t * 3) * 4, 60, e.tint || "#8fe9ff", 0.55);
@@ -718,11 +826,11 @@ function textPass(ctx, G, portals) {
       ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(t, sx, yy); ctx.fillStyle = "#ffe0f0"; ctx.fillText(t, sx, yy);
     }
   }
-  if (R.L.stairs && G.depth < 20) {
-    const [sx, sy] = toScreen(R.L.stairs.x, R.L.stairs.y, 58);
-    if (onScreen(sx, sy)) {
+  if (R.L.stairs && (G.depth < 20 || R.L.stairs.sealed)) {
+    const st = R.L.stairs, [sx, sy] = toScreen(st.x, st.y, 58);
+    if (onScreen(sx, sy) && (!st.sealed || Math.hypot(G.p.x - st.x, G.p.y - st.y) < 4)) {
       ctx.font = "800 " + Math.round(13 * Math.max(1, Z)) + "px system-ui, sans-serif";
-      const t = "⬇️ Ebene " + (G.depth + 1);
+      const t = st.sealed ? "🔒 versiegelt" : "⬇️ Ebene " + (G.depth + 1);
       ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(t, sx, sy + Math.sin(R.t * 2) * 3);
       ctx.fillStyle = "#fff8e0"; ctx.fillText(t, sx, sy + Math.sin(R.t * 2) * 3);
     }
@@ -753,7 +861,7 @@ export function drawMini(cv, G) {
     c.fillRect((x - ox) * s * 1.4, (y - oy) * s * 1.4, s * 1.45, s * 1.45);
   }
   const dot = (x, y, col, r) => { c.fillStyle = col; c.beginPath(); c.arc((x - ox) * s * 1.4, (y - oy) * s * 1.4, r, 0, TAU); c.fill(); };
-  if (L.stairs && m.seen[Math.floor(L.stairs.y) * m.w + Math.floor(L.stairs.x)]) dot(L.stairs.x, L.stairs.y, "#ffd75e", s * 2.4);
+  if (L.stairs && !L.stairs.sealed && m.seen[Math.floor(L.stairs.y) * m.w + Math.floor(L.stairs.x)]) dot(L.stairs.x, L.stairs.y, "#ffd75e", s * 2.4);
   if (L.homePortal && !L.homePortal.hidden) dot(L.homePortal.x, L.homePortal.y, "#7fffd4", s * 2);
   for (const e of G.ents) if (e.isBoss && m.seen[Math.floor(e.y) * m.w + Math.floor(e.x)]) dot(e.x, e.y, "#ff4a5a", s * 2.6);
   dot(ox, oy, "#ff6fae", s * 2.2);

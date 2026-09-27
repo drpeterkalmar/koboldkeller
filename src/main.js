@@ -8,7 +8,7 @@ import { hardenTouch, wakeLock, watchVisibility } from "./platform.js";
 import { sanitize } from "./save.js";
 import { IN, initInput, resetInput } from "./input.js";
 import * as UI from "./ui.js";
-import { forceAttack, bossHit } from "./boss.js";
+import { forceAttack, bossHit, spawnWave, minionCount, arenaCap, bossFight } from "./boss.js";
 import { pick } from "./util.js";
 
 const cv = document.getElementById("cv");
@@ -141,7 +141,17 @@ window.KK = {
     ammo: G.p && G.p.ammo, ammoMax: G.p && G.p.ammoMax, spec: G.p && +G.p.spec.toFixed(3), skPts: G.p && G.p.skPts, sk: G.p && { ...G.p.sk },
     look: G.p && { ...G.p.look }, homeHidden: !!(G.L && G.L.homePortal && G.L.homePortal.hidden), homeHideT: +(G.homeHideT || 0).toFixed(2),
     levelName: levelName(G.depth), phase: G.boss ? G.boss.phase : 0,
+    stairsSealed: !!(G.L && G.L.stairs && G.L.stairs.sealed), mini: !!(G.boss && G.boss.isMini), bossDone: G.bossDone.slice(),
+    minions: G.ents.filter(e => e.minion).length, spawning: G.spawns.length, zoom: +R.cz.toFixed(3),
   }),
+  /** Arena-Zustand (v5): Größe, Tore, Handlanger, Deckel */
+  arena: () => {
+    const A = G.L && G.L.arena; if (!A) return null;
+    return { size: A.size, x: A.x, y: A.y, closed: !!A.closed, optional: !!A.optional, done: !!A.done, gates: A.gates.length, pillars: A.pillars.length, spawns: A.spawns.length,
+      minions: G.ents.filter(e => e.minion).length, spawning: G.spawns.length, count: minionCount(), cap: arenaCap(), waveT: A.waveT === undefined ? null : +A.waveT.toFixed(2), fight: bossFight(),
+      gateBlocked: A.gates.filter(g => G.L.map.block[g.ty * G.L.map.w + g.tx]).length, stairs: G.L.stairs && { x: G.L.stairs.x, y: G.L.stairs.y, sealed: !!G.L.stairs.sealed, armed: !!G.L.stairs.armed } };
+  },
+  wave: (n = 9) => (G.boss ? spawnWave(G.boss, n) : 0),
   start: (o = {}) => {
     const prof = sanitize({ name: o.name || "Testi", species: o.species || "kobold", mega: !!o.mega, tut: o.tut !== false, seed: o.seed || 777, depth: 0 });
     G.demo = false; resetInput(); startGame(prof); UI.hideScreens(); G.screen = "play";

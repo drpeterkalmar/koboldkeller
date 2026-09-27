@@ -193,10 +193,13 @@ export function buildTown(seed) {
 }
 
 // ================= DUNGEON =================
-export function buildDungeon(seed, depth, biome, room = [5, 10]) {
+/** ad = Arena-Eintrag aus config.ARENA (nur Boss-Ebenen: Hauptboss 4/8/…, Mini-Boss 2/6/…) */
+export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
   const rnd = mulberry32((seed | 0) + depth * 7717);
-  const isBoss = depth % 4 === 0;
-  const S = 44 + Math.min(6, depth >> 2);
+  const isBoss = !!ad;
+  const aw = isBoss ? ad.size : 0;
+  // Boss-Ebenen werden um die größere Arena erweitert, damit die übrigen Räume Platz behalten
+  const S = 44 + Math.min(6, depth >> 2) + (isBoss ? Math.max(0, aw - 12) : 0);
   const m = makeMap(S, S);
   for (let i = 0; i < m.v.length; i++) m.v[i] = (rnd() * 256) | 0;
   const rooms = [];
@@ -205,10 +208,7 @@ export function buildDungeon(seed, depth, biome, room = [5, 10]) {
     for (const o of rooms) if (r.x < o.x + o.w + 2 && r.x + r.w + 2 > o.x && r.y < o.y + o.h + 2 && r.y + r.h + 2 > o.y) return false;
     return true;
   };
-  if (isBoss) {
-    const aw = 12, ah = 12;
-    rooms.push({ x: S - aw - 3, y: S - ah - 3, w: aw, h: ah, arena: true });
-  }
+  if (isBoss) rooms.push({ x: S - aw - 3, y: S - aw - 3, w: aw, h: aw, arena: true });
   const want = 8 + Math.min(4, Math.floor(depth / 3));
   for (let t = 0; t < 400 && rooms.length < want; t++) {
     const span = room[1] - room[0] + 1, w = room[0] + ((rnd() * span) | 0), h = room[0] + ((rnd() * span) | 0);
@@ -250,7 +250,10 @@ export function buildDungeon(seed, depth, biome, room = [5, 10]) {
   const er = rooms[entryRoom], sr = rooms[stairRoom];
   er.entry = true; sr.stairs = true;
   const entry = { x: Math.floor(er.cx) + 0.5, y: Math.floor(er.cy) + 0.5 };
+  // Boss-Ebene: Treppe in der hintersten Arena-Ecke (weit weg von Eingängen und Kampfmitte), versiegelt bis zum Sieg
   const stairs = isBoss ? { x: sr.x + sr.w - 2.5, y: sr.y + sr.h - 2.5 } : { x: Math.floor(sr.cx) + 0.5, y: Math.floor(sr.cy) + 0.5 };
+  const props = [];
+  const arena = isBoss ? buildArena(m, rooms[0], ad, biome, stairs, props, rnd) : null;
   let homePortal = { x: entry.x - 2, y: entry.y };
   for (const [dx, dy] of [[-2, 0], [0, -2], [2, 0], [0, 2], [-1, -1]]) {
     const hx = entry.x + dx, hy = entry.y + dy;
@@ -258,8 +261,9 @@ export function buildDungeon(seed, depth, biome, room = [5, 10]) {
   }
   // Fackeln an Rückwänden (oben = y-1, links = x-1)
   const torches = [], lights = [];
+  if (arena) lights.push(...arena.lights);
   rooms.forEach((r, i) => {
-    const n = r.arena ? 4 : (rnd() < 0.85 ? 1 + ((rnd() * 2) | 0) : 0);
+    const n = r.arena ? Math.round(r.w / 2) : (rnd() < 0.85 ? 1 + ((rnd() * 2) | 0) : 0);
     for (let k = 0; k < n; k++) {
       if (rnd() < 0.5) {
         const x = r.x + 1 + ((rnd() * (r.w - 2)) | 0);
@@ -271,7 +275,6 @@ export function buildDungeon(seed, depth, biome, room = [5, 10]) {
     }
   });
   // Props: Töpfe, Truhen, Deko
-  const props = [];
   const occupied = new Set();
   const freeIn = (r, pad = 1) => {
     for (let t = 0; t < 30; t++) {
@@ -290,11 +293,11 @@ export function buildDungeon(seed, depth, biome, room = [5, 10]) {
       const kk = corner[1] * S + corner[0];
       if (!occupied.has(kk)) { occupied.add(kk); props.push({ kind: "pot", x: corner[0] + 0.5, y: corner[1] + 0.5, hp: 1, var: (rnd() * 3) | 0 }); }
     }
-    // Biom-Deko (nicht blockierend) — leuchtet teilweise
+    // Biom-Deko (nicht blockierend) — leuchtet teilweise; Arena-Mosaik (≥ 5) bleibt frei
     const nDeco = 2 + ((rnd() * 4) | 0);
     for (let k = 0; k < nDeco; k++) {
       const x = r.x + ((rnd() * r.w) | 0), y = r.y + ((rnd() * r.h) | 0);
-      m.deco[y * S + x] = 2 + ((rnd() * 3) | 0);
+      if (m.deco[y * S + x] < 5) m.deco[y * S + x] = 2 + ((rnd() * 3) | 0);
     }
   });
   // Truhe(n)
@@ -314,7 +317,56 @@ export function buildDungeon(seed, depth, biome, room = [5, 10]) {
   const spots = [];
   rooms.forEach((r, i) => { if (i !== entryRoom) for (let t = 0; t < 12; t++) { const p = freeIn(r, 0); if (p) spots.push({ ...p, room: i }); } });
   for (let i = spots.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
-  return { kind: "dungeon", map: m, rooms, entry, stairs, homePortal, torches, lights, props, spots, isBoss, arena: isBoss ? rooms[0] : null, rnd };
+  return { kind: "dungeon", map: m, rooms, entry, stairs, homePortal, torches, lights, props, spots, isBoss, arena, rnd };
+}
+
+// ================= BOSS-ARENA (v5) =================
+const ARENA_LIGHT = [null, "#b6ff8a", "#bfefff", "#ffc2e8", "#dff6ff", "#ffa04a"];
+/** Säulen (Deckung), Tor-Kacheln an den Eingängen, Spawn-Punkte für Handlanger am Rand, Boden-Mosaik, Licht */
+function buildArena(m, a, ad, biome, stairs, props, rnd) {
+  const S = m.w, N = a.w;
+  const ctx = a.x + Math.floor(N / 2), cty = a.y + Math.floor(N / 2);   // Mittel-Kachel (Boss schläft hier)
+  const cx = a.x + N / 2, cy = a.y + N / 2;
+  const q = Math.round(N * 0.27), q2 = Math.round(N * 0.3);
+  const offs = [[q, q], [-q, q], [q, -q], [-q, -q]];
+  if (ad.pillars >= 8) offs.push([q2, 0], [-q2, 0], [0, q2], [0, -q2]);
+  const pillars = [], lights = [];
+  const stTx = Math.floor(stairs.x), stTy = Math.floor(stairs.y);
+  for (const [ox, oy] of offs) {
+    const tx = ctx + ox, ty = cty + oy;
+    if (Math.abs(tx - stTx) + Math.abs(ty - stTy) < 2) continue;           // nie direkt an der Treppe
+    const i = ty * S + tx;
+    m.block[i] = 1; m.deco[i] = 0;
+    const pr = { kind: "pillar", x: tx + 0.5, y: ty + 0.5, var: (rnd() * 3) | 0, bi: biome };
+    props.push(pr); pillars.push(pr);
+    lights.push({ x: tx + 0.5, y: ty + 0.5, r: 2.6, c: ARENA_LIGHT[biome] || "#ffe9a8", a: 0.5, flick: 0.08 });
+  }
+  // Tore: Boden-Kacheln direkt außerhalb der Arena, die an die Arena grenzen (Gang-Eingänge)
+  const inA = (x, y) => x >= a.x && y >= a.y && x < a.x + N && y < a.y + N;
+  const gates = [];
+  for (let y = a.y - 1; y <= a.y + N; y++) for (let x = a.x - 1; x <= a.x + N; x++) {
+    if (inA(x, y) || x < 0 || y < 0 || x >= S || y >= S || m.block[y * S + x]) continue;
+    if (inA(x + 1, y) || inA(x - 1, y) || inA(x, y + 1) || inA(x, y - 1)) {
+      const g = { kind: "gate", x: x + 0.5, y: y + 0.5, tx: x, ty: y, k: 0, bi: biome };
+      gates.push(g); props.push(g);
+    }
+  }
+  // Spawn-Punkte der Handlanger: Ecken + Kantenmitten (1,5 Kacheln innen), nicht an Treppe/Toren/Säulen
+  const cand = [[1.5, 1.5], [N - 1.5, 1.5], [1.5, N - 1.5], [N - 1.5, N - 1.5], [N / 2, 1.5], [N / 2, N - 1.5], [1.5, N / 2], [N - 1.5, N / 2]];
+  let spawns = cand.map(([ox, oy]) => ({ x: Math.floor(a.x + ox) + 0.5, y: Math.floor(a.y + oy) + 0.5 }))
+    .filter(s => !m.block[Math.floor(s.y) * S + Math.floor(s.x)] && Math.hypot(s.x - stairs.x, s.y - stairs.y) > 3 && gates.every(g => Math.hypot(g.x - s.x, g.y - s.y) > 2.2));
+  if (spawns.length < 3) spawns = cand.slice(0, 4).map(([ox, oy]) => ({ x: Math.floor(a.x + ox) + 0.5, y: Math.floor(a.y + oy) + 0.5 })).filter(s => Math.hypot(s.x - stairs.x, s.y - stairs.y) > 2);
+  // Boden-Mosaik: Ring um die Mitte (5), Mittel-Emblem (6), Spawn-Runen (7)
+  const ringR = N * 0.22;
+  for (let y = a.y; y < a.y + N; y++) for (let x = a.x; x < a.x + N; x++) {
+    const i = y * S + x;
+    if (m.block[i]) continue;
+    const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy);
+    if (d < 1.3) m.deco[i] = 6; else if (Math.abs(d - ringR) < 0.55) m.deco[i] = 5; else if (m.deco[i] >= 2 && rnd() < 0.5) m.deco[i] = 0;
+  }
+  for (const s of spawns) m.deco[Math.floor(s.y) * S + Math.floor(s.x)] = 7;
+  lights.push({ x: cx, y: cy, r: 4.5, c: ARENA_LIGHT[biome] || "#ffe9a8", a: 0.35, flick: 0.04 });
+  return Object.assign(a, { cx, cy, size: N, pillars, gates, spawns, lights, closed: false });
 }
 function farthest(rooms, df, S, skip) {
   let best = 0, bd = -1;

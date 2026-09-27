@@ -43,9 +43,10 @@ export function banner(title, sub, kind = "", lvl = false) {
 /** große Boss-Titelkarte beim Erwachen */
 export function bossIntro(e) {
   const c = $("bossCard");
-  $("bcName").textContent = (e.isKing ? "👑🔥 " : "👑 ") + e.name;
+  $("bcSmall").textContent = e.isMini ? "⚡ MINI-BOSS ⚡" : "⚠️ BOSS ⚠️";
+  $("bcName").textContent = (e.isKing ? "👑🔥 " : e.isMini ? "⚡ " : "👑 ") + e.name;
   $("bcEpi").textContent = e.epi || "";
-  c.className = ""; void c.offsetWidth; c.className = "show" + (e.isKing ? " king" : "");
+  c.className = ""; void c.offsetWidth; c.className = "show" + (e.isKing ? " king" : e.isMini ? " mini" : "");
   clearTimeout(UI._bc); UI._bc = setTimeout(() => c.className = "hidden", 2600);
 }
 
@@ -361,9 +362,12 @@ export function showBoss(e) {
   $("bossBar").classList.toggle("hidden", !e);
   document.body.classList.toggle("bossOn", !!e);
   if (e) {
-    $("bossName").textContent = (e.isKing ? "👑🔥 " : "👑 ") + e.name;
-    $("bossPhase").textContent = e.phase >= 3 ? "🔥 WUT-PHASE · 3 / 3" : "Phase " + e.phase + " / 3";
+    const mini = !!e.isMini;
+    $("bossName").textContent = (e.isKing ? "👑🔥 " : mini ? "⚡ Mini-Boss " : "👑 ") + e.name;
+    $("bossPhase").textContent = mini ? (e.phase >= 2 ? "⚡ WILD · 2 / 2" : "Phase 1 / 2") : e.phase >= 3 ? "🔥 WUT-PHASE · 3 / 3" : "Phase " + e.phase + " / 3";
     $("bossBar").classList.toggle("rage", e.phase >= 3);
+    $("bossBar").classList.toggle("mini", mini);
+    $("bossTick1").style.left = mini ? "50%" : "33%"; $("bossTick2").classList.toggle("hidden", mini);
     $("tut").classList.add("hidden"); document.body.classList.remove("tutOn");
   }
 }
