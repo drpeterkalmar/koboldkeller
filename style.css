@@ -241,7 +241,7 @@ p { font-size: 15px; line-height: 1.4; margin: 6px 0 12px; }
 .prevBox { position: relative; height: 168px; border-radius: 20px; background: radial-gradient(ellipse at 50% 85%, rgba(255,230,160,.3), rgba(0,0,0,.22) 70%); border: 2px solid rgba(255,255,255,.2); margin-bottom: 8px; }
 #editPrev { width: 100%; height: 100%; display: block; }
 .tabs { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 2px 0 8px; }
-.tab { padding: 6px 9px; min-height: 40px; border-radius: 12px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.2); font-size: 13.5px; font-weight: 800; }
+.tab { padding: 6px 9px; min-height: 48px; border-radius: 12px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.2); font-size: 13.5px; font-weight: 800; }
 .tab.on { background: rgba(255,215,94,.26); border-color: var(--gold); }
 .opts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 6px; align-items: start; }
 .opt span { display: block; padding: 0 2px; line-height: 1.15; overflow-wrap: anywhere; }
@@ -252,6 +252,29 @@ p { font-size: 15px; line-height: 1.4; margin: 6px 0 12px; }
 .swc { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(255,255,255,.35); box-shadow: inset 0 -5px 0 rgba(0,0,0,.2); }
 .swc.on { border-color: #fff; box-shadow: 0 0 0 3px var(--gold), inset 0 -5px 0 rgba(0,0,0,.2); transform: scale(1.1); }
 .hint { font-size: 13px; opacity: .82; margin: 4px 0; }
+/* v9: Kostüme — Stufen-Rahmen (selten blau · episch lila · mythisch gold funkelnd), gesperrt = Silhouette + 🔒 + Hinweis */
+.opt.myth { position: relative; min-height: 48px; }
+.opt.myth.tier-selten { border-color: rgba(127,200,255,.75); }
+.opt.myth.tier-episch { border-color: rgba(196,140,255,.85); background: rgba(120,60,200,.18); }
+.opt.myth.tier-mythisch { border-color: #ffd75e; background: linear-gradient(160deg, rgba(255,215,94,.28), rgba(255,120,60,.14) 55%, rgba(160,110,255,.2));
+  box-shadow: 0 0 10px rgba(255,215,94,.55), inset 0 0 8px rgba(255,240,180,.35); animation: mythGlow 2.2s ease-in-out infinite; }
+@keyframes mythGlow { 50% { box-shadow: 0 0 18px rgba(255,215,94,.9), inset 0 0 12px rgba(255,240,180,.5); } }
+.opt.myth.on { outline: 3px solid #fff; outline-offset: -1px; }
+.opt.myth.locked { opacity: .92; }
+.opt.myth.locked span { font-size: 10px; opacity: .85; }
+.opt.myth .tierTag { position: absolute; left: 3px; top: 3px; font-style: normal; font-size: 8.5px; font-weight: 900; padding: 1px 4px; border-radius: 6px; background: rgba(0,0,0,.45); text-transform: uppercase; letter-spacing: .5px; }
+.opt.myth.tier-mythisch .tierTag { background: linear-gradient(90deg,#ffd75e,#ff9a3a); color: #3a1a00; }
+.opt.myth .lockTag { position: absolute; right: 4px; top: 22px; font-style: normal; font-size: 18px; }
+.mythCount { font-size: 14px; font-weight: 800; margin: 2px 0 6px; }
+.mythView { display: block; font-size: 11.5px; color: #ffe9a8; opacity: .9; }
+.mhatRow { margin-top: 6px; min-height: 48px; }
+.mhatRow.off { opacity: .6; }
+.toast.mythToast { pointer-events: auto; display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 12px; border-color: #c48cff; background: rgba(50,20,80,.95); }
+.toast.mythToast.tier-mythisch { border-color: #ffd75e; background: linear-gradient(120deg, rgba(90,40,10,.95), rgba(60,20,90,.95)); box-shadow: 0 0 18px rgba(255,200,80,.6); }
+.mythToast .mtE { font-size: 30px; }
+.mythToast .mtT { text-align: left; line-height: 1.2; }
+.mythToast .mtT small { display: block; font-size: 11px; opacity: .8; text-transform: uppercase; letter-spacing: 1px; }
+.mythToast .mtBtn { min-height: 48px; min-width: 96px; border-radius: 14px; font-weight: 900; font-size: 15px; color: #3a1a00; background: linear-gradient(180deg,#fff08a,#ffc53a); box-shadow: 0 3px 0 rgba(0,0,0,.35); position: relative; }
 /* Rucksack: Talente */
 h2.sub { font-size: 17px; margin: 12px 0 6px; }
 .pts { font-size: 13px; background: #ff5a86; padding: 2px 8px; border-radius: 10px; display: inline-block; animation: pillPulse 1s ease-in-out infinite; }

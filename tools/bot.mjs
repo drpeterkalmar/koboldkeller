@@ -12,6 +12,7 @@ const pos = process.argv.slice(2).filter(a => !a.startsWith("--")), flag = k => 
 const port = pos[0] || 8731, maxD = +(pos[1] || 20), speed = +(pos[2] || 4);
 const SECS = flag("secs") ? +flag("secs").split("=")[1] : 30 * 60, AUD = !!flag("audio"), MEGA = !!flag("mega");
 const OUT = flag("out") ? flag("out").split("=")[1] : (MEGA ? "mega" : "normal");
+const MYTH = flag("myth") ? flag("myth").split("=")[1] : "";          // v9: Kostüm anziehen (z. B. --myth=phoenix) — nur Optik
 const { chromium } = loadPlaywright();
 const flags = ["--use-angle=metal", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", ...(AUD ? ["--autoplay-policy=no-user-gesture-required"] : [])];
 const b = await chromium.launch({ channel: "chromium", args: flags });
@@ -115,6 +116,7 @@ await page.evaluate(([sp, mega]) => {
     }
   }, 100);
 }, [speed, MEGA]);
+if (MYTH) console.log("Kostüm:", await page.evaluate((id) => { KK.unlock(id); return KK.wear(id); }, MYTH));
 const start = Date.now();
 let last = "", nextA = 10;
 const samples = [];
@@ -140,7 +142,7 @@ const md = ["| Ebene | Versuche | Spielzeit s | Lauf s | Lauf-Tipps | Gegner-Tip
   "", "| Boss-Ebene | Boss | Art | ❤️ | Kampfdauer s | Schaden | besiegt | max. Handlanger | Handlanger gesamt |", "|---|---|---|---|---|---|---|---|---|",
   ...r.fights.map(f => `| ${f.d} | ${f.name} | ${f.mini ? "Mini" : "Haupt"} | ${f.hp ?? "–"} | ${f.secs} | ${f.dmg} | ${f.won ? "ja" : "nein"} | ${f.maxMin} | ${f.spawned ?? "–"} |`)].join("\n");
 mkdirSync("shots/neubau", { recursive: true });
-writeFileSync(`shots/neubau/bot_${OUT}.json`, JSON.stringify({ date: new Date().toISOString(), ver: await page.evaluate(() => window.KK_VER), mega: MEGA, speed, won: !!r.won, deaths: r.deaths, specials: r.specials, dodges: r.dodges, final: r.st, rows, fights: r.fights, maxMinions: r.maxMinions, town: r.town, taps: r.taps, tapsEnemy: r.tapsEnemy, walk: r.walk, stuck: r.log, errors: errs }, null, 2));
+writeFileSync(`shots/neubau/bot_${OUT}.json`, JSON.stringify({ date: new Date().toISOString(), ver: await page.evaluate(() => window.KK_VER), myth: await page.evaluate(() => KK.myths().wearing), mega: MEGA, speed, won: !!r.won, deaths: r.deaths, specials: r.specials, dodges: r.dodges, final: r.st, rows, fights: r.fights, maxMinions: r.maxMinions, town: r.town, taps: r.taps, tapsEnemy: r.tapsEnemy, walk: r.walk, stuck: r.log, errors: errs }, null, 2));
 writeFileSync(`shots/neubau/bot_${OUT}.md`, md + "\n");
 console.log(md);
 console.log(`Ergebnis: ${r.won ? "GEWONNEN" : "nicht gewonnen"} · Tode ${r.deaths} · Spezial ${r.specials}× · Ausweichen ${r.dodges}× · Hänger ${r.log.length} · Fehler: ${errs.length ? errs.join(" | ") : 0}`);

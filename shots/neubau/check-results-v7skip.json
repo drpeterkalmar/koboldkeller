@@ -1,48 +1,48 @@
 {
-  "date": "2026-09-29T21:50:14.119Z",
+  "date": "2026-09-29T22:38:38.383Z",
   "profile": "gpu",
   "throttle": 4,
   "fpsNormal": {
-    "fps": 361.3,
-    "p5": 156.2,
-    "frames": 1746,
-    "jsUpdate": 0.05,
-    "jsDraw": 0.52,
-    "avgAll": 347.8,
+    "fps": 350.8,
+    "p5": 285.7,
+    "frames": 1760,
+    "jsUpdate": 0.04,
+    "jsDraw": 0.44,
+    "avgAll": 351.7,
     "scale": 2,
     "q": 0,
     "budget": 1
   },
   "fpsThrottled": {
-    "fps": 271.3,
-    "p5": 106.4,
-    "frames": 1399,
-    "jsUpdate": 0.17,
-    "jsDraw": 1.74,
-    "avgAll": 232.9,
+    "fps": 260.2,
+    "p5": 133.3,
+    "frames": 1638,
+    "jsUpdate": 0.16,
+    "jsDraw": 1.52,
+    "avgAll": 272.3,
     "scale": 2,
     "q": 0,
     "budget": 1
   },
   "software": {
     "normal": {
-      "fps": 637.3,
-      "p5": 250,
-      "frames": 4262,
-      "jsUpdate": 0.04,
-      "jsDraw": 0.35,
-      "avgAll": 843.6,
+      "fps": 586.4,
+      "p5": 227.3,
+      "frames": 3796,
+      "jsUpdate": 0.05,
+      "jsDraw": 0.45,
+      "avgAll": 753.8,
       "scale": 2,
       "q": 0,
       "budget": 1
     },
     "throttled": {
-      "fps": 739.1,
-      "p5": 270.3,
-      "frames": 2753,
-      "jsUpdate": 0.07,
+      "fps": 646,
+      "p5": 256.4,
+      "frames": 2865,
+      "jsUpdate": 0.1,
       "jsDraw": 0.82,
-      "avgAll": 549.4,
+      "avgAll": 572.1,
       "scale": 2,
       "q": 0,
       "budget": 1
@@ -59,13 +59,13 @@
       "id": "A16",
       "name": "Vor-Rendern im Menü blockiert nicht (längster Happen < 16 ms, kein Frame > 50 ms, fertig < 12 s)",
       "pass": true,
-      "value": "491 ms, 67 Sätze, 24.7 MB, max. Happen 10.5 ms, Menü währenddessen 649.2 fps (längster Frame 14.4 ms; Boot davor 30.4 ms), Aufnahme 236 ms"
+      "value": "498 ms, 67 Sätze, 24.7 MB, max. Happen 12.5 ms, Menü währenddessen 561.9 fps (längster Frame 19.9 ms; Boot davor 31.2 ms), Aufnahme 242 ms"
     },
     {
       "id": "B1",
       "name": "Versionslabel im Startmenü",
       "pass": true,
-      "value": "🍄 Koboldkeller 2 · v8"
+      "value": "🍄 Koboldkeller 2 · v9"
     },
     {
       "id": "B2",
@@ -77,7 +77,7 @@
       "id": "B3",
       "name": "Namensfeld mit Zufallsnamen vorbelegt",
       "pass": true,
-      "value": "Plüschpurzel"
+      "value": "Flauschkeks"
     },
     {
       "id": "A10b",
@@ -89,13 +89,13 @@
       "id": "B14a",
       "name": "Tap-to-Move bewegt den Kobold",
       "pass": true,
-      "value": "(16.5,13.5) → (12.24,9.63)"
+      "value": "(16.5,13.5) → (12.37,9.37)"
     },
     {
       "id": "B18",
       "name": "Virtueller Joystick bewegt den Kobold",
       "pass": true,
-      "value": "(12.16,9.51) → (9.9,3.3)"
+      "value": "(12.27,9.27) → (9.84,4.3)"
     },
     {
       "id": "B12t",
@@ -149,25 +149,25 @@
       "id": "B14",
       "name": "Auto-Befreiung aus Wand + BFS-Weg zur Treppe",
       "pass": true,
-      "value": "{\"freed\":true,\"wall\":\"20,2\",\"ok\":true,\"n\":5,\"direct\":\"34.9\"}"
+      "value": "{\"freed\":true,\"wall\":\"29,6\",\"ok\":true,\"n\":7,\"direct\":\"38.4\"}"
     },
     {
       "id": "A2",
       "name": "FPS normal ≥ 55 (Kampf, 12 Gegner)",
       "pass": true,
-      "value": "361.3 fps (p5 156.2, Scale 2)"
+      "value": "350.8 fps (p5 285.7, Scale 2)"
     },
     {
       "id": "A3",
       "name": "FPS mit CPU-Throttle 4× ≥ 45",
       "pass": true,
-      "value": "271.3 fps (p5 106.4, Scale 2, q0)"
+      "value": "260.2 fps (p5 133.3, Scale 2, q0)"
     },
     {
       "id": "A15",
       "name": "Effekt-Dauerfeuer (30 Aufrufe/s) vs. aus: Audio-Engine < 3 % Main-Thread, FPS mit Effekten ≥ 45 (Throttle 4×)",
       "pass": true,
-      "value": "Main-Thread 11.0 ms/s = 1.10 % · FPS-Median aus 261.7 / an 288.9 (-10.4 %, Einzelwerte aus 270.5/261.7/257/241.8/337.7, an 320/288.9/297.3/272.7/286.9 — headless-FPS schwankt ±20 % auch ohne Änderung) · Stimmen jetzt 22, gestartet 2799, gestohlen 474"
+      "value": "Main-Thread 10.3 ms/s = 1.03 % · FPS-Median aus 279.4 / an 345.6 (-23.7 %, Einzelwerte aus 284.8/260.5/279.4/285.7/241.4, an 345.8/290.1/345.6/321.4/385.5 — headless-FPS schwankt ±20 % auch ohne Änderung) · Stimmen jetzt 25, gestartet 2522, gestohlen 319"
     },
     {
       "id": "B7a",
@@ -185,7 +185,7 @@
       "id": "B7c",
       "name": "Ebene 20: Kellerkönig riesig & knallrot mit Krone",
       "pass": true,
-      "value": "{\"name\":\"Kellerkönig\",\"hp\":2340,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
+      "value": "{\"name\":\"Kellerkönig\",\"hp\":2184,\"king\":true,\"scale\":2.9,\"skin\":\"#ff2a2a\"}"
     },
     {
       "id": "B8a",
@@ -197,13 +197,13 @@
       "id": "B9",
       "name": "Namen in Ehrenhall HTML-escaped",
       "pass": true,
-      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Di 29.9.2026236 🪙⏱️ Schnellster"
+      "value": "🪙 Meiste Münzen🥇<b>Zoe</b>Mi 30.9.202666 🪙⏱️ Schnellster "
     },
     {
       "id": "B8c",
       "name": "Datum de-AT + Medaillen",
       "pass": true,
-      "value": "29.9.2026"
+      "value": "30.9.2026"
     },
     {
       "id": "B8b",
@@ -215,7 +215,7 @@
       "id": "B4",
       "name": "Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang",
       "pass": true,
-      "value": "Tiefe 7, Gold 1234, Lv 10 (gespeichert: 7/1234/10), Abstand Eingang 0.00 | <b>Zoe</b> · ⭐ 10 · 🪙 1234 · Ebene 7"
+      "value": "Tiefe 7, Gold 1234, Lv 8 (gespeichert: 7/1234/8), Abstand Eingang 0.00 | <b>Zoe</b> · ⭐ 8 · 🪙 1234 · Ebene 7"
     },
     {
       "id": "A9",
@@ -251,7 +251,7 @@
       "id": "A6",
       "name": "Cache-Buster ?v=N überall + KK_VER",
       "pass": true,
-      "value": "v8, 5 Tags, 17 Module"
+      "value": "v9, 5 Tags, 18 Module"
     },
     {
       "id": "A8",
@@ -293,7 +293,7 @@
       "id": "A2q",
       "name": "FPS normal Querformat ≥ 55",
       "pass": true,
-      "value": "519.9 fps (p5 222.2)"
+      "value": "491.1 fps (p5 181.8)"
     },
     {
       "id": "C7",
@@ -341,7 +341,7 @@
       "id": "V8",
       "name": "Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️",
       "pass": true,
-      "value": "Moosbart ❤️447 1→2→3 [spores:4C vines:3L spores:6C] · Glitzerzahn ❤️770 1→2→3 [crystals:15C prism:4L crystals:7C] · Zuckerschnute ❤️1092 1→2→3 [candy:6C rush:1L candy:4C] · Frostnase ❤️1453 1→2→3 [icicles:6L snowball:2L icicles:3L] · Kellerkönig ❤️2223 1→2→3 [meteors:5C flameCross:4L meteors:5C]"
+      "value": "Moosbart ❤️447 1→2→3 [spores:4C vines:3L spores:6C] · Glitzerzahn ❤️770 1→2→3 [crystals:15C prism:4L crystals:7C] · Zuckerschnute ❤️1092 1→2→3 [candy:6C rush:1L candy:4C] · Frostnase ❤️1453 1→2→3 [icicles:6L snowball:2L icicles:4L] · Kellerkönig ❤️2223 1→2→3 [meteors:6C flameCross:4L meteors:5C]"
     },
     {
       "id": "D5",
@@ -377,13 +377,13 @@
       "id": "A3b",
       "name": "Größter Boss-Kampf (Kellerkönig, Arena 24, Wut-Phase, alle Effekte, volle Handlanger-Zahl) mit CPU-Throttle 4× ≥ 45 FPS",
       "pass": true,
-      "value": "235.4 fps (p5 135.1, Scale 2, q0) · Handlanger max 9/9 · Zoom 0.8 · sichtbare Boden-Chunks max 21 (< 28)"
+      "value": "164.1 fps (p5 72.5, Scale 2, q0) · Handlanger max 9/9 · Zoom 0.8 · sichtbare Boden-Chunks max 21 (< 28)"
     },
     {
       "id": "V11",
       "name": "Bug-Regression: Boss lebt → Treppe/20. Portal versiegelt (Draufstellen, Dodge drauf/drüber, Rückstoß: kein Wechsel/Sieg); Sieg → öffnet sichtbar → Betreten = Ebene +1 (E20: Sieg); Heimportal ≥ 4 Kacheln von der Arena",
       "pass": true,
-      "value": "E4: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.32 s, danach ✓, Heimportal 26.5 Kacheln weg · E2: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.31 s, danach ✓, Heimportal 32.6 Kacheln weg · E8: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.3 s, danach ✓, Heimportal 33.3 Kacheln weg · E20: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.34 s, danach ✓, Heimportal 13.5 Kacheln weg"
+      "value": "E4: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.33 s, danach ✓, Heimportal 26.5 Kacheln weg · E2: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.33 s, danach ✓, Heimportal 32.6 Kacheln weg · E8: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.31 s, danach ✓, Heimportal 33.3 Kacheln weg · E20: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.31 s, danach ✓, Heimportal 13.5 Kacheln weg"
     },
     {
       "id": "V12",
@@ -395,7 +395,7 @@
       "id": "V13",
       "name": "Mini-Bosse auf Ebene 2/6/10/14/18 (5 verschiedene Namen/Wesen/Angriffe), Hauptbosse auf 4/8/12/16/20, keiner auf ungeraden Ebenen, jeder Signatur-Angriff zeigt Warnungen, Mini klar kleiner + schwächer als Hauptboss, eigene Mini-Boss-Musik",
       "pass": true,
-      "value": "E2 Schlabbo „der Riesen-Moosschleim“ [glibber+platsch] ❤️127 ⚔️1 Höhe 165 ♪boss/3@92 · E6 Funkelflatter „die Kristall-Fledermaus“ [echo+schall] ❤️274 ⚔️2 Höhe 125 ♪boss/3@100 · E10 Lolli-Lutz „der Zuckerpilz-Riese“ [streusel+brause] ❤️447 ⚔️3 Höhe 201 ♪boss/3@106 · E14 Bibber „das Schneegespenst“ [frostatem+blinzel] ❤️633 ⚔️4 Höhe 180 ♪boss/3@88 · E18 Glutpanzer Gustav „der Lava-Käfer“ [lava+horn] ❤️859 ⚔️5 Höhe 155 ♪boss/3@96 | Hauptboss-Höhe ≥ 307 | Angriffe: 2:glibber=6 2:platsch=1 6:echo=10 6:schall=2 10:streusel=8 10:brause=1 14:frostatem=4 14:blinzel=1 18:lava=8 18:horn=1"
+      "value": "E2 Schlabbo „der Riesen-Moosschleim“ [glibber+platsch] ❤️127 ⚔️1 Höhe 165 ♪boss/3@92 · E6 Funkelflatter „die Kristall-Fledermaus“ [echo+schall] ❤️274 ⚔️2 Höhe 125 ♪boss/3@100 · E10 Lolli-Lutz „der Zuckerpilz-Riese“ [streusel+brause] ❤️447 ⚔️3 Höhe 201 ♪boss/3@106 · E14 Bibber „das Schneegespenst“ [frostatem+blinzel] ❤️633 ⚔️4 Höhe 180 ♪boss/3@88 · E18 Glutpanzer Gustav „der Lava-Käfer“ [lava+horn] ❤️859 ⚔️5 Höhe 155 ♪boss/3@96 | Hauptboss-Höhe ≥ 307 | Angriffe: 2:glibber=6 2:platsch=2 6:echo=7 6:schall=2 10:streusel=17 10:brause=1 14:frostatem=6 14:blinzel=1 18:lava=8 18:horn=1"
     },
     {
       "id": "V14",
@@ -407,7 +407,7 @@
       "id": "V15",
       "name": "Handlanger: spawnen laufend im Kampf (mit 0,8-s-Spawn-Kreis), Deckel nie überschritten (auch bei erzwungenen Wellen), wenig Beute (🫧 +1, ≤ ⅓ XP); Sieg → sofort 0 Handlanger/Spawn-Kreise/Timer, 10 s später immer noch 0, Tore offen",
       "pass": true,
-      "value": "E12: in 10.5 s max 4/7 (erzwungen 7), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.35 · vor Sieg 7 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true · E2: in 10.5 s max 2/3 (erzwungen 3), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.29 · vor Sieg 3 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true"
+      "value": "E12: in 10.6 s max 4/7 (erzwungen 7), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.35 · vor Sieg 7 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true · E2: in 10.7 s max 1/3 (erzwungen 3), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.29 · vor Sieg 3 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true"
     },
     {
       "id": "V16",

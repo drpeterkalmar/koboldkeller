@@ -1,6 +1,7 @@
 /* main.js — Boot, Game-Loop, Verdrahtung, Debug-API window.KK (MIT) */
-import { VERSION, SPECIES, PLAYER, MAX_DEPTH, levelName, makeLook } from "./config.js";
-import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, special, killEnt, winGame, makeEnt, makeElite, gainXp, finishTut, recalc, skillUp, skillReset, setLook, magnetOf } from "./game.js";
+import { VERSION, SPECIES, PLAYER, MAX_DEPTH, levelName, makeLook, MYTHS } from "./config.js";
+import { artCount } from "./art.js";
+import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, special, killEnt, winGame, makeEnt, makeElite, gainXp, finishTut, recalc, skillUp, skillReset, setLook, magnetOf, unlockMyth, lookForSave } from "./game.js";
 import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality } from "./render.js";
 import { FX, updateFx } from "./fx.js";
 import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
@@ -43,6 +44,7 @@ G.hooks = {
   dead: () => UI.showDead(),
   tut: (s) => UI.showTut(s),
   saved: () => UI.flashSaved(),
+  mythFound: (id, auto) => { if (!G.demo) UI.mythFound(id, auto); },
 };
 
 // ---------- Erste Geste: Audio + Wake-Lock ----------
@@ -203,6 +205,10 @@ window.KK = {
   path: (x, y) => findPath(G.L.map, G.p.x, G.p.y, x, y, G.p.r),
   hap: () => ({ mode: PF.hapMode, vibrate: PF.vibrate, calls: { ...PF.hapStats.calls }, fired: { ...PF.hapStats.fired }, count: PF.hapCount, iosTouch: PF.iosTouch, touchTicks: PF.touchTicks }),
   finishTut,
+  /** v9: Kostüme — Zustand, Freischalten (id | 'all'), Anziehen (id | '' = ohne) */
+  myths: () => ({ have: G.myth.have.slice(), real: G.myth.real.slice(), view: G.myth.view, count: G.myth.real.length, total: MYTHS.length, wearing: G.p ? G.p.look.myth : "", mhat: G.p ? G.p.look.mhat : false, art: artCount(), toasts: UI.UI.mythToasts || 0 }),
+  unlock: (id) => { const ids = id === "all" ? MYTHS.map(m => m.id) : [id]; let n = 0; for (const i of ids) if (unlockMyth(i)) n++; return n; },
+  wear: (id, mhat = false) => { if (!G.p) return null; setLook({ ...lookForSave(G.p.look), myth: id || "", mhat }); return G.p.look.myth; },
   G, R,
 };
 console.log("Koboldkeller 2 v" + VERSION);

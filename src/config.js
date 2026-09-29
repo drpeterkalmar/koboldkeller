@@ -75,11 +75,15 @@ export function makeLook(o = {}) {
     species: sp.id, skin: col(o.skin, PAL.fur, sp.skin), outfit: col(o.outfit, PAL.outfit, sp.outfit), eye: col(o.eye, PAL.eye, sp.eye),
     hair: col(o.hair, PAL.hair, sp.hair), style: HAIR_STYLES.some(h => h.id === o.style) ? o.style : sp.style,
     earsV: o.earsV === 1 ? 1 : 0, acc: ACCESSORIES.some(a => a.id === o.acc) ? o.acc : "none", ears: sp.ears,
+    myth: MYTH_BY_ID[o.myth] ? o.myth : "", mhat: !!o.mhat && !!MYTH_BY_ID[o.myth],   // v9: Kostüm (Sagenwesen) + „🎩 Hut statt Kopfteil“
   };
-  L.id = [L.species, L.skin, L.hair, L.eye, L.style, L.earsV, L.acc].join("|");
+  // v9: Kostüm gehört in den Sprite-Schlüssel (Körper, Kopf, Porträts); ohne Kostüm bleibt der Schlüssel wie bis v8
+  L.id = [L.species, L.skin, L.hair, L.eye, L.style, L.earsV, L.acc].join("|") + (L.myth ? "|" + L.myth + (L.mhat ? "+h" : "") : "");
   return L;
 }
-export const lookSave = L => ({ species: L.species, skin: L.skin, outfit: L.outfit, eye: L.eye, hair: L.hair, style: L.style, earsV: L.earsV, acc: L.acc });
+/** Spielstand-Look: myth/mhat nur, wenn gesetzt (alte Spielstände bleiben Feld für Feld gleich) */
+export const lookSave = L => Object.assign({ species: L.species, skin: L.skin, outfit: L.outfit, eye: L.eye, hair: L.hair, style: L.style, earsV: L.earsV, acc: L.acc },
+  L.myth ? { myth: L.myth } : null, L.myth && L.mhat ? { mhat: true } : null);
 export const OLD_SPECIES_MAP = { kobold: "kobold", baer: "baer", hase: "hase", tintenfisch: "tintenfisch", panda: "panda", katze: "katze" };
 
 // Zufallsnamen (v7: ≥ 150). Regeln (geprüft in check.mjs V18): höchstens 12 Zeichen (Namensfeld), keine Duplikate,
@@ -145,6 +149,9 @@ export const LOOK_RULES = {
   bunt: ["#ffc2d4", "#8a5fc0", "#ff6fae", "#6fb8ff", "#ffe070", "#3aa893", "#f4f4f4"], buntChance: 0.3,
   furOutfit: 130, furHair: 90, hairOutfit: 60, darkFur: 0.25, brightEyes: ["#0a7a8a", "#a0306a", "#c07a10"],
   accChance: 0.5,                           // Extra (Brille, Blume …) in höchstens 50 % der Würfe (Vorgabe ≤ 60 %)
+  // v9: Kostüme — in ≈ 30 % der Würfe ein freigeschaltetes Kostüm. Die Outfit-Farbe wird am Kostüm nur als Akzent (Gürtel/Knopf)
+  // gezeigt, wenn sie sich vom Kostüm abhebt (Farbabstand ≥ mythAccent), sonst nimmt das Kostüm seinen eigenen Akzent.
+  mythChance: 0.3, mythAccent: 110,
 };
 const _rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 export function colDist(a, b) {
@@ -156,7 +163,7 @@ export function colLum(h) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 /** Vollständiger Schlüssel eines Looks (inkl. Outfit) — „nicht zweimal derselbe" */
-export const lookKey = L => [L.species, L.skin, L.outfit, L.hair, L.eye, L.style, L.earsV, L.acc].join("|");
+export const lookKey = L => [L.species, L.skin, L.outfit, L.hair, L.eye, L.style, L.earsV, L.acc, L.myth || ""].join("|");   // v9: inkl. Kostüm
 /** Harmonie-Prüfung eines gewürfelten Looks: [] = hübsch, sonst Liste der verletzten Regeln */
 export function lookHarmony(L) {
   const R = LOOK_RULES, bad = [];
@@ -167,10 +174,12 @@ export function lookHarmony(L) {
   if (colDist(L.hair, L.outfit) < R.hairOutfit) bad.push("kontrast-haar-outfit");
   if (colLum(L.skin) < R.darkFur && !R.brightEyes.includes(L.eye)) bad.push("augen-dunkles-fell");
   if (!PAL.eye.includes(L.eye) || !PAL.outfit.includes(L.outfit)) bad.push("palette");
+  if (L.myth && !MYTH_BY_ID[L.myth]) bad.push("kostuem-unbekannt");
   return bad;
 }
-/** Würfelt einen hübschen Look (Harmonie-Tabelle), nie direkt denselben wie prevKey. r = Zufallsquelle (?seed= → reproduzierbar) */
-export function rollLook(r = Math.random, prevKey = "") {
+/** Würfelt einen hübschen Look (Harmonie-Tabelle), nie direkt denselben wie prevKey. r = Zufallsquelle (?seed= → reproduzierbar)
+ *  v9: myths = freigeschaltete Kostüme → in ≈ 30 % der Würfe kommt eines davon dazu (nie ein gesperrtes) */
+export function rollLook(r = Math.random, prevKey = "", myths = []) {
   const R = LOOK_RULES, pk = (a) => a[Math.floor(r() * a.length)];
   let L = null;
   for (let n = 0; n < 60; n++) {
@@ -182,6 +191,7 @@ export function rollLook(r = Math.random, prevKey = "") {
     if (!outs.length) continue;
     const o = { species: sp, skin, hair, style, eye: pk(eyes), outfit: pk(outs), earsV: r() < 0.5 ? 0 : 1,
       acc: r() < R.accChance ? pk(ACCESSORIES.slice(1)).id : "none" };
+    if (myths.length && r() < R.mythChance) o.myth = pk(myths);
     L = makeLook(o);
     if (!lookHarmony(L).length && lookKey(L) !== prevKey) break;
   }
@@ -393,6 +403,61 @@ export const HATS = {
   veteran: { name: "Ehrenmütze", emoji: "🎖️" },
 };
 export const BOSS_HAT = ["", "pilz", "diadem", "schleife", "pudel", "krone"];
+
+// ---------- v9: Mythos-Kostüme (nur Optik, keine Kampfwerte) ----------
+// tier: selten (Start) · episch (Weltbosse) · mythisch (Kellerkönig, MEGASCHWER-Sieg). unlock: "start" | Boss-Ebene (2 … 20) | "mega".
+// col: main (Grundfarbe), dark (Schatten/Kontur), light (Bauch/Rand), acc (eigener Akzent), fx (Glanz-Farben).
+// head: Kopfteil — hood* = Kapuze/Helm um das Gesicht (Ohren „tall“/„side“ schauen durch), sonst Hut-Typ oben auf dem Kopf.
+// back: Rückenteil (eigene Ebene, bewegt sich: Flügel flattern, Umhang weht, Schwänze wedeln). body: Körper-Überzug. fx: Signatur-Partikel.
+export const MYTH_TIERS = {
+  selten: { name: "selten", col: "#7fc8ff", rank: 1 },
+  episch: { name: "episch", col: "#c48cff", rank: 2 },
+  mythisch: { name: "mythisch", col: "#ffd75e", rank: 3 },
+};
+export const MYTHS = [
+  { id: "drache", name: "Drachenkind", emoji: "🐉", tier: "selten", unlock: "start",
+    col: { main: "#6fcf6a", dark: "#2f7a3a", light: "#fff0a8", acc: "#ffb35e", fx: ["#ffb35e", "#fff38a"] }, head: "hoodDragon", back: "wingsBat+tailDragon", body: "scales", fx: "ember" },
+  { id: "einhorn", name: "Einhorn", emoji: "🦄", tier: "selten", unlock: "start",
+    col: { main: "#fdf8ff", dark: "#a88ad8", light: "#ffe8f6", acc: "#ffd75e", fx: ["#ff9ad0", "#8fe9ff", "#fff38a", "#b3ff9a"] }, head: "hoodUnicorn", back: "tailRainbow", body: "fluffy", fx: "rainbow" },
+  { id: "zauberer", name: "Sternenzauberer", emoji: "🧙", tier: "selten", unlock: "start",
+    col: { main: "#4f4fc4", dark: "#23236e", light: "#8a8aff", acc: "#ffe36e", fx: ["#fff38a", "#ffffff"] }, head: "hatWizard", back: "capeStars", body: "robe", fx: "stars" },
+  { id: "fee", name: "Waldfee", emoji: "🧚", tier: "episch", unlock: 2,
+    col: { main: "#8ee07a", dark: "#3f8a3a", light: "#d8ffc0", acc: "#ff9ad0", fx: ["#b6ff8a", "#ffc2e0", "#fff6a0"] }, head: "hatWreath", back: "wingsFairy", body: "leaf", fx: "fairy" },
+  { id: "waldhueter", name: "Waldhüter", emoji: "🦌", tier: "episch", unlock: 4,
+    col: { main: "#6fa048", dark: "#35531f", light: "#b8e08a", acc: "#8a5a33", fx: ["#9ad86a", "#c8a060"] }, head: "hatAntlers", back: "capeMoss", body: "moss", fx: "leaves" },
+  { id: "greif", name: "Greif", emoji: "🦅", tier: "episch", unlock: 6,
+    col: { main: "#c98f3e", dark: "#6a4418", light: "#fff4e0", acc: "#ffcf4a", fx: ["#fff4e0", "#e8b870"] }, head: "hoodEagle", back: "wingsFeather", body: "feathers", fx: "feathers" },
+  { id: "kristallritter", name: "Kristallritter", emoji: "💎", tier: "episch", unlock: 8,
+    col: { main: "#a8f0ff", dark: "#3a64b0", light: "#eafcff", acc: "#ff6fae", fx: ["#bff4ff", "#ffffff"] }, head: "hoodKnight", back: "capeCrystal", body: "armor", fx: "glints" },
+  { id: "kitsune", name: "Kitsune", emoji: "🦊", tier: "episch", unlock: 10,
+    col: { main: "#fff6ee", dark: "#c8703a", light: "#ffffff", acc: "#ff5a6a", fx: ["#9fd8ff", "#c8a8ff"] }, head: "hoodFox", back: "tails3", body: "kimono", fx: "foxfire" },
+  { id: "nixe", name: "Bonbon-Nixe", emoji: "🧜", tier: "episch", unlock: 12,
+    col: { main: "#4fd6c8", dark: "#1f7a7a", light: "#c8fff4", acc: "#ff8fd0", fx: ["#dff6ff", "#ffc2e8"] }, head: "hatShell", back: "tailFish", body: "fin", fx: "bubbles" },
+  { id: "yeti", name: "Yeti", emoji: "❄️", tier: "episch", unlock: 14,
+    col: { main: "#f6faff", dark: "#8aa8c8", light: "#ffffff", acc: "#7fb8ff", fx: ["#ffffff", "#dff6ff"] }, head: "hoodYeti", back: "tailPuff", body: "fur", fx: "snow" },
+  { id: "frostwolf", name: "Frostwolf", emoji: "🐺", tier: "episch", unlock: 16,
+    col: { main: "#b4c4dc", dark: "#48587a", light: "#eef4ff", acc: "#8affc8", fx: ["#8affc8", "#8fe9ff", "#c8a0ff"] }, head: "hoodWolf", back: "capeFur", body: "furvest", fx: "aurora" },
+  { id: "golem", name: "Vulkan-Golem", emoji: "🌋", tier: "episch", unlock: 18,
+    col: { main: "#846660", dark: "#2e1c1c", light: "#b0908a", acc: "#ff8a3a", fx: ["#ffb060", "#ff7a2a"] }, head: "hoodRock", back: "boulders", body: "rock", fx: "embers" },
+  { id: "phoenix", name: "Phönix", emoji: "🔥", tier: "mythisch", unlock: 20,
+    col: { main: "#ff7a2a", dark: "#b0301a", light: "#ffd75e", acc: "#ffd75e", fx: ["#ffd75e", "#ff9a3a", "#ff5a3a"] }, head: "hatPhoenix", back: "wingsFlame+tailFlame", body: "flame", fx: "flame", aura: ["#ffb040", "#ff5a2a"] },
+  { id: "sternendrache", name: "Sternendrache", emoji: "🌌", tier: "mythisch", unlock: "mega",
+    col: { main: "#3a3a9a", dark: "#16164a", light: "#8a7aff", acc: "#fff38a", fx: ["#fff6c0", "#8fe9ff", "#ff9ae0"] }, head: "hoodStar", back: "wingsStar+tailStar", body: "night", fx: "starfall", aura: ["#ff9ae0", "#8fe9ff", "#fff38a", "#b3ff9a"] },
+];
+export const MYTH_BY_ID = Object.fromEntries(MYTHS.map(m => [m.id, m]));
+export const MYTH_START = MYTHS.filter(m => m.unlock === "start").map(m => m.id);
+/** Kostüm, das der Boss dieser Ebene beim ersten Sieg fallen lässt */
+export const mythOfBoss = d => (MYTHS.find(m => m.unlock === d) || null);
+/** Freischalt-Hinweis für gesperrte Kostüme im Editor */
+export function mythHint(m) {
+  if (m.unlock === "start") return "von Anfang an";
+  if (m.unlock === "mega") return "Gewinne auf 🔥 MEGASCHWER";
+  const d = m.unlock;
+  return "Besiege " + (bossKindOf(d) === "mini" ? MINIS[d].name : d >= MAX_DEPTH ? "den Kellerkönig" : BOSSES[biomeOf(d)].name);
+}
+// Glanz (Signatur-Partikel): Partikel pro Sekunde beim Laufen/Stehen, höchstens max gleichzeitig; „mythisch“ × myth (+ Aura)
+export const MYTH_FX = { walk: 6, idle: 1.6, myth: 1.7, max: 14, auraR: 0.9 };
+export const MYTH_KEY = "koboldkeller2_myths";                          // Sammlung gehört dem Gerät (wie die Ehrenhall)
 
 // Waffenstufen nach Schaden
 export const WEAPONS = [

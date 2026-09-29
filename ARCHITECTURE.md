@@ -44,7 +44,8 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 | `src/config.js` | Konstanten, Version, Spezies + Editor-Optionen, Biome, **Ebenen-Namen/-Farben (`LEVELS`)**, **Schwierigkeitskurve (`DIFF`)**, Bosse, Obergrenzen (`CAP`), Munition, Talente, Gegner-Tabellen |
 | `src/rng.js` | mulberry32, Hilfsfunktionen |
 | `src/world.js` | Stadt- und Dungeon-Generator, Kollision, BFS + Pfadglättung, freie Plätze |
-| `src/art.js` | Prozedurale Sprites (Kobolde, Gegner, Bosse, Items, Kacheln, Wände, Props, FX) + Cache |
+| `src/art.js` | Prozedurale Sprites (Kobolde, Gegner, Bosse, Items, Kacheln, Wände, Props, FX) + Cache (v9: LRU für Aussehen-Sprites) |
+| `src/myth.js` | v9: Mythos-Kostüme — Körper-Überzug, Kopfteil (Kapuze/Helm in zwei Lagen oder Hut), Rückenteil (Flügel/Umhang/Schwänze, per Transform animiert) |
 | `src/render.js` | Kamera, Iso-Projektion, Chunk-Cache, sortiertes Zeichnen, Licht, Post-FX |
 | `src/fx.js` | Partikel-Pool, Screenshake (Trauma), Hit-Stop, Schadenszahlen, Blitze |
 | `src/game.js` | Zustand, Spieler (Talente, Munition, Spezial), Gegner-KI (Elite, neue Muster), Kampf, Loot + Obergrenzen, Magnet, Fallen, Level-Aufbau, Heim-Portal, Sieg |
@@ -59,6 +60,8 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 | `src/platform.js` | Vollbild, Wake-Lock, Vibration, Sichtbarkeit, Kontextmenü-Sperre |
 | `tools/check.mjs` | Playwright-Testlauf (Flow, Screenshots, FPS, Fehler); `--v7=skip|only` teilt den Lauf |
 | `tools/checks_v7.mjs` | v7-Checks V18–V21 (Würfel/Namen, Haptik-Stub, Weg-Pfeil, Save v6 → v7), auch einzeln lauffähig |
+| `tools/checks_v9.mjs` | v9-Checks V26–V31 (Kostüme × Tierarten + Gesicht frei, Freischalten, Migration, Würfel, Editor, Leistung/Cache) |
+| `tools/mythsheet.mjs` | Kontaktbogen aller Kostüme × 8 Tierarten |
 | `tools/checks_v8.mjs` | v8-Checks V22–V25 (Tempo/Steuerung, Boss-Leben, Ebenen-Wahl/Welttore, Wandfallen), `--ref=PORT` = Vergleich mit altem Stand |
 | `tools/serve.py` | Statischer Testserver mit großem Backlog (der Standard-`http.server` ließ Modul-Anfragen hängen) |
 | `tools/icons.mjs` | Erzeugt `icons/icon-192/512.png` aus dem eigenen Art-Code |
@@ -276,3 +279,36 @@ Ambience ─► ambLvl ─► (ambSend ─► Hall) ─────────�
   kind `"wall"` (5,2 Kacheln/s, r 0,36, Schaden = Pieks-Platten `max(1, dmg−1)`, bei 💨 kein Treffer) → Pause (Takt 4,8 ± 0,9 s).
   Zeichnen: `art.wallFaceSprite` (Steingesicht, per `transform` auf die Wandseite geschert), `art.wallShotSprite` je Welt.
   Treffer vibrieren über `playerHurt` („hurt“), der Schuss selbst nicht. `G.stats.wallHits` zählt Treffer (Bot).
+
+## v9: Mythos-Kostüme
+- **Katalog `MYTHS` (config.js):** `{ id, name, emoji, tier (selten|episch|mythisch), unlock ("start" | Boss-Ebene | "mega"), col {main, dark, light, acc, fx[]},
+  head, back, body, fx, aura? }`. `mythOfBoss(d)`, `mythHint(M)`, `MYTH_START`, `MYTH_FX` (Glanz-Budget: 6/s laufend, 1,6/s stehend, × 1,7 mythisch,
+  höchstens 14 gleichzeitig; Aura-Radius), `MYTH_TIERS`. Nur Optik: keine Kampfwerte.
+- **Look:** `makeLook` kennt `myth` (Kostüm-ID) und `mhat` („🎩 Hut statt Kopfteil“). `L.id` (Sprite-Schlüssel von Körper/Kopf/Porträt) hängt
+  `|myth(+h)` an; ohne Kostüm bleibt der Schlüssel wie bis v8. `lookSave` schreibt `myth`/`mhat` nur, wenn gesetzt → alte Spielstände bleiben
+  Feld für Feld gleich. `lookKey` enthält das Kostüm (Würfel: nie zweimal derselbe). `rollLook(r, prev, myths)`: in `LOOK_RULES.mythChance` (30 %)
+  der Würfe ein Kostüm aus der übergebenen Sammlung. Die Outfit-Farbe erscheint am Kostüm als Akzent (Gürtel/Herz/Edelstein), wenn sie sich um
+  ≥ `LOOK_RULES.mythAccent` vom Kostüm abhebt, sonst der Kostüm-Akzent.
+- **Zeichnen (`myth.js`):** Körper-Sprite: Kostüm ersetzt Rumpf + Ärmel (Muster je `body`), Tierart-Schwänze/-Flügel entfallen (Tintenfisch-Beine bleiben).
+  Kopfteil = zwei gecachte Sprites (Box 150×190, Anker = Hals des Kopf-Sprites): „back“ (Kapuzen-Schale + Kragen über den Schultern, bei
+  Kapuzen/Helmen) hinter dem Kopf, „front“ (Kapuzen-Stirn oberhalb einer Stirnlinie, die über den Augen flach verläuft und seitlich tief
+  herunterzieht, weicher Rand, Hörner/Horn/Schnabel/Federbusch/Krone) davor. Regeln: Haare unter Kapuzen ausgeblendet; die Ohren der Tierart
+  (und Drachenhörner) werden über der Kapuze erneut gezeichnet („schauen durch“, hohe Ohren mit Kapuzen-Loch); kapuzen-eigene Ohren nur bei
+  Tierarten ohne hohe/runde Ohren. Extras: Brille/Sommersprossen bleiben im Gesicht, Blume/Schleife/Sternspange rücken an den Kapuzen-/Hutrand.
+  Rückenteil (`drawMythBack`, Anker in Körper-Koordinaten): Flügel an den Schultern (Drehung = Flattern, schneller beim Laufen), Umhang
+  (Scherung = Wehen), Schwänze (Drehung = Wedeln), Golem-Brocken (Schweben). Pro Frame nur Transform + `drawImage`, Sprites bleiben gecacht.
+  Reihenfolge `drawRig`: Füße → Rückenteil → Körper → Kopf-„back“ → Kopf → Kopf-„front“ bzw. Hut. Porträt + Editor-Vorschau nutzen dieselbe
+  Reihenfolge (`drawKobold`). Aussehen-Sprites (`body|head|mh|mb|mf`) liegen in einer LRU (160) → Cache wächst bei Kostümwechseln nicht unbegrenzt.
+- **Glanz:** `game.js mythGlow` (Partikel je `fx`, Budget `MYTH_FX`); mythisch zusätzlich weiche Aura im Glow-Pass (unter HUD/Warnungen, klein) +
+  Licht. Spezialangriff: Stil der Tierart, Farben aus `col.fx` (`specStyle`).
+- **Sammlung (`save.js`):** `koboldkeller2_myths = { v: 1, have: [ids], note }` — gehört dem Gerät. `initMyths()` beim ersten Laden ohne Key:
+  `have` = Start-Kostüme + `mythsEarned(Spielstand, Ehrenhall)` (bossDone → Boss-Kostüme, `won` → Phönix, `won && mega` oder 🔥-Eintrag in der
+  Ehrenhall → Sternendrache + Phönix), `note` = Anzahl → einmaliger Toast „Du hast N Kostüme verdient!“ beim nächsten Spielstart. Der Spielstand
+  wird dabei nicht verändert. `?kostueme=alle`: `G.myth.have` = alle (nur im Speicher), `G.myth.real` = echte Sammlung; es wird weder die
+  Sammlung geschrieben noch ein nicht verdientes Kostüm im Spielstand gespeichert (`lookForSave`).
+- **Freischalten (`game.js`):** `killEnt` → erster Sieg über einen Boss (Mini, Haupt, König; König auf MEGASCHWER zusätzlich Sternendrache) wirft
+  ein Kostüm-Paket (Item `myth`, Stufenfarbe), das nach 0,9 s zum Kobold fliegt (kein Verpassen). Aufheben → `unlockMyth`, Jubel (Funken,
+  `SFX.levelup`, Haptik „levelup“) und Hook `mythFound` → Toast oben mit Knopf „Anziehen“ (≥ 48 px, Spiel läuft weiter). `winGame` sichert
+  Phönix/Sternendrache nach, falls das Paket vor dem Siegesbild nicht mehr aufgehoben wurde.
+- **Editor (`ui.js`):** eigener Tab „🦄 Kostüme“ (zweiter Tab, damit man ihn sofort findet): „Ohne Kostüm“ + 14 Felder (4 je Reihe), Rahmen je
+  Stufe, gesperrte als dunkle Silhouette mit 🔒 und „Besiege …“, Zähler „N / 14 gesammelt“, Schalter „🎩 Hut statt Kopfteil“. Tabs ≥ 48 px.

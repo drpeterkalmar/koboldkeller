@@ -1,6 +1,8 @@
 /* art.js — prozedurale Chibi-Grafik, alles in Offscreen-Caches (MIT)
    Design-Einheit: 1 px bei Kachelbreite U = 64. K = Pixel pro Design-Einheit. */
 import { shade, rgba, hexRgb, TAU, mulberry32, mixHex } from "./util.js";
+import { MYTH_BY_ID } from "./config.js";
+import { drawMythBody, mythHead, drawMythBack, mythFoot, MYTH_LRU } from "./myth.js";
 
 let K = 1;
 const cache = new Map();
@@ -11,12 +13,16 @@ export function setArtScale(k) {
 }
 export function clearArt() { cache.clear(); }
 export function artCount() { return cache.size; }
+// v9: Aussehen-abhängige Sprites (Körper/Kopf/Kostümteile je Look) in einer LRU halten — Kostümwechsel lassen den Cache nicht unbegrenzt wachsen
+const lru = new Map();
 
 /** Sprite holen oder erzeugen. w,h,ax,ay in Design-Einheiten. */
 export function spr(key, w, h, ax, ay, fn) {
   key += "@" + K;
   let s = cache.get(key);
-  if (s) return s;
+  const lk = MYTH_LRU.test(key);
+  if (s) { if (lk) { lru.delete(key); lru.set(key, 1); } return s; }
+  if (lk) { lru.set(key, 1); if (lru.size > MYTH_LRU.max) { const old = lru.keys().next().value; lru.delete(old); cache.delete(old); } }
   const cv = document.createElement("canvas");
   cv.width = Math.max(1, Math.ceil(w * K)); cv.height = Math.max(1, Math.ceil(h * K));
   const c = cv.getContext("2d");
@@ -86,7 +92,9 @@ function heartPath(c, x, y, s) {
   c.bezierCurveTo(x - s * 1.4, y - s * 0.1, x - s * 0.7, y - s * 1.1, x, y - s * 0.4);
   c.bezierCurveTo(x + s * 0.7, y - s * 1.1, x + s * 1.4, y - s * 0.1, x, y + s * 0.9);
 }
-export { heartPath, star5 };
+export { heartPath, star5, star4, ol, shadeIn, ell };
+export { mythHead, drawMythBack, mythFoot } from "./myth.js";
+export const artK = () => K;
 
 // =====================================================================
 // XXL-Glitzeraugen
@@ -127,9 +135,14 @@ export function head(look, mood = "open") {
   return spr(key, 120, 132, 60, 112, (c) => drawHead(c, look, mood));
 }
 function drawHead(c, o, mood) {
-  const skin = o.skin, line = shade(skin, -0.55), inner = "#ffb3c7";
+  const skin = o.skin, line = shade(skin, -0.55);
   const v = o.earsV || 0;
-  // --- Ohren hinten (2 Varianten je Tierart) ---
+  drawEars(c, o);
+  drawHeadFace(c, o, mood, skin, line, v);
+}
+/** Ohren (hinter dem Kopf) — v9 auch für Kostüm-Kapuzen: Ohren schauen durch */
+export function drawEars(c, o) {
+  const skin = o.skin, line = shade(skin, -0.55), inner = "#ffb3c7", v = o.earsV || 0;
   const ear = (path, fillIn) => { ol(c, path, skin, line, 3.2); if (fillIn) { c.beginPath(); fillIn(c); c.fillStyle = inner; c.fill(); } };
   switch (o.ears) {
     case "pointy": {
@@ -179,6 +192,9 @@ function drawHead(c, o, mood) {
       }
       break;
   }
+}
+function drawHeadFace(c, o, mood, skin, line, v) {
+  const M = o.myth && !o.mhat ? MYTH_BY_ID[o.myth] : null;
   // --- Kopf ---
   const hp = ell(HX, HY, HR + 2, HR - 0.5);
   ol(c, hp, skin, line, 3.4);
@@ -198,13 +214,10 @@ function drawHead(c, o, mood) {
     c.fillStyle = "rgba(255,255,255,.35)"; c.beginPath(); c.ellipse(HX, HY + 20, 14, 9, 0, 0, TAU); c.fill();
   }
   c.restore();
-  // Frisur
-  drawHair(c, o, hp);
+  // Frisur (v9: unter Kapuzen/Helmen verborgen — sonst schauen Haarspitzen oben heraus)
+  if (!(M && M.head.startsWith("hood"))) drawHair(c, o, hp);
   // Hörner (Drache)
-  if (o.ears === "dragon") {
-    if (!v) for (const s of [-1, 1]) ol(c, (c) => { c.moveTo(HX + s * 10, HY - 30); c.quadraticCurveTo(HX + s * 18, HY - 52, HX + s * 24, HY - 50); c.quadraticCurveTo(HX + s * 20, HY - 40, HX + s * 22, HY - 26); c.closePath(); }, "#fff2c9", "#8a6a2a", 2.6);
-    else for (const s of [-1, 1]) { c.lineCap = "round"; c.strokeStyle = "#8a6a2a"; c.lineWidth = 9; c.beginPath(); c.moveTo(HX + s * 16, HY - 28); c.bezierCurveTo(HX + s * 22, HY - 50, HX + s * 44, HY - 44, HX + s * 36, HY - 30); c.stroke(); c.strokeStyle = "#fff2c9"; c.lineWidth = 5.5; c.stroke(); }
-  }
+  drawSpeciesHorns(c, o);
   // Wangen
   c.fillStyle = "rgba(255,105,150,.42)";
   for (const s of [-1, 1]) { c.beginPath(); c.ellipse(HX + s * 23, HY + 15, 7, 4.5, 0, 0, TAU); c.fill(); }
@@ -235,8 +248,16 @@ function drawHead(c, o, mood) {
     c.strokeStyle = "rgba(60,30,20,.55)"; c.lineWidth = 1.4;
     for (const s of [-1, 1]) for (const d of [-3, 3]) { c.beginPath(); c.moveTo(HX + s * 28, HY + 14 + d * 0.6); c.lineTo(HX + s * 42, HY + 12 + d); c.stroke(); }
   }
-  drawAcc(c, o, mood);
+  drawAcc(c, o, mood, M ? "face" : "all");
 }
+/** Hörner der Tierart Drache (v9: schauen auch durch Kostüm-Kapuzen) */
+export function drawSpeciesHorns(c, o) {
+  if (o.ears !== "dragon") return;
+  const v = o.earsV || 0;
+  if (!v) for (const s of [-1, 1]) ol(c, (c) => { c.moveTo(HX + s * 10, HY - 30); c.quadraticCurveTo(HX + s * 18, HY - 52, HX + s * 24, HY - 50); c.quadraticCurveTo(HX + s * 20, HY - 40, HX + s * 22, HY - 26); c.closePath(); }, "#fff2c9", "#8a6a2a", 2.6);
+  else for (const s of [-1, 1]) { c.lineCap = "round"; c.strokeStyle = "#8a6a2a"; c.lineWidth = 9; c.beginPath(); c.moveTo(HX + s * 16, HY - 28); c.bezierCurveTo(HX + s * 22, HY - 50, HX + s * 44, HY - 44, HX + s * 36, HY - 30); c.stroke(); c.strokeStyle = "#fff2c9"; c.lineWidth = 5.5; c.stroke(); }
+}
+export { HX, HY, HR };
 /** Frisuren — alle Tierarten können jede wählen */
 function drawHair(c, o, hp) {
   const h = o.hair, hl = shade(h, -0.5), hi = shade(h, 0.4);
@@ -311,9 +332,18 @@ function drawHair(c, o, hp) {
     }
   }
 }
-/** Accessoires (Spieler) + Boss-Merkmale */
-function drawAcc(c, o, mood) {
+/** Accessoires (Spieler) + Boss-Merkmale. v9 part: "all" · "face" (nur Gesicht: Brille/Sommersprossen/Boss) · "top" (nur Kopf-Extras
+ *  Blume/Schleife/Sternspange — mit Kostüm-Kopfteil werden sie versetzt: dx/dy verschieben sie an den Rand der Kapuze bzw. des Huts) */
+export const TOP_ACC = ["blume", "schleife", "stern"];
+export function drawAcc(c, o, mood, part = "all", dx = 0, dy = 0) {
   const ey = HY + 4, ex = 14.5;
+  const top = TOP_ACC.includes(o.acc);
+  if ((part === "face" && top) || (part === "top" && !top)) return;
+  if (dx || dy) { c.save(); c.translate(dx, dy); }
+  drawAccInner(c, o, mood, ey, ex);
+  if (dx || dy) c.restore();
+}
+function drawAccInner(c, o, mood, ey, ex) {
   switch (o.acc) {
     case "brille":
       c.strokeStyle = "#3a2a4a"; c.lineWidth = 2.6;
@@ -369,6 +399,8 @@ export function body(look, outfit, cape) {
 }
 function drawBody(c, o, outfit, cape) {
   const skin = o.skin, line = shade(skin, -0.55), oline = shade(outfit, -0.55);
+  const M = o.myth ? MYTH_BY_ID[o.myth] : null;
+  if (M) { if (o.ears === "octo") for (let i = -2; i <= 2; i++) ol(c, ell(BX + i * 8, BY - 8, 5.5, 9, i * 0.25), skin, line, 2.6); drawMythBody(c, o, M, outfit, BX, BY); return; }   // v9: Kostüm
   // Umhang (Bosse)
   if (cape) {
     ol(c, (c) => { c.moveTo(BX - 16, BY - 44); c.quadraticCurveTo(BX - 34, BY - 10, BX - 30, BY - 2); c.lineTo(BX + 30, BY - 2); c.quadraticCurveTo(BX + 34, BY - 10, BX + 16, BY - 44); c.closePath(); }, cape, shade(cape, -0.55), 3);
@@ -529,14 +561,27 @@ export function portrait(cv, look, hatId, px = 96) {
   cv.width = Math.round(px * dpr); cv.height = Math.round(px * dpr);
   const c = cv.getContext("2d");
   const kSave = K; K = Math.round(px * dpr / 172 * 100) / 100;
-  const put = (s, x, y) => c.drawImage(s.cv, (x - s.ax) * K, (y - s.ay) * K);
-  const fl = foot(shade(look.outfit, -0.35));
-  const gx = 86, gy = 166;
-  put(fl, gx - RIG.footX, gy + RIG.footY); put(fl, gx + RIG.footX, gy + RIG.footY);
-  put(body(look, look.outfit), gx, gy);
-  put(head(look, "open"), gx, gy + RIG.neck);
-  if (hatId) put(hat(hatId), gx, gy + RIG.neck - 32 - 26);
+  c.save(); c.scale(K, K);
+  const my = look.myth ? 18 : 0;                         // v9: Kostüme brauchen oben etwas Platz (Hörner, Hüte)
+  drawKobold(c, look, hatId, 86, 166 - (my ? 4 : 0), 0, 0, false, "open", my ? 0.9 : 1);
+  c.restore();
   K = kSave;
+}
+/** v9: ganze Figur in Design-Einheiten zeichnen (Menü-Porträt, Editor-Vorschau): Füße, Rückenteil, Körper, Kopfteil, Kopf, Hut */
+function drawKobold(c, look, hatId, gx, gy, t, bob, turn, mood, sc = 1, fxD = 1, fb = 0) {
+  const put = (s, x, y) => c.drawImage(s.cv, x - s.ax, y - s.ay, s.w, s.h);
+  c.save(); c.translate(gx, gy); c.scale(sc, sc);
+  const fl = foot(mythFoot(look) || shade(look.outfit, -0.35));
+  put(fl, -RIG.footX, RIG.footY - fb); put(fl, RIG.footX, RIG.footY - fb);
+  c.translate(0, -bob); c.scale(fxD, 1);
+  if (look.myth) drawMythBack(c, look, t, t * 7, false, put);
+  put(body(look, look.outfit), 0, 0);
+  c.translate(0, RIG.neck); c.rotate(turn || 0);
+  const hb = mythHead(look, "back"), hf = mythHead(look, "front");
+  if (hb) put(hb, 0, 0);
+  put(head(look, mood), 0, 0);
+  if (hf) put(hf, 0, 0); else if (hatId) put(hat(hatId), 0, -58);
+  c.restore();
 }
 /** Live-Vorschau im Charakter-Editor: dreht sich langsam, wippt, blinzelt (Sprites in eigener Auflösung gecacht) */
 export function previewRig(cv, look, hatId, t, dice = -1) {
@@ -556,14 +601,8 @@ export function previewRig(cv, look, hatId, t, dice = -1) {
   // Bodenschatten
   const shK = 1 - bob / 60;
   c.fillStyle = "rgba(20,8,30,.28)"; c.beginPath(); c.ellipse(gx, gy + 2, 34 * Math.max(0.6, Math.abs(dice >= 0 ? fxD : turn)) * shK, 9 * shK, 0, 0, TAU); c.fill();
-  const put = (s, x, y) => c.drawImage(s.cv, x - s.ax, y - s.ay, s.w, s.h);
-  const fl = foot(shade(look.outfit, -0.35)), fb = dice >= 0 ? bob : 0;
-  put(fl, gx - RIG.footX, gy + RIG.footY - fb); put(fl, gx + RIG.footX, gy + RIG.footY - fb);
-  c.translate(gx, gy - bob); c.scale(fxD, 1);
-  put(body(look, look.outfit), 0, 0);
-  c.translate(0, RIG.neck); c.rotate(Math.sin(t * 1.3) * 0.05);
-  put(head(look, mood), 0, 0);
-  if (hatId) put(hat(hatId), 0, -58);
+  const fb = dice >= 0 ? bob : 0, sc = look.myth ? 0.9 : 1;
+  drawKobold(c, look, hatId, gx, gy, t, bob, Math.sin(t * 1.3) * 0.05, mood, sc, fxD, fb);
   c.restore();
   K = kSave;
 }
@@ -750,6 +789,16 @@ export function itemSprite(kind, v = "") {
       c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.moveTo(12, 6); c.lineTo(20, 16); c.lineTo(6, 16); c.closePath(); c.fill();
       c.fillStyle = "rgba(90,30,160,.35)"; c.beginPath(); c.moveTo(34, 16); c.lineTo(20, 16); c.lineTo(20, 34); c.closePath(); c.fill();
       star4(c, 27, 10, 4, "#fff");
+    });
+    case "myth": return spr(key, 44, 46, 22, 40, (c) => {   // v9: Kostüm-Paket (Geschenk in Stufenfarbe + Symbol)
+      const M = MYTH_BY_ID[v] || { tier: "selten", emoji: "🎁" }, col = { selten: "#7fc8ff", episch: "#c48cff", mythisch: "#ffd75e" }[M.tier];
+      const box = (c) => c.roundRect(6, 16, 32, 24, 5);
+      ol(c, box, col, shade(col, -0.6), 2.6); shadeIn(c, box, 22, 28, 18, 0.45, 0.25);
+      ol(c, (c) => c.roundRect(4, 12, 36, 8, 3), shade(col, 0.25), shade(col, -0.6), 2.4);
+      c.fillStyle = "#ff5a8a"; c.fillRect(19, 12, 6, 28);
+      for (const s of [-1, 1]) ol(c, (c) => { c.moveTo(22, 12); c.bezierCurveTo(22 + s * 6, 0, 22 + s * 16, 4, 22 + s * 10, 12); c.closePath(); }, "#ff7aa8", "#8a1a4e", 2);
+      c.font = "15px system-ui, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(M.emoji, 22, 31);
+      star4(c, 36, 8, 4, "#ffffff");
     });
     case "hat": return spr(key, 50, 42, 25, 38, (c) => {
       c.scale(0.55, 0.55); c.drawImage(hat(v).cv, 0, 0, 90, 70);

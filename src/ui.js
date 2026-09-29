@@ -1,6 +1,6 @@
 /* ui.js — Menüs, Charakter-Editor, HUD, Toasts, Rucksack (Talente), Ehrenhall, Tutorial, Boss-Karte (MIT) */
-import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE } from "./game.js";
-import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO } from "./config.js";
+import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE, lookForSave } from "./game.js";
+import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint } from "./config.js";
 import { portrait, previewRig } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
 import { esc, pick, mulberry32 } from "./util.js";
@@ -109,7 +109,7 @@ export function showMenu() {
 // Charakter-Editor (beim Erstellen UND später am Spiegel in der Stadt)
 // =====================================================================
 const TABS = [
-  ["tier", "🐾 Tier"], ["fell", "🎨 Fell"], ["frisur", "💇 Frisur"], ["augen", "👀 Augen"], ["outfit", "👕 Outfit"], ["ohren", "👂 Ohren"], ["extra", "🎀 Extras"],
+  ["tier", "🐾 Tier"], ["myth", "🦄 Kostüme"], ["fell", "🎨 Fell"], ["frisur", "💇 Frisur"], ["augen", "👀 Augen"], ["outfit", "👕 Outfit"], ["ohren", "👂 Ohren"], ["extra", "🎀 Extras"],
 ];
 function openEditor(mode) {
   const cur = mode === "edit" && G.p ? lookSave(G.p.look) : lookSave(makeLook({ species: SPECIES[UI.selLook].id }));
@@ -129,7 +129,7 @@ function edLook() { return makeLook(UI.ed.look); }
 /** 🎲 Würfeln: neuer hübscher Look (Harmonie-Tabelle, nie direkt derselbe) + bei withName auch ein neuer Name */
 function rollDice(withName) {
   const ed = UI.ed; if (!ed) return;
-  ed.look = rollLook(UI.rnd, lookKey(makeLook(ed.look)));
+  ed.look = rollLook(UI.rnd, lookKey(makeLook(ed.look)), G.myth.have);          // v9: ≈ 30 % mit einem freigeschalteten Kostüm
   if (withName) $("nameInput").value = randomName(UI.rnd);
   UI.selLook = Math.max(0, SPECIES.findIndex(s => s.id === ed.look.species));
   ed.dice = ed.t; UI.diceN++;
@@ -191,6 +191,27 @@ function renderEditBody() {
     case "extra":
       items = ACCESSORIES.map(a => ({ key: "acc", val: a.id, label: a.name, on: L.acc === a.id, look: makeLook({ ...ed.look, acc: a.id }) }));
       h = optGrid(items); break;
+    case "myth": {   // v9: Kostüm-Raster (Porträts, Stufen-Rahmen, gesperrte als Silhouette mit Hinweis), Zähler, „🎩 Hut statt Kopfteil“
+      const have = G.myth.have, got = MYTHS.filter(m => G.myth.real.includes(m.id)).length;
+      items = [{ key: "myth", val: "", label: "Ohne Kostüm", on: !L.myth, look: makeLook({ ...ed.look, myth: "" }) },
+        ...MYTHS.map(M => ({ key: "myth", val: M.id, label: M.name, on: L.myth === M.id, look: makeLook({ ...ed.look, myth: M.id, mhat: false }), locked: !have.includes(M.id), tier: M.tier, hint: mythHint(M), emoji: M.emoji }))];
+      const hatId = ed.mode === "edit" && G.p ? G.p.hat : null;
+      h = '<p class="mythCount" id="mythCount">🦄 <b>' + got + " / " + MYTHS.length + "</b> gesammelt" + (G.myth.view ? ' <span class="mythView">Ansicht: alle Kostüme (wird nicht gespeichert)</span>' : "") + "</p>" +
+        '<div class="opts mythGrid">' + items.map((it, i) => '<button class="opt myth' + (it.on ? " on" : "") + (it.tier ? " tier-" + it.tier : "") + (it.locked ? " locked" : "") + '" data-k="myth" data-v="' + it.val + '" data-i="' + i + '"' + (it.locked ? ' data-lock="1"' : "") + '><canvas></canvas>' +
+          (it.tier ? '<i class="tierTag">' + MYTH_TIERS[it.tier].name + "</i>" : "") + (it.locked ? '<i class="lockTag">🔒</i>' : "") +
+          "<span>" + shy(esc(it.locked ? it.hint : it.label)) + "</span></button>").join("") + "</div>" +
+        (L.myth ? '<div class="set mhatRow' + (hatId ? "" : " off") + '" id="mhatRow"><span>🎩 Hut statt Kopfteil' + (hatId ? "" : " <small>(noch kein Hut)</small>") + '</span><span class="sw' + (L.mhat ? " on" : "") + '"></span></div>' : "");
+      opts.innerHTML = h;
+      opts.querySelectorAll(".opt canvas").forEach((cv, i) => { portrait(cv, items[i].look, null, 64); if (items[i].locked) silhouette(cv); });
+      opts.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+        if (b.dataset.lock) { SFX.empty(); toast("🔒 " + items[+b.dataset.i].hint + " — dann gehört dir " + items[+b.dataset.i].label + "!"); return; }
+        UI.ed.look = lookSave(makeLook({ ...UI.ed.look, myth: b.dataset.v, mhat: false }));
+        SFX.click(); renderEditBody();
+      }));
+      const mr = $("mhatRow");
+      if (mr) mr.addEventListener("click", () => { if (!hatId) { SFX.empty(); toast("🎩 Bosse lassen Hüte fallen — dann kannst du hier umschalten."); return; } UI.ed.look = lookSave(makeLook({ ...UI.ed.look, mhat: !L.mhat })); SFX.click(); renderEditBody(); });
+      return;
+    }
   }
   opts.innerHTML = h;
   if (items) opts.querySelectorAll(".opt canvas").forEach((cv, i) => portrait(cv, items[i].look, null, 64));
@@ -199,6 +220,29 @@ function renderEditBody() {
     UI.ed.look = lookSave(makeLook({ ...UI.ed.look, [k]: v }));
     SFX.click(); renderEditBody();
   }));
+}
+/** weiche Trennstellen für lange Wörter in den kleinen Kostüm-Feldern (statt „Sternenzaub|erer“) */
+const SHY = [["Sternenzauberer", "Sternen\u00adzauberer"], ["Kristallritter", "Kristall\u00adritter"], ["Zuckerschnute", "Zucker\u00adschnute"], ["Funkelflatter", "Funkel\u00adflatter"],
+  ["MEGASCHWER", "MEGA\u00adSCHWER"], ["Glutpanzer", "Glut\u00adpanzer"], ["Kellerkönig", "Keller\u00adkönig"], ["Vulkan-Golem", "Vulkan-\u200bGolem"], ["Bonbon-Nixe", "Bonbon-\u200bNixe"]];
+const shy = t => SHY.reduce((a, [w, r]) => a.split(w).join(r), t);
+/** gesperrtes Kostüm: dunkle Silhouette (Form erkennbar, Farben nicht) */
+function silhouette(cv) {
+  const c = cv.getContext("2d"); c.save(); c.globalCompositeOperation = "source-atop"; c.fillStyle = "rgba(24,12,40,.9)"; c.fillRect(0, 0, cv.width, cv.height); c.restore();
+}
+// ---------- v9: Fund-Moment (Kostüm-Paket aufgehoben) — Toast mit „Anziehen“, Spiel läuft weiter, oben (verdeckt keine Steuerung) ----------
+export function mythFound(id, auto) {
+  const M = MYTH_BY_ID[id]; if (!M) return;
+  const box = $("toasts"), el = document.createElement("div");
+  el.className = "toast mythToast tier-" + M.tier;
+  el.innerHTML = '<span class="mtE">' + M.emoji + '</span><span class="mtT">Neues Kostüm: <b>' + esc(M.name) + "</b>!<small>" + MYTH_TIERS[M.tier].name + (M.tier === "mythisch" ? " ✨" : "") + '</small></span><button class="mtBtn" type="button">Anziehen</button>';
+  el.querySelector(".mtBtn").addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    if (G.p) setLook({ ...lookForSave(G.p.look), myth: id, mhat: false });
+    SFX.pickup(); el.remove(); toast("✨ " + M.name + " angezogen! Ändern kannst du es am 🪞 Spiegel.");
+  });
+  box.appendChild(el); UI.mythToasts = (UI.mythToasts || 0) + 1;
+  hapticButtons(el);
+  setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 380); }, auto ? 9000 : 7000);
 }
 function startPreview() {
   stopPreview();

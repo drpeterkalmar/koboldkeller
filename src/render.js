@@ -1,7 +1,7 @@
 /* render.js — Iso-Renderer: Kamera, Boden-Chunks, Tiefensortierung, Licht, Glow (MIT) */
 import * as A from "./art.js";
 import { FX } from "./fx.js";
-import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName } from "./config.js";
+import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_FX } from "./config.js";
 import { clamp, TAU, rgba, mixHex } from "./util.js";
 
 export const R = {
@@ -173,6 +173,7 @@ export { blit, put, base };
 // =====================================================================
 // Kobold-Rig (Spieler, Bosse, Kellerkönig)
 // =====================================================================
+const put2 = (s, x, y) => R.ctx.drawImage(s.cv, x - s.ax, y - s.ay, s.w, s.h);
 function drawRig(ctx, X, Y, o) {
   const k = o.scale * R.Z;
   const spinning = o.spin >= 0;
@@ -206,12 +207,16 @@ function drawRig(ctx, X, Y, o) {
   if (wBehind) drawW();
   ctx.save();
   ctx.scale(fx, 1);
+  if (o.look.myth) A.drawMythBack(ctx, o.look, o.t, o.walkPh, o.moving, put2, S);   // v9: Rückenteil (Flügel/Umhang/Schwänze) bewegt sich
   if (o.wand) { ctx.save(); ctx.translate(-14, -30); ctx.rotate(-2.2); put(ctx, S(A.wand(o.wand)), 0, 0); ctx.restore(); }
   put(ctx, S(A.body(o.look, o.outfit, o.cape)), 0, 0);
   ctx.translate(0, A.RIG.neck);
   ctx.rotate(o.moving ? Math.sin(o.walkPh) * 0.06 : Math.sin(o.t * 1.3) * 0.03);
+  const hb = o.look.myth ? A.mythHead(o.look, "back") : null, hf = o.look.myth ? A.mythHead(o.look, "front") : null;
+  if (hb) put(ctx, S(hb), 0, 0);
   put(ctx, S(A.head(o.look, o.mood)), 0, 0);
-  if (o.hat) put(ctx, S(A.hat(o.hat, o.hatRed)), 0, -58);
+  if (hf) put(ctx, S(hf), 0, 0);                        // v9: Kopfteil ersetzt den Hut nur optisch („🎩 Hut statt Kopfteil“ → mhat)
+  else if (o.hat) put(ctx, S(A.hat(o.hat, o.hatRed)), 0, -58);
   ctx.restore();
   if (!wBehind) drawW();
   ctx.restore();
@@ -810,6 +815,7 @@ function lighting(G, B, portals) {
     l.drawImage(lightSprite(col), (sx - rx) / LS, (sy - ry) / LS - 6, rx * 2 / LS, ry * 2 / LS);
   };
   const T = R.t;
+  { const M = p.look && p.look.myth && MYTH_BY_ID[p.look.myth]; if (M && M.aura) light(p.x, p.y, 2.2, M.aura[0], 0.35); }
   if (R.biome) light(p.x, p.y, 5.6, "#fff1d6", 0.95);
   else light(p.x, p.y, 3.5, "#fff6e0", 0.25);
   for (const t of L.torches) { const fl = 0.82 + 0.1 * Math.sin(T * 9 + t.x * 3) + 0.08 * Math.sin(T * 23 + t.y); light(t.x, t.y, 4.4 * (0.95 + fl * 0.05), B.torch, fl); }
@@ -870,6 +876,9 @@ function glowPass(ctx, G, B, portals) {
   if (L.wallTraps) for (const w of L.wallTraps) if (w.st === 1) { const k = Math.min(1, w.t / WALLTRAP.warn); g(w.x0, w.y0, 18, 40 + 50 * k, w.look.glow, 0.35 + 0.35 * k + 0.1 * Math.sin(T * 26)); }
   for (const s of G.shots) if (s.kind === "wall") g(s.x, s.y, s.z, 56, s.col, s.look === "ember" ? 0.55 : 0.3);
   drawGuide(ctx, G, "glow");
+  // v9: „mythisch“ glänzt — weiche Aura unter dem Kobold (klein und leise, Warnkreise der Bosse bleiben lesbar)
+  { const M = p.look && p.look.myth && MYTH_BY_ID[p.look.myth]; if (M && M.aura) { const n = M.aura.length, k = (T * 0.6) % n, c1 = M.aura[Math.floor(k)], w = 1 + 0.08 * Math.sin(T * 3);
+    g(p.x, p.y, 16, 150 * MYTH_FX.auraR * w, c1, 0.26); g(p.x, p.y, 60, 90 * w, M.aura[(Math.floor(k) + 1) % n], 0.14); } }
   if (L.stairs && G.depth < 20 && !L.stairs.sealed) g(L.stairs.x, L.stairs.y, 4, 70, "#ffe9a8", 0.3 + Math.sin(T * 2.5) * 0.1);
   for (const s of G.spawns) g(s.x, s.y, 20, 80 * (0.5 + s.t / s.max), s.col, 0.35);
   for (const s of G.shots) g(s.x, s.y, s.z, s.kind === "bubble" ? 34 * s.size : s.kind === "snow" ? 70 : 44, s.kind === "bubble" ? "#bfefff" : s.col, s.kind === "lob" ? 0.3 : 0.45);

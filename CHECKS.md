@@ -85,7 +85,18 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | V25 | 200 Ebenen (5 Seeds × Normal/MEGA): Anzahl = Tabelle, keine vor Ebene 3, keine Bahn im Eingangsraum/< 6 Kacheln vom Eingang/in Arenen, Bahnen ≥ 4 auseinander; Vorwarnung 0,8 … 1,1 s; Treffer = Pieks-Schaden, mit 💨 0; Haptik nur beim Treffer („hurt“); Schüsse derselben Falle ≥ 2,5 s auseinander; FPS (4×, E19, alle Fallen aktiv + 12 Gegner) ≥ 45. Screenshots je Welt Vorwarnung + Schuss, hoch + quer | ja |
 | Bot | `tools/bot.mjs 8731 20 6 --out=v8`: Normal durchspielbar, Tipps nur auf Sichtbares, Stadt zu Fuß; Tabelle mit Lauf-Sekunden, Tipps, Wandfallen-Treffern, Bosskampf-Dauer | 0 Tode, 0 Hänger |
 
-Hinweis: Der ganze Lauf dauert ~19 min. In zwei Teilen: `--v7=skip` (A/B/C/V1–V17, ~9 min) und `--v7=only` (V18–V25, ~10 min).
+## V9 — Mythos-Kostüme (automatisch, `tools/checks_v9.mjs`, Screenshots in `shots/neubau/v9/`)
+| # | Check | Ziel |
+|---|---|---|
+| V26 | 14 Kostüme × 8 Tierarten: Spielfigur (laufend), Porträt, Editor-Vorschau ohne Fehler, hoch + quer; Gesicht frei: Pixelvergleich Kopf mit/ohne Kopfteil im Gesichtsfeld (Augen, Wangen, Mund; auch mit Brille/Blume) < 3 % verändert, Gegenprobe Stirn unter Kapuzen > 30 %; Kontaktbogen; Laufen in allen 5 Welten | ja |
+| V27 | Erster Sieg Mini-Boss (E2 → Waldfee), Hauptboss (E4 → Waldhüter), König (E20 → Phönix), König auf MEGASCHWER (→ Sternendrache): genau ein Paket, fliegt zum Kobold, Toast + echter Tipp „Anziehen“ (Knopf ≥ 44 px); zweiter Sieg → kein Paket; Speichern + Neu laden + Weiterspielen → Kostüm + Sammlung da; neues Spiel behält die Sammlung | ja |
+| V28 | Migration echter v3-Spielstände (Format `save.js`): bossDone [2,4,6] → genau Waldfee, Waldhüter, Greif · won → Phönix · MEGA-Sieg (Spielstand) und 🔥 in der Ehrenhall → Sternendrache; Hinweis „Du hast N Kostüme verdient!“ genau einmal; alle anderen Felder gleich, Datei v3 | ja |
+| V29 | 300 Würfe im Modul (Sammlung von 5): nur freigeschaltete, Anteil 20–40 %, 0 Harmonie-Verstöße, 0 Wiederholungen, Seed reproduzierbar; Editor-Würfel (20×) nur Kostüme der Sammlung | ja |
+| V30 | Tab „🦄 Kostüme“ hoch + quer: 8 Tabs ≥ 48 px, 15 Felder ≥ 48 px, ≤ 4 je Reihe, gesperrte = dunkle Silhouette + „Besiege …“, Stufen-Rahmen, Zähler „6 / 14“, Tipp auf Gesperrtes ändert nichts, „🎩 Hut statt Kopfteil“ wirkt im Spiel; `?kostueme=alle`: alles frei + Hinweis, Sammlung und Spielstand unverändert | ja |
+| V31 | Kellerkönig-Kampf (Wut-Phase, 9 Handlanger, Warnungen) mit Phönix bzw. Sternendrache, CPU 4× ≥ 45 FPS (hoch + quer); 400 Kostümwechsel → Sprite-Cache begrenzt (LRU) | ja |
+| Bot | `tools/bot.mjs 8731 20 6 --out=v9 --myth=phoenix`: Normal mit Phönix durchspielbar | 0 Tode |
+
+Hinweis: Der ganze Lauf dauert ~27 min. In zwei Teilen: `--v7=skip` (A/B/C/V1–V17, ~9 min) und `--v7=only` (V18–V31, ~18 min).
 Testserver: `python3 tools/serve.py 8731` (großer Backlog; der Standard-`http.server` ließ vereinzelt Modul-Anfragen > 30 s hängen).
 
 ## B — Kids-UX (automatisch + Screenshot)

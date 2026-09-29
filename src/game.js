@@ -3,17 +3,19 @@
    Glitzerpilze, Heim-Portal 20 s unsichtbar, Ebenen-Paletten, Schwierigkeitskurve (Elite, Fallen, neue Muster).
    v5: Boss auf jeder 2. Ebene (Mini-Bosse), Treppe/20. Portal versiegelt bis zum Sieg (bossDone), Handlanger-Beute klein.
    v8: schneller laufen (Animation/Wegpunkte/Teilschritte), 20 Stadt-Portale (je Ebene eins, Welttore) mit Ziel-/Verweil-Regel,
-   Treppe/Portal per Tipp „scharf“, Wand-Schützen (Wandfallen) mit Vorwarnung. */
+   Treppe/Portal per Tipp „scharf“, Wand-Schützen (Wandfallen) mit Vorwarnung.
+   v9: Mythos-Kostüme — Sammlung je Gerät (G.myth), Kostüm-Paket beim ersten Boss-Sieg, Glanz-Partikel, Spezial-Welle in Kostümfarbe. */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
-  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK,
+  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ,
 } from "./config.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
 import { haptic } from "./platform.js";
-import { writeSave, addHall } from "./save.js";
+import { writeSave, addHall, initMyths, saveMyths } from "./save.js";
+import { mythFoot } from "./myth.js";
 import { rand, randi, pick, weighted, TAU, shade, clamp } from "./util.js";
 import { initBoss, bossAI, bossHit, bossKilled, wakeBoss, arenaTick, bossFight } from "./boss.js";
 
@@ -28,6 +30,21 @@ export const G = {
   stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0, wallHits: 0 },
 };
 export const H = () => G.hooks;
+// ---------- v9: Kostüm-Sammlung ----------
+// ?kostueme=alle: nur zum Anschauen alle frei — nichts wird gespeichert (weder Sammlung noch getragenes Kostüm)
+G.myth = (() => { const m = initMyths(), view = URLQ.get("kostueme") === "alle"; return { have: view ? MYTHS.map(x => x.id) : m.have, real: m.have, note: m.note, view }; })();
+export const mythHave = id => G.myth.have.includes(id);
+export const mythReal = id => G.myth.real.includes(id);
+/** Kostüm freischalten (Sammlung des Geräts) — true, wenn es neu war */
+export function unlockMyth(id) {
+  if (!MYTH_BY_ID[id] || mythReal(id)) return false;
+  G.myth.real.push(id);
+  if (!G.myth.have.includes(id)) G.myth.have.push(id);
+  if (!G.myth.view && !G.demo) saveMyths(G.myth.real, G.myth.note);
+  return true;
+}
+/** Look für den Spielstand: in der Nur-Ansehen-Ansicht (?kostueme=alle) nie ein nicht verdientes Kostüm speichern */
+export function lookForSave(L) { const o = lookSave(L); if (o.myth && !mythReal(o.myth)) { delete o.myth; delete o.mhat; } return o; }
 /** Ereignis nach sec Spielzeit (steht in Pause/Hit-Stop still). tag = "boss": wird beim Boss-Sieg abgebrochen */
 export function later(sec, fn, tag) { G.later.push({ t: sec, fn, tag }); }
 
@@ -49,7 +66,7 @@ export function makePlayer(prof) {
   for (const s of SKILLS) p.sk[s.id] = p.sk[s.id] | 0;
   recalc(p);
   p.rig = {
-    look, outfit: look.outfit, footCol: shade(look.outfit, -0.35), cape: null, hat: p.hat, hatRed: false,
+    look, outfit: look.outfit, footCol: mythFoot(look) || shade(look.outfit, -0.35), cape: null, hat: p.hat, hatRed: false,
     mood: "open", scale: 0.86, face: 1, t: 0, sq: 0, moving: false, walkPh: 0, spin: -1, wpn: "stick", wand: 1,
     flash: false, alpha: 1, tilt: 0, cast: 0,
   };
@@ -70,13 +87,13 @@ export function recalc(p) {
 export function setLook(o) {
   const p = G.p; if (!p) return;
   p.look = makeLook(o); p.species = p.look.species;
-  Object.assign(p.rig, { look: p.look, outfit: p.look.outfit, footCol: shade(p.look.outfit, -0.35) });
+  Object.assign(p.rig, { look: p.look, outfit: p.look.outfit, footCol: mythFoot(p.look) || shade(p.look.outfit, -0.35) });
   save();
 }
 export function profileFromGame() {
   const p = G.p, pr = G.prof;
   Object.assign(pr, {
-    name: p.name, species: p.species, look: lookSave(p.look), lvl: p.lvl, xp: p.xp, xpNext: p.xpNext, maxHp: p.hpBase, hp: Math.max(1, Math.ceil(p.hp)),
+    name: p.name, species: p.species, look: lookForSave(p.look), lvl: p.lvl, xp: p.xp, xpNext: p.xpNext, maxHp: p.hpBase, hp: Math.max(1, Math.ceil(p.hp)),
     atk: p.atkBase, projN: p.projN, magic: p.magic, gold: G.gold, potions: p.potions, ammo: p.ammo, spec: p.spec, sk: { ...p.sk }, skPts: p.skPts,
     hats: p.hats.slice(), hat: p.hat, deepest: G.deepest, depth: G.depth, mega: G.mega, runSecs: G.runSecs,
     kills: G.stats.kills, bossDone: G.bossDone.slice(),
@@ -133,6 +150,11 @@ export function startGame(prof) {
   G.winQueued = false;
   G.tutStep = prof.tut ? -1 : 0; G.tutFlags = {};
   enterLevel(prof.depth || 0, true);
+  // v9: einmaliger Hinweis nach der Kostüm-Migration (Sammlung des Geräts)
+  if (!G.demo && G.myth.note > 0 && !G.myth.view) {
+    const n = G.myth.note; G.myth.note = 0; saveMyths(G.myth.real, 0);
+    setTimeout(() => H().toast("🦄 Du hast " + n + (n === 1 ? " Kostüm" : " Kostüme") + " verdient! Schau am 🪞 Spiegel in der Stadt."), 2400);
+  }
   // einmalige Umzugs-Hinweise (v3 → v4)
   if (!G.demo && (prof.capNote || prof.giftNote)) {
     const cg = prof.capNote, gp = prof.giftNote;
@@ -348,6 +370,12 @@ export function killEnt(e) {
     const h = BOSS_HAT[G.biome];
     if (h && !p.hats.includes(h)) G.items.push(flyItem("hat", e.x, e.y, h));
   }
+  // v9: Kostüm-Paket beim ersten Sieg über diesen Boss (Mini, Haupt, König; König auf MEGASCHWER: zusätzlich der Sternendrache)
+  if (e.isBoss && !G.demo) {
+    const drops = [mythOfBoss(G.depth)];
+    if (e.isKing && G.mega) drops.push(MYTH_BY_ID.sternendrache);
+    for (const M of drops) if (M && !mythReal(M.id) && !G.items.some(it => it.kind === "myth" && it.v === M.id)) { const it = flyItem("myth", e.x, e.y, M.id); it.vz = 320; it.flyT = 0.9; G.items.push(it); }
+  }
   // Schleime teilen sich ab Tiefe 6 in zwei kleine
   const D = G.depth > 0 ? diffOf(G.depth) : null;
   if (D && D.split && e.type === "slime" && !e.mini && !e.minion) {
@@ -440,6 +468,16 @@ function pickup(it) {
     }
     case "wand": p.projN++; SFX.pickup(); haptic("pickup"); P.sparkle(it.x, it.y, "#9be1ff", 14, 40); H().toast("🪄 Zauberstab! " + p.projN + " Seifenblasen pro Schuss (kostet trotzdem nur 1 🫧)!"); save(); return true;
     case "gem": p.magic++; SFX.pickup(); haptic("pickup"); P.sparkle(it.x, it.y, "#d9b3ff", 14, 40); H().toast("✨ Glitzerstein! Blasen-Schaden +1"); save(); return true;
+    case "myth": {                                          // v9: Kostüm-Paket — Jubel, Toast mit „Anziehen“, Spiel läuft weiter
+      const M = MYTH_BY_ID[it.v];
+      if (!M) return true;
+      const fresh = unlockMyth(M.id);
+      P.levelUp(p.x, p.y); P.sparkle(p.x, p.y, M.tier === "mythisch" ? "#ffd75e" : "#ffffff", 16, 70);
+      burst(p.x, p.y, 16, { kind: "star5", col: M.col.fx[0], s0: 14, s1: 0, sp0: 1, sp1: 3.2, z: 50, vz0: 120, vz1: 260, g: -260, l0: 0.6, l1: 1.1 });
+      SFX.levelup(); haptic("levelup");
+      if (fresh || G.myth.view) H().mythFound && H().mythFound(M.id);
+      return true;
+    }
     case "hat": {
       const h = it.v;
       let full = false;
@@ -577,7 +615,7 @@ export function special() {
     SFX.empty();
     return false;
   }
-  const S = SPECIAL_STYLE[p.species] || SPECIAL_STYLE.kobold;
+  const S = specStyle(p);
   p.spec = 0; p.specT = 0.42; p.invulT = Math.max(p.invulT, 1.1); p.path = null; p.foe = null; p.sq = 0.3;
   slowmo(0.42, 0.45); G.stats.specials++;
   SFX.special({ v: S.snd }); haptic("special");
@@ -590,8 +628,13 @@ export function special() {
   G.tutFlags.special = true;
   return true;
 }
+/** v9: Spezial-Stil der Tierart, Farben vom Kostüm (falls getragen) */
+export function specStyle(p) {
+  const S = SPECIAL_STYLE[p.species] || SPECIAL_STYLE.kobold, M = MYTH_BY_ID[p.look.myth];
+  return M ? { ...S, c1: M.col.fx[0], c2: M.col.fx[1] || M.col.acc } : S;
+}
 function doSpecial() {
-  const p = G.p, S = SPECIAL_STYLE[p.species] || SPECIAL_STYLE.kobold, R = SPECIAL.radius, dmg = specialDmg(p);
+  const p = G.p, S = specStyle(p), R = SPECIAL.radius, dmg = specialDmg(p);
   ring(p.x, p.y, R, S.c1, 0.7, 2.6); ring(p.x, p.y, R * 0.66, S.c2, 0.55, 2); ring(p.x, p.y, R * 1.15, "#ffffff", 0.8, 1.2);
   burst(p.x, p.y, 34, { kind: S.kind, col: S.c1, s0: 18, s1: 0, sp0: 3, sp1: 8, z: 30, vz0: 80, vz1: 260, g: -300, l0: 0.5, l1: 1.0, add: S.kind !== "puff" && S.kind !== "heart" });
   burst(p.x, p.y, 26, { kind: "star5", col: S.c2, s0: 14, s1: 0, sp0: 2, sp1: 6, z: 40, vz0: 120, vz1: 320, g: -380, l0: 0.6, l1: 1.2 });
@@ -645,6 +688,8 @@ export function winGame(how) {
   };
   const hall = addHall(rec);
   G.prof.won = true;
+  // v9: Kostüme des Sieges sicherstellen (falls das Paket vor dem Siegesbild nicht mehr aufgehoben wurde)
+  if (!G.demo) for (const id of G.mega ? ["phoenix", "sternendrache"] : ["phoenix"]) if (unlockMyth(id)) setTimeout(() => H().mythFound && H().mythFound(id, true), 900);
   save();
   G.screen = "win";
   SFX.victory(); flash("#fff6c0", 0.8); haptic("win");
@@ -735,6 +780,7 @@ export function update(dt, realDt) {
   }
   // Ambient-Partikel
   ambient(dt);
+  if (G.screen === "play") mythGlow(dt);
   // Rig-Daten
   const rg = p.rig;
   rg.face = p.face; rg.t = p.t; rg.sq = p.sq; rg.moving = p.moving; rg.walkPh = p.walkPh;
@@ -908,7 +954,7 @@ function updateItems(dt) {
       if (it.flyT > 0.3) continue;
     }
     const d = Math.hypot(p.x - it.x, p.y - it.y);
-    const mag = magnetOf(it.kind);
+    const mag = it.kind === "myth" ? 99 : magnetOf(it.kind);     // v9: Kostüm-Paket fliegt immer zum Kobold (kein Suchen, kein Verpassen)
     if (d < mag && d > 0.01 && G.screen === "play") {
       const k = 1 - d / mag, s = 3.2 + k * k * 11;
       const ux = (p.x - it.x) / d, uy = (p.y - it.y) / d;
@@ -1242,6 +1288,37 @@ function updateWallTraps(dt) {
       }
     } else if (w.t >= 0.4) { w.st = 0; w.next = WALLTRAP.period - WALLTRAP.warn - 0.4 + rand(-1, 1) * WALLTRAP.jit; }
   }
+}
+
+// ---------- v9: Glanz — Signatur-Partikel je Kostüm (Budget MYTH_FX; „mythisch“ glänzt stärker + Aura in render.js) ----------
+function mythGlow(dt) {
+  const p = G.p, M = MYTH_BY_ID[p.look.myth];
+  if (!M) return;
+  const myth = M.tier === "mythisch", now = G.t;
+  const live = G.mythLive || (G.mythLive = []);
+  while (live.length && live[0] <= now) live.shift();
+  if (live.length >= MYTH_FX.max * (myth ? 1.4 : 1) * FX.budget) return;
+  const rate = (p.moving ? MYTH_FX.walk : MYTH_FX.idle) * (myth ? MYTH_FX.myth : 1) * FX.budget;
+  if (Math.random() > rate * dt) return;
+  const cols = M.col.fx, col = cols[(Math.random() * cols.length) | 0], x = p.x + rand(-0.35, 0.35), y = p.y + rand(-0.35, 0.35);
+  let o;
+  switch (M.fx) {
+    case "ember": case "embers": o = { kind: "dot", z: rand(20, 50), vz: rand(30, 60), vx: rand(-0.2, 0.2), s0: 6, s1: 0, life: rand(0.6, 1) }; break;
+    case "rainbow": o = { kind: "star", z: 6, s0: 9, s1: 0, life: 0.7, x: p.x - (p.lastMx || 0) * 0.08, y: p.y - (p.lastMy || 0) * 0.08, col: ["#ff7a9a", "#ffc56e", "#fff38a", "#8ff08a", "#8fd8ff", "#c79bff"][Math.floor(now * 8) % 6] }; break;
+    case "stars": case "starfall": o = { kind: "star5", z: rand(60, 110), vz: rand(-20, 10), s0: rand(8, 12), s1: 0, life: rand(0.7, 1.1), vr: 2 }; break;
+    case "fairy": o = Math.random() < 0.5 ? { kind: "star", z: rand(40, 80), s0: 9, s1: 0, life: 0.6 } : { kind: "heart", add: false, z: rand(70, 100), vz: -18, vx: rand(-0.3, 0.3), s0: 7, s1: 5, life: 1.2, vr: 3, fade: 0.3 }; break;
+    case "leaves": o = { kind: "heart", add: false, z: rand(60, 100), vz: -22, vx: rand(-0.4, 0.4), s0: 8, s1: 6, life: 1.4, vr: 3, fade: 0.3 }; break;
+    case "feathers": o = { kind: "conf", add: false, z: rand(60, 90), vz: -16, vx: rand(-0.4, 0.4), s0: 9, s1: 7, life: 1.4, vr: 2, fade: 0.3 }; break;
+    case "glints": o = { kind: "star", z: rand(20, 80), s0: 0, s1: 11, life: 0.45, vr: 3 }; break;
+    case "foxfire": o = { kind: "dot", z: rand(30, 70), vz: rand(10, 30), vx: rand(-0.3, 0.3), s0: 10, s1: 2, life: rand(0.8, 1.2) }; break;
+    case "bubbles": o = { kind: "ring", add: false, z: rand(20, 50), vz: rand(30, 50), vx: rand(-0.2, 0.2), s0: 5, s1: 8, life: 1, fade: 0.4 }; break;
+    case "snow": o = { kind: "dot", add: false, z: rand(80, 110), vz: -25, vx: rand(-0.3, 0.3), s0: 5, s1: 4, life: 1.3, fade: 0.3 }; break;
+    case "aurora": o = { kind: "star", z: rand(40, 90), vz: rand(5, 20), s0: 10, s1: 0, life: 0.9, vr: 2 }; break;
+    case "flame": o = Math.random() < 0.5 ? { kind: "flame", z: rand(10, 30), vz: rand(40, 70), s0: 14, s1: 4, life: 0.5 } : { kind: "dot", z: rand(30, 60), vz: rand(40, 80), vx: rand(-0.3, 0.3), s0: 6, s1: 0, life: 0.8 }; break;
+    default: o = { kind: "star", z: 40, s0: 8, s1: 0, life: 0.6 };
+  }
+  const q = part({ x, y, g: 0, drag: 0.5, col, ...o });
+  if (q) live.push(now + q.life);
 }
 
 // ---------- Ambiente ----------

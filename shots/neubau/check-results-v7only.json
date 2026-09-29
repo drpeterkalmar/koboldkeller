@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-29T21:57:19.934Z",
+  "date": "2026-09-29T22:48:58.250Z",
   "profile": "gpu",
   "throttle": 4,
   "fpsNormal": null,
@@ -10,7 +10,7 @@
       "id": "V18",
       "name": "🎲 Würfel würfelt Name + kompletten Look: 20× → ≥ 15 verschiedene Looks, keine direkte Wiederholung, alle Harmonie-Regeln, Name ≤ 12 Zeichen, Namensfeld editierbar, ?seed= reproduzierbar",
       "pass": true,
-      "value": "20/20 Looks verschieden, 0 Wiederholungen, 0 Harmonie-Verstöße, Namen 20/20 neu (max. 11 Zeichen, z. B. Kicherhase, Pilzchen, Hüpftropfen, Mondtatze), editierbar true, Seed reproduzierbar true"
+      "value": "20/20 Looks verschieden, 0 Wiederholungen, 0 Harmonie-Verstöße, Namen 20/20 neu (max. 12 Zeichen, z. B. Piepsi, Glitzerzwerg, Pupsi, Wuselbommel), editierbar true, Seed reproduzierbar true"
     },
     {
       "id": "V18b",
@@ -28,19 +28,19 @@
       "id": "V19",
       "name": "Haptik dezent (Stub, je 60 s Kampf): v7 nur große Ereignisse, keine Pulse < 25 ms, Abstand ≥ 400 ms, Budget ≤ 350 ms/s; „Vibration aus“ → 0 Aufrufe; „📳 Vibration testen“ vibriert + Hinweis",
       "pass": true,
-      "value": "vorher (v6) 101 Vibrationen (103 < 25 ms, kürzester 5 ms, Abstand ≥ 56 ms) · nachher (v7) 10 Vibrationen [levelup 4, hurt 2, stairs 1, boss 1, bossKill 1, chest 1], kürzester 35 ms, Abstand ≥ 723 ms, max. 180 ms/s · aus: 0 Aufrufe · Test-Knopf: [50,90,50], Hinweis true"
+      "value": "vorher (v6) 100 Vibrationen (101 < 25 ms, kürzester 5 ms, Abstand ≥ 22 ms) · nachher (v7) 10 Vibrationen [levelup 5, hurt 2, stairs 1, boss 1, bossKill 1], kürzester 35 ms, Abstand ≥ 407 ms, max. 180 ms/s · aus: 0 Aufrufe · Test-Knopf: [50,90,50], Hinweis true"
     },
     {
       "id": "V19b",
       "name": "iPhone ab iOS 26.5: Haptik-Switch nur in DOM-Knöpfen (✨, 🧪, ⏸️, 🎒, Menü) — nie über dem Canvas; echter Tipp auf 🧪 wirkt + tickt; Tap-to-move + Joystick ungestört; „aus“ blendet die Switches aus",
       "pass": true,
-      "value": "26 Switches (btnPause, btnBag, bSpec, bPot, btnCont, btnNew, btnHall, btnSet, btnFull1, btnDice, btnLookDice, btnGo), deckungsgleich true, Canvas-Stichproben 120/120 frei, ⚔️ ohne Switch true; 🧪: Trank 3→2, Ticks 0→1; Tap-to-move 4.75 Kacheln, Joystick 3.04; aus: Trank 2→1, Ticks 1, Switch none"
+      "value": "26 Switches (btnPause, btnBag, bSpec, bPot, btnCont, btnNew, btnHall, btnSet, btnFull1, btnDice, btnLookDice, btnGo), deckungsgleich true, Canvas-Stichproben 120/120 frei, ⚔️ ohne Switch true; 🧪: Trank 3→2, Ticks 0→1; Tap-to-move 4.86 Kacheln, Joystick 2.95; aus: Trank 2→1, Ticks 1, Switch none"
     },
     {
       "id": "V20",
       "name": "Weg-Pfeil: erscheint nach 2,0 s Stillstand (nicht früher), zeigt zum Pfad-Wegpunkt (Winkelfehler < 20°, nie in eine Wand), weg bei Bewegung und erst nach erneut 2 s wieder",
       "pass": true,
-      "value": "erst nach 2001 ms (Stillstand 2.00 s, davor a=0), Winkelfehler Stadt 0° · E1 0° · Frost 0° · Glut 0° · versiegelt 0° · um die Ecke 5.1° (Luftlinie wäre 124.7° daneben), max. 5.1°; nach Tipp a=0, wieder nach 2.00 s"
+      "value": "erst nach 2002 ms (Stillstand 2.00 s, davor a=0), Winkelfehler Stadt 0° · E1 0° · Frost 0° · Glut 0° · versiegelt 0° · um die Ecke 5.1° (Luftlinie wäre 124.7° daneben), max. 5.1°; nach Tipp a=0, wieder nach 2.00 s"
     },
     {
       "id": "V20b",
@@ -58,7 +58,7 @@
       "id": "V22",
       "name": "Schneller laufen: Tempo ≈ 4,7 (+31 %), Schritt-Animation skaliert (Schrittweite ≈ gleich), Kamera läuft vorn mit, Finger still halten = weiterlaufen, ein Tipp weit = ganzer Weg, Wand dicht bei dt 0,05 s",
       "pass": true,
-      "value": "Tempo 4.7 Kacheln/s (v7 3.6, ×1.306) · Schritt 14.34 rad/s, Schrittweite 2.059 (v7 11.76 rad/s, 1.923) · Kamera 0.879 Kacheln voraus (v7 0.533) · Finger 2,5 s still: 11.64 Kacheln, läuft noch true, stoppt beim Loslassen true (v7: 3.05 Kacheln, läuft noch false) · Tipp 5 Kacheln: an in 1.06 s (v7 1.37 s) · Wand: 400 Sprünge/Stöße, 0 Frames in der Wand"
+      "value": "Tempo 4.7 Kacheln/s (v7 3.6, ×1.306) · Schritt 14.34 rad/s, Schrittweite 2.059 (v7 11.76 rad/s, 1.923) · Kamera 0.871 Kacheln voraus (v7 0.517) · Finger 2,5 s still: 11.7 Kacheln, läuft noch true, stoppt beim Loslassen true (v7: 3.03 Kacheln, läuft noch false) · Tipp 5 Kacheln: an in 1.06 s (v7 1.35 s) · Wand: 400 Sprünge/Stöße, 0 Frames in der Wand"
     },
     {
       "id": "V23",
@@ -70,13 +70,49 @@
       "id": "V24",
       "name": "Ebenen-Wahl: 5 Welt-Wege mit Welttor, 20 Portale (je Ebene eins, Name + 👑/⚡/🔒), offen bis „tiefste“, gesperrte zeigen Hinweis, Abstand ≥ 2, Brunnen → jedes Portal ≤ 6 s, Vorbeilaufen löst nichts aus, Pfeil/Tutorial/Ehrenhall/Spielstand unverändert",
       "pass": true,
-      "value": "20 Portale (Karte 38×36), Tore 1:2P 2:2P 3:2P 4:2P 5:2P, min. Abstand 2.1 · Brunnen → weitestes Portal (E6) 11.7 Kacheln = 2.49 s, Eingang → weitestes 4.22 s · offen 1,2,3,4,5,6,7,8,9 / gesperrt 11 · Symbole+Namen true · Pfeil → portal 9 · Tipp auf 9: Ebene 9 nach 1.05 s, from 9 · gesperrt 12: bleibt 0, Hinweis true · drüberlaufen (0.01 Kacheln nah): Ebene 0, stehen: Ebene 5 nach 1.13 s · Tutorial: {\"depth\":1,\"flag\":true,\"step\":-1,\"prof\":true,\"from\":1} · Spielstand v3, Felder wie v7 (32)"
+      "value": "20 Portale (Karte 38×36), Tore 1:2P 2:2P 3:2P 4:2P 5:2P, min. Abstand 2.1 · Brunnen → weitestes Portal (E6) 11.7 Kacheln = 2.49 s, Eingang → weitestes 4.22 s · offen 1,2,3,4,5,6,7,8,9 / gesperrt 11 · Symbole+Namen true · Pfeil → portal 9 · Tipp auf 9: Ebene 9 nach 1.05 s, from 9 · gesperrt 12: bleibt 0, Hinweis true · drüberlaufen (0.04 Kacheln nah): Ebene 0, stehen: Ebene 5 nach 1.1 s · Tutorial: {\"depth\":1,\"flag\":true,\"step\":-1,\"prof\":true,\"from\":1} · Spielstand v3, Felder wie v7 (32)"
     },
     {
       "id": "V25",
       "name": "Wandfallen: ab Ebene 3 wenige Schützen (1–2 → 3–5, MEGASCHWER +1), nie am Eingang/in Arenen, nie zwei auf demselben Gang, Vorwarnung ≥ 0,8 s, Treffer = Pieks-Schaden, 💨 schützt, nur der Treffer vibriert, Takt mit Lücke, FPS ≥ 45 (4×)",
       "pass": true,
-      "value": "200 Ebenen geprüft (5 Seeds × Normal/MEGA), Fehler 0, Anzahl 00112222333344445554 (MEGA 00223333444455556665) · min. Abstand zweier Bahnen 4.0 · min. Abstand zum Eingang 6.0 · Vorwarnung 0.9 s · Treffer −2 ❤️ (Pieks 2) · mit 💨 −0 · Haptik beim Schuss [], beim Treffer [hurt] · kürzester Abstand zweier Schüsse 4.84 s (3 in 12 s) · FPS 4× 296.8 (p5 151.5, 0 Geschosse) · Screenshots 10"
+      "value": "200 Ebenen geprüft (5 Seeds × Normal/MEGA), Fehler 0, Anzahl 00112222333344445554 (MEGA 00223333444455556665) · min. Abstand zweier Bahnen 4.0 · min. Abstand zum Eingang 6.0 · Vorwarnung 0.92 s · Treffer −2 ❤️ (Pieks 2) · mit 💨 −0 · Haptik beim Schuss [], beim Treffer [hurt] · kürzester Abstand zweier Schüsse 5.11 s (3 in 12 s) · FPS 4× 263.1 (p5 144.9, 0 Geschosse) · Screenshots 10"
+    },
+    {
+      "id": "V26",
+      "name": "Alle 14 Kostüme × 8 Tierarten zeichnen fehlerfrei (Spielfigur laufend, Porträt, Editor-Vorschau; hoch + quer), Gesicht bleibt frei (Kopfteil verdeckt < 3 % des Gesichtsfelds, auch mit Brille/Blume)",
+      "pass": true,
+      "value": "hoch: 112 Figuren, 112 Porträts, 112 Vorschauen, Fehler 0, Gesicht verdeckt max. 0 % (Gegenprobe Stirn unter Kapuzen ≥ 59 %), Sprites 265 · quer: 112 Figuren, 112 Porträts, 112 Vorschauen, Fehler 0, Gesicht verdeckt max. 0 % (Gegenprobe Stirn unter Kapuzen ≥ 56.1 %), Sprites 268 · Kontaktbogen 1194×1954"
+    },
+    {
+      "id": "V27",
+      "name": "Freischalten: erster Sieg über Mini-Boss/Hauptboss/König (MEGASCHWER: Sternendrache) wirft genau ein Kostüm-Paket, es fliegt zum Kobold, Toast mit „Anziehen“ (echter Tipp), zweiter Sieg → kein Paket; Speichern/Neu laden stellt Kostüm + Sammlung her, neues Spiel behält die Sammlung",
+      "pass": true,
+      "value": "E2 fee (+1, Toasts 1) · Knopf 48 px → angezogen fee · E4 waldhueter · E2 nochmal: 0 Pakete · E20 phoenix · MEGA-König sternendrache · gespeichert look.myth=fee → neu geladen fee, Sammlung 7 · neues Spiel: Sammlung 7, trägt „“"
+    },
+    {
+      "id": "V28",
+      "name": "Migration echter v3-Spielstände: bossDone [2,4,6] → genau Waldfee, Waldhüter, Greif · won → Phönix · MEGA-Sieg (Spielstand oder 🔥 Ehrenhall) → Sternendrache; einmal „Du hast N Kostüme verdient!“, alle anderen Felder gleich (Datei v3)",
+      "pass": true,
+      "value": "bossDone 2,4,6: +fee,waldhueter,greif, Hinweis ja, 2. Laden kein Hinweis, Felder gleich · won: +phoenix, Hinweis ja, 2. Laden kein Hinweis, Felder gleich · MEGA-Sieg (Spielstand): +phoenix,sternendrache, Hinweis ja, 2. Laden kein Hinweis, Felder gleich · 🔥 in der Ehrenhall: +phoenix,sternendrache, Hinweis ja, 2. Laden kein Hinweis, Felder gleich"
+    },
+    {
+      "id": "V29",
+      "name": "Würfel mit Kostümen: 300 Würfe → nur freigeschaltete, Anteil 20–40 %, 0 Harmonie-Verstöße, 0 direkte Wiederholungen, gleicher Seed = gleicher Wurf; Editor-Würfel nimmt nur Kostüme der Sammlung",
+      "pass": true,
+      "value": "Anteil 29.7 % ({\"greif\":16,\"einhorn\":21,\"drache\":19,\"zauberer\":13,\"phoenix\":20}), gesperrt 0, Verstöße 0, Wiederholungen 0, Seed gleich true · Editor 20 Würfe: 4 mit Kostüm, fremde 0"
+    },
+    {
+      "id": "V30",
+      "name": "Editor-Tab „🦄 Kostüme“: 15 Felder (Ohne + 14), ≤ 4 je Reihe, Touch ≥ 48 px, 8 Tabs ≥ 48 px, gesperrte = dunkle Silhouette + 🔒 + „Besiege …“, Stufen-Rahmen, Zähler „6 / 14“, Gesperrtes tippen ändert nichts, „🎩 Hut statt Kopfteil“ wirkt im Spiel; ?kostueme=alle: alles frei + Hinweis, speichert nichts",
+      "pass": true,
+      "value": "hoch: Tabs 8 (min 48 px), Felder 15, max 4/Reihe, min 85 px, gesperrt 8 (Helligkeit max 42, Hinweis true), Stufen 3/9/2, „🦄 6 / 14 gesammelt“, Tipp gesperrt → unverändert, gewählt phoenix, Hut-Schalter true → im Spiel {\"myth\":\"phoenix\",\"mhat\":true,\"hat\":\"pilz\"} · quer: Tabs 8 (min 48 px), Felder 15, max 4/Reihe, min 123 px, gesperrt 8 (Helligkeit max 42, Hinweis true), Stufen 3/9/2, „🦄 6 / 14 gesammelt“, Tipp gesperrt → unverändert, gewählt phoenix, Hut-Schalter true → im Spiel {\"myth\":\"phoenix\",\"mhat\":true,\"hat\":\"pilz\"} · ?kostueme=alle: gesperrt 0, Hinweis true, Sammlung unverändert, Spielstand-Look ohne Kostüm (getragen: sternendrache)"
+    },
+    {
+      "id": "V31",
+      "name": "Leistung mit Kostüm: Kellerkönig-Kampf (Wut-Phase, 9 Handlanger, Warnungen) mit Phönix/Sternendrache, CPU 4× ≥ 45 FPS (hoch + quer); Sprite-Cache bei 400 Kostümwechseln begrenzt (LRU)",
+      "pass": true,
+      "value": "hoch:phoenix 174.7 fps (p5 119, Handlanger 9, Warnungen 8) · hoch:sternendrache 227.9 fps (p5 142.9, Handlanger 9, Warnungen 5) · quer:phoenix 173.4 fps (p5 128.2, Handlanger 9, Warnungen 0) · quer:sternendrache 218.2 fps (p5 135.1, Handlanger 9, Warnungen 11) · Cache nach 50…400 Wechseln: 237 → 237 → 237 → 237 → 237 → 237 → 237 → 237 (zweite Hälfte +0)"
     },
     {
       "id": "A1",

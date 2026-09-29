@@ -70,6 +70,15 @@ während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten pe
   Haar passend oder bewusst bunt, keine dunklen Augen auf dunklem Fell, Extra in ≈ 50 %), nie zweimal direkt derselbe Look.
   Am Spiegel zusätzlich „🎲 Zufallslook“ (nur Aussehen). 177 Namen + Baukasten (z. B. „Knuddel“ + „keks“) = 536 Namen, alle ≤ 12 Zeichen.
   `?seed=N` macht die Würfe reproduzierbar (Tests).
+- **🦄 Mythos-Kostüme (v9, [V9_BERICHT.md](V9_BERICHT.md)):** 14 Kostüme nach Sagenwesen, die den ganzen Kobold verwandeln (Kapuze/Helm oder
+  Hut, Körper-Überzug, bewegtes Rückenteil: Flügel flattern, Umhänge wehen, Schwänze wedeln) — für alle 8 Tierarten, Gesicht bleibt frei.
+  Stufen: **selten** (Drachenkind, Einhorn, Sternenzauberer — von Anfang an), **episch** (je Mini-/Hauptboss beim ersten Sieg ein Kostüm-Paket:
+  Waldfee, Waldhüter, Greif, Kristallritter, Kitsune, Bonbon-Nixe, Yeti, Frostwolf, Vulkan-Golem), **mythisch** (Phönix = Kellerkönig,
+  Sternendrache = Sieg auf 🔥 MEGASCHWER; mit Aura). Nur Optik, keine Kampfwerte. Jedes Kostüm hat eine Glanz-Spur (Funken, Regenbogen,
+  Schneeflocken, Bläschen …), der Spezialangriff nimmt die Kostümfarbe an. Die Sammlung gehört dem Gerät (Key `koboldkeller2_myths`) —
+  ein neues Spiel behält sie; schon verdiente Kostüme schalten sich beim ersten Laden von selbst frei. Anziehen: im Fund-Toast
+  („Anziehen“) oder am 🪞 Spiegel, Tab „🦄 Kostüme“ (gesperrte als Silhouette mit Hinweis, Zähler, Schalter „🎩 Hut statt Kopfteil“).
+  🎲 Würfel bringt in ≈ 30 % ein freigeschaltetes Kostüm. **Nur anschauen:** `?kostueme=alle` (alles frei, nichts wird gespeichert).
 - **Schwierigkeitskurve:** Tabelle `DIFF` in `src/config.js` — mehr/zähere/schnellere Gegner je Ebene, Elite-Gegner mit Krone,
   Pieks-Platten-Fallen, engere Räume, neue Muster (Schleime teilen sich, 3er-Fächer, blinzelnde Gespenster, Doppel-Sturm).
 - **Wandfallen (v8):** Ab Ebene 3 sitzen wenige freundliche Steingesichter in den Wänden (1 → 5 je Ebene, MEGASCHWER +1). Ab und zu
@@ -99,6 +108,7 @@ additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md).
 | Datei | Inhalt |
 |---|---|
 | `src/art.js` | prozedurale Chibi-Grafik (Figuren, Gegner, Bosse, Items, Kacheln, Props) |
+| `src/myth.js` | v9: Mythos-Kostüme (Körper-Überzug, Kopfteil in zwei Lagen, animiertes Rückenteil) |
 | `src/render.js` | Iso-Renderer, Kamera, Chunk-Cache, Tiefensortierung, Licht, Glow, Minikarte |
 | `src/game.js` | Spiellogik, Kampf, KI, Loot, Ebenen, Treppen-Siegel, Sieg |
 | `src/guide.js` | v7: Weg-Pfeil (Ziel-Regel, Stillstand-Timer, Richtung entlang `findPath`) |
@@ -119,15 +129,18 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
 `KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
 v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
-`KK.editor()` (Editor-Look, Name, Würfe). v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
+`KK.editor()` (Editor-Look, Name, Würfe). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
 
 ### Testen
 ```bash
 python3 tools/serve.py 8731          # Testserver (wie http.server, aber großer Backlog — sonst hängen Modul-Anfragen)
 node tools/check.mjs --port=8731 --throttle=4   # Flow hoch+quer, FPS, Saves, v7 → shots/neubau/ (~14 min)
 node tools/check.mjs --port=8731 --throttle=4 --v7=skip   # Teil 1 (~9 min) …
-node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V25 (~10 min), einzeln: node tools/checks_v7.mjs --only=V20
+node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V31 (~18 min), einzeln: node tools/checks_v7.mjs --only=V20
 node tools/checks_v8.mjs --port=8731 --ref=8732          # v8-Checks V22–V25 einzeln; --ref = Server mit altem Stand (Vorher/Nachher)
+node tools/checks_v9.mjs --port=8731 --only=V26          # v9-Kostüm-Checks V26–V31 einzeln
+node tools/mythsheet.mjs 8731 130 out.png                # Kontaktbogen aller Kostüme × 8 Tierarten
+node tools/bot.mjs 8731 20 6 --out=v9 --myth=phoenix     # Bot mit angezogenem Kostüm
 node tools/icons.mjs 8731            # PWA-Icons aus eigenem Art-Code neu erzeugen
 node tools/audiotest.mjs http://localhost:8731/   # Handy-Regeln (ohne Autoplay-Flag): Tap → Audio läuft
 node tools/audiorender.mjs --port=8731            # Effekte + Musikzustände → shots/audio/*.wav + Messtabelle

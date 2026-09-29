@@ -1,5 +1,5 @@
 /* save.js — Spielstand, v20-Migration, Ehrenhall, Einstellungen (MIT) */
-import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf } from "./config.js";
+import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf, MYTH_KEY, MYTH_BY_ID, MYTH_START, MYTHS, mythOfBoss } from "./config.js";
 
 const num = (v, d, lo = -Infinity, hi = Infinity) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
 const str = (v, d, max = 14) => typeof v === "string" && v.trim() ? v.trim().slice(0, max) : d;
@@ -121,3 +121,27 @@ export function loadSettings() {
   return { music: s.music !== false, sfx: s.sfx !== false, vibrate: s.vibrate !== false, arrow: s.arrow !== false, joystick: s.joystick !== false };
 }
 export function saveSettings(s) { writeJson(SETTINGS_KEY, s); }
+
+// ---------- v9: Kostüm-Sammlung (gehört dem Gerät, eigener Key — ein neues Spiel verliert nichts, wie die Ehrenhall) ----------
+// { v: 1, have: [Kostüm-IDs], note: N } — note = einmaliger Hinweis „Du hast N Kostüme verdient!“ nach der Migration.
+/** was ein Spielstand + die Ehrenhall schon verdient haben: besiegte Bosse (bossDone), Sieg → Phönix, MEGASCHWER-Sieg → Sternendrache */
+export function mythsEarned(sv, hall) {
+  const out = new Set();
+  if (sv) {
+    for (const d of sv.bossDone || []) { const M = mythOfBoss(d); if (M) out.add(M.id); }
+    if (sv.won) { out.add("phoenix"); if (sv.mega) out.add("sternendrache"); }
+  }
+  const rows = hall ? [...(hall.gold || []), ...(hall.time || [])] : [];
+  if (rows.some(r => r && r.mega)) { out.add("sternendrache"); out.add("phoenix"); }
+  return MYTHS.filter(m => out.has(m.id)).map(m => m.id);
+}
+/** Sammlung laden; beim allerersten Laden (v8 → v9) aus Spielstand + Ehrenhall ableiten. Nichts wird gesperrt, der Spielstand bleibt unverändert. */
+export function initMyths() {
+  const m = readJson(MYTH_KEY);
+  if (m && Array.isArray(m.have)) return { have: [...new Set([...MYTH_START, ...m.have.filter(id => MYTH_BY_ID[id])])], note: Math.max(0, m.note | 0), fresh: false };
+  const earned = mythsEarned(loadSave(), loadHall());
+  const rec = { v: 1, have: [...new Set([...MYTH_START, ...earned])], note: earned.length };
+  writeJson(MYTH_KEY, rec);
+  return { have: rec.have, note: rec.note, fresh: true };
+}
+export function saveMyths(have, note = 0) { return writeJson(MYTH_KEY, { v: 1, have: have.filter(id => MYTH_BY_ID[id]), note }); }
