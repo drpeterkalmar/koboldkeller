@@ -1,6 +1,6 @@
 /* art.js — prozedurale Chibi-Grafik, alles in Offscreen-Caches (MIT)
    Design-Einheit: 1 px bei Kachelbreite U = 64. K = Pixel pro Design-Einheit. */
-import { shade, rgba, hexRgb, TAU, mulberry32 } from "./util.js";
+import { shade, rgba, hexRgb, TAU, mulberry32, mixHex } from "./util.js";
 
 let K = 1;
 const cache = new Map();
@@ -1016,6 +1016,9 @@ export function orbSprite(col) {
 // =====================================================================
 export const WALL_H = 34;
 const TOWN = { grass: ["#93d86c", "#8ad064", "#9ddf76"], path: ["#ecd9b4", "#e2cda4", "#f2e2c2"], edge: "#6fae4f" };
+// v8: Welt-Wege in der Stadt (deco 8 … 12 = Weg/Torplatz, 13 … 17 = Platz-Rand) — Pflaster in Weltfarbe
+export const ROAD_COL = [null, "#b9eb95", "#b4e4f6", "#ffc6e3", "#e6f3ff", "#ffcc94"];
+export const WORLD_EMOJI = [null, "🌿", "💎", "🍭", "❄️", "🔥"];
 function diamondPath(c, sx, sy, i = 0) {
   c.moveTo(sx, sy + i); c.lineTo(sx + 32 - i * 2, sy + 16); c.lineTo(sx, sy + 32 - i); c.lineTo(sx - 32 + i * 2, sy + 16); c.closePath();
 }
@@ -1023,6 +1026,19 @@ function diamondPath(c, sx, sy, i = 0) {
 export function drawFloorTile(c, sx, sy, B, bi, v, deco, ao) {
   const r = mulberry32(v * 7919 + 13);
   if (bi === 0) {
+    if (deco >= 8) {                                        // v8: Welt-Weg (Pflaster in Weltfarbe), Platz-Rand heller + Gras-Fugen
+      const w = deco >= 13 ? deco - 12 : deco - 7, edge = deco >= 13, base = ROAD_COL[w] || TOWN.path[0];
+      c.beginPath(); diamondPath(c, sx, sy, -0.6); c.fillStyle = edge ? TOWN.grass[v % 3] : shade(base, -0.1); c.fill();
+      for (let k = 0; k < (edge ? 2 : 4); k++) {
+        const x = sx + (r() - 0.5) * 32, y = sy + 16 + (r() - 0.5) * 13;
+        c.beginPath(); c.ellipse(x, y, 7 + r() * 4, 4 + r() * 2, 0, 0, TAU);
+        c.fillStyle = shade(base, 0.08 - r() * 0.14); c.fill();
+        c.strokeStyle = shade(base, -0.45); c.globalAlpha = 0.35; c.lineWidth = 1.2; c.stroke(); c.globalAlpha = 1;
+      }
+      if (!edge && v % 7 === 0) star4(c, sx + (r() - 0.5) * 20, sy + 14 + (r() - 0.5) * 8, 3.2, "rgba(255,255,255,.7)");
+      if (ao) aoEdges(c, sx, sy, ao, 0.28);
+      return;
+    }
     const isPath = deco === 1;
     const col = isPath ? TOWN.path[v % 3] : TOWN.grass[v % 3];
     c.beginPath(); diamondPath(c, sx, sy, -0.6); c.fillStyle = col; c.fill();
@@ -1205,6 +1221,97 @@ export function wallSprite(B, bi, v) {
         c.beginPath(); c.moveTo(8 + o, 22 + H * 0.2); c.lineTo(14 + o, 24 + H * 0.5); c.lineTo(10 + o, 22 + H * 0.8); c.stroke();
         c.beginPath(); c.moveTo(52 - o, 22 + H * 0.3); c.lineTo(46 - o, 26 + H * 0.6); c.stroke();
         break;
+    }
+  });
+}
+
+// =====================================================================
+// v8: Welttor-Pfosten (Stadt) — Steinsäule mit Kappe + Wimpel in Weltfarbe (Anker = Bodenmitte)
+// =====================================================================
+export function gatePostSprite(w) {
+  const col = ROAD_COL[w] || "#ffffff", dk = shade(col, -0.55);
+  return spr("wpost:" + w, 44, 128, 22, 120, (c) => {
+    c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(22, 120, 18, 8, 0, 0, TAU); c.fill();
+    const col1 = (c) => c.roundRect(12, 34, 20, 86, 6);
+    ol(c, col1, "#efe6d6", "#6a5a4a", 3); shadeIn(c, col1, 22, 70, 30, 0.35, 0.3);
+    c.strokeStyle = "rgba(106,90,74,.35)"; c.lineWidth = 1.6; for (const y of [58, 84, 106]) { c.beginPath(); c.moveTo(13, y); c.lineTo(31, y + 3); c.stroke(); }
+    ol(c, (c) => c.roundRect(7, 110, 30, 10, 3), "#d8cdbd", "#6a5a4a", 2.6);
+    ol(c, (c) => c.roundRect(6, 26, 32, 12, 4), shade(col, -0.1), dk, 2.8);   // Kappe
+    ol(c, ell(22, 18, 12, 12), col, dk, 2.8);                                  // Kugel obenauf
+    c.fillStyle = "rgba(255,255,255,.75)"; c.beginPath(); c.ellipse(18, 13, 4, 3, -0.5, 0, TAU); c.fill();
+    star4(c, 27, 12, 3.5, "#ffffff");
+  });
+}
+
+// =====================================================================
+// v8: Wand-Schütze — freundliches Steingesicht in der Wand (vorne gezeichnet, render.js schert es auf die Wandseite)
+// mood: "idle" (Mäulchen zu) · "warn" (Backen aufgebläht, Maul glüht) · "shoot" (Maul weit offen). Anker = Mitte.
+// =====================================================================
+const FACE_STONE = { moos: "#cfdcae", kristall: "#dcd6ff", zucker: "#fff1dc", frost: "#8fb8da", glut: "#e8b890" };
+export function wallFaceSprite(B, mood, glow) {
+  const stone = FACE_STONE[B.id] || "#d8d0c4", dk = "#2a1830";
+  return spr("wface:" + (B.id || "x") + ":" + mood + ":" + glow, 40, 40, 20, 20, (c) => {
+    const puff = mood === "warn" ? 1.12 : 1;
+    const face = ell(20, 21, 15.5 * puff, 15 * puff);
+    ol(c, face, stone, dk, 3.2); shadeIn(c, face, 20, 21, 16, 0.45, 0.3);
+    ol(c, ell(20, 21, 12.5 * puff, 12 * puff), "rgba(0,0,0,0)", rgba(glow, 0.55), 1.8);   // Ring in Weltfarbe
+    // Augen (klein, glitzernd) + Bäckchen
+    for (const x of [14, 26]) {
+      c.beginPath(); c.ellipse(x, 15, 2.8, 3.4, 0, 0, TAU); c.fillStyle = "#1b1030"; c.fill();
+      c.beginPath(); c.arc(x - 0.9, 13.8, 1.1, 0, TAU); c.fillStyle = "#fff"; c.fill();
+    }
+    c.fillStyle = mood === "warn" ? "rgba(255,110,140,.75)" : "rgba(255,140,170,.45)";
+    for (const x of [9.5, 30.5]) { c.beginPath(); c.ellipse(x, 21, 3.6 * puff, 2.4 * puff, 0, 0, TAU); c.fill(); }
+    if (mood === "idle") { c.beginPath(); c.ellipse(20, 25, 3.2, 2.4, 0, 0, TAU); c.fillStyle = "#2a1830"; c.fill(); }
+    else {
+      const rr = mood === "shoot" ? 6.5 : 4.8;
+      const g = c.createRadialGradient(20, 25, 0, 20, 25, rr);
+      g.addColorStop(0, "#ffffff"); g.addColorStop(0.45, glow); g.addColorStop(1, shade(glow, -0.5));
+      c.beginPath(); c.ellipse(20, 25, rr, rr * 0.9, 0, 0, TAU); c.fillStyle = g; c.fill();
+      c.strokeStyle = "#2a1830"; c.lineWidth = 2; c.stroke();
+    }
+  });
+}
+/** v8: Geschoss der Wand-Schützen je Welt (Anker = Mitte) */
+export function wallShotSprite(id) {
+  return spr("wshot:" + id, 40, 40, 20, 20, (c) => {
+    switch (id) {
+      case "spore": {           // Moos-Spore: flauschige grüne Kugel mit Pünktchen
+        for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; c.beginPath(); c.arc(20 + Math.cos(a) * 11, 20 + Math.sin(a) * 11, 4.2, 0, TAU); c.fillStyle = "#8fdc6a"; c.fill(); }
+        ol(c, ell(20, 20, 11.5, 11.5), "#b6ff8a", "#3f7a2a", 2.2);
+        c.fillStyle = "#ffe36e"; for (const [x, y] of [[16, 17], [24, 19], [19, 25], [26, 25]]) { c.beginPath(); c.arc(x, y, 1.8, 0, TAU); c.fill(); }
+        c.fillStyle = "rgba(255,255,255,.8)"; c.beginPath(); c.ellipse(15, 14, 3.5, 2.2, -0.6, 0, TAU); c.fill();
+        break;
+      }
+      case "shard": {           // Kristallsplitter: spitzer Doppelkeil
+        const d = (c) => { c.moveTo(20, 3); c.lineTo(28, 20); c.lineTo(20, 37); c.lineTo(12, 20); c.closePath(); };
+        ol(c, d, "#9ff0ff", "#3a5a9a", 2.4);
+        c.fillStyle = "rgba(255,255,255,.7)"; c.beginPath(); c.moveTo(20, 6); c.lineTo(24, 20); c.lineTo(20, 20); c.closePath(); c.fill();
+        c.fillStyle = "rgba(90,120,220,.35)"; c.beginPath(); c.moveTo(20, 20); c.lineTo(12, 20); c.lineTo(20, 34); c.closePath(); c.fill();
+        break;
+      }
+      case "candy": {           // Bonbonkugel mit Streifen
+        c.save(); c.beginPath(); c.arc(20, 20, 12.5, 0, TAU); c.clip();
+        c.fillStyle = "#ffffff"; c.fillRect(0, 0, 40, 40);
+        c.fillStyle = "#ff6fae"; for (let k = -3; k < 4; k++) { c.beginPath(); c.moveTo(k * 9, 40); c.lineTo(k * 9 + 5, 40); c.lineTo(k * 9 + 25, 0); c.lineTo(k * 9 + 20, 0); c.closePath(); c.fill(); }
+        c.restore();
+        ol(c, ell(20, 20, 12.5, 12.5), "rgba(0,0,0,0)", "#8a1a4e", 2.4);
+        c.fillStyle = "rgba(255,255,255,.85)"; c.beginPath(); c.ellipse(15, 14, 4, 2.5, -0.6, 0, TAU); c.fill();
+        break;
+      }
+      case "snow": {            // Schneeball
+        ol(c, ell(20, 20, 12.5, 12.5), "#f8fcff", "#7aa8cc", 2.4);
+        c.fillStyle = "#dcefff"; c.beginPath(); c.arc(24, 24, 4.5, 0, TAU); c.fill(); c.beginPath(); c.arc(15, 17, 3, 0, TAU); c.fill();
+        star4(c, 16, 13, 3.4, "#ffffff");
+        break;
+      }
+      default: {                // Glutkugel
+        const g = c.createRadialGradient(18, 17, 1, 20, 20, 13);
+        g.addColorStop(0, "#fffbe0"); g.addColorStop(0.45, "#ffc050"); g.addColorStop(1, "#e0501a");
+        c.beginPath(); c.arc(20, 20, 12.5, 0, TAU); c.fillStyle = g; c.fill();
+        c.strokeStyle = "#7a2008"; c.lineWidth = 2.2; c.stroke();
+        c.strokeStyle = "rgba(255,240,180,.8)"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(13, 22); c.lineTo(18, 25); c.lineTo(22, 21); c.stroke();
+      }
     }
   });
 }

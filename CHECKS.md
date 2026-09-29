@@ -76,7 +76,16 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | V21 | Save v6 → v7: Spielstand-Datei (v3) unverändert, alle Felder gleich, Einstellungen bleiben + 🧭 neu an, Weiterspielen stellt alles her | ja |
 | Bot | `tools/bot.mjs 8731 20 6 --out=v7`: Normal durchspielbar | 0 Tode |
 
-Hinweis: Der ganze Lauf dauert ~14 min. In zwei Teilen: `--v7=skip` (A/B/C/V1–V17, ~9 min) und `--v7=only` (V18–V21, ~4,5 min).
+## V8 — Spielgefühl: Tempo, Boss-Leben, Ebenen-Wahl, Wandfallen (automatisch, `tools/checks_v8.mjs`, Screenshots in `shots/neubau/v8/`)
+| # | Check | Ziel |
+|---|---|---|
+| V22 | Tempo auf gerader Strecke ≈ 4,7 (×1,25 … 1,36 ggü. v7), Schrittweite < 2,3 (Animation skaliert), Kamera läuft vorn mit; Finger 2,5 s **still** halten (echtes Touch) → > 7 Kacheln und läuft noch, Loslassen stoppt; ein Tipp 5 Kacheln weit → kommt an; 400 Sprünge/Stöße gegen Wände bei dt 0,05 s → 0 Frames in der Wand. Mit `--ref`: dieselben Messungen am alten Stand | ja |
+| V23 | Alle 10 Bosse (Level 10): Leben = (Grund + proLevel·10) × `BOSS_HP_MUL` (1,25 … 1,35), Phasen bei 66/33 % (Mini 50 %) wie vorher, 30 erzwungene Wellen E20 → Deckel hält | ja |
+| V24 | 20 Portale (1 … 20, je Welttor 4, 2 Pfosten), Abstand ≥ 2, Brunnen → jedes Portal ≤ 6 s (Pfadlänge / Tempo), offen = 1 … tiefste, 👑/⚡/🌀/🔒 + Namen, Weg-Pfeil → tiefstes Portal; echter Tipp auf Portal 9 → Ebene 9, `runFrom` 9; gesperrtes Portal → Hinweis, kein Wechsel; Pfad mitten über ein Portal → kein Betreten, Stehenbleiben → hinein; Tutorial-Schritt „Portal“ schließt ab; Spielstand v3 ohne neue Felder. Screenshots aller Tore hoch + quer | ja |
+| V25 | 200 Ebenen (5 Seeds × Normal/MEGA): Anzahl = Tabelle, keine vor Ebene 3, keine Bahn im Eingangsraum/< 6 Kacheln vom Eingang/in Arenen, Bahnen ≥ 4 auseinander; Vorwarnung 0,8 … 1,1 s; Treffer = Pieks-Schaden, mit 💨 0; Haptik nur beim Treffer („hurt“); Schüsse derselben Falle ≥ 2,5 s auseinander; FPS (4×, E19, alle Fallen aktiv + 12 Gegner) ≥ 45. Screenshots je Welt Vorwarnung + Schuss, hoch + quer | ja |
+| Bot | `tools/bot.mjs 8731 20 6 --out=v8`: Normal durchspielbar, Tipps nur auf Sichtbares, Stadt zu Fuß; Tabelle mit Lauf-Sekunden, Tipps, Wandfallen-Treffern, Bosskampf-Dauer | 0 Tode, 0 Hänger |
+
+Hinweis: Der ganze Lauf dauert ~19 min. In zwei Teilen: `--v7=skip` (A/B/C/V1–V17, ~9 min) und `--v7=only` (V18–V25, ~10 min).
 Testserver: `python3 tools/serve.py 8731` (großer Backlog; der Standard-`http.server` ließ vereinzelt Modul-Anfragen > 30 s hängen).
 
 ## B — Kids-UX (automatisch + Screenshot)

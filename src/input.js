@@ -1,8 +1,11 @@
-/* input.js — Tap-to-Move, Halten-Folgen, schwebender Joystick, Tastatur (MIT) */
+/* input.js — Tap-to-Move, Halten-Folgen, schwebender Joystick, Tastatur (MIT)
+   v8: Halten-Folgen reißt nicht mehr ab — hält der Finger still, wird der Zielpunkt jeden Frame neu unter dem Finger bestimmt
+   (die Kamera läuft mit), der Kobold läuft also weiter, solange man hält. Tipp auf Gegner/Portal/Treppe + Halten bleibt ein Tipp. */
 import { R, toWorld, toScreen } from "./render.js";
 import { G, tapWorld, holdWorld, releaseHold, setJoy, attack, bubbles, dodge, potion, special } from "./game.js";
 
 export const IN = { joyOn: true, joy: null, hold: null, keys: {}, attackHeld: false, cb: {} };
+export const HOLD = { ms: 250, movePx: 12, moveMs: 120 };   // Halten wird „live“ nach 250 ms Stillhalten (nicht auf Gegner/Portal) oder beim Ziehen
 let base, knob;
 
 /** Bildschirm-Richtung → Welt-Richtung (Iso) */
@@ -49,8 +52,8 @@ function down(e) {
     return;
   }
   const w = toWorld(x, y);
-  tapWorld(w.x, w.y, pickEnt(x, y));
-  IN.hold = { id: e.pointerId, t0: performance.now(), x, y };
+  const kind = tapWorld(w.x, w.y, pickEnt(x, y));
+  IN.hold = { id: e.pointerId, t0: performance.now(), x, y, x0: x, y0: y, snap: kind === "enemy" || kind === "snap", live: false };
 }
 function move(e) {
   const j = IN.joy;
@@ -69,8 +72,16 @@ function move(e) {
   const h = IN.hold;
   if (h && e.pointerId === h.id && G.screen === "play") {
     h.x = e.clientX; h.y = e.clientY;
-    if (performance.now() - h.t0 > 170) { const w = toWorld(h.x, h.y); holdWorld(w.x, w.y); }
+    if (!h.live && Math.hypot(h.x - h.x0, h.y - h.y0) > HOLD.movePx && performance.now() - h.t0 > HOLD.moveMs) h.live = true;
+    if (h.live) { const w = toWorld(h.x, h.y); holdWorld(w.x, w.y); }
   }
+}
+/** v8: jeden Frame (main.js) — Finger hält still: Zielpunkt unter dem Finger neu bestimmen (Kamera wandert mit) */
+export function inputFrame() {
+  const h = IN.hold;
+  if (!h || G.screen !== "play") return;
+  if (!h.live && !h.snap && performance.now() - h.t0 > HOLD.ms) h.live = true;
+  if (h.live) { const w = toWorld(h.x, h.y); holdWorld(w.x, w.y); }
 }
 function up(e) {
   const j = IN.joy;

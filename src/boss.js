@@ -3,7 +3,7 @@
    v5: Mini-Bosse (Ebene 2/6/10/14/18, 2 Phasen, eigene Wesen + Angriffe), große Arena mit Toren, Handlanger-Wellen mit
    Spawn-Kreis, beim Sieg verschwinden alle Handlanger + Treppe/Portal entsiegelt sich.
    Fairness für Kinder: jede Gefahr wird ≥ 0,8 s vorher angezeigt (MEGASCHWER ×0,75), Phasenwechsel räumen alle Warnungen ab. */
-import { BOSSES, BOSS_PHASES, MEGA, MINIS, MINI_PHASE, ARENA, MINION, MINION_CAP, MAX_DEPTH } from "./config.js";
+import { BOSSES, BOSS_PHASES, BOSS_HP_MUL, MEGA, MINIS, MINI_PHASE, ARENA, MINION, MINION_CAP, MAX_DEPTH } from "./config.js";
 import { G, H, later, playerHurt, makeEnt, steer, walk, faceTo, flyItem, rainItem, winGame, segDist, save } from "./game.js";
 import { canStand, nearestFree } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash } from "./fx.js";
@@ -17,7 +17,7 @@ export function initBoss(e, lvl) {
   const b = G.biome, D = BOSSES[b] || BOSSES[1], king = e.type === "king";
   e.isBoss = true; e.isKing = king; e.def = D; e.bi = b;
   e.scale = king ? 2.9 : 1.9; e.r = king ? 1.1 : 0.7;
-  e.hp = e.maxHp = Math.round(D.hp[0] + D.hp[1] * lvl);
+  e.hp = e.maxHp = Math.round((D.hp[0] + D.hp[1] * lvl) * BOSS_HP_MUL);            // v8: × BOSS_HP_MUL
   e.dmg = D.dmg * (G.mega ? MEGA.dmg : 1);
   e.speed = D.speed * (G.mega ? MEGA.speed : 1);
   e.name = D.name; e.epi = D.epi; e.phase = 1; e.cycle = 0; e.state = "sleep"; e.lastAtk = ""; e.invulT = 0; e.aura = D.aura;
@@ -40,7 +40,7 @@ function initMini(e, lvl) {
   const M = MINIS[G.depth] || MINIS[2];
   e.isBoss = true; e.isMini = true; e.def = M; e.bi = G.biome; e.kind = M.id;
   e.scale = M.scale; e.r = M.r; e.fly = !!M.fly;
-  e.hp = e.maxHp = Math.round(M.hp[0] + M.hp[1] * lvl);
+  e.hp = e.maxHp = Math.round((M.hp[0] + M.hp[1] * lvl) * BOSS_HP_MUL);            // v8: × BOSS_HP_MUL
   e.dmg = M.dmg * (G.mega ? MEGA.dmg : 1);
   e.speed = M.speed * (G.mega ? MEGA.speed : 1);
   e.name = M.name; e.epi = M.epi; e.phase = 1; e.cycle = 0; e.state = "sleep"; e.lastAtk = ""; e.invulT = 0; e.aura = M.aura; e.tint = M.col;
@@ -549,6 +549,7 @@ export function spawnWave(b, n) {
   const pool = (b.def && b.def.minions) || [["slime", 1]];
   const free = A.spawns.filter(s => Math.hypot(s.x - p.x, s.y - p.y) > 3.5 && !G.spawns.some(o => Math.hypot(o.x - s.x, o.y - s.y) < 0.9));
   const list = (free.length ? free : A.spawns).slice().sort(() => Math.random() - 0.5);
+  A.spawned = (A.spawned || 0) + n;                         // v8: Handlanger je Kampf gesamt (Bot-Protokoll)
   for (let k = 0; k < n; k++) {
     const s = list[k % list.length], j = k >= list.length ? 0.8 : 0;
     const f = nearestFree(G.L.map, s.x + rand(-j, j), s.y + rand(-j, j), 0.3);

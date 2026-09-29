@@ -1,6 +1,7 @@
 // Koboldkeller 2 — Akzeptanz-Check (CHECKS.md)
-// node tools/check.mjs [--port=8731] [--throttle=4] [--no-perf] [--profile=gpu|software] [--v7=all|skip|only] [--hapsecs=60]
-// v7-Checks (V18–V21) liegen in tools/checks_v7.mjs (auch einzeln lauffähig). Langer Lauf in Teilen: --v7=skip, dann --v7=only.
+// node tools/check.mjs [--port=8731] [--throttle=4] [--no-perf] [--profile=gpu|software] [--v7=all|skip|only] [--hapsecs=60] [--ref=8732]
+// v7-Checks (V18–V21) liegen in tools/checks_v7.mjs, v8-Checks (V22–V25) in tools/checks_v8.mjs (beide auch einzeln lauffähig).
+// Langer Lauf in Teilen: --v7=skip (A/B/C/V1–V17), dann --v7=only (V18–V25). --ref=PORT: v7-Vergleichsserver für Vorher/Nachher in V22.
 // Profil „gpu" (Standard): Chromium new-headless mit GPU-Raster (wie Canvas2D am Handy) und
 // ungedrosseltem Frame-Takt (--disable-gpu-vsync/--disable-frame-rate-limit), weil headless-rAF
 // sonst lastunabhängig auf ~10–25 Hz gedrosselt wird. FPS = gemessener Frame-Durchsatz.
@@ -9,10 +10,11 @@
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { runV7, GPU_FLAGS } from "./checks_v7.mjs";
+import { runV8 } from "./checks_v8.mjs";
 
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith("--" + k)); if (!a) return d; const v = a.split("=")[1]; return v === undefined ? true : v; };
 const PORT = +arg("port", 8731), THROTTLE = +arg("throttle", 4), PERF = !arg("no-perf", false), PROFILE = arg("profile", "gpu");
-const V7MODE = arg("v7", "all"), HAPSECS = +arg("hapsecs", 60);
+const V7MODE = arg("v7", "all"), HAPSECS = +arg("hapsecs", 60), REF = arg("ref", null) ? `http://localhost:${arg("ref")}/` : null;
 const FLAGS = [...(PROFILE === "gpu" ? GPU_FLAGS.slice(0, 3) : []), "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
 const LAUNCH = PROFILE === "gpu" ? { channel: "chromium", args: FLAGS } : { args: FLAGS };
 const BASE = `http://localhost:${PORT}/`;
@@ -921,6 +923,7 @@ if (PERF && PROFILE === "gpu") {
 // 6) v7 — Würfel-Look + Namen, Haptik dezent, Weg-Pfeil, Save v6 → v7 (tools/checks_v7.mjs, Screenshots in shots/neubau/v7/)
 // =====================================================================
 if (V7MODE !== "skip") await runV7({ browser, BASE, R, errors, secs: HAPSECS });
+if (V7MODE !== "skip") await runV8({ browser, BASE, R, errors, REF });
 R("A1", "Keine pageerrors/console.errors (hoch + quer)", errors.length === 0, errors.length ? errors.slice(0, 5).join(" | ") : "0");
 R("A5", "Keine externen Requests", foreign.length === 0, foreign.length ? foreign.slice(0, 3).join(", ") : "0");
 await browser.close();

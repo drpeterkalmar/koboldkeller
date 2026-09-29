@@ -1,13 +1,15 @@
 /* game.js — Zustand, Spieler, Kampf, Gegner-KI, Loot, Ebenen, Sieg (MIT)
    v4: Munition aus Kills, Obergrenzen (❤️/🧪/🫧) mit Gold-Umtausch, großer Magnet, Talente, Spezialangriff über
    Glitzerpilze, Heim-Portal 20 s unsichtbar, Ebenen-Paletten, Schwierigkeitskurve (Elite, Fallen, neue Muster).
-   v5: Boss auf jeder 2. Ebene (Mini-Bosse), Treppe/20. Portal versiegelt bis zum Sieg (bossDone), Handlanger-Beute klein. */
+   v5: Boss auf jeder 2. Ebene (Mini-Bosse), Treppe/20. Portal versiegelt bis zum Sieg (bossDone), Handlanger-Beute klein.
+   v8: schneller laufen (Animation/Wegpunkte/Teilschritte), 20 Stadt-Portale (je Ebene eins, Welttore) mit Ziel-/Verweil-Regel,
+   Treppe/Portal per Tipp „scharf“, Wand-Schützen (Wandfallen) mit Vorwarnung. */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
-  ARENA, MINIS, BOSSES, bossKindOf,
+  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK,
 } from "./config.js";
-import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked } from "./world.js";
+import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
 import { haptic } from "./platform.js";
@@ -23,7 +25,7 @@ export const G = {
   flow: null, flowT: 0, seenT: 0, saveT: 0, portalCd: 0, lockToastT: 0, tutStep: -1, tutFlags: {},
   homeHideT: 0, emptyT: 0, emptyToastT: 0, specToastT: 0, capToastT: 0, camFocus: null, later: [], specFx: null, mirrorArmed: true,
   hooks: { toast() { }, banner() { }, hud() { }, boss() { }, bossIntro() { }, win() { }, dead() { }, level() { }, tut() { }, fade(cb) { cb(); }, editor() { } },
-  stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0 },
+  stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0, wallHits: 0 },
 };
 export const H = () => G.hooks;
 /** Ereignis nach sec Spielzeit (steht in Pause/Hit-Stop still). tag = "boss": wird beim Boss-Sieg abgebrochen */
@@ -164,16 +166,19 @@ export function buildLevel(depth) {
   }
   resetFx();
   const p = G.p;
-  p.x = L.entry.x; p.y = L.entry.y; p.vx = p.vy = 0; p.path = null; p.foe = null; p.dashT = 0; p.z = 0; p.specT = 0;
+  p.x = L.entry.x; p.y = L.entry.y; p.vx = p.vy = 0; p.path = null; p.foe = null; p.goal = null; p.dashT = 0; p.z = 0; p.specT = 0;
   p.invulT = 1.2;
   G.hold = null; G.portalCd = 1.0; G.flow = null; G.flowT = 0; G.darkness = 0; G.mirrorArmed = false;
-  L.homeArmed = false; L.traps = L.traps || [];
+  L.homeArmed = false; L.traps = L.traps || []; L.wallTraps = L.wallTraps || [];
   if (depth === 0) {
     for (const d of L.dummies) G.ents.push(makeEnt("dummy", d.x, d.y));
+    // v8: jede erreichte Ebene einzeln wählbar (bis G.deepest) — Boss-Ebenen 👑, Mini-Boss-Ebenen ⚡, noch nicht erreichte 🔒
     for (const po of L.portals) {
       po.locked = po.depth > G.deepest;
       po.col = BIOME_PORTAL[biomeOf(po.depth)];
-      po.label = (po.locked ? "🔒 " : "🌀 ") + "Ebene " + po.depth;
+      po.icon = po.locked ? "🔒" : portalIcon(po.depth);
+      po.label = po.icon + " " + po.depth;
+      po.name = levelName(po.depth); po.dwell = 0;
     }
     L.lights = L.lights || [];
     G.runSecs = 0; G.homeHideT = 0;
@@ -196,6 +201,8 @@ export function buildLevel(depth) {
   else save();
 }
 const BIOME_PORTAL = ["#7fffd4", "#8fff8a", "#8fe9ff", "#ff9ae0", "#dff6ff", "#ffae5a"];
+export const portalIcon = d => { const k = bossKindOf(d); return k === "main" ? "👑" : k === "mini" ? "⚡" : "🌀"; };
+export const PORTAL_DWELL = 0.45;          // v8: Stadt-Portal ohne Tipp-Ziel erst nach so langem Stehen (Vorbeilaufen löst nichts aus)
 
 function populate(L, depth) {
   const b = G.biome, D = diffOf(depth);
@@ -226,6 +233,10 @@ function populate(L, depth) {
     const s = take(5); if (!s) break;
     L.traps.push({ x: s.x, y: s.y, ph: L.rnd() * TRAP.period, st: 0, hitT: 0 });
   }
+  // v8: Wand-Schützen — nicht im Eingangsraum, nicht in der Arena, nie zwei auf demselben Gang (world.js placeWallTraps)
+  const nW = D.wall + (G.mega && D.wall ? WALLTRAP.megaPlus : 0);
+  L.wallTraps = nW ? placeWallTraps(L, nW, WALLTRAP) : [];
+  L.wallTraps.forEach((w, i) => { w.st = 0; w.t = 0; w.next = 1.2 + i * WALLTRAP.period / L.wallTraps.length + L.rnd() * WALLTRAP.jit; w.look = WALLTRAP_LOOK[G.biome] || WALLTRAP_LOOK[1]; w.fired = 0; });
   // Items
   const put = (kind, v) => { const s = take(3); if (s) G.items.push(makeItem(kind, s.x, s.y, v)); };
   for (let i = 0; i < 7 + depth * 2; i++) put("coin");
@@ -648,30 +659,37 @@ export function tapWorld(wx, wy, hitEnt) {
   const p = G.p;
   if (!playing()) return;
   if (hitEnt && G.ents.includes(hitEnt)) {
-    p.foe = hitEnt;
+    p.foe = hitEnt; p.goal = null;
     const d = Math.hypot(hitEnt.x - p.x, hitEnt.y - p.y);
     if (d < PLAYER.atkRadius - 0.3) { attack(); p.path = null; }
     else p.path = findPath(G.L.map, p.x, p.y, hitEnt.x, hitEnt.y, p.r);
-    return;
+    return "enemy";
   }
   p.foe = null;
   const L = G.L;
   if (L.npc && Math.hypot(L.npc.x - wx, L.npc.y - wy) < 1.2) { H().tut("tap"); }
   if (L.mirror && Math.hypot(L.mirror.x - wx, L.mirror.y - wy) < 1.1) G.mirrorArmed = true;
-  let tx = wx, ty = wy;
-  const snap = (pt, r) => { if (pt && !pt.hidden && !pt.sealed && Math.hypot(pt.x - wx, pt.y - wy) < r) { tx = pt.x; ty = pt.y; } };
+  let tx = wx, ty = wy, goal = null, bd = 1e9;
+  // Einrasten auf Treppe/Portale (nächstes gewinnt — die Stadt-Portale stehen ≥ 2 Kacheln auseinander)
+  const snap = (pt, r) => { if (!pt || pt.hidden || pt.sealed) return; const d = Math.hypot(pt.x - wx, pt.y - wy); if (d < r && d < bd) { bd = d; tx = pt.x; ty = pt.y; goal = pt; } };
   snap(L.stairs, 1.5); snap(L.homePortal, 1.3);
-  if (L.portals) for (const po of L.portals) snap(po, 1.4);
+  if (L.portals) for (const po of L.portals) snap(po, 1.3);
+  // v8: Tipp auf Treppe/Heim-Portal = klare Absicht → sofort „scharf“ (auch wenn man beim Öffnen schon draufstand)
+  if (goal && goal === L.stairs) L.stairs.armed = true;
+  if (goal && goal === L.homePortal) L.homeArmed = true;
+  p.goal = goal;
   const path = findPath(L.map, p.x, p.y, tx, ty, p.r);
   p.path = path || [{ x: tx, y: ty }];
   ring(tx, ty, 0.5, "#ffffff", 0.35, 0.5);
+  return goal ? "snap" : "ground";
 }
 export function holdWorld(wx, wy) {
   if (!playing()) return;
   G.hold = { x: wx, y: wy };
+  if (G.p) G.p.goal = null;
 }
 export function releaseHold() { G.hold = null; }
-export function setJoy(x, y, m) { G.joy.x = x; G.joy.y = y; G.joy.m = m; if (m > 0.1 && G.p) { G.p.path = null; G.p.foe = null; } }
+export function setJoy(x, y, m) { G.joy.x = x; G.joy.y = y; G.joy.m = m; if (m > 0.1 && G.p) { G.p.path = null; G.p.foe = null; G.p.goal = null; } }
 
 // =====================================================================
 // Update
@@ -706,6 +724,7 @@ export function update(dt, realDt) {
   updateEnts(dt);
   updateTeles(dt);
   updateTraps(dt);
+  updateWallTraps(dt);
   if (L.arena) arenaTick(dt);
   // Sichtbarkeit (Minikarte)
   G.seenT -= dt;
@@ -777,16 +796,19 @@ function updatePlayer(dt) {
       }
     }
     if (tvx === 0 && tvy === 0 && p.path && p.path.length) {
-      const wp = p.path[0];
+      const wp = p.path[0], last = p.path.length === 1;
       const d = Math.hypot(wp.x - p.x, wp.y - p.y);
-      if (d < 0.14) p.path.shift();
-      else { const s = Math.min(spd, d * 8 + 0.8); tvx = (wp.x - p.x) / d * s; tvy = (wp.y - p.y) / d * s; }
+      if (d < (last ? 0.14 : 0.3)) p.path.shift();
+      else { const s = last ? Math.min(spd, d * 8 + 0.8) : spd; tvx = (wp.x - p.x) / d * s; tvy = (wp.y - p.y) / d * s; }   // v8: nur am Ziel abbremsen, nicht an jeder Ecke
       if (!p.path.length) p.path = null;
     }
     const a = Math.min(1, dt * 16);
     p.vx += (tvx - p.vx) * a; p.vy += (tvy - p.vy) * a;
   }
-  const blocked = moveEnt(m, p, p.vx * dt, p.vy * dt, p.r);
+  // v8: in Teilschritten ≤ 0,2 Kacheln bewegen — Wand bleibt dicht, auch bei Frame-Einbrüchen (dt bis 0,05 s) und Rückstoß
+  const mvx = p.vx * dt, mvy = p.vy * dt, nSub = Math.max(1, Math.ceil(Math.max(Math.abs(mvx), Math.abs(mvy)) / 0.2));
+  let blocked = false;
+  for (let k = 0; k < nSub; k++) blocked = moveEnt(m, p, mvx / nSub, mvy / nSub, p.r) || blocked;
   if (blocked && p.path && p.dashT <= 0) { p.stuckT += dt; if (p.stuckT > 0.5) { p.path = findPath(m, p.x, p.y, p.path[p.path.length - 1].x, p.path[p.path.length - 1].y, p.r); p.stuckT = 0; } }
   else p.stuckT = 0;
   // Auto-Befreiung
@@ -794,11 +816,12 @@ function updatePlayer(dt) {
   const sp = Math.hypot(p.vx, p.vy);
   p.moving = sp > 0.4;
   if (p.moving) {
-    p.walkPh += dt * (6 + sp * 1.6);
+    // v8: Schrittfrequenz wächst mit dem Tempo (bei 3,6 wie bisher 11,8 rad/s, bei 4,7 ≈ 14,3) — Füße rutschen nicht
+    p.walkPh += dt * (4 + sp * 2.2);
     const sdx = p.vx - p.vy; if (Math.abs(sdx) > 0.15) p.face = sdx > 0 ? 1 : -1;
     p.lastMx = p.vx; p.lastMy = p.vy;
     p.stepT -= dt;
-    if (p.stepT <= 0) { p.stepT = 0.28; P.dust(p.x, p.y, G.biome === 0 ? "#e8f6d0" : "#e6dcf0"); }
+    if (p.stepT <= 0) { p.stepT = 0.28 * PLAYER.speed0 / Math.max(PLAYER.speed0, sp); P.dust(p.x, p.y, G.biome === 0 ? "#e8f6d0" : "#e6dcf0"); }
     G.tutFlags.walked = (G.tutFlags.walked || 0) + sp * dt;
   }
   triggers(dt);
@@ -821,12 +844,16 @@ function triggers(dt) {
       H().toast("💧 Der Brunnen heilt dich und füllt deine Tränke auf!");
     }
   }
-  // Stadt-Portale
+  // Stadt-Portale (v8: 20 Stück, je Ebene eins). Sofort nur, wenn dieses Portal das Ziel ist (Tipp rastet ein / Finger hält darauf),
+  // sonst erst nach kurzem Stehen darauf — so löst Vorbeilaufen nichts aus.
   if (L.portals) for (const po of L.portals) {
-    if (Math.hypot(po.x - p.x, po.y - p.y) < 0.75) {
-      if (po.locked) { if (G.lockToastT <= 0) { H().toast("🔒 Dieses Portal öffnet sich, wenn du Ebene " + po.depth + " erreicht hast!"); G.lockToastT = 3; } }
-      else { G.portalCd = 2; G.runFrom = po.depth; G.runSecs = 0; SFX.portal(); haptic("stairs"); P.levelUp(po.x, po.y); enterLevel(po.depth); G.tutFlags.portal = true; if (G.tutStep >= 0) finishTut(); return; }
-    }
+    const d = Math.hypot(po.x - p.x, po.y - p.y);
+    po.dwell = d < 0.6 && !p.moving ? (po.dwell || 0) + dt : d < 0.6 ? (po.dwell || 0) + dt * 0.5 : 0;
+    if (d >= 0.75) continue;
+    const aimed = p.goal === po || (G.hold && Math.hypot(G.hold.x - po.x, G.hold.y - po.y) < 0.9);
+    if (!aimed && po.dwell < PORTAL_DWELL) continue;
+    if (po.locked) { if (G.lockToastT <= 0) { H().toast("🔒 Ebene " + po.depth + " („" + po.name + "“) öffnet sich, wenn du sie im Keller erreicht hast!"); G.lockToastT = 3; } }
+    else { G.portalCd = 2; G.runFrom = po.depth; G.runSecs = 0; p.goal = null; SFX.portal(); haptic("stairs"); P.levelUp(po.x, po.y); enterLevel(po.depth); G.tutFlags.portal = true; if (G.tutStep >= 0) finishTut(); return; }
   }
   // Heimportal: unsichtbar/unbenutzbar, solange versteckt; danach erst nach Verlassen scharf
   const hp = L.homePortal;
@@ -928,13 +955,16 @@ function updateShots(dt) {
       if (k >= 1) { const j = G.shots.indexOf(s); if (j >= 0) G.shots.splice(j, 1); }
     } else {
       s.x += s.vx * dt; s.y += s.vy * dt;
-      if (s.kind === "snow") { s.rot = (s.rot || 0) + dt * 6; if (Math.random() < 0.5) P.dust(s.x, s.y, "#ffffff"); }
+      if (s.kind === "snow" || (s.kind === "wall" && s.look === "snow")) { s.rot = (s.rot || 0) + dt * 6; if (Math.random() < 0.5) P.dust(s.x, s.y, "#ffffff"); }
+      else if (s.kind === "wall") s.rot = (s.rot || 0) + dt * (s.look === "shard" ? 9 : 5);
       if (isBlocked(m, s.x, s.y)) pop = true;
       if (Math.random() < 0.5) part({ x: s.x, y: s.y, z: s.z, kind: "dot", col: s.col, s0: 9, s1: 0, life: 0.3, g: 0 });
       const hr = s.r || 0.42;
-      if (Math.hypot(p.x - s.x, p.y - s.y) < hr && p.dashT <= 0) { playerHurt(s.dmg, s.x, s.y); pop = true; }
+      if (Math.hypot(p.x - s.x, p.y - s.y) < hr && p.dashT <= 0) { if (playerHurt(s.dmg, s.x, s.y) && s.kind === "wall") G.stats.wallHits++; pop = true; }
       if (pop) {
-        burst(s.x, s.y, s.kind === "snow" ? 14 : 6, { kind: s.kind === "snow" ? "puff" : "dot", col: s.col, add: s.kind !== "snow", s0: s.kind === "snow" ? 18 : 8, s1: 0, sp0: 0.5, sp1: 2, z: s.z, vz0: 0, vz1: 50, g: 0, l0: 0.2, l1: 0.5 });
+        const soft = s.kind === "snow" || s.kind === "wall";
+        burst(s.x, s.y, soft ? 12 : 6, { kind: soft ? "puff" : "dot", col: s.col, add: !soft, s0: soft ? 16 : 8, s1: 0, sp0: 0.5, sp1: 2, z: s.z, vz0: 0, vz1: 50, g: 0, l0: 0.2, l1: 0.5 });
+        if (s.kind === "wall") P.sparkle(s.x, s.y, s.col, 4, s.z);
         if (s.kind === "snow") SFX.slam({ x: s.x, y: s.y });
         const j = G.shots.indexOf(s); if (j >= 0) G.shots.splice(j, 1);
       }
@@ -1183,6 +1213,34 @@ function updateTraps(dt) {
     if (st === 2 && tr.st !== 2 && Math.hypot(p.x - tr.x, p.y - tr.y) < 7) SFX.trap({ x: tr.x, y: tr.y });
     tr.st = st;
     if (st === 2 && p.dashT <= 0 && p.z < 10 && Math.hypot(p.x - tr.x, p.y - tr.y) < 0.5) playerHurt(dmg, tr.x, tr.y);
+  }
+}
+
+// ---------- v8: Wand-Schützen (Wandfallen) ----------
+// st 0 = Ruhe (next zählt herunter, feuert aber nur, wenn der Kobold nah ist) · 1 = Vorwarnung (Glühen, Aufblähen, Bodenlinie, Ton)
+// · 2 = Schuss (Maul offen, kurz). Schaden wie Pieks-Platten. Geschoss = G.shots, kind "wall" (💨 Ausweichen → unverwundbar).
+export const wallTrapDmg = () => Math.max(1, diffOf(G.depth).dmg - 1) * (G.mega ? MEGA.dmg : 1);
+function updateWallTraps(dt) {
+  const L = G.L, p = G.p;
+  if (!L.wallTraps || !L.wallTraps.length || G.screen !== "play" || G.depth <= 0) return;
+  for (const w of L.wallTraps) {
+    w.t += dt;
+    if (w.st === 0) {
+      w.next -= dt;
+      if (w.next <= 0 && Math.hypot(p.x - w.mx, p.y - w.my) < WALLTRAP.near + w.len / 2) {
+        w.st = 1; w.t = 0; w.warnAt = G.t;
+        SFX.wallWarn({ x: w.x0, y: w.y0 });
+      }
+    } else if (w.st === 1) {
+      if (Math.random() < dt * 14) part({ x: w.x0 + w.dx * 0.15, y: w.y0 + w.dy * 0.15, z: 18, vx: w.dx * 0.4 + rand(-0.3, 0.3), vy: w.dy * 0.4 + rand(-0.3, 0.3), vz: rand(10, 40), kind: "dot", col: w.look.glow, s0: 7, s1: 0, life: 0.4, g: 0 });
+      if (w.t >= WALLTRAP.warn) {
+        w.st = 2; w.t = 0; w.fired++; w.fireAt = G.t;
+        const sp = WALLTRAP.speed;
+        G.shots.push({ kind: "wall", look: w.look.id, x: w.x0 + w.dx * 0.12, y: w.y0 + w.dy * 0.12, z: 18, vx: w.dx * sp, vy: w.dy * sp, life: (w.len + 0.6) / sp, t: 0, col: w.look.col, dmg: wallTrapDmg(), r: WALLTRAP.r, trap: w });
+        burst(w.x0, w.y0, 6, { kind: "puff", col: w.look.col, add: false, s0: 12, s1: 3, sp0: 0.4, sp1: 1.4, z: 18, vz0: 10, vz1: 40, g: 0, drag: 3, l0: 0.3, l1: 0.5, fade: 0.7 });
+        SFX.shoot({ x: w.x0, y: w.y0, fire: G.biome === 5 });
+      }
+    } else if (w.t >= 0.4) { w.st = 0; w.next = WALLTRAP.period - WALLTRAP.warn - 0.4 + rand(-1, 1) * WALLTRAP.jit; }
   }
 }
 

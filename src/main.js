@@ -8,7 +8,7 @@ import { hardenTouch, wakeLock, watchVisibility, PF } from "./platform.js";
 import { GD, guideUpdate, guideInput, guideTarget, guideAim } from "./guide.js";
 import { findPath } from "./world.js";
 import { sanitize } from "./save.js";
-import { IN, initInput, resetInput } from "./input.js";
+import { IN, initInput, resetInput, inputFrame } from "./input.js";
 import * as UI from "./ui.js";
 import { forceAttack, bossHit, spawnWave, minionCount, arenaCap, bossFight } from "./boss.js";
 import { pick } from "./util.js";
@@ -118,6 +118,7 @@ function frame(now) {
   if (FX.slowT > 0) { FX.slowT -= rd; dt *= FX.slowF; }
   if (G.screen === "pause" || G.screen === "bag" || G.screen === "edit") dt = 0;
   if (IN.attackHeld && G.screen === "play") attack();
+  inputFrame();                                           // v8: Halten-Folgen läuft weiter, solange der Finger hält
   const t0 = performance.now();
   for (let k = 0; k < (G.dbgSpeed || 1); k++) { update(dt, rd); updateFx(dt, rd); }
   tutUpdate();

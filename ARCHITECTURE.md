@@ -59,6 +59,7 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 | `src/platform.js` | Vollbild, Wake-Lock, Vibration, Sichtbarkeit, Kontextmenü-Sperre |
 | `tools/check.mjs` | Playwright-Testlauf (Flow, Screenshots, FPS, Fehler); `--v7=skip|only` teilt den Lauf |
 | `tools/checks_v7.mjs` | v7-Checks V18–V21 (Würfel/Namen, Haptik-Stub, Weg-Pfeil, Save v6 → v7), auch einzeln lauffähig |
+| `tools/checks_v8.mjs` | v8-Checks V22–V25 (Tempo/Steuerung, Boss-Leben, Ebenen-Wahl/Welttore, Wandfallen), `--ref=PORT` = Vergleich mit altem Stand |
 | `tools/serve.py` | Statischer Testserver mit großem Backlog (der Standard-`http.server` ließ Modul-Anfragen hängen) |
 | `tools/icons.mjs` | Erzeugt `icons/icon-192/512.png` aus dem eigenen Art-Code |
 | `tools/bot.mjs` | Autoplay-Bot: spielt Ebene 1→20 wie ein Kind (Tap auf Gegner/Treppe), meldet Hänger/Tode |
@@ -239,3 +240,39 @@ Ambience ─► ambLvl ─► (ambSend ─► Hall) ─────────�
   Zeichnen (`render.js drawGuide`): Pfeil-Polygon in Welt-Koordinaten über `toScreen` projiziert (liegt iso-korrekt am Boden, 0,6–1,7
   Kacheln neben der Figur) — Bodenebene (dunkler Rand, helle Füllung in Weltfarbe `dust`), halbtransparent über Wänden/Laternen
   (Figur ausgespart) und additiver Schein + 3 wandernde Funkel. Stadt: Gold.
+
+## v8: Spielgefühl — Tempo, Boss-Leben, Ebenen-Wahl, Wandfallen
+- **Tempo:** `PLAYER.speed` 4,7 (vorher 3,6 = `PLAYER.speed0`). `updatePlayer` bewegt in Teilschritten ≤ 0,2 Kacheln (`moveEnt` je Achse) →
+  auch bei dt 0,05 s, Ausweichsprung (14,7 Kacheln/s) und Rückstoß kein Tunneln (V22: 400 Versuche, 0 Frames in der Wand). Auf einem
+  Pfad wird nur am Ziel abgebremst (vorher an jedem Wegpunkt). Schrittphase `walkPh += dt·(4 + 2,2·v)` (Schrittweite ≈ gleich),
+  Staubwölkchen-Takt ∝ 1/v. Kamera: Vorlauf 0,3 s·v, Nachführ-Rate × v/3,6 (max. 1,5) → Abstand Kamera↔Kobold in Kacheln wie vorher.
+- **Halten-Folgen (`input.js`):** `IN.hold` wird „live“ beim Ziehen (> 12 px) oder nach 250 ms Stillhalten (nicht, wenn der Tipp auf
+  einem Gegner/Portal/Treppe eingerastet ist). `inputFrame()` (jeder Frame aus `main.js`) rechnet den Zielpunkt unter dem Finger neu
+  (Kamera wandert mit) → der Kobold läuft weiter, solange der Finger liegt; Loslassen stoppt. `tapWorld` liefert `"enemy" | "snap" | "ground"`.
+- **Tipp-Absicht:** Rastet ein Tipp auf der (offenen) Treppe oder dem Heim-Portal ein, sind sie sofort „scharf“ (`stairs.armed`/`homeArmed`),
+  auch wenn man beim Entsiegeln schon draufstand. Versiegelte Treppen rasten weiterhin nicht ein.
+- **Boss-Leben:** `BOSS_HP_MUL` (1,3) in `initBoss`/`initMini` für Haupt-, Mini-Bosse und König. `ENEMIES.boss/mini/king.hp` werden von
+  `initBoss` überschrieben (wirken nicht). Phasen-Schwellen bleiben Anteile. `A.spawned` zählt Handlanger je Kampf (Bot-Protokoll);
+  der Deckel `min(MINION_CAP, ARENA.cap)` gilt unverändert.
+- **Stadt (`world.js buildTown`, 38×36):** Brunnen-Mitte F = (19,5 | 16,5). Je Welt w eine Karten-Richtung `TOWN_DIRS[w]`
+  ((−1,1), (0,1), (1,1), (1,0), (1,−1) → am Bildschirm links, links unten, unten, rechts unten, rechts). `TOWN_GATE`: Weg ab 2,6 bis 11,3
+  Kacheln (Boden-Deko 8 … 12 = Pflaster in Weltfarbe `art.ROAD_COL`, 13 … 17 = Platz-Rand), Welttor bei 9,3 (`L.gates[w]`: zwei
+  Pfosten-Props `wpost`, blockieren je eine Kachel; der vordere zeichnet Girlande + Welt-Schild), vier Portale auf einem Bogen (Radius
+  2,75, ±22,5°/±67,5°) um den Torplatz bei 11,3 → Abstand 2,1. Reihenfolge: liegt der Bogen am Bildschirm eher waagrecht, links → rechts,
+  sonst oben → unten. Häuser, Spiegel, Oma, Strohwichtel und Eingang (16,5 | 13,5) liegen oben (Bildschirm), Bäume halten Abstand zu Wegen/Toren.
+- **Stadt-Portale (`game.js`):** `po.locked = depth > G.deepest`, `po.icon` 👑/⚡/🌀/🔒, `po.label` kurz, `po.name = levelName(depth)`.
+  Auslösen sofort, wenn das Portal das Tipp-Ziel ist (`p.goal`) oder der gehaltene Finger darauf liegt; sonst erst nach `PORTAL_DWELL`
+  (0,45 s) Stehen innerhalb 0,6 Kacheln (Vorbeilaufen: max. 0,26 s drin, zählt halb). Gesperrt → Hinweis mit Ebenen-Namen.
+  `G.runFrom = depth` (Ehrenhall), `tutFlags.portal`, Weg-Pfeil (Ziel = Portal der tiefsten Ebene) und Spielstand (kein neues Feld) wie bisher.
+  Anzeige (`render.js textPass`): kurze Beschriftung über jedem Portal, Welttor-Name über der Girlande (blendet am Torplatz und über dem
+  Kobold aus), Schild mit Ebene + Name des nächsten Portals an fester Bildschirmstelle (hoch unter der Anzeige, quer oben Mitte).
+  Minikarte zeigt in der Stadt alle Portale.
+- **Wandfallen (`world.js placeWallTraps`, `game.js updateWallTraps`):** Anzahl `DIFF.wall` (0,0,1,1,2,…,5,5,5,4; MEGASCHWER +1).
+  Kandidaten = gerade Rückwand-Kachel (sichtbare Seite: schießt +y von einer Nord-, +x von einer Westwand), Bahn über Boden bis zur
+  nächsten Wand (3 … 11 Kacheln), Bahn nicht im Eingangsraum, ≥ 6 Kacheln vom Eingang, nicht in/an der Arena, nicht über Treppe/Heim-Portal,
+  Wand direkt davor höchstens 30 % (sonst verdeckt), zwei Bahnen ≥ 4 Kacheln auseinander (`lineDist`). Takt: Ruhe (`next`, startet versetzt,
+  nur wenn der Kobold ≤ 9 Kacheln + halbe Bahn nah ist) → Vorwarnung `WALLTRAP.warn` 0,9 s (Gesicht bläht sich auf, Glühen + Licht,
+  Bodenlinie in Weltfarbe mit gestricheltem Rand — der Rand auch über Wänden —, `SFX.wallWarn` räumlich) → ein Geschoss `G.shots`
+  kind `"wall"` (5,2 Kacheln/s, r 0,36, Schaden = Pieks-Platten `max(1, dmg−1)`, bei 💨 kein Treffer) → Pause (Takt 4,8 ± 0,9 s).
+  Zeichnen: `art.wallFaceSprite` (Steingesicht, per `transform` auf die Wandseite geschert), `art.wallShotSprite` je Welt.
+  Treffer vibrieren über `playerHurt` („hurt“), der Schuss selbst nicht. `G.stats.wallHits` zählt Treffer (Bot).

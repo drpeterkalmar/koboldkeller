@@ -136,61 +136,99 @@ function distField(m, sx, sy) {
 }
 
 // ================= STADT =================
+// v8: Aus dem Brunnen-Platz führt je Welt ein eigener Weg (in Weltfarbe) zu einem kleinen Welttor mit einem Portal je Ebene
+// (1–4, 5–8, …). Fächer nach unten (Bildschirm): Moos links → Kristall → Zucker (unten) → Frost → Glut rechts. Kurze Wege:
+// Welttor-Mitte ≈ 11 Kacheln vom Brunnen (≈ 2,5 s mit Tempo 4,7), Portale ≥ 2 Kacheln auseinander.
+export const TOWN_GATE = { road0: 2.6, gate: 9.3, plaza: 11.3, ring: 2.75, ang: [-67.5, -22.5, 22.5, 67.5] };
+export const TOWN_DIRS = [null, [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1]];    // Karten-Richtung je Welt (1 … 5)
 export function buildTown(seed) {
   const rnd = mulberry32(seed ^ 0x51ab);
-  const W = 34, H = 36;
+  const W = 38, H = 36;
   const m = makeMap(W, H);
   for (let y = 3; y < H - 3; y++) for (let x = 3; x < W - 3; x++) carve(m, x, y);
   for (let i = 0; i < m.v.length; i++) m.v[i] = (rnd() * 256) | 0;
-  const cx = 17, cy = 15;
-  const props = [], lights = [];
+  const cx = 19, cy = 16, F = { x: cx + 0.5, y: cy + 0.5 };
+  const props = [], lights = [], portals = [], gates = [];
+  const free = (x, y) => x >= 3 && y >= 3 && x < W - 3 && y < H - 3;
+  const paint = (x, y, d) => { x = Math.floor(x); y = Math.floor(y); if (free(x, y) && !m.block[y * W + x]) m.deco[y * W + x] = d; };
+  const segD = (px, py, ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1, k = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)); return Math.hypot(px - ax - dx * k, py - ay - dy * k); };
   // Brunnen 3×3
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) setBlock(m, cx + dx, cy + dy, 1);
-  props.push({ kind: "fountain", x: cx + 0.5, y: cy + 0.5 });
-  lights.push({ x: cx + 0.5, y: cy + 0.5, r: 4.5, c: "#bfe9ff", a: 0.55, flick: 0.05 });
-  // Häuser im Norden (Grundfläche 3×3), Fenster leuchten
-  const houseXs = [6, 13, 22];
-  houseXs.forEach((hx, i) => {
-    for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) setBlock(m, hx + dx, 5 + dy, 1);
-    props.push({ kind: "house", x: hx + 1.5, y: 6.5, var: i });
-    lights.push({ x: hx + 1.5, y: 8.4, r: 3.2, c: "#ffc56e", a: 0.7, flick: 0.08 });
+  props.push({ kind: "fountain", x: F.x, y: F.y });
+  lights.push({ x: F.x, y: F.y, r: 4.5, c: "#bfe9ff", a: 0.55, flick: 0.05 });
+  // Häuser oben (Bildschirm) — Grundfläche 3×3, Fenster leuchten
+  const houses = [[5, 4], [12, 3], [4, 11]];
+  houses.forEach(([hx, hy], i) => {
+    for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) setBlock(m, hx + dx, hy + dy, 1);
+    props.push({ kind: "house", x: hx + 1.5, y: hy + 1.5, var: i });
+    lights.push({ x: hx + 1.5, y: hy + 3.4, r: 3.2, c: "#ffc56e", a: 0.7, flick: 0.08 });
   });
-  // Wege (Kopfsteinpflaster): Brunnen-Kreuz + zum Portalplatz
-  const path = (x, y) => { if (!m.solid[y * W + x]) m.deco[y * W + x] = 1; };
-  for (let y = 8; y <= 29; y++) { path(cx, y); path(cx + 1, y); }
-  for (let x = 5; x <= 29; x++) { path(x, cy + 3); path(x, cy + 4); }
-  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) path(cx + dx, cy + dy);
-  for (const hx of houseXs) for (let y = 8; y <= cy + 3; y++) path(hx + 1, y);
-  for (let y = 27; y <= 30; y++) for (let x = 7; x <= 28; x++) path(x, y);
-  // Portalplatz: Checkpoints 1, 5, 9, 13, 17
-  const portals = [1, 5, 9, 13, 17].map((d, i) => ({ x: 8.5 + i * 4.5, y: 29.2, depth: d }));
-  // Bäume
-  const trees = [[4, 12], [4, 20], [29, 11], [29, 21], [9, 22], [26, 23], [11, 12], [24, 12], [5, 26], [29, 27], [7, 16], [28, 16]];
-  for (const [tx, ty] of trees) { setBlock(m, tx, ty, 1); props.push({ kind: "tree", x: tx + 0.5, y: ty + 0.5, var: (rnd() * 3) | 0 }); }
-  // Laternen am Weg
-  for (const [lx, ly] of [[cx - 1, 11], [cx + 2, 11], [cx - 1, 23], [cx + 2, 23], [10, cy + 2], [24, cy + 2]]) {
+  // Pflaster: Brunnenplatz + Wege zu den Häusern/zum Spiegel
+  for (let y = cy - 4; y <= cy + 4; y++) for (let x = cx - 4; x <= cx + 4; x++) if (Math.hypot(x + 0.5 - F.x, y + 0.5 - F.y) < 3.4) paint(x, y, 1);
+  const mirror = { x: 10.5, y: 9.5 };
+  const lane = (ax, ay, bx, by, d = 1, w = 0.75) => {
+    for (let y = Math.floor(Math.min(ay, by) - 2); y <= Math.max(ay, by) + 2; y++) for (let x = Math.floor(Math.min(ax, bx) - 2); x <= Math.max(ax, bx) + 2; x++)
+      if (segD(x + 0.5, y + 0.5, ax, ay, bx, by) < w) paint(x, y, d);
+  };
+  for (const [hx, hy] of houses) lane(F.x, F.y, hx + 1.5, hy + 3.2);
+  lane(F.x, F.y, mirror.x, mirror.y + 0.8);
+  // Welt-Wege + Welttore mit je 4 Portalen (Ebene 4·(w−1)+1 … 4·w)
+  const G0 = TOWN_GATE;
+  for (let w = 1; w <= 5; w++) {
+    const [dx, dy] = TOWN_DIRS[w], l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, vx = -uy, vy = ux;
+    const a = { x: F.x + ux * G0.road0, y: F.y + uy * G0.road0 }, g = { x: F.x + ux * G0.gate, y: F.y + uy * G0.gate }, c = { x: F.x + ux * G0.plaza, y: F.y + uy * G0.plaza };
+    lane(a.x, a.y, c.x, c.y, 7 + w, 1.05);                         // Weg in Weltfarbe (deco 8 … 12)
+    for (let y = Math.floor(c.y - 4); y <= c.y + 4; y++) for (let x = Math.floor(c.x - 4); x <= c.x + 4; x++) { const d = Math.hypot(x + 0.5 - c.x, y + 0.5 - c.y); if (d < 3.4) paint(x, y, d < 2.1 ? 7 + w : 12 + w); }   // Torplatz (Rand = 13 … 17)
+    const ps = G0.ang.map(an => { const r = an * Math.PI / 180; return { x: c.x + G0.ring * (Math.cos(r) * ux + Math.sin(r) * vx), y: c.y + G0.ring * (Math.cos(r) * uy + Math.sin(r) * vy) }; });
+    // Reihenfolge entlang des Bogens: liegt er eher waagrecht am Bildschirm → links nach rechts, sonst oben nach unten
+    const scr = q => [q.x - q.y, (q.x + q.y) / 2], [ax, ay] = scr(ps[0]), [bx, by] = scr(ps[3]);
+    if (Math.abs(bx - ax) >= Math.abs(by - ay) ? bx < ax : by < ay) ps.reverse();
+    ps.forEach((pt, i) => portals.push({ x: pt.x, y: pt.y, depth: (w - 1) * 4 + i + 1, world: w }));
+    // Welttor: zwei Pfosten links/rechts vom Weg (blockieren je eine Kachel) + Girlande/Schild dazwischen (render.js)
+    const gate = { x: g.x, y: g.y, w, ux, uy, vx, vy, cx: c.x, cy: c.y, depths: [(w - 1) * 4 + 1, w * 4] };
+    gate.posts = [1, -1].map(k => ({ kind: "wpost", x: Math.floor(g.x + vx * 1.6 * k) + 0.5, y: Math.floor(g.y + vy * 1.6 * k) + 0.5, w, gate }));
+    gate.posts.sort((a, b) => (a.x + a.y) - (b.x + b.y)); gate.posts[1].front = true;   // vorderer Pfosten zeichnet die Girlande
+    gates.push(gate);
+    for (const pt of gate.posts) { setBlock(m, Math.floor(pt.x), Math.floor(pt.y), 1); props.push(pt); }
+    lights.push({ x: c.x, y: c.y, r: 3.6, c: TOWN_WORLD_COL[w], a: 0.5, flick: 0.05 });
+  }
+  // Laternen am Brunnenplatz (oben, nicht auf den Welt-Wegen)
+  for (const [lx, ly] of [[cx - 4, cy - 1], [cx - 1, cy - 4], [cx + 3, cy - 3]]) {
     props.push({ kind: "lantern", x: lx + 0.5, y: ly + 0.5 });
     lights.push({ x: lx + 0.5, y: ly + 0.5, r: 2.6, c: "#ffd27a", a: 0.6, flick: 0.1 });
   }
-  // Blumen & Gras-Deko
-  for (let i = 0; i < 140; i++) {
-    const x = 3 + ((rnd() * (W - 6)) | 0), y = 3 + ((rnd() * (H - 6)) | 0), k = y * W + x;
-    if (!m.block[k] && !m.deco[k]) m.deco[k] = 2 + ((rnd() * 4) | 0);
-  }
   // Friseur-Spiegel (Charakter-Editor) vor dem linken Haus
-  const mirror = { x: 10.5, y: 9.5 };
   setBlock(m, 10, 9, 1);
   props.push({ kind: "mirror", x: mirror.x, y: mirror.y });
   lights.push({ x: mirror.x, y: mirror.y + 0.6, r: 2.2, c: "#ffe9f4", a: 0.45, flick: 0.04 });
-  // Übungspuppen + Oma
-  const dummies = [{ x: cx - 4.5, y: cy + 6.5 }, { x: cx + 5.5, y: cy + 6.5 }];
-  const npc = { x: cx + 2.6, y: cy + 5.2 };
+  // Übungspuppen + Oma (oben, weg von den Welt-Wegen), Eingang nordwestlich vom Brunnen
+  const entry = { x: 16.5, y: 13.5 };
+  const dummies = [{ x: 12.5, y: 13.5 }, { x: 19.5, y: 10.5 }];
+  const npc = { x: 14.1, y: 16.3 };
+  const keep = [entry, npc, mirror, ...dummies];
+  // Bäume: nur wo sie keinen Weg, kein Tor, kein Haus und niemanden stören
+  const nearRoad = (x, y) => { for (let w = 1; w <= 5; w++) { const [dx, dy] = TOWN_DIRS[w], l = Math.hypot(dx, dy); if (segD(x, y, F.x, F.y, F.x + dx / l * G0.plaza, F.y + dy / l * G0.plaza) < 2.9 || Math.hypot(x - F.x - dx / l * G0.plaza, y - F.y - dy / l * G0.plaza) < 5.2) return true; } return false; };
+  const trees = [];
+  for (let t = 0; t < 400 && trees.length < 22; t++) {
+    const x = 3 + ((rnd() * (W - 6)) | 0), y = 3 + ((rnd() * (H - 6)) | 0), px = x + 0.5, py = y + 0.5;
+    if (m.block[y * W + x] || m.deco[y * W + x] === 1 || nearRoad(px, py) || Math.hypot(px - F.x, py - F.y) < 5) continue;
+    if (keep.some(k => Math.hypot(k.x - px, k.y - py) < 2.6) || houses.some(([hx, hy]) => px > hx - 1.5 && px < hx + 4.5 && py > hy - 1.5 && py < hy + 5)) continue;
+    if (trees.some(q => Math.hypot(q.x - px, q.y - py) < 2.2)) continue;
+    trees.push({ x: px, y: py });
+    setBlock(m, x, y, 1); props.push({ kind: "tree", x: px, y: py, var: (rnd() * 3) | 0 });
+  }
+  // Blumen & Gras-Deko
+  for (let i = 0; i < 160; i++) {
+    const x = 3 + ((rnd() * (W - 6)) | 0), y = 3 + ((rnd() * (H - 6)) | 0), k = y * W + x;
+    if (!m.block[k] && !m.deco[k]) m.deco[k] = 2 + ((rnd() * 4) | 0);
+  }
+  m.seen.fill(1);                                                  // kleine Stadt: Minikarte zeigt alles
   return {
-    kind: "town", map: m, props, lights, portals, dummies, npc, mirror,
-    fountain: { x: cx + 0.5, y: cy + 0.5 }, entry: { x: cx + 0.5, y: cy + 5.5 },
-    stairs: null, homePortal: null, torches: [], rooms: [],
+    kind: "town", map: m, props, lights, portals, gates, dummies, npc, mirror,
+    fountain: F, entry, stairs: null, homePortal: null, torches: [], rooms: [],
   };
 }
+export const TOWN_WORLD_COL = [null, "#8fff8a", "#8fe9ff", "#ff9ae0", "#dff6ff", "#ffae5a"];
 
 // ================= DUNGEON =================
 /** ad = Arena-Eintrag aus config.ARENA (nur Boss-Ebenen: Hauptboss 4/8/…, Mini-Boss 2/6/…) */
@@ -319,6 +357,50 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
   for (let i = spots.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
   return { kind: "dungeon", map: m, rooms, entry, stairs, homePortal, torches, lights, props, spots, isBoss, arena, rnd };
 }
+
+// ================= WAND-SCHÜTZEN (v8) =================
+/** Wand-Schützen platzieren: Steingesicht in einer geraden Rückwand (sichtbare Seite, schießt +x oder +y), Schusslinie über Boden bis
+ *  zur nächsten Wand (C.len[0] … C.len[1] Kacheln). Fair: keine Linie im Eingangsraum oder näher als C.entry am Eingang, nicht in/an der
+ *  Boss-Arena, nicht über Treppe/Heim-Portal; zwei Linien immer ≥ C.gap Kacheln auseinander (nie derselbe Gang doppelt). */
+export function placeWallTraps(L, n, C) {
+  const m = L.map, S = m.w, rnd = L.rnd || Math.random, out = [];
+  if (!n) return out;
+  const entryRoom = L.rooms.findIndex(r => r.entry), arenaRoom = L.rooms.findIndex(r => r.arena), A = L.arena;
+  const inArena = (x, y) => A && x > A.x - 2 && y > A.y - 2 && x < A.x + A.w + 2 && y < A.y + A.h + 2;
+  const segD = (px, py, t) => { const dx = t.x1 - t.x0, dy = t.y1 - t.y0, l2 = dx * dx + dy * dy || 1, k = Math.max(0, Math.min(1, ((px - t.x0) * dx + (py - t.y0) * dy) / l2)); return Math.hypot(px - t.x0 - dx * k, py - t.y0 - dy * k); };
+  const lineD = (a, b) => { let d = 1e9; for (let i = 0; i <= 8; i++) { const k = i / 8; d = Math.min(d, segD(a.x0 + (a.x1 - a.x0) * k, a.y0 + (a.y1 - a.y0) * k, b), segD(b.x0 + (b.x1 - b.x0) * k, b.y0 + (b.y1 - b.y0) * k, a)); } return d; };
+  const cand = [];
+  for (let y = 1; y < m.h - 1; y++) for (let x = 1; x < S - 1; x++) {
+    if (!m.solid[y * S + x]) continue;
+    for (const [dx, dy, face] of [[0, 1, "L"], [1, 0, "R"]]) {
+      if (m.block[(y + dy) * S + x + dx]) continue;                                   // davor muss Boden sein
+      if (!m.solid[(y - dx) * S + x - dy] || !m.solid[(y + dx) * S + x + dy]) continue;   // gerade Wand (keine Ecke, kein Durchgang)
+      let len = 0, tx = x + dx, ty = y + dy, ok = true, hug = 0;
+      while (tx < S && ty < m.h && !m.block[ty * S + tx]) {
+        const r = m.room[ty * S + tx];
+        if (r === entryRoom || (arenaRoom >= 0 && r === arenaRoom) || inArena(tx, ty)) { ok = false; break; }
+        if (m.solid[(ty + dx) * S + tx + dy]) hug++;                                     // Wand direkt davor (Bildschirm) verdeckt die Bahn
+        len++; tx += dx; ty += dy;
+      }
+      if (!ok || len < C.len[0] || len > C.len[1]) continue;
+      if (m.solid[(y + dy + dx) * S + x + dx + dy] || hug > len * 0.3) continue;          // Gesicht + Bahn gut sichtbar
+      const t = { wx: x, wy: y, dx, dy, face, len, x0: x + 0.5 + dx * 0.5, y0: y + 0.5 + dy * 0.5, x1: x + 0.5 + dx * (len + 0.5), y1: y + 0.5 + dy * (len + 0.5) };
+      if (segD(L.entry.x, L.entry.y, t) < C.entry) continue;
+      if (L.stairs && segD(L.stairs.x, L.stairs.y, t) < 1.6) continue;
+      if (L.homePortal && segD(L.homePortal.x, L.homePortal.y, t) < 2.2) continue;
+      cand.push(t);
+    }
+  }
+  for (let i = cand.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [cand[i], cand[j]] = [cand[j], cand[i]]; }
+  for (const t of cand) {
+    if (out.length >= n) break;
+    if (out.some(o => lineD(o, t) < C.gap)) continue;
+    t.mx = (t.x0 + t.x1) / 2; t.my = (t.y0 + t.y1) / 2;
+    out.push(t);
+  }
+  return out;
+}
+export function lineDist(a, b) { const segD = (px, py, t) => { const dx = t.x1 - t.x0, dy = t.y1 - t.y0, l2 = dx * dx + dy * dy || 1, k = Math.max(0, Math.min(1, ((px - t.x0) * dx + (py - t.y0) * dy) / l2)); return Math.hypot(px - t.x0 - dx * k, py - t.y0 - dy * k); }; let d = 1e9; for (let i = 0; i <= 16; i++) { const k = i / 16; d = Math.min(d, segD(a.x0 + (a.x1 - a.x0) * k, a.y0 + (a.y1 - a.y0) * k, b), segD(b.x0 + (b.x1 - b.x0) * k, b.y0 + (b.y1 - b.y0) * k, a)); } return d; }
 
 // ================= BOSS-ARENA (v5) =================
 const ARENA_LIGHT = [null, "#b6ff8a", "#bfefff", "#ffc2e8", "#dff6ff", "#ffa04a"];

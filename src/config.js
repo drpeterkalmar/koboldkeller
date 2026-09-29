@@ -33,8 +33,9 @@ export const SKILLS = [
 ];
 
 // Spieler-Grundwerte (aus v20 übernommen / kinderfreundlich)
+// v8: Grundtempo 3,6 → 4,7 Kacheln/s (+31 %, Peter: „derzeit krachen die Finger“); Lauf-Animation + Kamera skalieren mit (game.js/render.js)
 export const PLAYER = {
-  hp: 6, speed: 3.6, atk: 4, atkCd: 0.6, atkRadius: 3.0,   // v6: Schlag-Pause 0,25 → 0,6 s (Peter: „wie eine Kreissäge“)
+  hp: 6, speed: 4.7, speed0: 3.6, atk: 4, atkCd: 0.6, atkRadius: 3.0,   // v6: Schlag-Pause 0,25 → 0,6 s (Peter: „wie eine Kreissäge“)
   bubbleCd: 0.7, dashCd: 0.9, dashTime: 0.3, dashDist: 4.4, dashInvul: 0.5,
   hurtInvul: 1.0, potions: 3,
 };
@@ -267,6 +268,7 @@ export function levelBiome(depth) {
 //  n     Anzahl normaler Gegner          hp   Leben-Faktor          dmg  Grundschaden pro Treffer
 //  spd   Tempo-Faktor                    cd   Angriffspause-Faktor  elite Chance auf Elite-Gegner (2,2× Leben, +1 Schaden, Krone)
 //  traps Pieks-Platten (Fallen)          room kleinste/größte Raumgröße (engere Räume)
+//  wall  v8: Wand-Schützen (schießen hin und wieder quer durch den Gang; MEGASCHWER +1)
 //  Neue Angriffsmuster ab Tiefe: 6 Schleime teilen sich · 10 Irrlichter/Flämmchen schießen 3er-Fächer ·
 //  13 Gespenstchen blinzeln hinter dich · 15 Kristallkäfer stürmen zweimal
 // MEGASCHWER kommt obendrauf (Gegner 2× Tempo, 10× Schaden). Tiefe 1–2 bleiben „zahm" (Einstieg).
@@ -278,13 +280,14 @@ const DT = {
   cd:    [1, 1.3, 1.22, 1.12, 1.1, 1.05, 1.0, 0.98, 0.96, 0.94, 0.92, 0.9, 0.9, 0.88, 0.86, 0.84, 0.84, 0.82, 0.8, 0.78, 0.78],
   elite: [0, 0, 0, 0.03, 0.04, 0.06, 0.08, 0.1, 0.1, 0.12, 0.14, 0.16, 0.16, 0.18, 0.2, 0.22, 0.22, 0.24, 0.26, 0.28, 0.3],
   traps: [0, 0, 0, 0, 0, 2, 3, 4, 2, 4, 5, 6, 3, 5, 6, 7, 4, 6, 7, 8, 4],
+  wall:  [0, 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 4],   // v8: Wand-Schützen („hin und wieder“)
   rmin:  [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
   rmax:  [10, 10, 10, 10, 10, 10, 9, 9, 9, 9, 9, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7],
 };
 // v5: boss = "main" (Hauptboss 4/8/12/16/20) · "mini" (Mini-Boss 2/6/10/14/18, jede 2. Ebene hat damit einen Boss) · null
 export const bossKindOf = d => d > 0 && d <= MAX_DEPTH && d % 2 === 0 ? (d % 4 === 0 ? "main" : "mini") : null;
 export const DIFF = Array.from({ length: MAX_DEPTH + 1 }, (_, d) => d === 0 ? null : {
-  n: DT.n[d], hp: DT.hp[d], dmg: DT.dmg[d], spd: DT.spd[d], cd: DT.cd[d], elite: DT.elite[d], traps: DT.traps[d], room: [DT.rmin[d], DT.rmax[d]],
+  n: DT.n[d], hp: DT.hp[d], dmg: DT.dmg[d], spd: DT.spd[d], cd: DT.cd[d], elite: DT.elite[d], traps: DT.traps[d], wall: DT.wall[d], room: [DT.rmin[d], DT.rmax[d]],
   split: d >= 6, fan: d >= 10, blink: d >= 13, double: d >= 15, tame: d <= 2, boss: bossKindOf(d),
 });
 export const diffOf = d => DIFF[Math.max(1, Math.min(MAX_DEPTH, d | 0))];
@@ -300,6 +303,10 @@ export const BOSSES = [null,
   { name: "Kellerkönig", epi: "Herrscher des Koboldkellers", hp: [1500, 30], dmg: 7, speed: 1.25, sig: ["fireRing", "meteors", "flameCross"], acc: "none", aura: "#ff5a3a", arena: "ember", minions: [["flamme", 3], ["geist", 1], ["wichtel", 1]] },
 ];
 export const BOSS_PHASES = [0.66, 0.33];
+// v8: Bosse etwas mehr Leben (Peter: „Bossen etwas mehr Hitpoints geben“) — gilt einheitlich für Hauptbosse, Mini-Bosse und den
+// Kellerkönig (boss.js initBoss/initMini). Fängt das schnellere Laufen (v8) mit ab. Phasen-Schwellen bleiben prozentual.
+// Hinweis: ENEMIES.boss/mini/king.hp unten wirken NICHT — initBoss() überschreibt Leben mit BOSSES/MINIS.hp × BOSS_HP_MUL.
+export const BOSS_HP_MUL = 1.3;
 
 // ---------- v5: Mini-Bosse (Ebene 2/6/10/14/18) — jeder ein anderes Wesen, 2 Phasen (ab 50 % wild) ----------
 // Stärke zwischen Elite-Gegner und Hauptboss: Leben ≈ 35–50 % des nächsten Hauptbosses, Schaden = Hauptboss der Welt − 1.
@@ -333,6 +340,22 @@ const AT = {
 export const ARENA = Object.fromEntries(Object.entries(AT).map(([d, a]) => [d, { size: a[0], pillars: a[1], wave: a[2], n: a[3], cap: a[4] }]));
 export const MINION_CAP = 9;                 // Performance-Deckel: nie mehr Handlanger gleichzeitig (auch MEGASCHWER)
 export const MINION = { spawnT: 0.8, first: 3, hp: 0.75, xp: 1 / 3 };   // Spawn-Kreis 0,8 s vorher, erste Welle 3 s nach dem Intro
+
+// ---------- v8: Wand-Schützen (Wandfallen) ----------
+// Ein Steingesicht in der Wand bläht sich warn s lang auf (Glühen + Bodenlinie + Ton), dann fliegt EIN Geschoss geradeaus quer durch
+// den Gang bis zur nächsten Wand (speed Kacheln/s). Danach Pause: Takt = period (± jit) s, erst wenn der Kobold näher als near ist.
+// Schaden wie die Pieks-Platten (max(1, Ebenen-Schaden − 1)); 💨 Ausweichen macht unverwundbar.
+// Fair: nicht im Eingangsraum (entry Kacheln Abstand), nicht in Boss-Arenen, Linien zweier Schützen ≥ gap Kacheln auseinander
+// (nie derselbe Gang doppelt), Takt versetzt; Linienlänge len[0]…len[1] Kacheln.
+export const WALLTRAP = { warn: 0.9, period: 4.8, jit: 0.9, speed: 5.2, near: 9, entry: 6, gap: 4, len: [3, 11], megaPlus: 1, r: 0.36 };
+// Aussehen je Welt (Geschoss): Moos-Sporen, Kristallsplitter, Bonbonkugeln, Schneebälle, Glutkugeln
+export const WALLTRAP_LOOK = [null,
+  { id: "spore", name: "Moos-Sporen", col: "#b6ff8a", glow: "#9aff6a" },
+  { id: "shard", name: "Kristallsplitter", col: "#9ff0ff", glow: "#8fe9ff" },
+  { id: "candy", name: "Bonbonkugel", col: "#ff8fd0", glow: "#ff9ae0" },
+  { id: "snow", name: "Schneeball", col: "#f8fcff", glow: "#bfe9ff" },
+  { id: "ember", name: "Glutkugel", col: "#ffb060", glow: "#ff7a2a" },
+];
 
 // Gegner: hp/xp = a + b·Tiefe + c·Level
 export const ENEMIES = {

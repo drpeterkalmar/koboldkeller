@@ -50,6 +50,7 @@ const MIX = {
   reveal: { vol: 0.34, max: 1, cents: 0, prio: 1 },
   phase: { vol: 0.8, max: 1, cents: 0, prio: 3 },
   trap: { vol: 0.34, max: 2, gap: 0.08, cents: 60 },
+  wallWarn: { vol: 0.4, max: 2, gap: 0.1, cents: 40 },
   impact: { vol: 0.5, max: 3, gap: 0.05, cents: 40, prio: 1 },
 };
 const AMBMIX = { bird: 0.35, drip: 0.5, chime: 0.3, fizz: 0.35, tink: 0.3, blub: 0.45, crackle: 0.3 };
@@ -512,6 +513,7 @@ export const SFX = {
   reveal(o = {}) { P("reveal", { x: o.x, y: o.y }); },
   phase(o = {}) { P("phase", { x: o.x, y: o.y, v: o.rage ? 1 : 0 }); ST(o.rage ? "rage" : "phase"); if (ok()) E.duck(-7, AUDIO.ctx.currentTime, 1.2, 1.0); },
   trap(o = {}) { P("trap", { x: o.x, y: o.y }); },
+  wallWarn(o = {}) { P("wallWarn", { x: o.x, y: o.y }); },     // v8: Wand-Schütze holt Luft (räumlich)
   impact(o = {}) { P("impact", { x: o.x, y: o.y }); },
 };
 

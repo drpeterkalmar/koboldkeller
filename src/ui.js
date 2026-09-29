@@ -371,7 +371,7 @@ const TUT = [
   () => "Klasse! Drück 🫧 — die Seifenblasen fliegen von selbst zum Gegner. Jeder Schuss kostet 1 🫧 — oben links siehst du, wie viele du noch hast!",
   () => "Mit 💨 springst du blitzschnell weg vom Gegner. Probier's aus!",
   () => "Hier, 3 Glitzerpilze von mir! 🍄 Pilze füllen deine Spezial-Leiste. Ist sie voll, leuchtet ✨ — drück drauf!",
-  () => "Perfekt! 💧 Der Brunnen heilt dich. Beim Level-Aufstieg gibt's ⭐ Talentpunkte (🎒). Das 🌀 Portal unten bringt dich in den Keller. Viel Glück!",
+  () => "Perfekt! 💧 Der Brunnen heilt dich. Beim Level-Aufstieg gibt's ⭐ Talentpunkte (🎒). Folge dem 🌿 grünen Weg zum Welttor — das 🌀 Portal 1 bringt dich in den Keller. Viel Glück!",
 ];
 const TIPS = [
   "Halte ⚔️ gedrückt — dann schlägst du immer weiter!",
@@ -384,7 +384,9 @@ const TIPS = [
   "Truhen gehen auf, wenn du drüberläufst. ✨",
   "Mein Brunnen füllt deine Tränke wieder auf 3 auf. 💧",
   "Bosse lassen schicke Hüte fallen — und werden wütend, wenn sie wenig ❤️ haben!",
-  "Die Portale hier bringen dich zu jeder Welt, die du schon erreicht hast.",
+  "Jeder bunte Weg führt zu einem Welttor. Dort wartet für jede Ebene, die du schon erreicht hast, ein eigenes 🌀 Portal!",
+  "👑 auf einem Portal heißt: Dort wohnt ein Boss. ⚡ heißt: ein Mini-Boss.",
+  "Steingesichter in der Wand pusten ab und zu etwas quer durch den Gang. Leuchten sie, schnell zur Seite — oder mit 💨 durch!",
   "Das 🏠-Portal im Keller taucht erst nach ein paar Sekunden auf.",
   "Jede zweite Ebene hat einen Boss! Die Treppe dort ist versiegelt 🔒, bis du ihn besiegt hast.",
   "In der Boss-Arena kommen Handlanger — lila Kreise am Boden zeigen, wo gleich einer auftaucht.",

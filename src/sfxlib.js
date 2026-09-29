@@ -316,6 +316,12 @@ export const SFX_DEFS = {
     K.osc("sine", 2600 * p, t + 0.01, 0.25, 0.08);
     K.noise(t + 0.005, 0.06, 0.25, { type: "bandpass", f: 1800 * p, q: 3 });
   } },
+  wallWarn: { n: 2, len: 0.95, fn(K, t, v, r) {        // v8: Wand-Schütze bläht sich auf („hmmmf“ steigt an, dann kleines Klack)
+    const p = J(r, 0.12);
+    K.noise(t, 0.75, 0.32, { type: "bandpass", f: 380 * p, f1: 1500 * p, q: 2.2, a: 0.3, pink: true });
+    K.osc("triangle", 260 * p, t + 0.05, 0.7, 0.22, { f1: 520 * p, a: 0.35 });
+    K.osc("sine", 1320 * p, t + 0.78, 0.12, 0.16);
+  } },
   impact: { n: 3, len: 0.5, fn(K, t, v, r) {           // Einschlag einer Boss-Warnung (weich)
     const p = J(r, 0.2);
     K.osc("sine", 210 * p, t, 0.22, 0.8, { f1: 115, g: 0.12, a: 0.003 });

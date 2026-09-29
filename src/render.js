@@ -1,7 +1,7 @@
 /* render.js — Iso-Renderer: Kamera, Boden-Chunks, Tiefensortierung, Licht, Glow (MIT) */
 import * as A from "./art.js";
 import { FX } from "./fx.js";
-import { BIOMES, weaponOf, HATS } from "./config.js";
+import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName } from "./config.js";
 import { clamp, TAU, rgba, mixHex } from "./util.js";
 
 export const R = {
@@ -75,6 +75,8 @@ export function setLevel(L, biome, B) {
   }
   R.wallTorch.clear();
   for (const t of L.torches || []) R.wallTorch.set(t.wy * m.w + t.wx, t);
+  R.wallTrapAt = new Map();                                   // v8: Wand-Schützen sitzen auf ihrer Wand-Kachel
+  for (const t of L.wallTraps || []) R.wallTrapAt.set(t.wy * m.w + t.wx, t);
 }
 export function snapCamera(x, y) { R.camX = x; R.camY = y; }
 
@@ -243,7 +245,8 @@ export function draw(G, dt) {
   const cf = G.camFocus;
   let tx = cf ? p.x + (cf.x - p.x) * 0.7 : p.x + (p.vx || 0) * 0.3, ty = cf ? p.y + (cf.y - p.y) * 0.7 : p.y + (p.vy || 0) * 0.3;
   if (!cf && bz) { const b = G.boss, d = Math.hypot(b.x - p.x, b.y - p.y), k = d > 0.1 ? Math.min(d, 7) * 0.4 / d : 0; tx += (b.x - p.x) * k; ty += (b.y - p.y) * k; }
-  const f = Math.min(1, dt * 6);
+  // v8: Nachführung skaliert mit dem Tempo — Abstand Kamera↔Kobold in Kacheln bleibt wie bei 3,6 (nichts hinkt hinterher)
+  const f = Math.min(1, dt * 6 * clamp(Math.hypot(p.vx || 0, p.vy || 0) / PLAYER.speed0, 1, 1.5));
   R.camX += (tx - R.camX) * f; R.camY += (ty - R.camY) * f;
   R.camDX = (R.camX - R.camY) * 32; R.camDY = (R.camX + R.camY) * 16 - 44;
   const amp = FX.trauma * FX.trauma * 16;
@@ -278,7 +281,7 @@ export function draw(G, dt) {
     }
   }
   const portals = allPortals(G);
-  for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy)) blit(ctx, A.portalRing(po.locked), sx, sy, (po.small ? 0.7 : 1) * appear(po)); }
+  for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy)) blit(ctx, A.portalRing(po.locked), sx, sy, portalScale(po) * appear(po)); }
   // Fallen (Pieks-Platten)
   if (L.traps) for (const tr of L.traps) {
     const [sx, sy] = toScreen(tr.x, tr.y);
@@ -290,6 +293,18 @@ export function draw(G, dt) {
       const sp = A.trapSpikes(B.top);
       ctx.save(); ctx.translate(sx, sy); ctx.scale(R.Z, R.Z * k); put(ctx, sp, 0, 0); ctx.restore();
     }
+  }
+  // v8: Wand-Schützen — Vorwarnung als Bodenlinie der Flugbahn (Weltfarbe, füllt sich von der Wand aus, weiß gestrichelter Rand)
+  if (L.wallTraps) for (const w of L.wallTraps) {
+    if (w.st !== 1 && !(w.st === 2 && w.t < 0.3)) continue;
+    const k = w.st === 1 ? Math.min(1, w.t / WALLTRAP.warn) : 1, fade = w.st === 2 ? 1 - w.t / 0.3 : 1;
+    const t = { x: w.x0, y: w.y0, x2: w.x1, y2: w.y1, w: 0.62 };
+    ctx.globalAlpha = (0.3 + 0.2 * Math.sin(R.t * 16)) * fade; telePoly(ctx, t, 1, w.look.glow);
+    ctx.globalAlpha = 0.5 * fade; telePoly(ctx, t, k, w.look.glow);
+    ctx.globalAlpha = 0.9 * fade; ctx.setLineDash([8 * R.Z, 6 * R.Z]); ctx.lineDashOffset = -R.t * 50;
+    ctx.beginPath(); telePath(ctx, t, 1); ctx.strokeStyle = "rgba(40,16,50,.8)"; ctx.lineWidth = 4 * R.Z; ctx.stroke();
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.8 * R.Z; ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   }
   // Handlanger-Spawn-Kreise (lila/Welt-Farbe, nicht rot: kein Schaden, „gleich kommt einer")
   for (const s of G.spawns) {
@@ -395,6 +410,8 @@ export function draw(G, dt) {
         blit(ctx, A.wallSprite(B, R.biome, w.v), e.sx, e.sy);
         const t = R.wallTorch.get(w.y * m.w + w.x);
         if (t) blit(ctx, A.torchSprite(), e.sx + (t.face === "L" ? -16 : 16) * Z, e.sy - 8 * Z);
+        const wt = R.wallTrapAt && R.wallTrapAt.get(w.y * m.w + w.x);
+        if (wt) drawWallFace(ctx, wt, e.sx, e.sy);
         ctx.globalAlpha = 1;
         break;
       }
@@ -409,7 +426,7 @@ export function draw(G, dt) {
         break;
       }
       case 8: {
-        const po = e.o, sc = (po.small ? 0.7 : 1) * appear(po);
+        const po = e.o, sc = portalScale(po) * appear(po);
         ctx.save(); ctx.translate(e.sx, e.sy - 52 * Z * sc);
         ctx.scale(Z * sc * 0.62, Z * sc); ctx.rotate(R.t * 2.2);
         ctx.globalAlpha = 0.95; put(ctx, A.swirlSprite(po.col), 0, 0);
@@ -430,6 +447,14 @@ export function draw(G, dt) {
     ctx.strokeStyle = "rgba(255,90,120,.9)"; ctx.lineWidth = 5 * R.Z; ctx.stroke();
     ctx.strokeStyle = "rgba(255,240,245,.95)"; ctx.lineWidth = 2 * R.Z; ctx.stroke();
     ctx.setLineDash([]);
+  }
+  // v8: Rand der Wandfallen-Bahn auch über Wänden/Figuren (Vorwarnung bleibt sichtbar, wie Boss-Warnungen)
+  if (L.wallTraps) for (const w of L.wallTraps) {
+    if (w.st !== 1) continue;
+    const t = { x: w.x0, y: w.y0, x2: w.x1, y2: w.y1, w: 0.62 };
+    ctx.globalAlpha = 0.75; ctx.setLineDash([8 * R.Z, 6 * R.Z]); ctx.lineDashOffset = -R.t * 50;
+    ctx.beginPath(); telePath(ctx, t, 1); ctx.strokeStyle = w.look.glow; ctx.lineWidth = 3.2 * R.Z; ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   }
   drawGuide(ctx, G, "over");                             // Weg-Pfeil scheint durch Wände/Laternen (nicht über den Kobold)
   // normale Partikel
@@ -506,6 +531,7 @@ function telePath(ctx, t, k) {
   ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.closePath();
 }
 function telePoly(ctx, t, k, col) { ctx.fillStyle = col; ctx.beginPath(); telePath(ctx, t, k); ctx.fill(); }
+const portalScale = po => po.small ? 0.7 : po.world ? 0.8 : 1;     // v8: Stadt-Portale etwas kleiner (20 Stück)
 /** Heim-Portal blendet nach dem Verstecken weich ein */
 const appear = po => po.appearT === undefined ? 1 : Math.max(0.05, 1 - Math.pow(1 - po.appearT, 3));
 
@@ -636,6 +662,11 @@ function drawProp(ctx, pr, sx, sy, G) {
       blit(ctx, A.treeSprite(pr.var), 0, 0); ctx.restore(); break;
     }
     case "lantern": blit(ctx, A.lanternSprite(), sx, sy); break;
+    case "wpost": {   // v8: Welttor-Pfosten; der vordere zeichnet die Girlande mit Welt-Schild zum hinteren
+      blit(ctx, A.gatePostSprite(pr.w), sx, sy);
+      if (pr.front) drawGateGarland(ctx, pr.gate);
+      break;
+    }
     case "fountain": blit(ctx, A.fountainSprite(), sx, sy); break;
     case "mirror": blit(ctx, A.mirrorSprite(), sx, sy, 0.8); break;
     case "pillar": {   // Säule vor dem Kobold → weich durchsichtig (wie Wände)
@@ -652,6 +683,42 @@ function drawProp(ctx, pr, sx, sy, G) {
       break;
     }
   }
+}
+/** v8: Wand-Schütze (Steingesicht) auf die sichtbare Wandseite geschert; Vorwarnung = pulsierend aufblähen */
+function drawWallFace(ctx, w, sx, sy) {
+  const Z = R.Z, mood = w.st === 1 ? "warn" : w.st === 2 ? "shoot" : "idle";
+  const k = w.st === 1 ? Math.min(1, w.t / WALLTRAP.warn) : 0;
+  const sc = 0.8 * (1 + (w.st === 1 ? 0.08 + 0.1 * k + 0.05 * Math.sin(R.t * 26) : w.st === 2 ? 0.06 : 0));
+  ctx.save();
+  ctx.translate(sx + (w.face === "L" ? -16 : 16) * Z, sy - 9 * Z);
+  ctx.transform(1, w.face === "L" ? 0.5 : -0.5, 0, 1, 0, 0);
+  ctx.scale(Z * sc, Z * sc);
+  put(ctx, A.wallFaceSprite(R.B, mood, w.look.glow), 0, 0);
+  ctx.restore();
+}
+/** v8: Girlande mit Wimpeln zwischen den Pfosten-Köpfen + rundes Schild mit Welt-Symbol (hängt in der Mitte) */
+function drawGateGarland(ctx, g) {
+  const Z = R.Z, [a, b] = g.posts, col = A.ROAD_COL[g.w];
+  const [ax, ay] = toScreen(a.x, a.y, 112), [bx, by] = toScreen(b.x, b.y, 112);
+  const mx = (ax + bx) / 2, my = (ay + by) / 2 + 26 * Z;
+  ctx.save(); ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(60,30,50,.85)"; ctx.lineWidth = 4 * Z;
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(mx, my + 12 * Z, bx, by); ctx.stroke();
+  ctx.strokeStyle = col; ctx.lineWidth = 2 * Z; ctx.stroke();
+  for (let i = 1; i < 8; i++) {                               // Wimpel entlang der Kurve
+    const t = i / 8, x = (1 - t) * (1 - t) * ax + 2 * (1 - t) * t * mx + t * t * bx, y = (1 - t) * (1 - t) * ay + 2 * (1 - t) * t * (my + 12 * Z) + t * t * by;
+    if (Math.abs(t - 0.5) < 0.1) continue;
+    const sw = Math.sin(R.t * 3 + i) * 1.5 * Z;
+    ctx.beginPath(); ctx.moveTo(x - 5 * Z, y); ctx.lineTo(x + 5 * Z, y); ctx.lineTo(x + sw, y + 11 * Z); ctx.closePath();
+    ctx.fillStyle = i % 2 ? col : "#ffffff"; ctx.fill(); ctx.strokeStyle = "rgba(60,30,50,.7)"; ctx.lineWidth = 1.4 * Z; ctx.stroke();
+  }
+  const sx = mx, sy = my + 4 * Z + Math.sin(R.t * 1.7 + g.w) * 1.5 * Z, r = 15 * Z;
+  ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fillStyle = "#fff8ec"; ctx.fill();
+  ctx.lineWidth = 3.2 * Z; ctx.strokeStyle = "rgba(60,30,50,.9)"; ctx.stroke();
+  ctx.beginPath(); ctx.arc(sx, sy, r - 3.2 * Z, 0, TAU); ctx.strokeStyle = col; ctx.lineWidth = 2.4 * Z; ctx.stroke();
+  ctx.font = Math.round(17 * Z) + "px system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#000"; ctx.fillText(A.WORLD_EMOJI[g.w], sx, sy + 1 * Z);
+  ctx.restore();
 }
 function drawItem(ctx, it, sx, sy) {
   const Z = R.Z, t = R.t + it.seed;
@@ -679,6 +746,11 @@ function drawShot(ctx, s, sx, sy) {
     ctx.beginPath(); ctx.arc(0, 0, 20 * Z, 0, TAU); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#dcefff"; ctx.beginPath(); ctx.arc(6 * Z, 5 * Z, 6 * Z, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.arc(-7 * Z, -4 * Z, 4 * Z, 0, TAU); ctx.fill();
     ctx.restore();
+  } else if (s.kind === "wall") {             // v8: Geschoss der Wand-Schützen (Welt-Look)
+    const sp = A.wallShotSprite(s.look);
+    let rot = s.rot || 0;
+    if (s.look === "shard") rot = Math.atan2((s.vx + s.vy) * 16, (s.vx - s.vy) * 32) + Math.PI / 2;
+    ctx.save(); ctx.translate(sx, sy - s.z * Z); ctx.rotate(rot); ctx.scale(Z * 1.05, Z * 1.05); put(ctx, sp, 0, 0); ctx.restore();
   } else if (s.kind === "lob" && s.glob) {   // Glibber-Klumpen (Schlabbo)
     const bw = 12 * Z, w = 1 + Math.sin(s.t * 18) * 0.12;
     ctx.save(); ctx.translate(sx, sy - s.z * Z);
@@ -742,7 +814,8 @@ function lighting(G, B, portals) {
   else light(p.x, p.y, 3.5, "#fff6e0", 0.25);
   for (const t of L.torches) { const fl = 0.82 + 0.1 * Math.sin(T * 9 + t.x * 3) + 0.08 * Math.sin(T * 23 + t.y); light(t.x, t.y, 4.4 * (0.95 + fl * 0.05), B.torch, fl); }
   for (const li of L.lights) light(li.x, li.y, li.r, li.c, li.a * (1 - li.flick + li.flick * Math.sin(T * 7 + li.x)));
-  for (const po of portals) if (!po.locked) light(po.x, po.y, po.small ? 2.4 : 3.4, po.col, 0.8);
+  for (const po of portals) if (!po.locked) light(po.x, po.y, po.small ? 2.4 : po.world ? 2.2 : 3.4, po.col, po.world ? 0.45 : 0.8);
+  if (L.wallTraps) for (const w of L.wallTraps) if (w.st === 1) light(w.x0, w.y0, 1.6 + 1.4 * Math.min(1, w.t / WALLTRAP.warn), w.look.glow, 0.7);
   if (L.stairs && G.depth < 20 && !L.stairs.sealed) light(L.stairs.x, L.stairs.y, 2.6, "#ffe9a8", 0.55);
   for (const s of G.spawns) light(s.x, s.y, 2.2, s.col, 0.5 + 0.4 * s.t / s.max);
   for (const s of G.shots) if (s.kind !== "lob") light(s.x, s.y, s.kind === "bubble" ? 1.6 : 2.0, s.kind === "bubble" ? "#bfefff" : s.col, 0.7);
@@ -793,7 +866,9 @@ function glowPass(ctx, G, B, portals) {
     else if (pr.kind === "house") { const [sx, sy] = toScreen(pr.x, pr.y); ctx.globalAlpha = 0.35; const s = A.tinted(glow, "#ffc56e"); for (const [dx, dy] of [[-72, -32], [30, -10], [64, -28]]) { const w = 46 * Z; ctx.drawImage(s.cv, sx + dx * Z - w / 2, sy + dy * Z - w / 2, w, w); } }
     else if (pr.kind === "chest" && !pr.open) g(pr.x, pr.y, 20, 50, "#ffd75e", 0.25 + Math.sin(T * 3) * 0.1);
   }
-  for (const po of portals) if (!po.locked) g(po.x, po.y, 52 * (po.small ? 0.7 : 1), po.small ? 90 : 130, po.col, 0.4 + Math.sin(T * 3) * 0.08);
+  for (const po of portals) if (!po.locked) g(po.x, po.y, 52 * (po.small ? 0.7 : 1), po.small ? 90 : po.world ? 96 : 130, po.col, (po.world ? 0.3 : 0.4) + Math.sin(T * 3) * 0.08);
+  if (L.wallTraps) for (const w of L.wallTraps) if (w.st === 1) { const k = Math.min(1, w.t / WALLTRAP.warn); g(w.x0, w.y0, 18, 40 + 50 * k, w.look.glow, 0.35 + 0.35 * k + 0.1 * Math.sin(T * 26)); }
+  for (const s of G.shots) if (s.kind === "wall") g(s.x, s.y, s.z, 56, s.col, s.look === "ember" ? 0.55 : 0.3);
   drawGuide(ctx, G, "glow");
   if (L.stairs && G.depth < 20 && !L.stairs.sealed) g(L.stairs.x, L.stairs.y, 4, 70, "#ffe9a8", 0.3 + Math.sin(T * 2.5) * 0.1);
   for (const s of G.spawns) g(s.x, s.y, 20, 80 * (0.5 + s.t / s.max), s.col, 0.35);
@@ -853,13 +928,37 @@ function glowPass(ctx, G, B, portals) {
 function textPass(ctx, G, portals) {
   const Z = R.Z;
   ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  // v8: Stadt-Portale: kurze Beschriftung (🌀/⚡/👑/🔒 + Ebene); das nächste Portal zeigt zusätzlich seinen Namen (Schild)
+  let near = null, nd = 3.2;
+  for (const po of portals) if (po.world) { const d = Math.hypot(po.x - G.p.x, po.y - G.p.y); if (d < nd) { nd = d; near = po; } }
   for (const po of portals) {
-    const [sx, sy] = toScreen(po.x, po.y, (po.small ? 100 : 135));
+    const [sx, sy] = toScreen(po.x, po.y, (po.small ? 100 : po.world ? 104 : 135));
     if (!onScreen(sx, sy)) continue;
     const txt = po.label || "";
-    ctx.font = "800 " + Math.round(13 * Math.max(1, Z)) + "px system-ui, sans-serif";
+    ctx.font = "800 " + Math.round((po.world ? 14 : 13) * Math.max(1, Z)) + "px system-ui, sans-serif";
     ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(txt, sx, sy + Math.sin(R.t * 2 + po.x) * 3);
     ctx.fillStyle = po.locked ? "#c8c0d8" : "#fff8e0"; ctx.fillText(txt, sx, sy + Math.sin(R.t * 2 + po.x) * 3);
+  }
+  if (near) {   // Schild an fester Stelle (hoch: unter der Anzeige, quer: oben Mitte zwischen ❤️-Leiste und ⏸️) — verdeckt keine Portal-Nummern
+    const sx = R.VW / 2, sy = R.VH > R.VW ? Math.max(210, R.VH * 0.27) : 34;
+    const t1 = "Ebene " + near.depth + (near.icon === "👑" ? " · 👑 Boss" : near.icon === "⚡" ? " · ⚡ Mini-Boss" : ""), t2 = near.name;
+    ctx.font = "800 " + Math.round(14 * Math.max(1, Z)) + "px system-ui, sans-serif";
+    const w = Math.max(ctx.measureText(t2).width, ctx.measureText(t1).width) + 22, h = 44;
+    const x = Math.max(6 + w / 2, Math.min(R.VW - 6 - w / 2, sx));
+    ctx.globalAlpha = 0.9; ctx.fillStyle = near.locked ? "rgba(50,40,70,.92)" : "rgba(40,16,60,.9)";
+    ctx.beginPath(); ctx.roundRect(x - w / 2, sy - h / 2, w, h, 12); ctx.fill();
+    ctx.strokeStyle = near.col; ctx.lineWidth = 2.5; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.fillStyle = near.locked ? "#c8c0d8" : "#ffe9a8"; ctx.font = "800 " + Math.round(12 * Math.max(1, Z)) + "px system-ui, sans-serif"; ctx.fillText((near.locked ? "🔒 " : "") + t1, x, sy - 10);
+    ctx.fillStyle = near.locked ? "#d8d0e8" : "#ffffff"; ctx.font = "800 " + Math.round(14 * Math.max(1, Z)) + "px system-ui, sans-serif"; ctx.fillText(t2, x, sy + 9);
+  }
+  if (R.L.gates) for (const g of R.L.gates) {                 // Welttor-Name über der Girlande (blendet am Torplatz aus → Portal-Schild)
+    const [sx, sy] = toScreen(g.x, g.y, 150), dp = Math.hypot(G.p.x - g.cx, G.p.y - g.cy), [px, py] = toScreen(G.p.x, G.p.y, 50);
+    if (!onScreen(sx, sy) || dp < 2.6) continue;
+    ctx.globalAlpha = Math.min(1, (dp - 2.6) / 1.2) * (Math.abs(sx - px) < 120 * Z && Math.abs(sy - py) < 70 * Z ? 0.3 : 1);   // nicht über dem Kobold
+    const t = A.WORLD_EMOJI[g.w] + " " + BIOMES[g.w].name + " · " + g.depths[0] + "–" + g.depths[1];
+    ctx.font = "900 " + Math.round(13 * Math.max(1, Z)) + "px system-ui, sans-serif";
+    ctx.lineWidth = 4; ctx.strokeStyle = "rgba(40,10,50,.85)"; ctx.strokeText(t, sx, sy); ctx.fillStyle = A.ROAD_COL[g.w]; ctx.fillText(t, sx, sy);
+    ctx.globalAlpha = 1;
   }
   if (R.L.mirror) {
     const [sx, sy] = toScreen(R.L.mirror.x, R.L.mirror.y, 128);
@@ -906,6 +1005,7 @@ export function drawMini(cv, G) {
   const dot = (x, y, col, r) => { c.fillStyle = col; c.beginPath(); c.arc((x - ox) * s * 1.4, (y - oy) * s * 1.4, r, 0, TAU); c.fill(); };
   if (L.stairs && !L.stairs.sealed && m.seen[Math.floor(L.stairs.y) * m.w + Math.floor(L.stairs.x)]) dot(L.stairs.x, L.stairs.y, "#ffd75e", s * 2.4);
   if (L.homePortal && !L.homePortal.hidden) dot(L.homePortal.x, L.homePortal.y, "#7fffd4", s * 2);
+  if (L.portals) for (const po of L.portals) dot(po.x, po.y, po.locked ? "#8a8298" : po.col, s * (po.depth === G.deepest ? 2.2 : 1.4));   // v8: Stadt-Portale
   for (const e of G.ents) if (e.isBoss && m.seen[Math.floor(e.y) * m.w + Math.floor(e.x)]) dot(e.x, e.y, "#ff4a5a", s * 2.6);
   dot(ox, oy, "#ff6fae", s * 2.2);
   c.restore();

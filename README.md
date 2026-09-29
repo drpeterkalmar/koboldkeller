@@ -10,7 +10,7 @@ in Kawaii-Optik — warmes Licht, flackernde Fackeln, Hit-Stop, Screenshake, Par
 ## Steuerung
 | Handy | Tastatur | Aktion |
 |---|---|---|
-| Tipp auf den Boden | Klick | Laufen (Wegfindung um Wände) — Finger halten = folgen |
+| Tipp auf den Boden | Klick | Laufen (Wegfindung um Wände, auch weit bis an den Bildschirmrand) — Finger halten = weiterlaufen, solange er liegt (v8) |
 | Daumen links unten ziehen | WASD / Pfeile | Virtueller Joystick (abschaltbar) |
 | Tipp auf Gegner | — | hinlaufen & angreifen |
 | ⚔️ (halten = Dauerfeuer) | 1 / Leertaste / J | Rundumschlag 360°, Radius 3 Kacheln |
@@ -25,9 +25,16 @@ Weltfarbe neben ihm am Boden auf — entlang des Weges (Wegfindung, nicht durch 
 versiegelter Treppe zum Boss, in der Stadt zum Portal der tiefsten freigeschalteten Ebene. Nicht im Bosskampf, im Oma-Dialog oder
 während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten per URL, z. B. `?arrowIdle=1&arrowShow=3`.
 
+**⚡ Tempo (v8, [V8_BERICHT.md](V8_BERICHT.md)):** Der Kobold läuft 4,7 statt 3,6 Kacheln/s (+31 %); Schritte und Kamera laufen mit.
+
 ## Welt
 - **Koboldstadt** (Hub): Brunnen heilt & füllt Tränke auf, Oma Pilzhut erklärt alles (Tutorial, überspringbar),
-  Strohwichtel zum Üben, **🪞 Friseur-Spiegel** (Charakter-Editor), Portalplatz mit Checkpoints Ebene 1 / 5 / 9 / 13 / 17.
+  Strohwichtel zum Üben, **🪞 Friseur-Spiegel** (Charakter-Editor).
+  **v8: Vom Brunnen führt je Welt ein eigener bunter Weg** (🌿 Moos links → 💎 Kristall → 🍭 Zucker unten → ❄️ Frost → 🔥 Glut rechts)
+  zu einem **Welttor** (zwei Pfosten, Wimpel-Girlande, Welt-Schild) mit **einem Portal je Ebene** (1–4, 5–8, …). Jede Ebene bis zur
+  tiefsten erreichten ist wählbar; Boss-Ebenen tragen 👑, Mini-Boss-Ebenen ⚡, noch nicht erreichte 🔒 (mit Hinweis). Steht man am Tor,
+  zeigt ein Schild Ebene + Namen des nächsten Portals. Brunnen → jedes Portal ≤ 2,5 s. Ein Portal startet sofort, wenn man es antippt;
+  wer nur darüberläuft, löst nichts aus (erst nach kurzem Stehenbleiben).
 - **Jede Ebene** hat einen eigenen Namen (z. B. „Die Flüsternden Moosgärten", „Der Bonbonbach") und eine eigene Farbnuance.
   Das 🏠-Heim-Portal neben dem Eingang taucht erst nach 20 s Spielzeit auf (kein versehentliches Zurücklaufen).
 - **Moosgrotte (1–4) · Kristallhöhle (5–8) · Zuckerkeller (9–12) · Frostkeller (13–16) · Glutkeller (17–20)** —
@@ -65,6 +72,11 @@ während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten pe
   `?seed=N` macht die Würfe reproduzierbar (Tests).
 - **Schwierigkeitskurve:** Tabelle `DIFF` in `src/config.js` — mehr/zähere/schnellere Gegner je Ebene, Elite-Gegner mit Krone,
   Pieks-Platten-Fallen, engere Räume, neue Muster (Schleime teilen sich, 3er-Fächer, blinzelnde Gespenster, Doppel-Sturm).
+- **Wandfallen (v8):** Ab Ebene 3 sitzen wenige freundliche Steingesichter in den Wänden (1 → 5 je Ebene, MEGASCHWER +1). Ab und zu
+  blähen sie sich 0,9 s auf (Glühen, Ton, gestrichelte Bodenlinie) und pusten dann etwas quer durch den Gang bis zur nächsten Wand:
+  Moos-Sporen, Kristallsplitter, Bonbonkugeln, Schneebälle, Glutkugeln. Schaden wie die Pieks-Platten, 💨 macht unverwundbar.
+  Nie im Eingangsraum, nie in Boss-Arenen, nie zwei auf demselben Gang.
+- **Bosse (v8):** alle Haupt-, Mini-Bosse und der Kellerkönig haben 30 % mehr Leben (`BOSS_HP_MUL` in `src/config.js`).
 - **MEGASCHWER** (🔥): Gegner 2× schnell, 10× Schaden. Speichern pro Gerät, „💾 Weiterspielen" (Respawn am Ebenen-Eingang).
   Alte v20-Spielstände werden übernommen (Name, Look, Level, Gold, Waffen + 🎖️ Ehrenmütze), die Ehrenhall ebenso.
 
@@ -107,18 +119,19 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
 `KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
 v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
-`KK.editor()` (Editor-Look, Name, Würfe).
+`KK.editor()` (Editor-Look, Name, Würfe). v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
 
 ### Testen
 ```bash
 python3 tools/serve.py 8731          # Testserver (wie http.server, aber großer Backlog — sonst hängen Modul-Anfragen)
 node tools/check.mjs --port=8731 --throttle=4   # Flow hoch+quer, FPS, Saves, v7 → shots/neubau/ (~14 min)
 node tools/check.mjs --port=8731 --throttle=4 --v7=skip   # Teil 1 (~9 min) …
-node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V21 (~4,5 min), einzeln: node tools/checks_v7.mjs --only=V20
+node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V25 (~10 min), einzeln: node tools/checks_v7.mjs --only=V20
+node tools/checks_v8.mjs --port=8731 --ref=8732          # v8-Checks V22–V25 einzeln; --ref = Server mit altem Stand (Vorher/Nachher)
 node tools/icons.mjs 8731            # PWA-Icons aus eigenem Art-Code neu erzeugen
 node tools/audiotest.mjs http://localhost:8731/   # Handy-Regeln (ohne Autoplay-Flag): Tap → Audio läuft
 node tools/audiorender.mjs --port=8731            # Effekte + Musikzustände → shots/audio/*.wav + Messtabelle
-node tools/bot.mjs 8731 20 6 [--mega] [--out=v7]  # Autoplay 1→20, Schwierigkeitskurve → shots/neubau/bot_<name>.md
+node tools/bot.mjs 8731 20 6 [--mega] [--out=v8]  # Autoplay 1→20 (Tipps nur auf Sichtbares, Stadt zu Fuß) → shots/neubau/bot_<name>.md
 node tools/bot.mjs 8731 20 4 --secs=120 --audio   # 2 min Kampf-Bot + Knoten-Leck-Test
 ```
 `check.mjs` misst im Profil „gpu" (Chromium new-headless mit GPU-Raster, ungedrosselter Frame-Takt) und
