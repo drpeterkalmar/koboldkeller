@@ -69,6 +69,7 @@ still works when the user directly clicks the checkbox switch themselves, but it
 | V20 Weg-Pfeil | erscheint nach 2,00 s (vorher 0), um die Ecke 5,1° zum Pfad-Wegpunkt (Luftlinie wäre 124,7° daneben), nie in eine Wand, nach Tipp sofort weg |
 | V20b | Titelkarte/Bosskampf/aus: kein Pfeil · versiegelte Treppe → Ziel Boss · 12 s Stillstand: 2 Einblendungen = 2 Pfad-Berechnungen |
 | V21 Save v6 → v7 | alle 32 Felder gleich, Datei v3, Einstellungen erhalten, 🧭 neu an |
+| Live-URL headless nach Deploy (Pages ~70 s) | Menü „v7", `KK_VER = 7`, Boot 1,1 s, 🎲 → „Kicherkeks" (Tintenfisch), Ebene 1: Pfeil zur Treppe, Haptik-Modus v7, AudioContext „running", **0 Fehler, 0 fremde Requests** |
 | Bot Normal (`bot.mjs 8731 20 6 --out=v7`) | **durchgespielt, 0 Tode**, 0 Hänger, 0 Fehler, Level 16 am Ende (`shots/neubau/bot_v7.md`) |
 
 A3 und A3b liegen mit 224 bzw. 173 fps im Rahmen der Vorversionen (v5: 210/210, Vorlauf v7: 294/151) und weit über 45; im Bosskampf
