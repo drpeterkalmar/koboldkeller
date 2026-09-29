@@ -63,6 +63,7 @@ Keine Film- oder Markenfiguren, nichts Gruseliges. Die Sagen-Paare aus dem Vorsc
 | V29 Würfel | 300 Würfe: Kostüm-Anteil 29,7 %, nur freigeschaltete, 0 Verstöße, 0 Wiederholungen, Seed reproduzierbar |
 | V30 Editor | 8 Tabs ≥ 48 px, 15 Felder ≥ 85 px, 4 je Reihe (hoch + quer), 8 Silhouetten mit Hinweis, „6 / 14 gesammelt“, Hut-Schalter wirkt im Spiel; `?kostueme=alle` speichert nichts |
 | V31 Leistung (CPU 4×, Kellerkönig Wut-Phase, 9 Handlanger) | Phönix 175 / 173 fps, Sternendrache 228 / 218 fps (hoch / quer); Sprite-Cache nach 50…400 Kostümwechseln konstant 237 |
+| Live-URL headless nach Deploy (Pages ~60 s) | Menü „v9", `KK_VER = 9`, Boot 1,0 s, `?kostueme=alle` → 14 Kostüme, Phönix angezogen, Stadt 20 Portale, Ebene 3 mit Wandfalle, AudioContext „running", **0 Fehler, 0 fremde Requests** |
 | Bot `--out=v9 --myth=phoenix` | **durchgespielt, 0 Tode, 0 Hänger, 0 Fehler**, Level 16, 848 s Spielzeit (v8: 818–836 s) |
 
 Screenshots (`shots/neubau/v9/`, alle selbst angesehen): `kontaktbogen.png` (alle Kostüme × 8 Tierarten), Kostüm-Tab mit Silhouetten
