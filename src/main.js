@@ -4,7 +4,9 @@ import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dod
 import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality } from "./render.js";
 import { FX, updateFx } from "./fx.js";
 import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
-import { hardenTouch, wakeLock, watchVisibility } from "./platform.js";
+import { hardenTouch, wakeLock, watchVisibility, PF } from "./platform.js";
+import { GD, guideUpdate, guideInput, guideTarget, guideAim } from "./guide.js";
+import { findPath } from "./world.js";
 import { sanitize } from "./save.js";
 import { IN, initInput, resetInput } from "./input.js";
 import * as UI from "./ui.js";
@@ -46,6 +48,7 @@ G.hooks = {
 // ---------- Erste Geste: Audio + Wake-Lock ----------
 function gesture() {
   unlockAudio();
+  guideInput();                                          // v7: jede Eingabe blendet den Weg-Pfeil aus
   if (G.screen === "play" && !G.demo) wakeLock(true);
 }
 UI.initUI(gesture);
@@ -118,6 +121,8 @@ function frame(now) {
   const t0 = performance.now();
   for (let k = 0; k < (G.dbgSpeed || 1); k++) { update(dt, rd); updateFx(dt, rd); }
   tutUpdate();
+  if (IN.attackHeld || IN.joy || IN.hold) guideInput();
+  guideUpdate(dt * (G.dbgSpeed || 1));
   const t1 = performance.now();
   UI.hud(rd);
   draw(G, rd);
@@ -186,6 +191,16 @@ window.KK = {
   quality: (q) => { if (q !== undefined) setQuality(q); return R.q; },
   save: () => { save(); return true; },
   pause: () => UI.openPause(), resume: () => UI.resume(),
+  /** v7: Weg-Pfeil-Zustand (Richtung in Welt + Bildschirm, Wegpunkt, Ziel) */
+  guide: () => {
+    const ang = Math.atan2((GD.ux + GD.uy) * 16, (GD.ux - GD.uy) * 32);
+    return { a: +GD.a.toFixed(3), t: +GD.t.toFixed(2), idle: +GD.idle.toFixed(2), shows: GD.shows, calcs: GD.calcs, ux: GD.ux, uy: GD.uy, screenAng: ang,
+      wp: GD.wp, target: GD.target, cur: guideTarget(), on: !!G.arrowOn };
+  },
+  editor: () => UI.UI.ed ? { mode: UI.UI.ed.mode, look: { ...UI.UI.ed.look }, name: document.getElementById("nameInput").value, dice: UI.UI.diceN, tab: UI.UI.ed.tab } : null,
+  guideAim: () => { const tg = guideTarget(); return tg ? guideAim(G.p, tg) : null; },
+  path: (x, y) => findPath(G.L.map, G.p.x, G.p.y, x, y, G.p.r),
+  hap: () => ({ mode: PF.hapMode, vibrate: PF.vibrate, calls: { ...PF.hapStats.calls }, fired: { ...PF.hapStats.fired }, count: PF.hapCount, iosTouch: PF.iosTouch, touchTicks: PF.touchTicks }),
   finishTut,
   G, R,
 };

@@ -8,29 +8,30 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Koboldkeller 2</title>
-<link rel="manifest" href="manifest.webmanifest?v=6">
-<link rel="icon" href="icons/icon-192.png?v=6">
-<link rel="apple-touch-icon" href="icons/icon-192.png?v=6">
-<link rel="stylesheet" href="style.css?v=6">
-<script>window.KK_VER = 6;</script>
+<link rel="manifest" href="manifest.webmanifest?v=7">
+<link rel="icon" href="icons/icon-192.png?v=7">
+<link rel="apple-touch-icon" href="icons/icon-192.png?v=7">
+<link rel="stylesheet" href="style.css?v=7">
+<script>window.KK_VER = 7;</script>
 <script type="importmap">
 { "imports": {
-  "./src/main.js": "./src/main.js?v=6",
-  "./src/util.js": "./src/util.js?v=6",
-  "./src/config.js": "./src/config.js?v=6",
-  "./src/world.js": "./src/world.js?v=6",
-  "./src/art.js": "./src/art.js?v=6",
-  "./src/fx.js": "./src/fx.js?v=6",
-  "./src/render.js": "./src/render.js?v=6",
-  "./src/audio.js": "./src/audio.js?v=6",
-  "./src/sfxlib.js": "./src/sfxlib.js?v=6",
-  "./src/music.js": "./src/music.js?v=6",
-  "./src/save.js": "./src/save.js?v=6",
-  "./src/platform.js": "./src/platform.js?v=6",
-  "./src/game.js": "./src/game.js?v=6",
-  "./src/boss.js": "./src/boss.js?v=6",
-  "./src/input.js": "./src/input.js?v=6",
-  "./src/ui.js": "./src/ui.js?v=6"
+  "./src/main.js": "./src/main.js?v=7",
+  "./src/util.js": "./src/util.js?v=7",
+  "./src/config.js": "./src/config.js?v=7",
+  "./src/world.js": "./src/world.js?v=7",
+  "./src/art.js": "./src/art.js?v=7",
+  "./src/fx.js": "./src/fx.js?v=7",
+  "./src/render.js": "./src/render.js?v=7",
+  "./src/audio.js": "./src/audio.js?v=7",
+  "./src/sfxlib.js": "./src/sfxlib.js?v=7",
+  "./src/music.js": "./src/music.js?v=7",
+  "./src/save.js": "./src/save.js?v=7",
+  "./src/platform.js": "./src/platform.js?v=7",
+  "./src/game.js": "./src/game.js?v=7",
+  "./src/boss.js": "./src/boss.js?v=7",
+  "./src/input.js": "./src/input.js?v=7",
+  "./src/ui.js": "./src/ui.js?v=7",
+  "./src/guide.js": "./src/guide.js?v=7"
 } }
 </script>
 </head>
@@ -95,6 +96,7 @@
       <div class="editLeft">
         <div class="prevBox"><canvas id="editPrev"></canvas></div>
         <div class="nameRow"><input id="nameInput" maxlength="12" autocomplete="off" spellcheck="false" aria-label="Name"><button class="round dice" id="btnDice" aria-label="Zufallsname">🎲</button></div>
+        <button class="btn blue lookDice hidden" id="btnLookDice">🎲 Zufallslook</button>
       </div>
       <div class="editRight">
         <div class="tabs" id="editTabs"></div>
@@ -181,6 +183,6 @@
 </div>
 
 <noscript>Koboldkeller braucht JavaScript.</noscript>
-<script type="module" src="./src/main.js?v=6"></script>
+<script type="module" src="./src/main.js?v=7"></script>
 </body>
 </html>

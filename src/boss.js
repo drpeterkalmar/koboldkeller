@@ -84,7 +84,7 @@ function startPhase(e, n) {
   ring(e.x, e.y, 5, n === 3 ? "#ff5a5a" : e.aura, 0.7, 2.6); ring(e.x, e.y, 3, "#ffffff", 0.5, 1.6);
   burst(e.x, e.y, 30, { kind: "star5", col: n === 3 ? "#ff7a5a" : e.aura, s0: 16, s1: 0, sp0: 2, sp1: 6, z: 60, vz0: 100, vz1: 300, g: -300, l0: 0.6, l1: 1.2 });
   part({ x: e.x, y: e.y, z: 60, kind: "glow", col: n === 3 ? "#ff4a3a" : e.aura, s0: 380, s1: 60, life: 0.7 });
-  flash(n === 3 ? "#ffb0a0" : "#ffffff", 0.55); shake(0.8); FX.zoomPunch = 1; hitstop(180); slowmo(0.7, 0.35); haptic("boss");
+  flash(n === 3 ? "#ffb0a0" : "#ffffff", 0.55); shake(0.8); FX.zoomPunch = 1; hitstop(180); slowmo(0.7, 0.35); haptic("phase");
   G.camFocus = { x: e.x, y: e.y, t: 0.9 };
   SFX.phase({ x: e.x, y: e.y, rage: n === 3 });
   if (e.isMini) H().banner("PHASE 2! ⚡", D.name + " wird wild — neue Angriffe!", "boss");

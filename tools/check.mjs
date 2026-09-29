@@ -1,5 +1,6 @@
 // Koboldkeller 2 — Akzeptanz-Check (CHECKS.md)
-// node tools/check.mjs [--port=8731] [--throttle=4] [--no-perf] [--profile=gpu|software]
+// node tools/check.mjs [--port=8731] [--throttle=4] [--no-perf] [--profile=gpu|software] [--v7=all|skip|only] [--hapsecs=60]
+// v7-Checks (V18–V21) liegen in tools/checks_v7.mjs (auch einzeln lauffähig). Langer Lauf in Teilen: --v7=skip, dann --v7=only.
 // Profil „gpu" (Standard): Chromium new-headless mit GPU-Raster (wie Canvas2D am Handy) und
 // ungedrosseltem Frame-Takt (--disable-gpu-vsync/--disable-frame-rate-limit), weil headless-rAF
 // sonst lastunabhängig auf ~10–25 Hz gedrosselt wird. FPS = gemessener Frame-Durchsatz.
@@ -7,10 +8,12 @@
 // Android-Profil 412×915 @DPR2, hasTouch, isMobile; Querformat 915×412. Screenshots → shots/neubau/
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { runV7, GPU_FLAGS } from "./checks_v7.mjs";
 
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith("--" + k)); if (!a) return d; const v = a.split("=")[1]; return v === undefined ? true : v; };
 const PORT = +arg("port", 8731), THROTTLE = +arg("throttle", 4), PERF = !arg("no-perf", false), PROFILE = arg("profile", "gpu");
-const FLAGS = ["--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
+const V7MODE = arg("v7", "all"), HAPSECS = +arg("hapsecs", 60);
+const FLAGS = [...(PROFILE === "gpu" ? GPU_FLAGS.slice(0, 3) : []), "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
 const LAUNCH = PROFILE === "gpu" ? { channel: "chromium", args: FLAGS } : { args: FLAGS };
 const BASE = `http://localhost:${PORT}/`;
 const SHOTS = "shots/neubau/";
@@ -64,6 +67,8 @@ async function measureFps(page, label, secs = 5, warm = 1500) {
   return p;
 }
 
+let fpsN = null, fpsT = null, swInfo = null;
+if (V7MODE !== "only") {
 // =====================================================================
 // 1) Hochformat: kompletter Flow
 // =====================================================================
@@ -221,7 +226,7 @@ const reach = await page.evaluate(async () => {
 R("B14", "Auto-Befreiung aus Wand + BFS-Weg zur Treppe", bfs.freed && reach.ok, JSON.stringify({ ...bfs, ...reach }));
 
 // FPS normal
-let fpsN = null, fpsT = null;
+fpsN = null; fpsT = null;
 if (PERF) {
   fpsN = await measureFps(page, "normal (hoch)");
   R("A2", "FPS normal ≥ 55 (Kampf, 12 Gegner)", fpsN.fps >= 55, fpsN.fps + " fps (p5 " + fpsN.p5 + ", Scale " + fpsN.scale + ")");
@@ -312,7 +317,7 @@ await page.evaluate(() => { KK.goto(7); KK.G.gold = 1234; KK.save(); });
 await sleep(300);
 const saved = await S(page);
 await page.reload();
-await page.waitForFunction(() => window.KK && KK.G.L, null, { timeout: 10000 });
+await page.waitForFunction(() => window.KK && KK.G.L, null, { timeout: 30000 });
 await sleep(600);
 const info = await page.textContent("#contInfo");
 await shot(page, "20_menue_weiterspielen");
@@ -897,7 +902,7 @@ mkdirSync(V5, { recursive: true });
   await c14.close();
 }
 // Info: reines Software-Raster (kein GPU) — Worst Case, adaptive Qualität darf greifen
-let swInfo = null;
+swInfo = null;
 if (PERF && PROFILE === "gpu") {
   const b2 = await chromium.launch({ args: FLAGS });
   const c6 = await b2.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
@@ -911,10 +916,15 @@ if (PERF && PROFILE === "gpu") {
   console.log("INFO Software-Raster: normal " + n.fps + " fps (Scale " + n.scale + "), " + THROTTLE + "× " + t.fps + " fps (Scale " + t.scale + ")");
   await b2.close();
 }
+}
+// =====================================================================
+// 6) v7 — Würfel-Look + Namen, Haptik dezent, Weg-Pfeil, Save v6 → v7 (tools/checks_v7.mjs, Screenshots in shots/neubau/v7/)
+// =====================================================================
+if (V7MODE !== "skip") await runV7({ browser, BASE, R, errors, secs: HAPSECS });
 R("A1", "Keine pageerrors/console.errors (hoch + quer)", errors.length === 0, errors.length ? errors.slice(0, 5).join(" | ") : "0");
 R("A5", "Keine externen Requests", foreign.length === 0, foreign.length ? foreign.slice(0, 3).join(", ") : "0");
 await browser.close();
 const pass = results.filter(r => r.pass).length;
 console.log(`\n${pass}/${results.length} PASS`);
-writeFileSync(SHOTS + "check-results.json", JSON.stringify({ date: new Date().toISOString(), profile: PROFILE, throttle: THROTTLE, fpsNormal: fpsN, fpsThrottled: fpsT, software: swInfo, results, errors }, null, 2));
+writeFileSync(SHOTS + (V7MODE === "all" ? "check-results.json" : "check-results-v7" + V7MODE + ".json"), JSON.stringify({ date: new Date().toISOString(), profile: PROFILE, throttle: THROTTLE, fpsNormal: fpsN, fpsThrottled: fpsT, software: swInfo, results, errors }, null, 2));
 process.exit(pass === results.length ? 0 : 1);

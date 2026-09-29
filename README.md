@@ -20,6 +20,11 @@ in Kawaii-Optik — warmes Licht, flackernde Fackeln, Hit-Stop, Screenshake, Par
 | 🧪 | R / Q / 4 | Trank (+50 % ❤️) |
 | ⭐ / 🎒 / ⏸️ | I / Esc | Talente verteilen (⭐ tippen) · Rucksack (Talente, Hüte, 🪞 Aussehen in der Stadt) · Pause |
 
+**🧭 Weg-Pfeil (v7):** Bleibt der Kobold 2 s stehen (keine Bewegung, keine Eingabe), leuchtet kurz ein kleiner Funkel-Pfeil in
+Weltfarbe neben ihm am Boden auf — entlang des Weges (Wegfindung, nicht durch Wände) zur Treppe bzw. zum 20. Portal, bei
+versiegelter Treppe zum Boss, in der Stadt zum Portal der tiefsten freigeschalteten Ebene. Nicht im Bosskampf, im Oma-Dialog oder
+während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten per URL, z. B. `?arrowIdle=1&arrowShow=3`.
+
 ## Welt
 - **Koboldstadt** (Hub): Brunnen heilt & füllt Tränke auf, Oma Pilzhut erklärt alles (Tutorial, überspringbar),
   Strohwichtel zum Üben, **🪞 Friseur-Spiegel** (Charakter-Editor), Portalplatz mit Checkpoints Ebene 1 / 5 / 9 / 13 / 17.
@@ -53,15 +58,26 @@ in Kawaii-Optik — warmes Licht, flackernde Fackeln, Hit-Stop, Screenshake, Par
   neu verteilen in der Stadt. **Magnet:** Münzen 3,5 / Sachen 2,5 Kacheln (+ 🧲).
 - **Charakter-Editor** (beim Erstellen und am Spiegel): 8 Tierarten, Fell-, Augen-, Outfit-, Haarfarbe, 10 Frisuren, 2 Ohrenformen,
   Extras (Brille, Blume, Schleife, Sommersprossen, Sternspange), große Live-Vorschau.
+  **🎲 Würfel (v7):** würfelt Name **und** kompletten Look (Hüpfer + Doppeldreher + Funkeln in der Vorschau). Nur hübsche
+  Kombinationen über die Harmonie-Tabelle `LOOK_RULES` in `src/config.js` (Fell passend zur Tierart, Kontrast Fell↔Outfit,
+  Haar passend oder bewusst bunt, keine dunklen Augen auf dunklem Fell, Extra in ≈ 50 %), nie zweimal direkt derselbe Look.
+  Am Spiegel zusätzlich „🎲 Zufallslook“ (nur Aussehen). 177 Namen + Baukasten (z. B. „Knuddel“ + „keks“) = 536 Namen, alle ≤ 12 Zeichen.
+  `?seed=N` macht die Würfe reproduzierbar (Tests).
 - **Schwierigkeitskurve:** Tabelle `DIFF` in `src/config.js` — mehr/zähere/schnellere Gegner je Ebene, Elite-Gegner mit Krone,
   Pieks-Platten-Fallen, engere Räume, neue Muster (Schleime teilen sich, 3er-Fächer, blinzelnde Gespenster, Doppel-Sturm).
 - **MEGASCHWER** (🔥): Gegner 2× schnell, 10× Schaden. Speichern pro Gerät, „💾 Weiterspielen" (Respawn am Ebenen-Eingang).
   Alte v20-Spielstände werden übernommen (Name, Look, Level, Gold, Waffen + 🎖️ Ehrenmütze), die Ehrenhall ebenso.
 
 ## Handy / PWA
-Hoch- und Querformat, `100dvh` + Safe-Area, kein Doppeltipp-Zoom, kein Long-Press-Menü, Vibration (abschaltbar),
+Hoch- und Querformat, `100dvh` + Safe-Area, kein Doppeltipp-Zoom, kein Long-Press-Menü, Vibration (dezent, abschaltbar, v7 siehe unten),
 Wake-Lock beim Spielen, Pause + Stummschalten beim App-Wechsel, Vollbild-Knopf, Manifest + Icons
 („Zum Startbildschirm hinzufügen"). Canvas-Backbuffer max. DPR 2, adaptive Render-Auflösung.
+
+**Vibration (v7, [V7_BERICHT.md](V7_BERICHT.md)):** nur noch bei großen Ereignissen (Level-Up, Truhe, Treppe/Portal, eigener Treffer,
+Boss-Auftritt/-Sieg, Tod, Sieg), jeder Impuls ≥ 35 ms, ≥ 400 ms Abstand. **Android:** braucht eingeschaltete Vibration/
+Berührungsfeedback (bzw. Medien-Vibration), kein Lautlos- und kein Energiesparmodus. **iPhone:** Safari kann Webseiten seit iOS 26.5
+nicht mehr per Programm vibrieren lassen — es gibt nur noch einen kleinen Tick beim direkten Antippen von Knöpfen (✨, 🧪, ⏸️, 🎒, Menü).
+In ⏸️: „📳 Vibration testen“ mit Hinweis, falls nichts zu spüren ist. A/B-Vergleich mit der alten Tabelle: `?hap=alt`.
 
 ## Technik
 Vanilla-JS-ES-Module + Canvas 2D (Begründung: [ARCHITECTURE.md](ARCHITECTURE.md)). Alles Vektorielle wird einmal
@@ -73,6 +89,7 @@ additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md).
 | `src/art.js` | prozedurale Chibi-Grafik (Figuren, Gegner, Bosse, Items, Kacheln, Props) |
 | `src/render.js` | Iso-Renderer, Kamera, Chunk-Cache, Tiefensortierung, Licht, Glow, Minikarte |
 | `src/game.js` | Spiellogik, Kampf, KI, Loot, Ebenen, Treppen-Siegel, Sieg |
+| `src/guide.js` | v7: Weg-Pfeil (Ziel-Regel, Stillstand-Timer, Richtung entlang `findPath`) |
 | `src/boss.js` | Haupt- und Mini-Bosse, Arena (Tore, Handlanger-Wellen), Sieg/Entsiegeln |
 | `src/world.js` | Stadt-/Dungeon-Generator, Kollision, BFS-Wegfindung |
 | `src/ui.js` · `src/input.js` | Menüs/HUD · Touch/Joystick/Tastatur |
@@ -88,16 +105,20 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.kill('all'|'boss'|'near')`, `KK.win('boss'|'portal')`, `KK.god(on)`, `KK.heal()`, `KK.give(kind,n)`,
 `KK.attack()/bubbles()/dodge()/potion()/special()`, `KK.skill(id)/respec()/look(o)/magnet(kind)/item(kind,dx,dy)`,
 `KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
-`KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen).
+`KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
+v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
+`KK.editor()` (Editor-Look, Name, Würfe).
 
 ### Testen
 ```bash
-python3 -m http.server 8731          # freien Port wählen
-node tools/check.mjs --port=8731 --throttle=4   # Flow hoch+quer, FPS, Saves → shots/neubau/
+python3 tools/serve.py 8731          # Testserver (wie http.server, aber großer Backlog — sonst hängen Modul-Anfragen)
+node tools/check.mjs --port=8731 --throttle=4   # Flow hoch+quer, FPS, Saves, v7 → shots/neubau/ (~14 min)
+node tools/check.mjs --port=8731 --throttle=4 --v7=skip   # Teil 1 (~9 min) …
+node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V21 (~4,5 min), einzeln: node tools/checks_v7.mjs --only=V20
 node tools/icons.mjs 8731            # PWA-Icons aus eigenem Art-Code neu erzeugen
 node tools/audiotest.mjs http://localhost:8731/   # Handy-Regeln (ohne Autoplay-Flag): Tap → Audio läuft
 node tools/audiorender.mjs --port=8731            # Effekte + Musikzustände → shots/audio/*.wav + Messtabelle
-node tools/bot.mjs 8731 20 6 [--mega]             # Autoplay 1→20, Schwierigkeitskurve → shots/neubau/bot_normal|mega.md
+node tools/bot.mjs 8731 20 6 [--mega] [--out=v7]  # Autoplay 1→20, Schwierigkeitskurve → shots/neubau/bot_<name>.md
 node tools/bot.mjs 8731 20 4 --secs=120 --audio   # 2 min Kampf-Bot + Knoten-Leck-Test
 ```
 `check.mjs` misst im Profil „gpu" (Chromium new-headless mit GPU-Raster, ungedrosselter Frame-Takt) und

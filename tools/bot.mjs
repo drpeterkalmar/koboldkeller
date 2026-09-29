@@ -10,7 +10,7 @@ const port = pos[0] || 8731, maxD = +(pos[1] || 20), speed = +(pos[2] || 4);
 const SECS = flag("secs") ? +flag("secs").split("=")[1] : 30 * 60, AUD = !!flag("audio"), MEGA = !!flag("mega");
 const OUT = flag("out") ? flag("out").split("=")[1] : (MEGA ? "mega" : "normal");
 const { chromium } = loadPlaywright();
-const flags = ["--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", ...(AUD ? ["--autoplay-policy=no-user-gesture-required"] : [])];
+const flags = ["--use-angle=metal", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", ...(AUD ? ["--autoplay-policy=no-user-gesture-required"] : [])];
 const b = await chromium.launch({ channel: "chromium", args: flags });
 const page = await (await b.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true })).newPage();
 const errs = []; page.on("pageerror", e => errs.push((e.stack || e.message).split("\n").slice(0, 4).join(" ← ")));

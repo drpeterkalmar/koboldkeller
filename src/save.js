@@ -117,6 +117,7 @@ export function addHall(rec) {
 // ---------- Einstellungen ----------
 export function loadSettings() {
   const s = readJson(SETTINGS_KEY) || {};
-  return { music: s.music !== false, sfx: s.sfx !== false, vibrate: s.vibrate !== false, joystick: s.joystick !== false };
+  // v7: arrow = 🧭 Weg-Pfeil (Standard an; ältere Einstellungen kennen ihn nicht → an)
+  return { music: s.music !== false, sfx: s.sfx !== false, vibrate: s.vibrate !== false, arrow: s.arrow !== false, joystick: s.joystick !== false };
 }
 export function saveSettings(s) { writeJson(SETTINGS_KEY, s); }

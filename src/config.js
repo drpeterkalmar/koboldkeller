@@ -81,10 +81,123 @@ export function makeLook(o = {}) {
 export const lookSave = L => ({ species: L.species, skin: L.skin, outfit: L.outfit, eye: L.eye, hair: L.hair, style: L.style, earsV: L.earsV, acc: L.acc });
 export const OLD_SPECIES_MAP = { kobold: "kobold", baer: "baer", hase: "hase", tintenfisch: "tintenfisch", panda: "panda", katze: "katze" };
 
-export const NAMES = ["Knuffel", "Wichtel-Willy", "Glitzer-Emma", "Pupsi", "Krümel", "Flauschi", "Kobbi",
+// Zufallsnamen (v7: ≥ 150). Regeln (geprüft in check.mjs V18): höchstens 12 Zeichen (Namensfeld), keine Duplikate,
+// nichts Beleidigendes/Zweideutiges, keine echten Vornamen (neue Namen sind nur Tiere, Naschzeug, Natur, Glitzer).
+export const NAME_MAX = 12;
+export const NAMES = ["Knuffel", "Wichtelwilly", "Glitzer-Emma", "Pupsi", "Krümel", "Flauschi", "Kobbi",
   "Zuckerkäfer", "Mopsi", "Wackel", "Brummi", "Schmusebacke", "Pünktchen", "Knorpf", "Tapsi", "Blubber",
   "Sternchen", "Muffin", "Kicher-Kiki", "Plüschi", "Funkel", "Wuschel", "Hüpfi", "Zimtschnecke", "Glöckchen",
-  "Keksi", "Schnuffel", "Mausi-Maus", "Purzel", "Bommel"];
+  "Keksi", "Schnuffel", "Mausi-Maus", "Purzel", "Bommel",
+  // v7
+  "Knuddel", "Schnuppi", "Wuselchen", "Flitzi", "Piepsi", "Hoppel", "Kuschel", "Schnuckel", "Murmel", "Zwirbel",
+  "Fussel", "Knöpfchen", "Tröpfchen", "Flöckchen", "Stupsi", "Tüpfel", "Kringel", "Klecks", "Schnipsel", "Brösel",
+  "Mümmel", "Pilzchen", "Pilzhütchen", "Tautropfen", "Funkelstein", "Glitzerkeks", "Wolkenhüpfer", "Mondkeks", "Honigtopf", "Honigbär",
+  "Himbeerchen", "Erdbeerchen", "Blaubeerchen", "Kirschkern", "Apfelmus", "Pfannkuchen", "Waffel", "Kakaobohne", "Vanille", "Zimtstern",
+  "Lebkuchen", "Marzipan", "Karamell", "Gummibärchen", "Bonbon", "Törtchen", "Plätzchen", "Schoki", "Schokokeks", "Knusper",
+  "Streusel", "Puderzucker", "Zuckerwatte", "Kekskrümel", "Butterkeks", "Pudding", "Knödel", "Buchtel", "Spätzchen", "Mäuschen",
+  "Igelchen", "Eichhörnchen", "Maulwurf", "Glühwürmchen", "Marienkäfer", "Hummelchen", "Brummel", "Summsi", "Räupchen", "Flauschohr",
+  "Schlappohr", "Kuschelbär", "Tätzchen", "Pfötchen", "Samtpfote", "Schnurri", "Maunzi", "Wuffi", "Quietschi", "Quaki",
+  "Purzelbaum", "Kicherfee", "Glitzerfee", "Moosfee", "Zauberpilz", "Waldwichtel", "Wurzelchen", "Knirps", "Wichtelchen", "Sternenstaub",
+  "Blinki", "Glimmer", "Regenbogen", "Wölkchen", "Mondschein", "Morgentau", "Schneeflocke", "Nordlicht", "Kometchen", "Pummelchen",
+  "Mampfi", "Naschkatze", "Leckermaul", "Zottel", "Strubbel", "Wuschelkopf", "Lockenkopf", "Wirbelwind", "Flummi", "Hopsi",
+  "Grashüpfer", "Klimper", "Bimmel", "Kulleraugen", "Knopfauge", "Stupsnase", "Naseweis", "Tollpatsch", "Schlafmütze", "Frechdachs",
+  "Kichererbse", "Radieschen", "Möhrchen", "Kürbischen", "Glückspilz", "Kleeblatt", "Pusteblume", "Butterblume", "Löwenzahn", "Veilchen",
+  "Rosinchen", "Haselnuss", "Kastanie", "Tannenzapfen", "Kiesel", "Seestern", "Perlchen", "Knallerbse", "Kreisel", "Murmeltier",
+  "Pinguin", "Eulchen", "Zaunkönig", "Libelle", "Grille", "Dachsi", "Otterchen"];
+// Namens-Baukasten: Vorsilbe × Nachsilbe (z. B. „Knuddel“ + „keks“ = „Knuddelkeks“), nur Kombinationen ≤ 12 Zeichen
+export const NAME_PRE = ["Knuddel", "Glitzer", "Kuschel", "Funkel", "Zucker", "Moos", "Wusel", "Honig", "Pilz", "Flausch",
+  "Kicher", "Wolken", "Zimt", "Schoko", "Mond", "Tau", "Hüpf", "Plüsch", "Stern", "Keks"];
+export const NAME_POST = ["keks", "bär", "maus", "pilz", "stern", "flocke", "fee", "knopf", "tatze", "ohr",
+  "wicht", "krümel", "nase", "bohne", "tropfen", "purzel", "bommel", "hase", "zwerg", "herz"];
+export const NAME_KIT = NAME_PRE.flatMap(a => NAME_POST.filter(b => !a.toLowerCase().startsWith(b)).map(b => a + b)).filter(n => n.length <= NAME_MAX && !NAMES.includes(n));
+/** Zufallsname: 60 % aus der Liste, 40 % aus dem Baukasten (r = Zufallsquelle 0…1) */
+export function randomName(r = Math.random) {
+  const list = r() < 0.6 ? NAMES : NAME_KIT;
+  return list[Math.floor(r() * list.length)];
+}
+
+// ---------- v7: Würfel-Look — Harmonie-Tabelle (Regeln statt reinem Zufall) ----------
+// fur/hair: passende Fell- und Haarfarben je Tierart; bunt = bewusst bunte Haarfarben (mit buntChance statt der natürlichen).
+// Kontrast (Farbabstand „redmean“, 0…765): Fell↔Outfit ≥ furOutfit, Fell↔Haar ≥ furHair (außer Frisur „ohne“), Haar↔Outfit ≥ hairOutfit.
+// Dunkles Fell (Helligkeit < darkFur): nur helle Augenfarben (brightEyes) — dunkle Augen hätten dort keinen Rand mehr.
+export const LOOK_RULES = {
+  fur: {
+    kobold: ["#86dc5c", "#6fd8c4", "#b98ff0", "#9fc8ff", "#c8c8d4", "#ffc6dc"],
+    baer: ["#cf9460", "#9a7058", "#f6eee0", "#c8c8d4", "#f3aa62", "#6a5a7a"],
+    hase: ["#f6eee0", "#c8c8d4", "#ffc6dc", "#fff0a0", "#9a7058", "#cf9460"],
+    tintenfisch: ["#b98ff0", "#ffc6dc", "#9fc8ff", "#6fd8c4", "#ea7a4c", "#6a5a7a"],
+    panda: ["#ea7a4c", "#ff9a42", "#cf9460", "#9a7058"],
+    katze: ["#f3aa62", "#c8c8d4", "#f6eee0", "#9a7058", "#6a5a7a", "#fff0a0", "#ff9a42"],
+    fuchs: ["#ff9a42", "#ea7a4c", "#f3aa62", "#c8c8d4", "#f6eee0"],
+    drache: ["#6fd8c4", "#86dc5c", "#b98ff0", "#9fc8ff", "#ffc6dc", "#fff0a0", "#ea7a4c"],
+  },
+  hair: {
+    kobold: ["#6b4430", "#8a5a33", "#3aa893", "#2a1a2a", "#ffe070", "#7a3b22"],
+    baer: ["#8a5a33", "#6b4430", "#7a3b22", "#2a1a2a", "#f4f4f4"],
+    hase: ["#ffc2d4", "#f4f4f4", "#ffe070", "#8a5a33"],
+    tintenfisch: ["#8a5fc0", "#ff6fae", "#6fb8ff", "#ffc2d4", "#3aa893"],
+    panda: ["#7a3b22", "#c75f1a", "#6b4430", "#2a1a2a"],
+    katze: ["#c75f1a", "#8a5a33", "#6b4430", "#2a1a2a", "#f4f4f4", "#ffe070"],
+    fuchs: ["#c75f1a", "#7a3b22", "#f4f4f4", "#6b4430"],
+    drache: ["#3aa893", "#8a5fc0", "#6fb8ff", "#ff6fae", "#ffe070"],
+  },
+  bunt: ["#ffc2d4", "#8a5fc0", "#ff6fae", "#6fb8ff", "#ffe070", "#3aa893", "#f4f4f4"], buntChance: 0.3,
+  furOutfit: 130, furHair: 90, hairOutfit: 60, darkFur: 0.25, brightEyes: ["#0a7a8a", "#a0306a", "#c07a10"],
+  accChance: 0.5,                           // Extra (Brille, Blume …) in höchstens 50 % der Würfe (Vorgabe ≤ 60 %)
+};
+const _rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+export function colDist(a, b) {
+  const [r1, g1, b1] = _rgb(a), [r2, g2, b2] = _rgb(b), rm = (r1 + r2) / 2;
+  return Math.sqrt((2 + rm / 256) * (r1 - r2) ** 2 + 4 * (g1 - g2) ** 2 + (2 + (255 - rm) / 256) * (b1 - b2) ** 2);
+}
+export function colLum(h) {
+  const [r, g, b] = _rgb(h).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+/** Vollständiger Schlüssel eines Looks (inkl. Outfit) — „nicht zweimal derselbe" */
+export const lookKey = L => [L.species, L.skin, L.outfit, L.hair, L.eye, L.style, L.earsV, L.acc].join("|");
+/** Harmonie-Prüfung eines gewürfelten Looks: [] = hübsch, sonst Liste der verletzten Regeln */
+export function lookHarmony(L) {
+  const R = LOOK_RULES, bad = [];
+  if (!(R.fur[L.species] || []).includes(L.skin)) bad.push("fell-art");
+  if (!(R.hair[L.species] || []).includes(L.hair) && !R.bunt.includes(L.hair)) bad.push("haar-art");
+  if (colDist(L.skin, L.outfit) < R.furOutfit) bad.push("kontrast-fell-outfit");
+  if (L.style !== "ohne" && colDist(L.skin, L.hair) < R.furHair) bad.push("kontrast-fell-haar");
+  if (colDist(L.hair, L.outfit) < R.hairOutfit) bad.push("kontrast-haar-outfit");
+  if (colLum(L.skin) < R.darkFur && !R.brightEyes.includes(L.eye)) bad.push("augen-dunkles-fell");
+  if (!PAL.eye.includes(L.eye) || !PAL.outfit.includes(L.outfit)) bad.push("palette");
+  return bad;
+}
+/** Würfelt einen hübschen Look (Harmonie-Tabelle), nie direkt denselben wie prevKey. r = Zufallsquelle (?seed= → reproduzierbar) */
+export function rollLook(r = Math.random, prevKey = "") {
+  const R = LOOK_RULES, pk = (a) => a[Math.floor(r() * a.length)];
+  let L = null;
+  for (let n = 0; n < 60; n++) {
+    const sp = pk(SPECIES).id, skin = pk(R.fur[sp]);
+    const hair = r() < R.buntChance ? pk(R.bunt) : pk(R.hair[sp]);
+    const style = pk(HAIR_STYLES).id;
+    const eyes = colLum(skin) < R.darkFur ? R.brightEyes : PAL.eye;
+    const outs = PAL.outfit.filter(o => colDist(skin, o) >= R.furOutfit && colDist(hair, o) >= R.hairOutfit);
+    if (!outs.length) continue;
+    const o = { species: sp, skin, hair, style, eye: pk(eyes), outfit: pk(outs), earsV: r() < 0.5 ? 0 : 1,
+      acc: r() < R.accChance ? pk(ACCESSORIES.slice(1)).id : "none" };
+    L = makeLook(o);
+    if (!lookHarmony(L).length && lookKey(L) !== prevKey) break;
+  }
+  return lookSave(L);
+}
+
+// ---------- v7: Weg-Pfeil (nach Stillstand kurz in Richtung Ziel) — URL-Override z. B. ?arrowIdle=1&arrowShow=3 ----------
+const _q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams("");
+const _qn = (k, d) => { const v = parseFloat(_q.get(k)); return isFinite(v) && v >= 0 ? v : d; };
+export const ARROW_IDLE = _qn("arrowIdle", 2.0);      // s ohne Bewegung/Eingabe, bis der Pfeil erscheint
+export const ARROW = {
+  idle: ARROW_IDLE, fadeIn: _qn("arrowFadeIn", 0.35), show: _qn("arrowShow", 2.0), fadeOut: _qn("arrowFadeOut", 0.45),
+  repeat: _qn("arrowRepeat", 6),              // steht man danach weiter still: erneut nach so vielen s
+  ahead: _qn("arrowAhead", 3.5),              // Wegpunkt so viele Kacheln voraus auf dem Pfad (nicht Luftlinie)
+  r0: 0.62, r1: 1.5,                          // Pfeil liegt 0,62 … 1,5 Kacheln neben der Figur auf dem Boden
+};
+export const URLQ = _q;
 
 // Biome: Block à 4 Ebenen. amb = Umgebungslicht (0..1 pro Kanal)
 export const BIOMES = [

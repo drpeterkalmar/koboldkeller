@@ -63,6 +63,22 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | V17 | Save-Migration v4 → v5: nichts verloren, keine doppelten Geschenke, passierte Boss-Ebenen offen, tiefere versiegelt, Datei v3 | ja |
 | A3b | Größter Bosskampf (Kellerkönig, Arena 24, Wut-Phase, 9 Handlanger), CPU-Throttle 4× | ≥ 45 FPS |
 
+## V7 — Würfel-Look, Haptik dezent, Weg-Pfeil (automatisch, `tools/checks_v7.mjs`, Screenshots in `shots/neubau/v7/`)
+| # | Check | Ziel |
+|---|---|---|
+| V18 | 🎲 20× würfeln (`?seed=7`): Name + Look ändern sich, ≥ 15 verschiedene Looks, keine direkte Wiederholung, alle Harmonie-Regeln, Name ≤ 12 Zeichen, Namensfeld editierbar, gleicher Seed = gleiche Folge | ja |
+| V18b | 300 Würfe im Modul: 0 Harmonie-Verstöße, 0 Wiederholungen, Extra ≤ 60 %, alle 8 Tierarten; `NAMES` ≥ 150 ohne Duplikate, alle Namen + Baukasten ≤ 12 Zeichen, die 30 v6-Namen erhalten, Sperrliste (Beleidigendes/Zweideutiges; optional `KK_BLOCK_NAMES`) 0 Treffer | ja |
+| V18c | Spiegel: „🎲 Zufallslook“ ändert nur das Aussehen, Name bleibt, wird übernommen | ja |
+| V19 | Haptik-Stub (`navigator.vibrate` protokolliert), je 60 s Kampf vorher (`?hap=alt`) / nachher: v7 nur große Ereignisse, keine Pulse < 25 ms, Abstand ≥ 400 ms, ≤ 350 ms/s; „Vibration aus“ → 0 Aufrufe; „📳 Vibration testen“ vibriert + Hinweis | ja |
+| V19b | iPhone-Muster (`?haptouch=1`): Switch nur in DOM-Knöpfen, deckt ≥ 75 % des Knopfs, nie über dem Canvas, nicht auf ⚔️; echter Tipp auf 🧪 wirkt + schaltet; Tap-to-move + Joystick ungestört; aus → Switches weg | ja |
+| V20 | Weg-Pfeil nach 2,0 s Stillstand (nicht früher), Winkelfehler zum Pfad-Wegpunkt < 20° (Stadt, E1, Frost, Glut, versiegelt, „um die Ecke“ mit Luftlinie > 90° daneben), nie in eine Wand, bei Bewegung sofort weg, erneut erst nach 2 s | ja |
+| V20b | Ziel-Regel (Stadt → Portal, Keller → Treppe, versiegelt → Boss), kein Pfeil während Titelkarte und im Bosskampf, Einstellung greift, `findPath` nur beim Einblenden | ja |
+| V21 | Save v6 → v7: Spielstand-Datei (v3) unverändert, alle Felder gleich, Einstellungen bleiben + 🧭 neu an, Weiterspielen stellt alles her | ja |
+| Bot | `tools/bot.mjs 8731 20 6 --out=v7`: Normal durchspielbar | 0 Tode |
+
+Hinweis: Der ganze Lauf dauert ~14 min. In zwei Teilen: `--v7=skip` (A/B/C/V1–V17, ~9 min) und `--v7=only` (V18–V21, ~4,5 min).
+Testserver: `python3 tools/serve.py 8731` (großer Backlog; der Standard-`http.server` ließ vereinzelt Modul-Anfragen > 30 s hängen).
+
 ## B — Kids-UX (automatisch + Screenshot)
 | # | Check | Ziel |
 |---|---|---|

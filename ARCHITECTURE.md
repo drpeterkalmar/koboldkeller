@@ -48,6 +48,7 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 | `src/render.js` | Kamera, Iso-Projektion, Chunk-Cache, sortiertes Zeichnen, Licht, Post-FX |
 | `src/fx.js` | Partikel-Pool, Screenshake (Trauma), Hit-Stop, Schadenszahlen, Blitze |
 | `src/game.js` | Zustand, Spieler (Talente, Munition, Spezial), Gegner-KI (Elite, neue Muster), Kampf, Loot + Obergrenzen, Magnet, Fallen, Level-Aufbau, Heim-Portal, Sieg |
+| `src/guide.js` | v7: Weg-Pfeil — Stillstand-Timer, Ziel-Regel, Richtung entlang des Pfades (`findPath` nur beim Einblenden) |
 | `src/boss.js` | Bosse: Intro, 3 Phasen, Signatur-Angriffe je Welt (Warnkreise/-linien/-ringe), Arena-Effekte, Sieg-Spektakel; v5: Mini-Bosse (2 Phasen), Arena-Logik (Wecken, Tore, Handlanger-Wellen, Despawn, Entsiegeln) |
 | `src/input.js` | Tap-to-Move, Halten-Folgen, virtueller Joystick, Tastatur |
 | `src/ui.js` | Menüs, Charakter-Editor (Live-Vorschau), HUD (Munition, Spezial, Talentpunkte), Toasts, Rucksack mit Talenten, Ehrenhall, Tutorial, Boss-Karte |
@@ -56,7 +57,9 @@ Nur dort (und in `KK_VER`) wird die Version erhöht.
 | `src/music.js` | Adaptive Musik: Abschnitts-Scheduler mit Tempo je Abschnitt, Welt-Songs (Tonart/Akkorde/Melodien A/B), Leitmotiv-Zwischenspiele, Stadt Tag/Abend, Kampf-/Boss-Schichten, Stinger in laufender Tonart |
 | `src/save.js` | Save/Load, v20-Migration, Ehrenhall (`koboldkeller_hall_v1` weitergenutzt) |
 | `src/platform.js` | Vollbild, Wake-Lock, Vibration, Sichtbarkeit, Kontextmenü-Sperre |
-| `tools/check.mjs` | Playwright-Testlauf (Flow, Screenshots, FPS, Fehler) |
+| `tools/check.mjs` | Playwright-Testlauf (Flow, Screenshots, FPS, Fehler); `--v7=skip|only` teilt den Lauf |
+| `tools/checks_v7.mjs` | v7-Checks V18–V21 (Würfel/Namen, Haptik-Stub, Weg-Pfeil, Save v6 → v7), auch einzeln lauffähig |
+| `tools/serve.py` | Statischer Testserver mit großem Backlog (der Standard-`http.server` ließ Modul-Anfragen hängen) |
 | `tools/icons.mjs` | Erzeugt `icons/icon-192/512.png` aus dem eigenen Art-Code |
 | `tools/bot.mjs` | Autoplay-Bot: spielt Ebene 1→20 wie ein Kind (Tap auf Gegner/Treppe), meldet Hänger/Tode |
 | `tools/smoke.mjs` | Schnelltest mit frei wählbaren Schritten (`eval=…`, `wait=…`, `shot=…`) |
@@ -87,6 +90,7 @@ den Obergrenzen (Max-❤️ > 60, Tränke > 5, Pilze über voller Leiste) → Go
 bisherige Level → Talentpunkte als Willkommensgeschenk (`giftNote`). Nichts, was sichtbar war, geht verloren.
 **Migration v4 → v5** (`v < 3`): `bossDone` = alle Boss-Ebenen (2, 4, …) unterhalb der tiefsten erreichten Ebene (+ 20, wenn schon gewonnen) —
 die Kinder waren dort schon vorbei, nichts wird nachträglich gesperrt. Sonst ändert sich nichts (keine erneuten Geschenke).
+**v7:** Spielstand-Datei unverändert (`v:3`, geprüft in V21). Einstellungen (`koboldkeller2_settings`) bekommen `arrow` (🧭, fehlt → an).
 Migration: existiert nur `koboldkeller_save_v1` (v20), werden Name, Look (Spezies), Level, Gold,
 Waffenwerte, tiefste Ebene übernommen + Geschenk (Veteranen-Hut). Der alte Key bleibt unangetastet.
 Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompatibel mit v20).
@@ -109,6 +113,8 @@ Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompa
 | `KK.speed(k)` | Zeitraffer (k Update-Schritte pro Frame, nur für Bot/Tests) |
 | `KK.quality(q)` | Render-Qualitätsstufe 0–3 setzen (Scale 1 · 0.8 · 0.65 · 0.5 × DPR) |
 | `KK.arena()` / `KK.wave(n)` | Arena-Zustand (Größe, Säulen, Tore zu?, Handlanger lebend/erscheinend, Deckel, Treppe versiegelt?) / Welle erzwingen (Deckel gilt) |
+| `KK.guide()` / `KK.guideAim()` / `KK.path(x,y)` | v7: Weg-Pfeil-Zustand (a = Deckkraft, idle, ux/uy, Wegpunkt, Ziel, Zähler shows/calcs) / Richtung jetzt berechnen / Pfad vom Kobold |
+| `KK.hap()` / `KK.editor()` | v7: Haptik-Zähler (Aufrufe + ausgelöst je Art, Modus v7/alt) / Editor-Zustand (Look, Name, Würfe) |
 
 ## Spielregeln v4 (Überblick)
 - **Munition:** `bubbles()` kostet 1 🫧 pro Schuss (egal wie viele Blasen); `gainAmmo` bei jedem Kill (normal 2, Elite 4, Boss 12,
@@ -208,7 +214,28 @@ Ambience ─► ambLvl ─► (ambSend ─► Hall) ─────────�
 - Ambience: Stadt (Treiben-Schleife, Vögel, Brunnen räumlich), Keller je Biom (Wind + Tropfen/Kristall/Sprudeln/Eis/Lava),
   Fackel-Knistern nahe der nächsten Fackel. Alles am „🔔 Töne"-Schalter.
 
-### Haptik (`haptic(kind)` in `src/platform.js`)
-Muster nach Stärke (leicht 5–14 ms … Ereignis-Muster für Boss/Level-Up/Tod/Sieg), Vorrang (schwache Impulse unterbrechen
-keine starken), leichte Impulse ≥ 70 ms Abstand, Münzen ≤ 1/s, Budget ≤ 350 ms Vibration pro Sekunde. Um die gemessene
-Ausgabe-Latenz des AudioContext versetzt, damit Vibration und Schall-Transient zusammenfallen. iPhone: Switch-Tick wie v2.
+### Haptik (`haptic(kind)` in `src/platform.js`, v7 „dezent")
+- Tabelle `HAP_V7`: nur hurt, chest, stairs (Treppe/Portal), levelup, boss (Auftritt), bossKill, die, win (+ probe für „📳 Vibration testen").
+  Alle anderen Aufrufe im Spielcode (hit, coin, pickup, dodge, slam, special, phase …) bleiben stehen, vibrieren aber nicht.
+  Jeder Impuls ≥ 35 ms, Mindestabstand `HAP_GAP` = 400 ms (Wichtiges mit prio ≥ 2 wird nachgeholt statt verworfen),
+  Budget ≤ 350 ms/s, Vorrang wie bisher, Versatz um die Audio-Ausgabelatenz. `?hap=alt` = alte v6-Tabelle `HAP_V6` (A/B).
+- `PF.hapStats` zählt Aufrufe und Auslösungen je Art (Stub-Test V19).
+- iPhone: `navigator.vibrate` fehlt. Programmatischer Switch-Tick (`iosTick`) wirkt nur bis iOS 26.4. Ab 26.5: `hapticButtons()` legt in
+  ausgewählte DOM-Knöpfe (✨, 🧪, ⏸️, 🎒, `.btn`, 🎲, Einstellungs-Zeilen) einen unsichtbaren `<input type=checkbox switch>` (`.kkHapSw`),
+  den die echte Berührung umschaltet → System-Tick; der Klick blubbert normal zum Knopf. Nie über dem Canvas, nicht auf ⚔️.
+  Nur auf iPhone/iPad aktiv (oder `?haptouch=1` im Test); „Vibration aus" → `body.noHap` blendet die Switches aus.
+
+## v7: Würfel-Look, Weg-Pfeil
+- **Würfel:** `rollLook(r, prevKey)` in `config.js` würfelt Tierart → Fell aus `LOOK_RULES.fur[art]` → Haar (natürlich je Art oder mit 30 %
+  bewusst bunt) → Frisur → Augen (dunkles Fell: nur helle Augen) → Outfit (nur Farben mit Kontrast zu Fell und Haar) → Ohren → Extra (50 %).
+  `lookHarmony(L)` prüft dieselben Regeln (leere Liste = hübsch), `lookKey(L)` inkl. Outfit verhindert direkte Wiederholung.
+  Zufallsquelle `UI.rnd` = `mulberry32(?seed=)` oder `Math.random`. Namen: `NAMES` (177) + `NAME_KIT` (Vorsilbe × Nachsilbe ≤ 12 Zeichen),
+  `randomName(r)` 60/40. Vorschau-Animation: `previewRig(…, dice)` (Hüpfer + zwei Dreher) + Funkeln in `ui.js`.
+- **Weg-Pfeil (`guide.js`):** `guideUpdate(dt)` pro Frame: Bewegung/Joystick/Halten/Pfad/Gegner-Ziel/Dash/Spezial oder jede Eingabe
+  (`gesture()` → `guideInput()`) setzen den Stillstand auf 0 und blenden sofort aus. Nach `ARROW.idle` s (2,0) wird **einmal** `findPath`
+  zum Ziel gerechnet; Richtung = Punkt `ARROW.ahead` (3,5) Kacheln voraus auf dem Pfad, liegt der hinter einer Ecke, rückwärts bis sichtbar.
+  Einblenden 0,35 s, 2 s pulsieren, 0,45 s aus; bleibt man stehen, nach `ARROW.repeat` (6 s) erneut. Gesperrt: Einstellung aus, nicht
+  `play`, Bosskampf (`bossFight()`), Tutorial-Dialog, Titelkarte (`G.cardUntil`, gesetzt von `banner`/`bossIntro`).
+  Zeichnen (`render.js drawGuide`): Pfeil-Polygon in Welt-Koordinaten über `toScreen` projiziert (liegt iso-korrekt am Boden, 0,6–1,7
+  Kacheln neben der Figur) — Bodenebene (dunkler Rand, helle Füllung in Weltfarbe `dust`), halbtransparent über Wänden/Laternen
+  (Figur ausgespart) und additiver Schein + 3 wandernde Funkel. Stadt: Gold.

@@ -1,0 +1,83 @@
+Profil: gpu · Throttle-Test: 4×
+PASS A10  Audio erst nach Geste (vor Tap kein AudioContext)  → none
+PASS A16  Vor-Rendern im Menü blockiert nicht (längster Happen < 16 ms, kein Frame > 50 ms, fertig < 12 s)  → 496 ms, 66 Sätze, 24.4 MB, max. Happen 10.5 ms, Menü währenddessen 654.7 fps (längster Frame 16.1 ms; Boot davor 76.5 ms), Aufnahme 280 ms
+PASS B1   Versionslabel im Startmenü  → 🍄 Koboldkeller 2 · v7
+PASS B2   Charakterwahl ≤ 4 Porträts pro Reihe (412 px)  → Reihen: 4+4
+PASS B3   Namensfeld mit Zufallsnamen vorbelegt  → Sternmaus
+PASS A10b AudioContext läuft nach erster Geste  → running
+PASS B14a Tap-to-Move bewegt den Kobold  → (17.5,20.5) → (14.38,17.38)
+PASS B18  Virtueller Joystick bewegt den Kobold  → (14.28,17.28) → (12.35,9.13)
+PASS B12t Tutorial führt durch Laufen/Schlag/Blase/Sprung  → Schritt 4
+PASS B5   Brunnen heilt  → 6/6
+PASS B6   Portal triggert beim Draufsteigen (Stadt → Ebene 1)  → Tiefe 1
+PASS B16  Stadtmelodie bleibt Leitmotiv (Stadt-Aufnahme geladen, Keller spielt Welt-Musik)  → audio/town.m4a @ dungeon
+PASS B13  Fledermaus Ebene 1 zahm: ≥ 4 Treffer bis K.O.  → Schaden 1, 6 Treffer nötig
+PASS B11  Rundumschlag 360° Radius 3 (trifft hinten, nicht >3)  → {"hinten":true,"vorne":true,"weit":false}
+PASS B12  Seifenblasen / Dodge weg (+Unverwundbar) / Trank  → {"shots":1,"invul":true,"dodgeAway":true,"dodgeDir":true,"potion":true}
+PASS B12b Rucksack öffnet & schließt
+PASS B14  Auto-Befreiung aus Wand + BFS-Weg zur Treppe  → {"freed":true,"wall":"16,4","ok":true,"n":11,"direct":"28.0"}
+   FPS normal (hoch): {"fps":409.2,"p5":227.3,"frames":1845,"jsUpdate":0.05,"jsDraw":0.43,"avgAll":368.1,"scale":2,"q":0,"budget":1}
+PASS A2   FPS normal ≥ 55 (Kampf, 12 Gegner)  → 409.2 fps (p5 227.3, Scale 2)
+   FPS throttle 4×: {"fps":223.8,"p5":119,"frames":1439,"jsUpdate":0.2,"jsDraw":1.56,"avgAll":239.3,"scale":2,"q":0,"budget":1}
+PASS A3   FPS mit CPU-Throttle 4× ≥ 45  → 223.8 fps (p5 119, Scale 2, q0)
+   FPS Audio off @4×: {"fps":236.7,"p5":120.5,"frames":1033,"jsUpdate":0.16,"jsDraw":1.46,"avgAll":257.8,"scale":2,"q":0,"budget":1}
+   FPS Audio on @4×: {"fps":247.7,"p5":109.9,"frames":1036,"jsUpdate":0.14,"jsDraw":1.5,"avgAll":258.6,"scale":2,"q":0,"budget":1}
+   FPS Audio on @4×: {"fps":219.9,"p5":101,"frames":869,"jsUpdate":0.22,"jsDraw":1.66,"avgAll":217.2,"scale":2,"q":0,"budget":1}
+   FPS Audio off @4×: {"fps":250.4,"p5":138.9,"frames":890,"jsUpdate":0.18,"jsDraw":1.66,"avgAll":222.2,"scale":2,"q":0,"budget":1}
+   FPS Audio off @4×: {"fps":385.2,"p5":144.9,"frames":1033,"jsUpdate":0.16,"jsDraw":1.51,"avgAll":257.6,"scale":2,"q":0,"budget":1}
+   FPS Audio on @4×: {"fps":261.4,"p5":116.3,"frames":903,"jsUpdate":0.16,"jsDraw":1.59,"avgAll":225.8,"scale":2,"q":0,"budget":1}
+   FPS Audio on @4×: {"fps":394.8,"p5":151.5,"frames":1178,"jsUpdate":0.17,"jsDraw":1.42,"avgAll":294.3,"scale":2,"q":0,"budget":1}
+   FPS Audio off @4×: {"fps":249.8,"p5":116.3,"frames":1012,"jsUpdate":0.15,"jsDraw":1.55,"avgAll":252.6,"scale":2,"q":0,"budget":1}
+   FPS Audio off @4×: {"fps":428.8,"p5":172.4,"frames":1146,"jsUpdate":0.16,"jsDraw":1.37,"avgAll":286.3,"scale":2,"q":0,"budget":1}
+   FPS Audio on @4×: {"fps":287.8,"p5":135.1,"frames":981,"jsUpdate":0.18,"jsDraw":1.51,"avgAll":245.3,"scale":2,"q":0,"budget":1}
+PASS A15  Effekt-Dauerfeuer (30 Aufrufe/s) vs. aus: Audio-Engine < 3 % Main-Thread, FPS mit Effekten ≥ 45 (Throttle 4×)  → Main-Thread 11.7 ms/s = 1.17 % · FPS-Median aus 250.4 / an 261.4 (-4.4 %, Einzelwerte aus 236.7/250.4/385.2/249.8/428.8, an 247.7/219.9/261.4/394.8/287.8 — headless-FPS schwankt ±20 % auch ohne Änderung) · Stimmen jetzt 24, gestartet 2656, gestohlen 371
+PASS B7a  Ebene 4: Boss vorhanden & erwacht  → Moosbart
+PASS B7b  Bosse auf 8/12/16/20  → true,true,true,true
+PASS B7c  Ebene 20: Kellerkönig riesig & knallrot mit Krone  → {"name":"Kellerkönig","hp":1830,"king":true,"scale":2.9,"skin":"#ff2a2a"}
+PASS B8a  Sieg per Boss-Kill → Siegesbildschirm + Ehrenhall  → win
+PASS B9   Namen in Ehrenhall HTML-escaped  → 🪙 Meiste Münzen🥇<b>Zoe</b>Di 29.9.2026298 🪙⏱️ Schnellster
+PASS B8c  Datum de-AT + Medaillen  → 29.9.2026
+PASS B8b  Sieg per 20. Portal  → Einträge: 2
+PASS B4   Weiterspielen: Level/Gold/Tiefe zurück, Spawn am Eingang  → Tiefe 7, Gold 1234, Lv 11 (gespeichert: 7/1234/11), Abstand Eingang 0.00 | <b>Zoe</b> · ⭐ 11 · 🪙 1234 · Ebene 7
+PASS A9   App-Wechsel pausiert Spiel + Musik  → {"screen":"pause","audio":"suspended"}
+PASS B15  ⏸️ im Spiel sichtbar & jedes Menü hat Rückweg  → btnPause @294,8
+PASS B15b Umfallen → zurück in die Stadt (volle HP)  → Tiefe 0
+PASS A4   Canvas-Backbuffer ≤ 2× CSS  → 2.00
+PASS A7   Touch-Härtung (touch-action, Kontextmenü, kein Zoom)  → {"touch":"none","ctx":true}
+PASS A6   Cache-Buster ?v=N überall + KK_VER  → v7, 5 Tags, 17 Module
+PASS A8   100dvh + safe-area-insets im CSS
+PASS A11  PWA-Manifest + Icons, Vollbild-Button, Wake-Lock abgesichert  → {"manifest":true,"i192":true,"i512":true}
+PASS B10  MEGASCHWER: 2× Tempo, 10× Schaden, 🔥-Badge  → {"speed":2,"dmg":10,"badge":true}
+PASS A12  v20-Save migriert (Name/Look/Level/Gold + Ehrenmütze), Ehrenhall übernommen  → Oldie · ⭐ 7 · 🪙 321 · in der Stadt · aus v20 umgezogen 🎖️ | Hut veteran
+PASS A13  Kaputte Saves → kein Absturz, Menü erscheint  → Menü sichtbar: true
+PASS A14  Querformat: Buttons sichtbar (≥56 px), kein Überlappen  → {"skillsIn":true,"hudIn":true,"overlap":false,"btns":[86,64,62,64,58]}
+   FPS normal (quer): {"fps":653.2,"p5":333.3,"frames":4251,"jsUpdate":0.05,"jsDraw":0.45,"avgAll":844.3,"scale":2,"q":0,"budget":1}
+PASS A2q  FPS normal Querformat ≥ 55  → 653.2 fps (p5 333.3)
+PASS C7   Skill-Buttons ≥ 56 px im Daumenbereich rechts unten  → bAtk:86 bBub:64 bSpec:62 bDash:64 bPot:58
+PASS V1   Munition: 1 Schuss = 1 🫧 (egal wie viele Blasen), Kill/Elite/Boss geben 🫧, Cap → Gold + „VOLL“, leer = grau + 1 Hinweis, Schwert unbegrenzt  → {"afterShot":4,"bubbles":3,"killGain":2,"eliteGain":4,"capAmmo":true,"capGold":1,"hudFull":"20 · VOLL","emptyNoShot":true,"btnEmpty":true,"toast":true,"toasts":1,"swordOk":true,"bossGain":12}
+PASS V2   Obergrenzen: 🧪 max 5 (Extra → +10 🪙), ❤️ bei voll → +2 🪙, Max-❤️ max 60, Leben-Talent sperrt bei voll  → {"potCap":5,"potGold":10,"heartGold":2,"heartHeal":true,"hpAfter1":60,"hpAfter2":60,"maxHp":60,"lebenBlocked":true}
+PASS V3   Magnet: Münzen 3,5 / Sachen 2,5 Kacheln (Münze bei 3,3 kommt, bei 4,3 nicht; Stein bei 2,3 kommt, bei 3,1 nicht), 🧲-Talent vergrößert  → {"rCoin":3.5,"rItem":2.5,"coin33":true,"coin43":true,"item23":true,"item31":true,"withSkill":5.25}
+PASS V5   Talente: Punkte verteilen wirken (💪 +0,5 ⚔️, ❤️ +2, 🫧 +4 Platz, 👟 +5 %), Rucksack zeigt „+“, Umverteilen nur in der Stadt (kostenlos)  → {"k":true,"l":true,"b":true,"t":true,"atk":0.5,"hp":2,"ammo":4,"spd":0.05,"left":0,"noMore":true,"bagPlus":5,"bagPts":true,"respecDungeon":0,"respecTown":4,"after":{"pts":4,"atk":0,"hp":0}}
+PASS V6   Spezial: 3 Glitzerpilze füllen die Leiste (❤️ bleibt gleich), ✨-Knopf leuchtet, Flächenangriff trifft rundum (nicht in 11 Kacheln Ferne), danach leer  → {"spec":1,"hpUnchanged":true,"btnFull":true,"fired":true,"hitNear":[22,22,22],"farUntouched":true,"specAfter":0,"again":false}
+PASS V7   20 Ebenen: 20 eindeutige Namen (Titelkarte + unter der Karte), 20 verschiedene Farbnuancen  → 20 Namen, 20 Paletten, Titelkarte ok true, HUD ok true · z. B. „Die Flüsternden Moosgärten“, „Der Bonbonbach“, „Der Thronsaal des Kellerkönigs“
+PASS V8   Bosse: 3 Phasen (66 % / 33 %), je Welt eigene Signatur-Angriffe mit Warnkreisen/-linien, deutlich mehr ❤️  → Moosbart ❤️344 1→2→3 [spores:4C vines:3L spores:5C] · Glitzerzahn ❤️592 1→2→3 [crystals:16C prism:4L crystals:7C] · Zuckerschnute ❤️840 1→2→3 [candy:4C rush:1L candy:4C] · Frostnase ❤️1118 1→2→3 [icicles:6L snowball:2L icicles:4L] · Kellerkönig ❤️1710 1→2→3 [meteors:5C flameCross:4L meteors:5C]
+PASS D5   Musik: Stadt = Leitmotiv-Aufnahme, jede Welt eigene Tonart + Tempo + Abschnitte (A/B/Pause, Leitmotiv kehrt wieder)  → rec 3 90bpm | intro 5 84bpm | intro 9m 96bpm | intro 0 108bpm | intro 2 76bpm | intro 7m 92bpm
+PASS V10  Heim-Portal: nach Betreten 20 s weg (nicht gezeichnet, nicht auslösbar, Pause zählt nicht), dann sichtbar; erst nach Weggehen/Zurückkommen → Stadt  → {"hidden0":true,"depthOnPortal":2,"stillHidden":true,"minimap":true,"inPortals":false,"pausedFrozen":true,"visibleAfter":true,"stillHere":true,"stillHere2":true,"armed":true,"town":true}
+PASS V4   Charakter-Editor: 10 Frisuren je Tierart (alle 8), Frisurwechsel sichtbar, Spiegel in der Stadt, Aussehen im Spiel + gespeichert  → {"frisuren":"10,10,10,10,10,10,10,10","vorschauUnterschied":true,"start":{"style":"irokese","sp":"baer"},"spiegel":"edit","danach":{"screen":"play","style":"zoepfe","acc":"brille","rig":"zoepfe"},"gespeichert":"zoepfe+brille"}
+PASS V9   Save-Migration v3 → v4 (→ v5): nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, Datei v3 gespeichert  → Mia3 · ⭐ 12 · 🪙 310 · Ebene 6 → Gold 310 (+210), 🧪 5, Max-❤️ 60, Spezial 1, Punkte 11, Frisur wuschel, Datei v3
+PASS A14b Querformat: Munition + Spezial-Leiste sichtbar, ✨-Knopf im Bild, kein Überlappen  → {"hudBottom":136,"specIn":true,"ov":false}
+PASS A3b  Größter Boss-Kampf (Kellerkönig, Arena 24, Wut-Phase, alle Effekte, volle Handlanger-Zahl) mit CPU-Throttle 4× ≥ 45 FPS  → 172.6 fps (p5 92.6, Scale 2, q0) · Handlanger max 9/9 · Zoom 0.8 · sichtbare Boden-Chunks max 21 (< 28)
+PASS V11  Bug-Regression: Boss lebt → Treppe/20. Portal versiegelt (Draufstellen, Dodge drauf/drüber, Rückstoß: kein Wechsel/Sieg); Sieg → öffnet sichtbar → Betreten = Ebene +1 (E20: Sieg); Heimportal ≥ 4 Kacheln von der Arena  → E4: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.34 s, danach ✓, Heimportal 26.5 Kacheln weg · E2: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.31 s, danach ✓, Heimportal 32.6 Kacheln weg · E8: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.33 s, danach ✓, Heimportal 33.3 Kacheln weg · E20: versiegelt true, stehen/dodge/dodge-drüber/rückstoß ✓✓✓✓, offen nach 1.3 s, danach ✓, Heimportal 13.5 Kacheln weg
+PASS V12  Wiedereinstieg: besiegter Boss → Treppe offen + Tore bleiben offen (Kampf freiwillig), unbesiegter → versiegelt; Zustand im Spielstand (bossDone)  → {"e4Open":true,"e4Optional":true,"e4BossBack":true,"e8Sealed":true,"saved":[4]}
+PASS V13  Mini-Bosse auf Ebene 2/6/10/14/18 (5 verschiedene Namen/Wesen/Angriffe), Hauptbosse auf 4/8/12/16/20, keiner auf ungeraden Ebenen, jeder Signatur-Angriff zeigt Warnungen, Mini klar kleiner + schwächer als Hauptboss, eigene Mini-Boss-Musik  → E2 Schlabbo „der Riesen-Moosschleim“ [glibber+platsch] ❤️98 ⚔️1 Höhe 165 ♪boss/3@92 · E6 Funkelflatter „die Kristall-Fledermaus“ [echo+schall] ❤️211 ⚔️2 Höhe 125 ♪boss/3@100 · E10 Lolli-Lutz „der Zuckerpilz-Riese“ [streusel+brause] ❤️344 ⚔️3 Höhe 201 ♪boss/3@106 · E14 Bibber „das Schneegespenst“ [frostatem+blinzel] ❤️487 ⚔️4 Höhe 180 ♪boss/3@88 · E18 Glutpanzer Gustav „der Lava-Käfer“ [lava+horn] ❤️661 ⚔️5 Höhe 155 ♪boss/3@96 | Hauptboss-Höhe ≥ 307 | Angriffe: 2:glibber=7 2:platsch=1 6:echo=10 6:schall=2 10:streusel=10 10:brause=1 14:frostatem=4 14:blinzel=1 18:lava=5 18:horn=1
+PASS V14  Große Arena je Boss-Ebene: Größe ≥ Tabelle (config.ARENA) und mit der Tiefe steigend (v4: 12), Säulen + Tore + Spawn-Punkte, Tore zu sobald man drin ist, Kamera zoomt heraus (sichtbare Chunks < 28)  → E2 14×14 (3 Säulen, 4 Tor-Kacheln, 5 Spawn-Punkte, Zoom 0.8, Chunks 17) · E4 16×16 (4 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 18) · E6 17×17 (4 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 18) · E8 18×18 (8 Säulen, 6 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 21) · E10 19×19 (8 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 20) · E12 20×20 (8 Säulen, 2 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 16) · E14 21×21 (8 Säulen, 2 Tor-Kacheln, 7 Spawn-Punkte, Zoom 0.8, Chunks 18) · E16 22×22 (8 Säulen, 8 Tor-Kacheln, 6 Spawn-Punkte, Zoom 0.8, Chunks 18) · E18 23×23 (8 Säulen, 2 Tor-Kacheln, 7 Spawn-Punkte, Zoom 0.8, Chunks 18) · E20 24×24 (8 Säulen, 16 Tor-Kacheln, 5 Spawn-Punkte, Zoom 0.8, Chunks 21)
+PASS V15  Handlanger: spawnen laufend im Kampf (mit 0,8-s-Spawn-Kreis), Deckel nie überschritten (auch bei erzwungenen Wellen), wenig Beute (🫧 +1, ≤ ⅓ XP); Sieg → sofort 0 Handlanger/Spawn-Kreise/Timer, 10 s später immer noch 0, Tore offen  → E12: in 10.6 s max 4/7 (erzwungen 7), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.35 · vor Sieg 7 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true · E2: in 10.6 s max 1/3 (erzwungen 3), Spawn-Kreis ✓, Handlanger-Beute 🫧+1 XP×0.29 · vor Sieg 3 → nach Sieg 0+0 (Timer 0), 10 s später max 0, Tore offen true
+PASS V16  Querformat: jede Arena mit herausgezoomter Kamera (Boss + Warnungen im Bild), sichtbare Chunks < 28  → E2 Zoom 0.84 Chunks 17 · E4 Zoom 0.84 Chunks 16 · E6 Zoom 0.84 Chunks 17 · E8 Zoom 0.84 Chunks 23 · E10 Zoom 0.84 Chunks 22 · E12 Zoom 0.84 Chunks 12 · E14 Zoom 0.84 Chunks 16 · E16 Zoom 0.84 Chunks 19 · E18 Zoom 0.84 Chunks 19 · E20 Zoom 0.84 Chunks 19
+PASS V17  Save-Migration v4 → v5: nichts verloren (Level, Gold, Talente, Punkte, Spezial, Munition, Hüte, Aussehen, Tiefe), keine doppelten Geschenke, schon passierte Boss-Ebenen offen (bossDone), tiefere versiegelt, Datei v3  → Vier4 · ⭐ 9 · 🪙 777 · Ebene 6 → Lv 9, 🪙 777, Punkte 3, Talente {"kraft":2,"leben":3,"tempo":1,"blasen":1,"magnet":1}, Spezial 0.67, 🫧 18, Hut diadem, Frisur zoepfe, Ebene 6 (Treppe offen), bossDone 2,4,6,8, E8 offen, E10 zu, Datei v3
+   FPS software normal: {"fps":723.8,"p5":238.1,"frames":4107,"jsUpdate":0.04,"jsDraw":0.4,"avgAll":814.4,"scale":2,"q":0,"budget":1}
+   FPS software throttle 4× (adaptiv): {"fps":629.3,"p5":263.2,"frames":2905,"jsUpdate":0.07,"jsDraw":0.79,"avgAll":580,"scale":2,"q":0,"budget":1}
+INFO Software-Raster: normal 723.8 fps (Scale 2), 4× 629.3 fps (Scale 2)
+PASS A1   Keine pageerrors/console.errors (hoch + quer)  → 0
+PASS A5   Keine externen Requests  → 0
+
+64/64 PASS

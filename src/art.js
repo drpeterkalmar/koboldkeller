@@ -539,22 +539,27 @@ export function portrait(cv, look, hatId, px = 96) {
   K = kSave;
 }
 /** Live-Vorschau im Charakter-Editor: dreht sich langsam, wippt, blinzelt (Sprites in eigener Auflösung gecacht) */
-export function previewRig(cv, look, hatId, t) {
+export function previewRig(cv, look, hatId, t, dice = -1) {
   const c = cv.getContext("2d"), W = cv.width, Hh = cv.height;
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, Hh);
   const kSave = K; K = Math.round(Hh / 175 * 100) / 100;
   // sanftes Wiegen, alle 4 s ein schneller Dreher zur anderen Seite
   const per = Math.floor(t / 4), u = t - per * 4, dir = per % 2 ? -1 : 1;
   const fx = u > 3.7 ? dir * Math.cos((u - 3.7) / 0.3 * Math.PI) : dir * (0.93 + 0.07 * Math.cos(t * 1.6)), turn = fx;
-  const bob = Math.abs(Math.sin(t * 2.4)) * 3, mood = (t % 3.2) < 0.14 ? "blink" : "open";
+  let bob = Math.abs(Math.sin(t * 2.4)) * 3, mood = (t % 3.2) < 0.14 ? "blink" : "open", fxD = fx;
+  if (dice >= 0) {                                   // v7 Würfel: Hüpfer (ease-out) + zwei schnelle Dreher, fröhliches Gesicht
+    bob = Math.sin(Math.min(1, dice) * Math.PI) * 26; fxD = Math.cos(dice * Math.PI * 4); mood = dice > 0.2 && dice < 0.8 ? "blink" : "open";
+    if (Math.abs(fxD) < 0.12) fxD = fxD < 0 ? -0.12 : 0.12;
+  }
   const gx = W / 2 / K, gy = Hh / K - 16;
   c.save(); c.scale(K, K);
   // Bodenschatten
-  c.fillStyle = "rgba(20,8,30,.28)"; c.beginPath(); c.ellipse(gx, gy + 2, 34 * Math.max(0.6, Math.abs(turn)), 9, 0, 0, TAU); c.fill();
+  const shK = 1 - bob / 60;
+  c.fillStyle = "rgba(20,8,30,.28)"; c.beginPath(); c.ellipse(gx, gy + 2, 34 * Math.max(0.6, Math.abs(dice >= 0 ? fxD : turn)) * shK, 9 * shK, 0, 0, TAU); c.fill();
   const put = (s, x, y) => c.drawImage(s.cv, x - s.ax, y - s.ay, s.w, s.h);
-  const fl = foot(shade(look.outfit, -0.35));
-  put(fl, gx - RIG.footX, gy + RIG.footY); put(fl, gx + RIG.footX, gy + RIG.footY);
-  c.translate(gx, gy - bob); c.scale(fx, 1);
+  const fl = foot(shade(look.outfit, -0.35)), fb = dice >= 0 ? bob : 0;
+  put(fl, gx - RIG.footX, gy + RIG.footY - fb); put(fl, gx + RIG.footX, gy + RIG.footY - fb);
+  c.translate(gx, gy - bob); c.scale(fxD, 1);
   put(body(look, look.outfit), 0, 0);
   c.translate(0, RIG.neck); c.rotate(Math.sin(t * 1.3) * 0.05);
   put(head(look, mood), 0, 0);

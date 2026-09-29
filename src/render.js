@@ -2,7 +2,7 @@
 import * as A from "./art.js";
 import { FX } from "./fx.js";
 import { BIOMES, weaponOf, HATS } from "./config.js";
-import { clamp, TAU, rgba } from "./util.js";
+import { clamp, TAU, rgba, mixHex } from "./util.js";
 
 export const R = {
   cv: null, ctx: null, VW: 0, VH: 0, RS: 1, U: 64, Z: 1, Z0: 1, cz: 1, q: 0, qScales: [1, 0.8, 0.65, 0.5],
@@ -360,6 +360,7 @@ export function draw(G, dt) {
     ctx.beginPath(); ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); ctx.stroke();
   }
   ctx.globalAlpha = 1;
+  drawGuide(ctx, G, "ground");
 
   // --- Sortierte Ebene ---
   ln = 0;
@@ -430,6 +431,7 @@ export function draw(G, dt) {
     ctx.strokeStyle = "rgba(255,240,245,.95)"; ctx.lineWidth = 2 * R.Z; ctx.stroke();
     ctx.setLineDash([]);
   }
+  drawGuide(ctx, G, "over");                             // Weg-Pfeil scheint durch Wände/Laternen (nicht über den Kobold)
   // normale Partikel
   drawParticles(ctx, false);
 
@@ -454,6 +456,46 @@ export function draw(G, dt) {
     g.addColorStop(0, "rgba(255,40,80,0)"); g.addColorStop(1, "rgba(255,40,80," + ha + ")");
     ctx.fillStyle = g; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40);
   }
+}
+
+// ---------- v7: Weg-Pfeil (liegt als Funkel-Pfeil in Weltfarbe auf dem Boden neben der Figur) ----------
+export const guideCol = G => G.depth === 0 ? "#ffcc33" : (G.B.dust || G.B.torch || "#ffcc33");
+/** Pfeil-Umriss in Welt-Koordinaten (Iso-Projektion über toScreen → liegt korrekt „flach" auf dem Boden) */
+function guidePoly(ctx, p, ux, uy, r0, r1, w) {
+  const vx = -uy, vy = ux, hb = r1 - 0.42;
+  const P = [[r0, w * 0.5], [hb, w * 0.5], [hb, w * 1.55], [r1, 0], [hb, -w * 1.55], [hb, -w * 0.5], [r0, -w * 0.5]];
+  ctx.beginPath();
+  P.forEach(([a, b], i) => { const [sx, sy] = toScreen(p.x + ux * a + vx * b, p.y + uy * a + vy * b); i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy); });
+  ctx.closePath();
+}
+function drawGuide(ctx, G, mode) {
+  const GD = G.guide;
+  if (!GD || GD.t < 0 || GD.a <= 0.01) return;
+  const p = G.p, col = guideCol(G), a = GD.a, T = R.t;
+  const pulse = 1 + 0.07 * Math.sin(T * 7), push = 0.1 * Math.max(0, Math.sin(T * 4.2));
+  const r0 = 0.58 + push, r1 = r0 + 1.15 * pulse, w = 0.27;
+  if (mode === "glow") {   // additiver Schein + Funkel-Spur (bleibt auf dunklen Paletten hell)
+    ctx.globalAlpha = (0.5 + 0.15 * Math.sin(T * 7)) * a; ctx.fillStyle = col; guidePoly(ctx, p, GD.ux, GD.uy, r0, r1, w); ctx.fill();
+    const gl = A.fx("glow");
+    for (let i = 0; i < 3; i++) {
+      const k = ((T * 1.4 + i / 3) % 1), d = r0 - 0.1 + k * (r1 - r0 + 0.3);
+      const [sx, sy] = toScreen(p.x + GD.ux * d, p.y + GD.uy * d), s = (16 + 10 * Math.sin(k * Math.PI)) * R.Z;
+      ctx.globalAlpha = a * 0.7 * Math.sin(k * Math.PI); ctx.drawImage(A.tinted(gl, col).cv, sx - s / 2, sy - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
+    return;
+  }
+  ctx.save(); ctx.lineJoin = "round";
+  if (mode === "over") {                                  // Figur aussparen, Rest mit halber Deckkraft
+    const [px, py] = toScreen(p.x, p.y), Z = R.Z;
+    ctx.beginPath(); ctx.rect(-20, -20, R.VW + 40, R.VH + 40); ctx.rect(px - 30 * Z, py - 96 * Z, 60 * Z, 102 * Z); ctx.clip("evenodd");
+    ctx.globalAlpha = 0.5 * a; ctx.fillStyle = mixHex(col, "#ffffff", 0.4); guidePoly(ctx, p, GD.ux, GD.uy, r0, r1, w); ctx.fill();
+    ctx.restore(); return;
+  }
+  ctx.globalAlpha = 0.7 * a; ctx.strokeStyle = "rgba(24,10,40,.9)"; ctx.lineWidth = 7 * R.Z; guidePoly(ctx, p, GD.ux, GD.uy, r0, r1, w); ctx.stroke();
+  ctx.globalAlpha = a; ctx.fillStyle = mixHex(col, "#ffffff", 0.4); ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 2.6 * R.Z; ctx.stroke();
+  ctx.restore();
 }
 
 /** Warnlinie als Iso-Rechteck (k = Füllstand von der Quelle aus) */
@@ -752,6 +794,7 @@ function glowPass(ctx, G, B, portals) {
     else if (pr.kind === "chest" && !pr.open) g(pr.x, pr.y, 20, 50, "#ffd75e", 0.25 + Math.sin(T * 3) * 0.1);
   }
   for (const po of portals) if (!po.locked) g(po.x, po.y, 52 * (po.small ? 0.7 : 1), po.small ? 90 : 130, po.col, 0.4 + Math.sin(T * 3) * 0.08);
+  drawGuide(ctx, G, "glow");
   if (L.stairs && G.depth < 20 && !L.stairs.sealed) g(L.stairs.x, L.stairs.y, 4, 70, "#ffe9a8", 0.3 + Math.sin(T * 2.5) * 0.1);
   for (const s of G.spawns) g(s.x, s.y, 20, 80 * (0.5 + s.t / s.max), s.col, 0.35);
   for (const s of G.shots) g(s.x, s.y, s.z, s.kind === "bubble" ? 34 * s.size : s.kind === "snow" ? 70 : 44, s.kind === "bubble" ? "#bfefff" : s.col, s.kind === "lob" ? 0.3 : 0.45);

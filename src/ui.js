@@ -1,16 +1,19 @@
 /* ui.js — Menüs, Charakter-Editor, HUD, Toasts, Rucksack (Talente), Ehrenhall, Tutorial, Boss-Karte (MIT) */
 import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE } from "./game.js";
-import { SPECIES, NAMES, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO } from "./config.js";
+import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO } from "./config.js";
 import { portrait, previewRig } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
-import { esc, pick } from "./util.js";
+import { esc, pick, mulberry32 } from "./util.js";
 import { SFX, setMusic, setSfx } from "./audio.js";
-import { toggleFullscreen, canFullscreen, PF, vibrate } from "./platform.js";
+import { toggleFullscreen, canFullscreen, PF, hapticProbe, hapticButtons } from "./platform.js";
 import { IN, resetInput } from "./input.js";
 import { drawMini } from "./render.js";
 
 const $ = id => document.getElementById(id);
-export const UI = { settings: loadSettings(), back: "scrMenu", selLook: 0, miniT: 0, last: {}, ed: null };
+export const UI = { settings: loadSettings(), back: "scrMenu", selLook: 0, miniT: 0, last: {}, ed: null, diceN: 0 };
+// Würfel-Zufall: ?seed=N → reproduzierbar (Tests), sonst echter Zufall
+const _seed = parseInt(URLQ.get("seed"), 10);
+UI.rnd = isFinite(_seed) ? mulberry32(_seed) : Math.random;
 const SCREENS = ["scrMenu", "scrCreate", "scrConfirm", "scrPause", "scrSet", "scrBag", "scrHall", "scrDead", "scrWin"];
 
 export function show(id) {
@@ -39,6 +42,7 @@ export function banner(title, sub, kind = "", lvl = false) {
   const k = (kind || "") + (lvl ? " lvl" : "");
   b.className = k; void b.offsetWidth; b.className = "show " + k;
   clearTimeout(UI._bn); UI._bn = setTimeout(() => b.className = "hidden", 2700);
+  G.cardUntil = performance.now() + 2700;
 }
 /** große Boss-Titelkarte beim Erwachen */
 export function bossIntro(e) {
@@ -48,6 +52,7 @@ export function bossIntro(e) {
   $("bcEpi").textContent = e.epi || "";
   c.className = ""; void c.offsetWidth; c.className = "show" + (e.isKing ? " king" : e.isMini ? " mini" : "");
   clearTimeout(UI._bc); UI._bc = setTimeout(() => c.className = "hidden", 2600);
+  G.cardUntil = performance.now() + 2600;
 }
 
 // ---------- Blende ----------
@@ -60,18 +65,29 @@ export function fade(cb, after) {
 // ---------- Einstellungen ----------
 function settingsHtml(box) {
   const s = UI.settings;
-  const rows = [["music", "🎵 Musik"], ["sfx", "🔔 Töne"], ["vibrate", "📳 Vibration"], ["joystick", "🕹️ Daumen-Joystick (links unten)"]];
-  box.innerHTML = rows.map(([k, t]) => '<div class="set" data-k="' + k + '"><span>' + t + '</span><span class="sw' + (s[k] ? " on" : "") + '"></span></div>').join("");
+  const rows = [["music", "🎵 Musik"], ["sfx", "🔔 Töne"], ["vibrate", "📳 Vibration"], ["arrow", "🧭 Weg-Pfeil"], ["joystick", "🕹️ Daumen-Joystick (links unten)"]];
+  box.innerHTML = rows.map(([k, t]) => '<div class="set" data-k="' + k + '"><span>' + t + '</span><span class="sw' + (s[k] ? " on" : "") + '"></span></div>').join("") +
+    '<button class="btn ghost hapTest" id="btnHapTest">📳 Vibration testen</button><p class="hint hapHint hidden">Nichts gespürt? In den Handy-Einstellungen Vibration/Berührungsfeedback einschalten ' +
+    '(und Lautlos-/Energiesparmodus aus). Am iPhone gibt es Vibration nur beim Antippen von Knöpfen.</p>';
   box.querySelectorAll(".set").forEach(el => el.addEventListener("click", () => {
     const k = el.dataset.k; s[k] = !s[k];
     el.querySelector(".sw").classList.toggle("on", s[k]);
     applySettings(); saveSettings(s); SFX.click();
-    if (k === "vibrate" && s[k]) vibrate([30, 60, 30]);   // sofort fühlbare Rückmeldung
+    if (k === "vibrate" && s[k]) hapticProbe();          // sofort fühlbare Rückmeldung
   }));
+  const ht = box.querySelector("#btnHapTest");
+  ht.addEventListener("click", () => {
+    SFX.click();
+    if (!s.vibrate) { s.vibrate = true; saveSettings(s); applySettings(); const sw = box.querySelector('[data-k="vibrate"] .sw'); if (sw) sw.classList.add("on"); }
+    hapticProbe(); UI.hapTests = (UI.hapTests || 0) + 1;
+    box.querySelector(".hapHint").classList.remove("hidden");   // Hinweis, falls nichts zu spüren war
+  });
+  hapticButtons(box);
 }
 export function applySettings() {
   const s = UI.settings;
-  setMusic(s.music); setSfx(s.sfx); PF.vibrate = s.vibrate; IN.joyOn = s.joystick;
+  setMusic(s.music); setSfx(s.sfx); PF.vibrate = s.vibrate; IN.joyOn = s.joystick; G.arrowOn = s.arrow;
+  document.body.classList.toggle("noHap", !s.vibrate);
 }
 
 // ---------- Startmenü ----------
@@ -101,13 +117,25 @@ function openEditor(mode) {
   $("editTitle").textContent = mode === "edit" ? "🪞 Spiegel & Friseur" : "Wähle deinen Kobold";
   $("createOnly").classList.toggle("hidden", mode === "edit");
   $("btnEditOk").classList.toggle("hidden", mode !== "edit");
-  $("nameInput").value = mode === "edit" && G.p ? G.p.name : pick(NAMES);
+  $("btnLookDice").classList.toggle("hidden", mode !== "edit");
+  $("btnDice").setAttribute("aria-label", mode === "edit" ? "Zufallsname" : "Zufallsname und Zufallslook");
+  $("nameInput").value = mode === "edit" && G.p ? G.p.name : randomName(UI.rnd);
   if (mode !== "edit") $("megaNew").checked = false;
   renderTabs(); renderEditBody();
   show("scrCreate");
   startPreview();
 }
 function edLook() { return makeLook(UI.ed.look); }
+/** 🎲 Würfeln: neuer hübscher Look (Harmonie-Tabelle, nie direkt derselbe) + bei withName auch ein neuer Name */
+function rollDice(withName) {
+  const ed = UI.ed; if (!ed) return;
+  ed.look = rollLook(UI.rnd, lookKey(makeLook(ed.look)));
+  if (withName) $("nameInput").value = randomName(UI.rnd);
+  UI.selLook = Math.max(0, SPECIES.findIndex(s => s.id === ed.look.species));
+  ed.dice = ed.t; UI.diceN++;
+  SFX.pickup();
+  renderEditBody();
+}
 function renderTabs() {
   const box = $("editTabs");
   box.innerHTML = TABS.map(([k, t]) => '<button class="tab' + (UI.ed.tab === k ? " on" : "") + '" data-t="' + k + '">' + t + "</button>").join("");
@@ -180,11 +208,25 @@ function startPreview() {
   let last = performance.now();
   const loop = (now) => {
     if (!UI.ed) return;
-    UI.ed.t += Math.min(0.05, (now - last) / 1000); last = now;
-    previewRig(cv, edLook(), UI.ed.mode === "edit" && G.p ? G.p.hat : null, UI.ed.t);
+    const ed = UI.ed;
+    ed.t += Math.min(0.05, (now - last) / 1000); last = now;
+    const dk = ed.dice !== undefined ? (ed.t - ed.dice) / 0.62 : 9;      // Würfel-Animation: Hüpfer + Doppeldreher + Funkeln
+    previewRig(cv, edLook(), ed.mode === "edit" && G.p ? G.p.hat : null, ed.t, dk < 1 ? dk : -1);
+    if (dk < 1.4) diceSparkle(cv, dk);
     UI._pv = requestAnimationFrame(loop);
   };
   UI._pv = requestAnimationFrame(loop);
+}
+function diceSparkle(cv, k) {
+  const c = cv.getContext("2d"), W = cv.width, H = cv.height, a = Math.max(0, 1 - Math.max(0, k - 0.4) / 1.0);
+  c.save(); c.globalAlpha = a;
+  for (let i = 0; i < 9; i++) {
+    const ang = i / 9 * Math.PI * 2 + k * 2.2, r = (0.18 + 0.2 * Math.min(1, k * 1.6)) * H, x = W / 2 + Math.cos(ang) * r * 1.15, y = H * 0.55 + Math.sin(ang) * r * 0.8;
+    const s = H * (0.028 + 0.014 * Math.sin(k * 14 + i));
+    c.fillStyle = i % 3 ? "#fff6b0" : "#ffffff";
+    c.beginPath(); c.moveTo(x, y - s * 2); c.quadraticCurveTo(x, y, x + s * 2, y); c.quadraticCurveTo(x, y, x, y + s * 2); c.quadraticCurveTo(x, y, x - s * 2, y); c.quadraticCurveTo(x, y, x, y - s * 2); c.fill();
+  }
+  c.restore();
 }
 function stopPreview() { if (UI._pv) cancelAnimationFrame(UI._pv); UI._pv = 0; }
 export function openMirror() {
@@ -204,7 +246,7 @@ function closeMirror(apply) {
   G.screen = "play"; hideScreens();
 }
 function newProfile() {
-  const name = ($("nameInput").value || "").trim().slice(0, 12) || pick(NAMES);
+  const name = ($("nameInput").value || "").trim().slice(0, 12) || randomName(UI.rnd);
   const look = UI.ed ? UI.ed.look : lookSave(makeLook({ species: SPECIES[UI.selLook].id }));
   return sanitize({
     v: SAVE_V, name, species: look.species, look, lvl: 1, xp: 0, xpNext: 10, maxHp: PLAYER.hp, hp: PLAYER.hp,
@@ -435,7 +477,8 @@ export function initUI(onGesture) {
   tap("btnNew", () => { const sv = loadSave(); if (sv) { $("confirmText").textContent = "Dein Kobold „" + sv.name + "“ (⭐ " + sv.lvl + ", 🪙 " + sv.gold + ") wird ersetzt. Die Ehrenhall bleibt!"; show("scrConfirm"); } else { G.screen = "create"; openEditor("create"); } });
   tap("btnYes", () => { G.screen = "create"; openEditor("create"); });
   tap("btnNo", () => showMenu());
-  tap("btnDice", () => { $("nameInput").value = pick(NAMES); });
+  tap("btnDice", () => { if (UI.ed && UI.ed.mode !== "edit") rollDice(true); else $("nameInput").value = randomName(UI.rnd); });
+  tap("btnLookDice", () => rollDice(false));
   tap("btnGo", () => begin(newProfile()));
   tap("btnEditOk", () => closeMirror(true));
   tap("btnBack1", () => { if (UI.ed && UI.ed.mode === "edit") closeMirror(false); else { UI.ed = null; showMenu(); } });
@@ -464,4 +507,5 @@ export function initUI(onGesture) {
   };
   skill("bAtk", attack, true); skill("bBub", bubbles); skill("bDash", dodge); skill("bPot", potion); skill("bSpec", special);
   $("nameInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.target.blur(); } });
+  hapticButtons(document);                                 // iPhone ab iOS 26.5: Haptik nur beim echten Antippen von Knöpfen
 }
