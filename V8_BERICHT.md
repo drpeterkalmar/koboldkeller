@@ -121,6 +121,7 @@ Handlanger: Der Deckel (3–9 gleichzeitig) hält auch in langen Kämpfen; gesam
 | `check.mjs --throttle=4 --v7=only --ref=8732` (V18–V25) | **14/14 PASS**, 0 Fehler, 0 fremde Requests |
 | V22–V25 | siehe [CHECKS.md](CHECKS.md) — Werte oben; V25: 200 Ebenen (5 Seeds × Normal/MEGA) ohne Regelverstoß, Vorwarnung 0,90 s, Treffer −2 = Pieks, mit 💨 0, Haptik nur „hurt", FPS 4× mit allen Fallen 297 |
 | Bot Normal `--out=v8` | **durchgespielt, 0 Tode, 0 Hänger**, Level 16 am Ende |
+| Live-URL headless nach Deploy (Pages ~75 s) | Menü „v8", `KK_VER = 8`, Boot 1,1 s, Stadt 20 Portale (6 offen bei tiefster Ebene 6), Ebene 3 mit Wandfalle, AudioContext „running", **0 Fehler, 0 fremde Requests** |
 
 Screenshots (`shots/neubau/v8/`, selbst angesehen, hoch + quer): Stadt-Übersicht, alle 5 Welttore mit Portal-Schild, Pfeil zum tiefsten
 Portal, gesperrtes Portal mit Hinweis, Wandfalle je Welt (Vorwarnung + Schuss). Gefunden und behoben: Bahn hinter vorderen Wänden
