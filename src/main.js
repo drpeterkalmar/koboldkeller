@@ -2,7 +2,7 @@
 import { VERSION, SPECIES, PLAYER, MAX_DEPTH, levelName, makeLook, MYTHS } from "./config.js";
 import { artCount } from "./art.js";
 import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, special, killEnt, winGame, makeEnt, makeElite, gainXp, finishTut, recalc, skillUp, skillReset, setLook, magnetOf, unlockMyth, lookForSave } from "./game.js";
-import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality } from "./render.js";
+import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality, toScreen } from "./render.js";
 import { FX, updateFx } from "./fx.js";
 import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
 import { hardenTouch, wakeLock, watchVisibility, PF } from "./platform.js";
@@ -192,6 +192,7 @@ window.KK = {
   bossAtk: (k) => forceAttack(G.boss, k), bossHit: () => { if (G.boss) bossHit(G.boss, false); return G.boss && G.boss.phase; },
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },
   quality: (q) => { if (q !== undefined) setQuality(q); return R.q; },
+  screenOf: (x, y, z = 0) => toScreen(x, y, z),          // v10-Check: Weltpunkt → Bildschirm (CSS-px), z. B. zum Antippen der Oma
   save: () => { save(); return true; },
   pause: () => UI.openPause(), resume: () => UI.resume(),
   /** v7: Weg-Pfeil-Zustand (Richtung in Welt + Bildschirm, Wegpunkt, Ziel) */

@@ -4,9 +4,10 @@
    v5: Boss auf jeder 2. Ebene (Mini-Bosse), Treppe/20. Portal versiegelt bis zum Sieg (bossDone), Handlanger-Beute klein.
    v8: schneller laufen (Animation/Wegpunkte/Teilschritte), 20 Stadt-Portale (je Ebene eins, Welttore) mit Ziel-/Verweil-Regel,
    Treppe/Portal per Tipp „scharf“, Wand-Schützen (Wandfallen) mit Vorwarnung.
-   v9: Mythos-Kostüme — Sammlung je Gerät (G.myth), Kostüm-Paket beim ersten Boss-Sieg, Glanz-Partikel, Spezial-Welle in Kostümfarbe. */
+   v9: Mythos-Kostüme — Sammlung je Gerät (G.myth), Kostüm-Paket beim ersten Boss-Sieg, Glanz-Partikel, Spezial-Welle in Kostümfarbe.
+   v10: Oma Pilzhut gibt beim Vorbeigehen Tipps (Sprechblase, omaTick). */
 import {
-  PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET,
+  PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET, OMA,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
   ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ,
 } from "./config.js";
@@ -149,6 +150,7 @@ export function startGame(prof) {
   G.stats.kills = prof.kills || 0;
   G.winQueued = false;
   G.tutStep = prof.tut ? -1 : 0; G.tutFlags = {};
+  G.omaSay = null; G.omaNear = false; G.omaTipT = -1e9; G.omaSeen = {};   // v10: Oma-Tipps je Spiel frisch
   enterLevel(prof.depth || 0, true);
   // v9: einmaliger Hinweis nach der Kostüm-Migration (Sammlung des Geräts)
   if (!G.demo && G.myth.note > 0 && !G.myth.view) {
@@ -762,6 +764,7 @@ export function update(dt, realDt) {
   for (let i = G.later.length - 1; i >= 0; i--) { const l = G.later[i]; if (!l) continue; l.t -= dt; if (l.t <= 0) { const j = G.later.indexOf(l); if (j >= 0) G.later.splice(j, 1); l.fn(); } }
   p.t += dt;
   if (G.screen === "play") updatePlayer(dt);
+  if (G.screen === "play" && G.depth === 0) omaTick();
   // Squash-Feder
   spring(p, dt);
   updateItems(dt);
@@ -1357,3 +1360,16 @@ export function tutUpdate() {
   }
 }
 export function finishTut() { G.tutStep = -1; if (G.prof) G.prof.tut = true; H().tut(-1); save(); }
+
+// v10: Oma Pilzhut gibt beim Vorbeigehen einen Tipp (Peter 30.09.) — einmal pro Annäherung (Hysterese near/far),
+// höchstens alle OMA.cd s; nicht während des Tutorials (dort spricht sie ohnehin) und nicht im Menü-Hintergrund (Demo).
+function omaTick() {
+  const n = G.L && G.L.npc;
+  if (!n || G.tutStep >= 0 || G.demo) return;
+  const d = Math.hypot(G.p.x - n.x, G.p.y - n.y);
+  if (d > OMA.far) G.omaNear = false;
+  else if (d < OMA.near && !G.omaNear) {
+    G.omaNear = true;
+    if (G.t - (G.omaTipT ?? -1e9) >= OMA.cd) H().tut("near");
+  }
+}

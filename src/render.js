@@ -995,6 +995,44 @@ function textPass(ctx, G, portals) {
     ctx.fillStyle = t.col; ctx.fillText(t.str, sx, sy);
   }
   ctx.globalAlpha = 1;
+  omaBubble(ctx, G);
+}
+
+// v10: Sprechblase über Oma Pilzhut (Tipps im Vorbeigehen) — in Bildschirmgröße, Schwanz zeigt auf Omas Kopf,
+// bleibt am Bildrand im Bild; blendet am Ende aus. Text wird einmal umbrochen und an G.omaSay gemerkt.
+function omaBubble(ctx, G) {
+  const say = G.omaSay, n = R.L && R.L.npc;
+  if (!say || !n || G.depth !== 0) return;
+  const age = G.t - say.t0;
+  if (age < 0 || age > say.dur) { if (age > say.dur) G.omaSay = null; return; }
+  const [hx, hy] = toScreen(n.x, n.y, 118 * 0.8);           // Omas Kopf (Sprite 130 hoch, Anker unten, Maßstab 0.8)
+  const fs = Math.round(clamp(13 * Math.max(1, R.Z), 13, 17)), lh = Math.round(fs * 1.28), pad = 10;
+  ctx.font = "800 " + fs + "px system-ui, sans-serif";
+  const maxW = Math.min(R.VW - 24, 20 * fs);
+  if (!say.lines || say.fs !== fs || say.maxW !== maxW) {
+    const words = ("🍄 " + say.text).split(" "), lines = [];
+    let cur = "";
+    for (const w of words) { const t = cur ? cur + " " + w : w; if (cur && ctx.measureText(t).width > maxW - 2 * pad) { lines.push(cur); cur = w; } else cur = t; }
+    if (cur) lines.push(cur);
+    say.lines = lines; say.fs = fs; say.maxW = maxW;
+    say.w = Math.min(maxW, Math.max(...lines.map(l => ctx.measureText(l).width)) + 2 * pad);
+  }
+  const w = say.w, h = say.lines.length * lh + 2 * pad - 4, tail = 12;
+  const bx = clamp(hx - w / 2, 8, R.VW - 8 - w), by = clamp(hy - tail - h, 8, R.VH - 8 - h);
+  const tx = clamp(hx, bx + 16, bx + w - 16), below = by + h + 2 < hy;
+  const pop = age < 0.18 ? 0.85 + age / 0.18 * 0.15 : 1, fade = say.dur - age < 0.4 ? (say.dur - age) / 0.4 : 1;
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.translate(tx, by + h); ctx.scale(pop, pop); ctx.translate(-tx, -(by + h));
+  ctx.fillStyle = "rgba(255,250,236,.97)"; ctx.strokeStyle = "#7a4a9c"; ctx.lineWidth = 2.5; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.roundRect(bx, by, w, h, 14);
+  if (below) { ctx.moveTo(tx - 9, by + h - 1); ctx.lineTo(tx, Math.min(hy - 4, by + h + tail)); ctx.lineTo(tx + 9, by + h - 1); }
+  ctx.fill(); ctx.stroke();
+  if (below) { ctx.fillStyle = "rgba(255,250,236,.97)"; ctx.fillRect(tx - 7.5, by + h - 3, 15, 3); }
+  ctx.fillStyle = "#3a1d4e"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  say.lines.forEach((l, i) => ctx.fillText(l, bx + pad, by + pad - 1 + i * lh));
+  ctx.restore();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
 }
 
 // ---------- Minikarte ----------

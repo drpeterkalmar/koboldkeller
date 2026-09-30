@@ -18,6 +18,9 @@ export const CAP = { hp: 60, potions: 5, ammoBase: 20, ammoMax: 60 };
 // Munition: 1 Schuss = 1 Munition (egal wie viele Blasen der Zauberstab wirft); Gewinn pro besiegtem Gegner
 export const AMMO = { start: 15, kill: 2, elite: 4, boss: 12, king: 20, mini: 8, minion: 1, dummy: 1, revive: 8 };
 export const CAP_GOLD = { potion: 10, heart: 2, ammo: 1, hp: 8, shroom: 5 };   // Gold für Überzähliges
+// v10 (Peter 30.09.): Oma Pilzhut gibt beim Vorbeigehen einen Tipp als Sprechblase — beim Näherkommen auf < near Kacheln,
+// wieder scharf erst nach > far Kacheln Abstand, höchstens alle cd s (Spielzeit); Blase steht je nach Textlänge show..showMax s.
+export const OMA = { near: 3.0, far: 4.5, cd: 20, show: 5, showMax: 9 };
 export const MAGNET = { coin: 3.5, item: 2.5 };                 // Kacheln (+ Talent 🧲)
 export const HOME_PORTAL_HIDE_S = 20;                           // 🏠-Portal nach Betreten einer Ebene so lange weg
 export const SPECIAL = { perShroom: 1 / 3, radius: 5.5 };       // 3 Glitzerpilze = volle Spezial-Leiste

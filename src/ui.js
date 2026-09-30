@@ -1,6 +1,6 @@
 /* ui.js — Menüs, Charakter-Editor, HUD, Toasts, Rucksack (Talente), Ehrenhall, Tutorial, Boss-Karte (MIT) */
 import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE, lookForSave } from "./game.js";
-import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint } from "./config.js";
+import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA } from "./config.js";
 import { portrait, previewRig } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
 import { esc, pick, mulberry32 } from "./util.js";
@@ -435,11 +435,26 @@ const TIPS = [
   "Jede zweite Ebene hat einen Boss! Die Treppe dort ist versiegelt 🔒, bis du ihn besiegt hast.",
   "In der Boss-Arena kommen Handlanger — lila Kreise am Boden zeigen, wo gleich einer auftaucht.",
 ];
+// v10: Was sagt Oma? Zuerst, was gerade wirklich hilft (je Anlass höchstens alle 90 s), sonst der nächste allgemeine Tipp.
+function omaTip() {
+  const p = G.p, S = (G.omaSeen = G.omaSeen || {});
+  const now = [
+    ["talent", p.skPts > 0, () => "Du hast " + p.skPts + " ⭐ Talentpunkt" + (p.skPts === 1 ? "" : "e") + " frei! Tipp auf 🎒 und verteil " + (p.skPts === 1 ? "ihn" : "sie") + "."],
+    ["heal", p.hp < p.maxHp * 0.6, () => "Du bist ja verletzt! Mein 💧 Brunnen heilt dich."],
+    ["potion", p.potions < 3, () => "Nur noch " + p.potions + " 🧪? Mein 💧 Brunnen füllt deine Tränke wieder auf 3 auf."],
+    ["ammo", p.ammo < 5, () => "Kaum noch 🫧? Hau Gegner mit ⚔️ — jeder gibt dir neue Blasen!"],
+  ];
+  for (const [k, on, txt] of now) if (on && G.t - (S[k] ?? -1e9) >= 90) { S[k] = G.t; return txt(); }
+  UI.tip = ((UI.tip ?? -1) + 1) % TIPS.length;
+  return TIPS[UI.tip];
+}
 export function showTut(step) {
-  if (step === "tap") {
-    if (G.tutStep >= 0) { $("tut").classList.remove("hidden"); return; }
-    UI.tip = ((UI.tip ?? -1) + 1) % TIPS.length;
-    toast("🍄 Oma Pilzhut: " + TIPS[UI.tip]); SFX.click(); return;
+  if (step === "tap" || step === "near") {                 // Oma angetippt bzw. v10: im Vorbeigehen
+    if (G.tutStep >= 0) { if (step === "tap") $("tut").classList.remove("hidden"); return; }
+    const text = omaTip();
+    G.omaSay = { text, t0: G.t, dur: Math.min(OMA.showMax, Math.max(OMA.show, 2.5 + text.length / 20)) };
+    G.omaTipT = G.t;                                        // Antippen zählt mit: beim Hinlaufen nicht gleich den nächsten Tipp
+    SFX.click(); return;
   }
   if (step < 0) { $("tut").classList.add("hidden"); document.body.classList.remove("tutOn"); return; }
   document.body.classList.add("tutOn");

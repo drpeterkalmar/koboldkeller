@@ -12,6 +12,7 @@ import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { runV7, GPU_FLAGS } from "./checks_v7.mjs";
 import { runV8 } from "./checks_v8.mjs";
 import { runV9 } from "./checks_v9.mjs";
+import { runV10 } from "./checks_v10.mjs";
 
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith("--" + k)); if (!a) return d; const v = a.split("=")[1]; return v === undefined ? true : v; };
 const PORT = +arg("port", 8731), THROTTLE = +arg("throttle", 4), PERF = !arg("no-perf", false), PROFILE = arg("profile", "gpu");
@@ -926,6 +927,7 @@ if (PERF && PROFILE === "gpu") {
 if (V7MODE !== "skip") await runV7({ browser, BASE, R, errors, secs: HAPSECS });
 if (V7MODE !== "skip") await runV8({ browser, BASE, R, errors, REF });
 if (V7MODE !== "skip") await runV9({ browser, BASE, R, errors });
+if (V7MODE !== "skip") await runV10({ browser, BASE, R, errors });
 R("A1", "Keine pageerrors/console.errors (hoch + quer)", errors.length === 0, errors.length ? errors.slice(0, 5).join(" | ") : "0");
 R("A5", "Keine externen Requests", foreign.length === 0, foreign.length ? foreign.slice(0, 3).join(", ") : "0");
 await browser.close();
