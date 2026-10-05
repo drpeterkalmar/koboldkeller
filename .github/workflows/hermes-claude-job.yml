@@ -1,0 +1,84 @@
+# Hermes-Coding-Job auf einem GitHub-Runner (Test 05.10.2026, Peter: "warum nicht gleich GitHub Actions testen?")
+# Start vom Mac: gh workflow run hermes-claude-job.yml -R drpeterkalmar/koboldkeller -f name=… -f brief="$(cat brief.md)"
+# Auth: Secret CLAUDE_CODE_OAUTH_TOKEN (claude setup-token, Peters Max-Abo). Transkript bleibt auf dem Runner (öffentliches Repo).
+name: hermes-claude-job
+on:
+  workflow_dispatch:
+    inputs:
+      name: {description: "Job-Name", required: true}
+      brief: {description: "Auftrag (Markdown)", required: true}
+      effort: {description: "Effort", required: false, default: "max"}
+      max_turns: {description: "Max-Turns", required: false, default: "400"}
+permissions:
+  contents: write
+  pages: write
+concurrency: {group: hermes-claude-job, cancel-in-progress: false}
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Werkzeuge
+        run: |
+          npm i -g @anthropic-ai/claude-code playwright >/dev/null
+          npx -y playwright install --with-deps chromium >/dev/null
+          git config user.name "Peter Kalmar"; git config user.email dr.peter.kalmar@gmail.com
+          mkdir -p "$HOME/bin"
+          cat > "$HOME/bin/macnote" <<'EOF'
+          #!/bin/bash
+          # Zwischenmeldung: landet im Lauf-Log (Gruppe "notes"), der Mac-Hermes liest sie per gh mit.
+          echo "$(date -u +%H:%M) $*" >> "$RUNNER_TEMP/notes.txt"; echo "HERMES-NOTE: $*"
+          EOF
+          cat > "$HOME/bin/livepush" <<'EOF'
+          #!/bin/bash
+          # Push nach main + Pages-Build anstoßen (Pushes per GITHUB_TOKEN lösen den Pages-Build nicht selbst aus).
+          set -e; git push origin HEAD:main
+          gh api -X POST "repos/$REPO/pages/builds" >/dev/null && echo "Pages-Build angestoßen"
+          EOF
+          chmod +x "$HOME/bin/macnote" "$HOME/bin/livepush"; echo "$HOME/bin" >> "$GITHUB_PATH"
+          claude --version; node --version; python3 --version; nproc; free -g | head -2
+      - name: Brief
+        env: {BRIEF: "${{ inputs.brief }}"}
+        run: printf '%s' "$BRIEF" > "$RUNNER_TEMP/brief.md"; wc -c "$RUNNER_TEMP/brief.md"
+      - name: Claude
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          EFFORT: ${{ inputs.effort }}
+          TURNS: ${{ inputs.max_turns }}
+        run: |
+          set +e
+          ( while sleep 60; do [ -f "$RUNNER_TEMP/notes.txt" ] && { n=$(wc -l < "$RUNNER_TEMP/notes.txt"); [ "$n" != "${last:-0}" ] && tail -n $((n-${last:-0})) "$RUNNER_TEMP/notes.txt" | sed 's/^/HERMES-NOTE: /'; last=$n; }; done ) &
+          claude -p "$(cat "$RUNNER_TEMP/brief.md")" --model opus --effort "$EFFORT" --max-turns "$TURNS" \
+            --allowedTools Read,Write,Edit,Bash,Glob,Grep,Agent,WebSearch,WebFetch \
+            --output-format stream-json --verbose > "$RUNNER_TEMP/transcript.jsonl" 2> "$RUNNER_TEMP/claude.err"
+          rc=$?
+          echo "rc=$rc"; tail -c 1500 "$RUNNER_TEMP/claude.err"
+          python3 - "$RUNNER_TEMP/transcript.jsonl" <<'EOF'
+          import json, sys
+          last = None
+          for l in open(sys.argv[1]):
+              try: o = json.loads(l)
+              except Exception: continue
+              if o.get('type') == 'result': last = o
+          if last:
+              print('RESULT:', {k: last.get(k) for k in ('subtype', 'num_turns', 'duration_ms', 'is_error')})
+              print((last.get('result') or '')[:6000])
+          EOF
+          exit $rc
+      - name: Sicherung (ungepushte Arbeit auf ci-wip-Branch)
+        if: always()
+        run: |
+          git fetch -q origin main
+          if [ -n "$(git status --porcelain)" ] || [ -n "$(git log origin/main..HEAD --oneline)" ]; then
+            git checkout -b "ci-wip-${{ github.run_id }}"; git add -A
+            git diff --cached --quiet || git commit -qm "WIP CI-Lauf ${{ github.run_id }} (${{ inputs.name }})"
+            git push -q origin HEAD && echo "gesichert: ci-wip-${{ github.run_id }}"
+          else echo "nichts offen"; fi
+          echo "--- Meldungen"; cat "$RUNNER_TEMP/notes.txt" 2>/dev/null || true
