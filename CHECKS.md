@@ -103,6 +103,12 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | V33b | Besiegte Ebene: Tore bleiben offen, gleicher Auslöser; während des Bebens hinaus → Auftritt läuft zu Ende; Kobold genau auf dem Erscheinungspunkt → weggeschoben | ja |
 | V33c | Frame-Zeit p95 während des Kellerkönig-Auftritts, CPU 4×, hoch + quer | ≥ 45 fps oder nicht schlechter als der Kampf danach |
 
+## V12 — Fels statt schwarzem Nichts (automatisch, `tools/checks_v12.mjs`, Bilder in `shots/neubau/v12/`)
+| # | Check | Ziel |
+|---|---|---|
+| V34 | Anteil Schwarz-Pixel (Helligkeit < 4 %, nur Canvas) je Welt (Stadt + 5 Welten), hoch + quer, Boss-Zoom E4/E20, Kartenkante, volles Wackeln; Vergleich `?fels=0` | < 10 % |
+| V34b | Muster-Erzeugung je Welt, Zusatzspeicher, sichtbare Chunks, draw()-Median Fels an − aus (gleiche Szene im Wechsel, Median der Läufe), Desktop + CPU 4× | < 30 ms, ≤ 2 MB, < 28, ≤ 0,3 ms (4×: ≤ 0,5 ms wegen Messstreuung) |
+
 Hinweis: Der ganze Lauf dauert ~27 min. In zwei Teilen: `--v7=skip` (A/B/C/V1–V17, ~9 min) und `--v7=only` (V18–V31, ~18 min).
 Testserver: `python3 tools/serve.py 8731` (großer Backlog; der Standard-`http.server` ließ vereinzelt Modul-Anfragen > 30 s hängen).
 

@@ -6,3 +6,5 @@ shots/audio/
 shots/neubau/v11/*_[0-9]_*.png
 shots/neubau/*.log
 shots/neubau/v12/_*.png
+shots/neubau/v12/vorher_*.png
+shots/neubau/v12/nachher_*.png

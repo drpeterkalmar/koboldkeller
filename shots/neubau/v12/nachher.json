@@ -1,0 +1,119 @@
+{
+  "tag": "nachher",
+  "q": "",
+  "shots": [
+    {
+      "nm": "stadt",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_stadt_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_stadt_hoch.png",
+      "black": 0
+    },
+    {
+      "nm": "moos",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_moos_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_moos_hoch.png",
+      "black": 0.1
+    },
+    {
+      "nm": "kristall",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_kristall_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_kristall_hoch.png",
+      "black": 1.9
+    },
+    {
+      "nm": "zucker",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_zucker_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_zucker_hoch.png",
+      "black": 0
+    },
+    {
+      "nm": "frost",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_frost_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_frost_hoch.png",
+      "black": 0.1
+    },
+    {
+      "nm": "glut",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_glut_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_glut_hoch.png",
+      "black": 1.2
+    },
+    {
+      "nm": "boss_e4",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_boss_e4_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_boss_e4_hoch.png",
+      "black": 0.8
+    },
+    {
+      "nm": "boss_e20",
+      "tag": "hoch",
+      "file": "shots/neubau/v12/nachher_boss_e20_hoch.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_boss_e20_hoch.png",
+      "black": 4.1
+    },
+    {
+      "nm": "stadt",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_stadt_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_stadt_quer.png",
+      "black": 0
+    },
+    {
+      "nm": "moos",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_moos_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_moos_quer.png",
+      "black": 0.1
+    },
+    {
+      "nm": "kristall",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_kristall_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_kristall_quer.png",
+      "black": 0.8
+    },
+    {
+      "nm": "zucker",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_zucker_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_zucker_quer.png",
+      "black": 0
+    },
+    {
+      "nm": "frost",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_frost_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_frost_quer.png",
+      "black": 0.1
+    },
+    {
+      "nm": "glut",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_glut_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_glut_quer.png",
+      "black": 2.5
+    },
+    {
+      "nm": "boss_e4",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_boss_e4_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_boss_e4_quer.png",
+      "black": 0.7
+    },
+    {
+      "nm": "boss_e20",
+      "tag": "quer",
+      "file": "shots/neubau/v12/nachher_boss_e20_quer.png",
+      "raw": "shots/neubau/v12/_spiel_nachher_boss_e20_quer.png",
+      "black": 2.1
+    }
+  ],
+  "errors": []
+}

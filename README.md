@@ -85,6 +85,11 @@ während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten pe
   ein neues Spiel behält sie; schon verdiente Kostüme schalten sich beim ersten Laden von selbst frei. Anziehen: im Fund-Toast
   („Anziehen“) oder am 🪞 Spiegel, Tab „🦄 Kostüme“ (gesperrte als Silhouette mit Hinweis, Zähler, Schalter „🎩 Hut statt Kopfteil“).
   🎲 Würfel bringt in ≈ 30 % ein freigeschaltetes Kostüm. **Nur anschauen:** `?kostueme=alle` (alles frei, nichts wird gespeichert).
+- **Fels statt schwarzem Nichts (v12, [V12_BERICHT.md](V12_BERICHT.md)):** Außerhalb der Kellerwände liegt jetzt massiver Fels je Welt
+  (Moos, Kristallsplitter, Zuckerkrümel, Eisflecken, glimmende Glutadern) — deutlich dunkler und entsättigter als der Boden, die Vignette
+  bleibt. Die Wandkronen laufen in Brocken aus, vor den Wänden liegt Geröll. Eine langsamere Tiefen-Ebene (Wurzeln, Kristalle, Eiszapfen,
+  Glutadern) und wenige glimmende Punkte geben Tiefe. Um die Stadt: Wiese und Wald. Alles einmal je Ebene vorgerendert (1 Füllaufruf pro Frame),
+  Anteil schwarzer Pixel 42–71 % → 0–3 %. A/B-Vergleich: `?fels=0` (wie bisher).
 - **Schwierigkeitskurve:** Tabelle `DIFF` in `src/config.js` — mehr/zähere/schnellere Gegner je Ebene, Elite-Gegner mit Krone,
   Pieks-Platten-Fallen, engere Räume, neue Muster (Schleime teilen sich, 3er-Fächer, blinzelnde Gespenster, Doppel-Sturm).
 - **Wandfallen (v8):** Ab Ebene 3 sitzen wenige freundliche Steingesichter in den Wänden (1 → 5 je Ebene, MEGASCHWER +1). Ab und zu
@@ -135,7 +140,7 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
 `KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
 v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
-`KK.editor()` (Editor-Look, Name, Würfe). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
+`KK.editor()` (Editor-Look, Name, Würfe). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v12: `KK.rock()` (Fels-Muster: Bauzeit, Speicher, Chunks), `KK.perf()` liefert zusätzlich `drawMed`/`drawP95` (reine draw()-Zeit). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
 
 ### Testen
 ```bash
@@ -146,6 +151,8 @@ node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V3
 node tools/checks_v8.mjs --port=8731 --ref=8732          # v8-Checks V22–V25 einzeln; --ref = Server mit altem Stand (Vorher/Nachher)
 node tools/checks_v9.mjs --port=8731 --only=V26          # v9-Kostüm-Checks V26–V31 einzeln
 node tools/checks_v11.mjs --port=8731 --throttle=4     # v11: Boss-Auftritt (V33), Bildfolgen → shots/neubau/v11/
+node tools/checks_v12.mjs --port=8731 --throttle=4     # v12: Fels-Hintergrund (V34), Bilder → shots/neubau/v12/
+node tools/fels_shots.mjs --tag=vorher --q=fels=0      # Fels: Bilder je Welt + Schwarz-Anteil (vorher/nachher); fels_perf.mjs = Kosten je Qualitätsstufe
 node tools/mythsheet.mjs 8731 130 out.png                # Kontaktbogen aller Kostüme × 8 Tierarten
 node tools/bot.mjs 8731 20 6 --out=v9 --myth=phoenix     # Bot mit angezogenem Kostüm
 node tools/icons.mjs 8731            # PWA-Icons aus eigenem Art-Code neu erzeugen

@@ -29,6 +29,13 @@ nur 9–25 Hz) — so ist keine sinnvolle FPS-Messung möglich. `tools/check.mjs
 - Welt in Kachel-Einheiten (float). Isometrie 2:1: `sx = (x−y)·U/2`, `sy = (x+y)·U/4 − z·U`.
 - `U` (Kachelbreite in CSS-px) hängt vom Viewport ab: `clamp(min(VW,VH)/6.4, 52, 84)`.
 - Tiefensortierung nach `x+y` (Wände: Kachelmitte), Figuren stehen auf dem Boden (z für Sprünge/Münzen).
+- **v12 Fels-Masse:** Statt einer `B.void`-Fläche füllt `fillRock` den Hintergrund mit einem `createPattern` aus einer kachelbaren Fels-Kachel
+  (`art.drawRockMass`, 384×192 Design-Px, Periode passt aufs Iso-Gitter), per `pattern.setTransform` an Kamera/Zoom/Wackeln ausgerichtet
+  (lückenlos auch jenseits der Kartenkante). Helligkeit je Ebene nach dem Umgebungslicht (`rockCols`: ≈ 72 % des Bodens im Bild). Ab Qualität < 2
+  zusätzlich die Tiefen-Ebene (`drawRockDeep`, 256×128, Parallax 0,5) und ≤ 10 Glimmpunkte je Frame im Licht-Canvas (gecacht je Chunk, nur
+  sichtbare Chunks). `setRock` klassifiziert die Kacheln einmal (0 Boden · 1 Wand · 2 Felskante · 3 Masse); Felskanten (`drawRockEdge`: Brocken
+  auf Kronen-Höhe hinter Wänden, Geröll am Wandfuß davor) werden in die Boden-Chunks gebacken — Chunks mit nur Masse bleiben `null`.
+  Chunk-Rand oben `CHT` = 40 (Platz für die Kronen). `?fels=0` = alte Fläche.
 - Boden wird in **Chunks à 8×8 Kacheln** vorgerendert (LRU, max. 28), Wände einzeln aus
   gecachten Block-Sprites sortiert gezeichnet (nur Wände mit Nachbarboden). Wände vor dem
   Spieler werden weich transparent.
