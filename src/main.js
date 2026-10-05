@@ -18,6 +18,7 @@ const cv = document.getElementById("cv");
 const ft = new Float32Array(240); let fi = 0, fn = 0, qT = 0, perfFrames = 0, perfTime = 0;
 let last = performance.now();
 let jsU = 0, jsD = 0, jsN = 0;
+const drawT = new Float32Array(600); let di = 0, dn = 0;
 hardenTouch();
 initRender(cv);
 // Effekte/Instrumente/Stadtmelodie schon im Menü vor-rendern (OfflineAudioContext braucht keine Geste)
@@ -85,7 +86,9 @@ window.addEventListener("resize", () => resize());
 window.addEventListener("orientationchange", () => setTimeout(resize, 120));
 
 // ---------- Perf / adaptive Qualität ----------
-function perfReset() { fi = 0; fn = 0; qT = -2.5; perfFrames = 0; perfTime = 0; jsU = jsD = jsN = 0; }
+function perfReset() { fi = 0; fn = 0; qT = -2.5; perfFrames = 0; perfTime = 0; jsU = jsD = jsN = 0; di = dn = 0; }
+/** v12: draw()-Zeit je Frame (ms): Median + 95 % */
+function drawStats() { if (!dn) return { drawMed: 0, drawP95: 0 }; const a = Array.from(drawT.slice(0, dn)).sort((x, y) => x - y); return { drawMed: +a[dn >> 1].toFixed(3), drawP95: +a[Math.floor(dn * 0.95)].toFixed(3), drawN: dn }; }
 function perfTrack(ms) {
   ft[fi] = ms; fi = (fi + 1) % ft.length; fn = Math.min(ft.length, fn + 1);
   perfFrames++; perfTime += ms;
@@ -128,7 +131,9 @@ function frame(now) {
   guideUpdate(dt * (G.dbgSpeed || 1));
   const t1 = performance.now();
   UI.hud(rd);
+  const tdr = performance.now();
   draw(G, rd);
+  drawT[di] = performance.now() - tdr; di = (di + 1) % drawT.length; dn = Math.min(drawT.length, dn + 1);   // v12: reine draw()-Zeit
   audioFrame(G, rd);
   const t2 = performance.now();
   jsU += t1 - t0; jsD += t2 - t1; jsN++;
@@ -188,7 +193,8 @@ window.KK = {
   item: (kind, dx = 1, dy = 0, v) => { G.items.push({ kind, x: G.p.x + dx, y: G.p.y + dy, z: 0, vx: 0, vy: 0, vz: 0, seed: 0, v: v || "", flyT: 0 }); return G.items.length; },
   spawn: (type, dx = 1.5, dy = 0, elite = false) => { const e = makeEnt(type, G.p.x + dx, G.p.y + dy); if (elite) makeElite(e); G.ents.push(e); return e.hp; },
   audio: () => audioStats(),
-  perf: (reset) => { if (reset) perfReset(); return perfStats(); },
+  perf: (reset) => { if (reset) perfReset(); return { ...perfStats(), ...drawStats() }; },
+  rock: () => R.rock ? { ms: R.rock.ms, bytes: R.rock.bytes, w: R.rock.mass.width, h: R.rock.mass.height, fels: R.fels, chunks: R.chunks.size, vis: R.chunksVis } : { fels: R.fels },
   bossAtk: (k) => forceAttack(G.boss, k), bossHit: () => { if (G.boss) bossHit(G.boss, false); return G.boss && G.boss.phase; },
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },
   freeze: (on = true) => { G.dbgFreeze = !!on; return G.dbgFreeze; },   // v11: Spielzeit anhalten (Bildfolgen exakt fotografieren)

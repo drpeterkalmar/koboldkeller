@@ -1561,3 +1561,137 @@ export function sealSprite(bi) {
     c.fillStyle = "#5a3a10"; c.beginPath(); c.arc(36, 18.5, 1.8, 0, TAU); c.fill(); c.fillRect(35.2, 19, 1.6, 3);
   });
 }
+
+// =====================================================================
+// v12: Fels-Masse außerhalb der Kellerwände — kachelbares Muster (einmal je Ebene, render.js legt es per createPattern
+// an der Kamera ausgerichtet unter alles) + Felskanten an den Wänden (einmal in die Boden-Chunks gebacken). Stadt: Wiese/Wald.
+// =====================================================================
+export const ROCK_W = 384, ROCK_H = 192, DEEP_W = 256, DEEP_H = 128;   // Perioden passen aufs Iso-Gitter (64 × 32), verschieden → keine sichtbare Wiederholung
+const greyMix = (h, k) => { const [r, g, b] = hexRgb(h), l = Math.round(0.3 * r + 0.59 * g + 0.11 * b), x = l.toString(16).padStart(2, "0"); return mixHex(h, "#" + x + x + x, k); };
+/** Farben der Fels-Masse je Ebene: deutlich dunkler und entsättigter als Boden und Wände */
+export function rockCols(B, bi) {
+  if (bi === 0) return { base: "#3b6a33", hi: "#5a8f45", lo: "#1e3a1c", acc: "#2c5426" };
+  if (B._rock) return B._rock;
+  // Helligkeit nach dem Umgebungslicht ausrichten: im Bild ≈ 72 % des Bodens (deutlich dunkler), aber nicht im Schwarz versinken
+  const lum = h => { const [r, g, b] = hexRgb(h); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+  const amb = B.amb ? 0.2126 * B.amb[0] + 0.7152 * B.amb[1] + 0.0722 * B.amb[2] : 0.35;
+  let base = greyMix(mixHex(B.void, B.right, 0.62), 0.4);
+  const want = Math.min(0.095, Math.max(0.08, 0.72 * lum(B.floor[0]) * amb)) / amb, f = want / Math.max(0.01, lum(base));
+  const [r0, g0, b0] = hexRgb(base), sc = v => Math.min(255, Math.round(v * f)).toString(16).padStart(2, "0");
+  base = "#" + sc(r0) + sc(g0) + sc(b0);
+  return (B._rock = { base, hi: mixHex(base, B.top, 0.24), lo: mixHex(base, "#000000", 0.4), acc: greyMix(B.left, 0.25) });
+}
+/** unregelmäßiger Brocken (oben heller, dunkle Fuge) */
+function rockBlob(c, x, y, rad, fill, C, r, light = 0.5) {
+  const n = 6 + ((r() * 3) | 0), pts = [];
+  for (let k = 0; k < n; k++) { const a = k / n * TAU, q = rad * (0.74 + r() * 0.36); pts.push([x + Math.cos(a) * q, y + Math.sin(a) * q * 0.56]); }
+  const path = () => { c.beginPath(); pts.forEach(([px, py], k) => k ? c.lineTo(px, py) : c.moveTo(px, py)); c.closePath(); };
+  c.save(); c.translate(1.2, 2.6); path(); c.fillStyle = rgba(C.lo, 0.35); c.fill(); c.restore();
+  path(); c.fillStyle = fill; c.fill();
+  c.save(); path(); c.clip(); c.fillStyle = rgba(C.hi, light); c.beginPath(); c.ellipse(x - rad * 0.2, y - rad * 0.32, rad * 0.75, rad * 0.3, 0, 0, TAU); c.fill(); c.restore();
+  path(); c.strokeStyle = rgba(C.lo, 0.6); c.lineWidth = 1.2; c.stroke();
+}
+/** an allen Rändern wiederholen, damit das Muster nahtlos kachelt */
+function wrapAt(x, y, rad, fn, W = ROCK_W, H = ROCK_H) {
+  for (const dx of [-W, 0, W]) for (const dy of [-H, 0, H]) {
+    const X = x + dx, Y = y + dy;
+    if (X + rad >= 0 && X - rad <= W && Y + rad >= 0 && Y - rad <= H) fn(X, Y);
+  }
+}
+/** Fels-Masse (Design-Einheiten ROCK_W × ROCK_H, Ziel-Kontext bereits skaliert) */
+export function drawRockMass(c, B, bi) {
+  const W = ROCK_W, H = ROCK_H, C = rockCols(B, bi), r = mulberry32((B.depth || 0) * 7919 + bi * 131 + 5);
+  c.lineJoin = "round"; c.lineCap = "round";
+  c.fillStyle = C.base; c.fillRect(0, 0, W, H);
+  for (let i = 0; i < 18; i++) {                               // weiche Mulden
+    const x = r() * W, y = r() * H, rad = 22 + r() * 28, a = 0.18 + r() * 0.2, col = r() < 0.5 ? C.lo : C.hi;
+    wrapAt(x, y, rad, (X, Y) => { c.fillStyle = rgba(col, a * 0.8); c.beginPath(); c.ellipse(X, Y, rad, rad * 0.5, 0, 0, TAU); c.fill(); });
+  }
+  if (bi === 0) { drawMeadow(c, C, r); return; }
+  const crack = (x, y) => {                                    // Risse (gezackt, laufen über die Kante weiter)
+    const pts = [[x, y]]; let a = r() * TAU;
+    for (let k = 0; k < 4; k++) { a += (r() - 0.5) * 1.2; const l = 8 + r() * 12; const [px, py] = pts[pts.length - 1]; pts.push([px + Math.cos(a) * l, py + Math.sin(a) * l * 0.55]); }
+    return pts;
+  };
+  const cracks = [];
+  for (let i = 0; i < 22; i++) cracks.push(crack(r() * W, r() * H));
+  const strokeCracks = (col, lw) => { c.strokeStyle = col; c.lineWidth = lw; for (const pts of cracks) wrapAt(pts[0][0], pts[0][1], 60, (X, Y) => { const dx = X - pts[0][0], dy = Y - pts[0][1]; c.beginPath(); pts.forEach(([px, py], k) => k ? c.lineTo(px + dx, py + dy) : c.moveTo(px + dx, py + dy)); c.stroke(); }); };
+  strokeCracks(rgba(C.lo, 0.6), 1.5);
+  if (bi === 5) strokeCracks("rgba(255,110,40,.32)", 0.9);     // Glut: schwach glimmende Adern
+  for (let i = 0; i < 54; i++) {                               // Felsbrocken
+    const x = r() * W, y = r() * H, rad = 6 + r() * 14, fill = mixHex(C.base, C.hi, 0.3 + r() * 0.55), seed = (r() * 1e6) | 0;
+    wrapAt(x, y, rad, (X, Y) => rockBlob(c, X, Y, rad, fill, C, mulberry32(seed)));
+  }
+  for (let i = 0; i < 90; i++) {                               // Kiesel
+    const x = r() * W, y = r() * H, rad = 1 + r() * 2;
+    c.fillStyle = rgba(r() < 0.5 ? C.hi : C.lo, 0.7); c.beginPath(); c.ellipse(x, y, rad * 1.3, rad * 0.8, 0, 0, TAU); c.fill();
+  }
+  // Welt-Deko (gedämpft): Moos · Kristallsplitter · Zuckerkrümel · Eisflecken · Asche
+  for (let i = 0; i < 30; i++) {
+    const x = r() * W, y = r() * H, s = 0.6 + r() * 0.5, seed = (r() * 1e6) | 0;
+    wrapAt(x, y, 18, (X, Y) => {
+      const q = mulberry32(seed);
+      switch (bi) {
+        case 1: for (let k = 0; k < 5; k++) { c.fillStyle = rgba(k % 2 ? "#4f7a3a" : "#3a5f2e", 0.75); c.beginPath(); c.arc(X + (q() - 0.5) * 14 * s, Y + (q() - 0.5) * 6 * s, (2.5 + q() * 3) * s, 0, TAU); c.fill(); } break;
+        case 2: crystals(c, X, Y + 4, mixHex(C.acc, "#8a8ae0", 0.35), 0.55 * s, q); break;
+        case 3: for (let k = 0; k < 4; k++) { c.fillStyle = rgba(["#c98aa8", "#9fb8c8", "#c8c088", "#b0a0d0"][k], 0.45); c.beginPath(); c.roundRect(X + (q() - 0.5) * 16 * s, Y + (q() - 0.5) * 7 * s, 3.5 * s, 2 * s, 1); c.fill(); } break;
+        case 4: c.fillStyle = "rgba(190,220,245,.16)"; c.beginPath(); c.ellipse(X, Y, 13 * s, 5 * s, 0, 0, TAU); c.fill(); c.strokeStyle = "rgba(235,248,255,.28)"; c.lineWidth = 1; c.beginPath(); c.ellipse(X, Y, 13 * s, 5 * s, 0, Math.PI * 1.1, Math.PI * 1.8); c.stroke(); break;
+        case 5: c.fillStyle = "rgba(20,8,8,.35)"; c.beginPath(); c.ellipse(X, Y, 10 * s, 4 * s, 0, 0, TAU); c.fill(); break;
+      }
+    });
+  }
+}
+/** Stadt: Wiese mit Blumen und Baumkronen (Wald) außerhalb der Hecken */
+function drawMeadow(c, C, r) {
+  const W = ROCK_W, H = ROCK_H;
+  c.strokeStyle = rgba(C.lo, 0.45); c.lineWidth = 1.1;
+  for (let i = 0; i < 160; i++) { const x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x - 1.5, y + 1.5); c.lineTo(x - 2.5, y - 2.5); c.moveTo(x + 1, y + 1.5); c.lineTo(x + 2, y - 3); c.stroke(); }
+  for (let i = 0; i < 30; i++) { const x = r() * W, y = r() * H; c.fillStyle = ["#d88aa8", "#e8e0d0", "#d8c070", "#a090d0"][i % 4]; for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(x + Math.cos(k * 1.256) * 1.8, y + Math.sin(k * 1.256) * 1.1, 1.2, 0, TAU); c.fill(); } }
+  for (let i = 0; i < 12; i++) {                               // Baumkronen (Wald), dunkel, mit hellerer Oberkante
+    const x = r() * W, y = r() * H, rad = 16 + r() * 12, seed = (r() * 1e6) | 0;
+    wrapAt(x, y, rad + 10, (X, Y) => {
+      const q = mulberry32(seed);
+      c.fillStyle = rgba(C.lo, 0.5); c.beginPath(); c.ellipse(X + 4, Y + rad * 0.45, rad * 1.1, rad * 0.45, 0, 0, TAU); c.fill();
+      for (let k = 0; k < 5; k++) { const ax = X + (q() - 0.5) * rad, ay = Y - q() * rad * 0.5, rr = rad * (0.45 + q() * 0.25);
+        c.fillStyle = C.acc; c.beginPath(); c.arc(ax, ay, rr, 0, TAU); c.fill();
+        c.fillStyle = rgba(C.hi, 0.6); c.beginPath(); c.arc(ax - rr * 0.25, ay - rr * 0.3, rr * 0.55, 0, TAU); c.fill(); }
+    });
+  }
+}
+/** Tiefen-Ebene (Parallax, langsamer als die Kamera): wenige dunkle Silhouetten je Welt auf transparentem Grund —
+ *  Wurzeln · Kristalle · Zuckerkristalle · Eiszapfen · Glutadern; Stadt: Wolkenschatten */
+export function drawRockDeep(c, B, bi) {
+  const C = rockCols(B, bi), r = mulberry32((B.depth || 0) * 4243 + bi * 71 + 9), dark = rgba(C.lo, 0.42);
+  c.lineJoin = "round"; c.lineCap = "round";
+  for (let i = 0; i < 5; i++) {
+    const x = r() * DEEP_W, y = r() * DEEP_H, s = 0.7 + r() * 0.6, seed = (r() * 1e6) | 0;
+    wrapAt(x, y, 46 * s, (X, Y) => {
+      const q = mulberry32(seed);
+      switch (bi) {
+        case 0: c.fillStyle = "rgba(10,30,10,.16)"; for (let k = 0; k < 4; k++) { c.beginPath(); c.ellipse(X + (k - 1.5) * 14 * s, Y + (q() - 0.5) * 6, 16 * s, 7 * s, 0, 0, TAU); c.fill(); } break;
+        case 1: c.strokeStyle = dark; for (let k = 0; k < 3; k++) { c.lineWidth = (3 - k) * 1.4 * s; c.beginPath(); c.moveTo(X, Y); let px = X, py = Y; for (let j = 0; j < 5; j++) { px += (q() - 0.3) * 14 * s; py += (4 + q() * 6) * s; c.lineTo(px, py); } c.stroke(); } break;
+        case 2: case 3: c.fillStyle = dark; for (let k = 0; k < 3; k++) { const px = X + (k - 1) * 9 * s, h = (16 + q() * 18) * s, w = 4.5 * s; c.beginPath(); c.moveTo(px - w, Y); c.lineTo(px - w * 0.6, Y - h * 0.75); c.lineTo(px, Y - h); c.lineTo(px + w * 0.6, Y - h * 0.75); c.lineTo(px + w, Y); c.closePath(); c.fill(); } break;
+        case 4: c.fillStyle = dark; for (let k = 0; k < 5; k++) { const px = X + (k - 2) * 8 * s, h = (10 + q() * 22) * s; c.beginPath(); c.moveTo(px - 3.5 * s, Y); c.lineTo(px, Y + h); c.lineTo(px + 3.5 * s, Y); c.closePath(); c.fill(); } break;
+        case 5: c.strokeStyle = "rgba(255,90,30,.22)"; c.lineWidth = 2.2 * s; c.beginPath(); c.moveTo(X - 30 * s, Y); for (let j = 1; j <= 6; j++) c.lineTo(X - 30 * s + j * 10 * s, Y + (q() - 0.5) * 10 * s); c.stroke(); break;
+      }
+    }, DEEP_W, DEEP_H);
+  }
+}
+/** Felskante je Kachel, in die Boden-Chunks gebacken. Hinter einer Wand (front = false): Brocken-Haufen auf Kronen-Höhe —
+ *  die Wandoberkante läuft weich in die Masse aus. Vor einer Wand (front = true): Schatten + Geröll am Wandfuß. */
+export function drawRockEdge(c, sx, sy, B, bi, v, front) {
+  const C = rockCols(B, bi), r = mulberry32(v * 613 + (front ? 17 : 29));
+  if (front) {
+    c.save(); c.beginPath(); diamondPath(c, sx, sy, 0); c.clip();
+    const g = c.createLinearGradient(sx, sy, sx, sy + 30); g.addColorStop(0, rgba(C.lo, 0.7)); g.addColorStop(1, rgba(C.lo, 0));
+    c.fillStyle = g; c.fillRect(sx - 32, sy, 64, 32); c.restore();
+    for (let k = 0; k < 3; k++) rockBlob(c, sx + (r() - 0.5) * 34, sy + 7 + r() * 9, 3 + r() * 4, mixHex(C.base, C.hi, 0.4 + r() * 0.4), C, r);
+    return;
+  }
+  const y = sy - WALL_H, top = mixHex(shade(B.top, -0.5), C.base, 0.45);
+  c.fillStyle = rgba(top, 0.8); c.beginPath(); c.ellipse(sx, y + 16, 27, 13, 0, 0, TAU); c.fill();
+  for (let k = 0; k < 4; k++) rockBlob(c, sx + (r() - 0.5) * 38, y + 9 + r() * 15, 5 + r() * 7, mixHex(top, C.hi, r() * 0.6), C, r, 0.6);
+  if (bi === 1 && r() < 0.6) { c.fillStyle = "rgba(90,140,70,.8)"; for (let k = 0; k < 4; k++) { c.beginPath(); c.arc(sx + (r() - 0.5) * 24, y + 12 + r() * 8, 2 + r() * 2.5, 0, TAU); c.fill(); } }
+  else if (bi === 2 && r() < 0.35) crystals(c, sx + (r() - 0.5) * 16, y + 20, mixHex(C.acc, "#8a8ae0", 0.4), 0.6, r);
+  else if (bi === 4 && r() < 0.5) { c.fillStyle = "rgba(225,242,255,.45)"; c.beginPath(); c.ellipse(sx + (r() - 0.5) * 18, y + 14, 9, 3.5, 0, 0, TAU); c.fill(); }
+}

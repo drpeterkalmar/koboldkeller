@@ -1,7 +1,8 @@
 // Koboldkeller 2 — Akzeptanz-Check (CHECKS.md)
 // node tools/check.mjs [--port=8731] [--throttle=4] [--no-perf] [--profile=gpu|software] [--v7=all|skip|only] [--hapsecs=60] [--ref=8732]
 // v7-Checks (V18–V21) in tools/checks_v7.mjs, v8 (V22–V25) in tools/checks_v8.mjs, v9-Kostüme (V26–V31) in tools/checks_v9.mjs,
-// v10 Oma (V32) in tools/checks_v10.mjs, v11 Boss-Auftritt (V33) in tools/checks_v11.mjs (alle einzeln lauffähig).
+// v10 Oma (V32) in tools/checks_v10.mjs, v11 Boss-Auftritt (V33) in tools/checks_v11.mjs,
+// v12 Fels-Hintergrund (V34) in tools/checks_v12.mjs (alle einzeln lauffähig).
 // Langer Lauf in Teilen: --v7=skip (A/B/C/V1–V17), dann --v7=only (V18–V31). --ref=PORT: v7-Vergleichsserver für Vorher/Nachher in V22.
 // Profil „gpu" (Standard): Chromium new-headless mit GPU-Raster (wie Canvas2D am Handy) und
 // ungedrosseltem Frame-Takt (--disable-gpu-vsync/--disable-frame-rate-limit), weil headless-rAF
@@ -15,6 +16,7 @@ import { runV8 } from "./checks_v8.mjs";
 import { runV9 } from "./checks_v9.mjs";
 import { runV10 } from "./checks_v10.mjs";
 import { runV11 } from "./checks_v11.mjs";
+import { runV12 } from "./checks_v12.mjs";
 
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith("--" + k)); if (!a) return d; const v = a.split("=")[1]; return v === undefined ? true : v; };
 const PORT = +arg("port", 8731), THROTTLE = +arg("throttle", 4), PERF = !arg("no-perf", false), PROFILE = arg("profile", "gpu");
@@ -935,6 +937,7 @@ if (V7MODE !== "skip") await runV8({ browser, BASE, R, errors, REF });
 if (V7MODE !== "skip") await runV9({ browser, BASE, R, errors });
 if (V7MODE !== "skip") await runV10({ browser, BASE, R, errors });
 if (V7MODE !== "skip") await runV11({ browser, BASE, R, errors, throttle: THROTTLE });
+if (V7MODE !== "skip") await runV12({ browser, BASE, R, errors, throttle: THROTTLE });
 R("A1", "Keine pageerrors/console.errors (hoch + quer)", errors.length === 0, errors.length ? errors.slice(0, 5).join(" | ") : "0");
 R("A5", "Keine externen Requests", foreign.length === 0, foreign.length ? foreign.slice(0, 3).join(", ") : "0");
 await browser.close();

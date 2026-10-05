@@ -1,7 +1,7 @@
 /* render.js — Iso-Renderer: Kamera, Boden-Chunks, Tiefensortierung, Licht, Glow (MIT) */
 import * as A from "./art.js";
 import { FX } from "./fx.js";
-import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_FX } from "./config.js";
+import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_FX, URLQ } from "./config.js";
 import { clamp, TAU, rgba, mixHex, shade, mulberry32 } from "./util.js";
 
 export const R = {
@@ -12,6 +12,10 @@ export const R = {
   lightSpr: new Map(), drawn: 0, focusY: 0.5,
 };
 const CH = 8, CH_MAX = 28;
+// v12: Chunk-Rand oben (Design-Px) — Platz für die Felskanten auf Wandkronen-Höhe; CHH = Chunk-Höhe
+const CHT = 40, CHH = CH * 32 + 30 + (CHT - 24);
+// v12: Fels-Hintergrund (A/B: ?fels=0 = bisher, schwarze Fläche)
+R.fels = URLQ.get("fels") !== "0"; R.glowVis = [];
 
 export function initRender(cv) {
   R.cv = cv;
@@ -77,8 +81,70 @@ export function setLevel(L, biome, B) {
   for (const t of L.torches || []) R.wallTorch.set(t.wy * m.w + t.wx, t);
   R.wallTrapAt = new Map();                                   // v8: Wand-Schützen sitzen auf ihrer Wand-Kachel
   for (const t of L.wallTraps || []) R.wallTrapAt.set(t.wy * m.w + t.wx, t);
+  setRock(L);
 }
 export function snapCamera(x, y) { R.camX = x; R.camY = y; }
+
+// ---------- v12: Fels-Masse statt schwarzem Nichts ----------
+const GLOW_COL = [null, ["#c8ff8a", "#fff27a"], ["#9ff0ff", "#c8b8ff"], ["#ffb3e6", "#fff38a"], ["#dff6ff", "#a8e6ff"], ["#ff8a3a", "#ffc060"]];
+/** je Ebene einmal: Kachel-Klassen (Boden/Wand/Felskante/Masse), Muster-Kacheln, Glimmpunkte im Fels (nach Chunks sortiert) */
+function setRock(L) {
+  const m = L.map, n = m.w * m.h, ring = R.ring = new Uint8Array(n).fill(3), front = R.edgeFront = new Uint8Array(n);
+  const at = (x, y) => x >= 0 && y >= 0 && x < m.w && y < m.h ? ring[y * m.w + x] : 3;
+  for (let i = 0; i < n; i++) if (!m.solid[i]) ring[i] = 0;
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    const i = y * m.w + x; if (ring[i] !== 3) continue;
+    for (let dy = -1; dy <= 1 && ring[i] === 3; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy) === 0) { ring[i] = 1; break; }
+  }
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    const i = y * m.w + x; if (ring[i] !== 3) continue;
+    let near = false;
+    for (let dy = -1; dy <= 1 && !near; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy) === 1) { near = true; break; }
+    if (!near) continue;
+    ring[i] = 2;
+    // vor einer Wand (Wand liegt dahinter, Richtung −x/−y) und nicht zugleich hinter einer → Geröll am Wandfuß statt Kronen-Brocken
+    const behind = at(x + 1, y) === 1 || at(x, y + 1) === 1 || at(x + 1, y + 1) === 1;
+    front[i] = !behind && (at(x - 1, y) === 1 || at(x, y - 1) === 1 || at(x - 1, y - 1) === 1) ? 1 : 0;
+  }
+  R.rock = null;                                                // Muster entsteht beim ersten Zeichnen (Art-Maßstab bekannt)
+  // Glimmpunkte: Glühwürmchen, Kristall-Glitzer, Zucker-Funkeln, Eis-Glitzern, Glutadern — nur tief in der Masse, gecacht je Chunk
+  R.glowAt = null;
+  if (!R.biome) return;
+  const rnd = mulberry32(m.w * 31 + m.h * 7 + R.biome * 101 + (R.B.depth || 0)), cols = GLOW_COL[R.biome];
+  R.glowAt = new Map();
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    if (ring[y * m.w + x] !== 3 || rnd() > 0.015) continue;
+    const key = Math.floor(y / CH) * 64 + Math.floor(x / CH);
+    let list = R.glowAt.get(key); if (!list) R.glowAt.set(key, list = []);
+    list.push({ x: x + 0.2 + rnd() * 0.6, y: y + 0.2 + rnd() * 0.6, c: cols[(rnd() * 2) | 0], ph: rnd() * TAU, f: 0.8 + rnd() * 1.6 });
+  }
+}
+/** Muster-Kacheln bauen (einmal je Ebene bzw. nach Größenänderung; Masse 384 × 192, Tiefe 256 × 128 Design-Px × Art-Maßstab) */
+function buildRock() {
+  const K = A.artScale(), mk = (fn, W, H) => {
+    const cv = document.createElement("canvas"); cv.width = Math.round(W * K); cv.height = Math.round(H * K);
+    const g = cv.getContext("2d"); g.scale(cv.width / W, cv.height / H); fn(g, R.B, R.biome);
+    return cv;
+  };
+  const t0 = performance.now();
+  const mass = mk(A.drawRockMass, A.ROCK_W, A.ROCK_H), deep = mk(A.drawRockDeep, A.DEEP_W, A.DEEP_H);
+  R.rock = { K, mass, deep, pm: R.ctx.createPattern(mass, "repeat"), pd: R.ctx.createPattern(deep, "repeat"), m: new DOMMatrix(), ms: +(performance.now() - t0).toFixed(1),
+    bytes: (mass.width * mass.height + deep.width * deep.height) * 4 };
+}
+/** Hintergrund: 1 Füllaufruf mit dem an der Kamera ausgerichteten Muster (+ ab Qualität < 2 die langsamere Tiefen-Ebene) */
+function fillRock(ctx) {
+  if (!R.rock || R.rock.K !== A.artScale()) buildRock();
+  const rk = R.rock, Z = R.Z, mx = rk.m, s = Z * A.ROCK_W / rk.mass.width, sd = Z * A.DEEP_W / rk.deep.width;
+  const ox = R.VW / 2 + R.shx, oy = R.VH * R.focusY + R.shy;
+  if (R.q < 2) {                                                // Tiefen-Ebene zuerst: Faktor 0,5 zur Kamera → wirkt weiter weg
+    mx.a = mx.d = sd; mx.b = mx.c = 0; mx.e = ox - R.camDX * Z * 0.5; mx.f = oy - R.camDY * Z * 0.5;
+    rk.pd.setTransform(mx);
+  }
+  mx.a = mx.d = s; mx.b = mx.c = 0; mx.e = ox - R.camDX * Z; mx.f = oy - R.camDY * Z;
+  rk.pm.setTransform(mx);
+  ctx.fillStyle = rk.pm; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40);
+  if (R.q < 2) { ctx.fillStyle = rk.pd; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40); }
+}
 
 // ---------- Projektion ----------
 export function toScreen(x, y, z = 0) {
@@ -98,10 +164,11 @@ function chunk(cx, cy) {
   const L = R.L, m = L.map, B = R.B;
   const x0 = cx * CH, y0 = cy * CH;
   let any = false;
-  for (let y = y0; y < y0 + CH && !any; y++) for (let x = x0; x < x0 + CH; x++) if (x < m.w && y < m.h && !m.solid[y * m.w + x]) { any = true; break; }
+  const ring = R.ring;                                         // v12: 0 Boden · 1 Wand · 2 Felskante · 3 Masse
+  for (let y = y0; y < y0 + CH && !any; y++) for (let x = x0; x < x0 + CH; x++) if (x < m.w && y < m.h && (R.fels ? ring[y * m.w + x] < 3 : !m.solid[y * m.w + x])) { any = true; break; }
   if (!any) { R.chunks.set(key, null); return null; }
-  const ox = (x0 - y0 - CH) * 32 - 4, oy = (x0 + y0) * 16 - 24;
-  const W = CH * 64 + 8, H = CH * 32 + 30;
+  const ox = (x0 - y0 - CH) * 32 - 4, oy = (x0 + y0) * 16 - CHT;
+  const W = CH * 64 + 8, H = CHH;
   const K = A.artScale();
   const cv = document.createElement("canvas");
   cv.width = Math.ceil(W * K); cv.height = Math.ceil(H * K);
@@ -116,6 +183,11 @@ function chunk(cx, cy) {
       const ao = (y > 0 && m.solid[i - m.w] ? 1 : 0) | (x > 0 && m.solid[i - 1] ? 2 : 0);
       A.drawFloorTile(g, (x - y) * 32 - ox, (x + y) * 16 - oy, B, R.biome, m.v[i], m.deco[i], ao);
     }
+  }
+  if (R.fels && R.biome) for (let s = x0 + y0; s <= x0 + y0 + 2 * (CH - 1); s++) for (let x = x0; x < x0 + CH; x++) {   // v12: Felskanten (gebacken)
+    const y = s - x;
+    if (y < y0 || y >= y0 + CH || x >= m.w || y >= m.h || ring[y * m.w + x] !== 2) continue;
+    A.drawRockEdge(g, (x - y) * 32 - ox, (x + y) * 16 - oy, B, R.biome, m.v[y * m.w + x] + x * 7 + y * 13, R.edgeFront[y * m.w + x] === 1);
   }
   c = { cv, ox, oy, W, H, K };
   R.chunkBuilds = (R.chunkBuilds || 0) + 1;
@@ -267,15 +339,17 @@ export function draw(G, dt) {
   const Z = R.Z;
   base(ctx);
   ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
-  ctx.fillStyle = B.void; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40);
+  if (R.fels) fillRock(ctx); else { ctx.fillStyle = B.void; ctx.fillRect(-20, -20, R.VW + 40, R.VH + 40); }
 
   // --- Boden-Chunks --- (R.chunksVis: sichtbare Chunks, muss unter CH_MAX bleiben, sonst würde der Cache flattern)
   const m = L.map;
   let nCh = 0;
+  R.glowVis.length = 0;
   for (let cy = 0; cy * CH < m.h; cy++) for (let cx = 0; cx * CH < m.w; cx++) {
-    const ox = (cx * CH - cy * CH - CH) * 32 - 4, oy = (cx * CH + cy * CH) * 16 - 24;
+    const ox = (cx * CH - cy * CH - CH) * 32 - 4, oy = (cx * CH + cy * CH) * 16 - CHT;
     const sx = (ox - R.camDX) * Z + R.VW / 2 + R.shx, sy = (oy - R.camDY) * Z + R.VH * R.focusY + R.shy;
-    if (sx > R.VW || sy > R.VH || sx + (CH * 64 + 8) * Z < 0 || sy + (CH * 32 + 30) * Z < 0) continue;
+    if (sx > R.VW || sy > R.VH || sx + (CH * 64 + 8) * Z < 0 || sy + CHH * Z < 0) continue;
+    if (R.glowAt) { const gl = R.glowAt.get(cy * 64 + cx); if (gl) R.glowVis.push(gl); }   // v12: Glimmpunkte nur in sichtbaren Chunks
     const c = chunk(cx, cy);
     if (c) { ctx.drawImage(c.cv, sx, sy, c.W * Z, c.H * Z); nCh++; }
   }
@@ -920,10 +994,11 @@ function lighting(G, B, portals) {
   const light = (x, y, r, col, al, zOff = 0) => {
     const [sx, sy] = toScreen(x, y, zOff);
     const rx = 0.707 * r * R.U * R.zp;
-    if (sx + rx < 0 || sx - rx > R.VW || sy + rx < 0 || sy - rx > R.VH) return;
+    if (sx + rx < 0 || sx - rx > R.VW || sy + rx < 0 || sy - rx > R.VH) return false;
     l.globalAlpha = Math.min(1, al);
     const ry = rx * 0.62;
     l.drawImage(lightSprite(col), (sx - rx) / LS, (sy - ry) / LS - 6, rx * 2 / LS, ry * 2 / LS);
+    return true;
   };
   const T = R.t;
   { const M = p.look && p.look.myth && MYTH_BY_ID[p.look.myth]; if (M && M.aura) light(p.x, p.y, 2.2, M.aura[0], 0.35); }
@@ -948,6 +1023,10 @@ function lighting(G, B, portals) {
   if (p.spinT > 0) light(p.x, p.y, 3.4, "#fff8e0", p.spinT / 0.28 * 0.7);
   for (const t of G.teles) { if (t.t < 0) continue; if (t.burn) { light(t.x, t.y, t.r * 1.6, "#ff8a3a", 0.8); continue; } if (t.kind === "ring") { light(t.x, t.y, t.r * 1.2, "#ffe0e6", 0.8); continue; } if (t.kind === "line") light((t.x + t.x2) / 2, (t.y + t.y2) / 2, Math.hypot(t.x2 - t.x, t.y2 - t.y) * 0.55, "#ffe0e6", 0.6); else light(t.x, t.y, t.r * 1.5, "#ffe0e6", 0.95); }
   if (L.traps) for (const tr of L.traps) if (tr.st === 1) light(tr.x, tr.y, 1.4, "#ff9ab0", 0.6);
+  if (R.fels && R.q < 2) {                                      // v12: Glimmen im Fels — wenige, nur in Sicht (höchstens 10 je Frame)
+    let n = 0;
+    for (const gl of R.glowVis) { for (const gp of gl) if (light(gp.x, gp.y, 1.5, gp.c, 0.4 + 0.25 * Math.sin(T * gp.f + gp.ph)) && ++n >= 10) break; if (n >= 10) break; }
+  }
   if (G.rise) { const RS = G.rise, kk = RS.ph === "quake" ? RS.u : RS.ph === "burst" ? 1 : RS.ph === "grow" ? 1 - 0.4 * RS.u : 0.6 * (1 - RS.u); light(RS.x, RS.y, (2.4 + 3.2 * kk) * (RS.b.isKing ? 1.4 : 1), RS.col, 0.4 + 0.5 * kk); }
   l.globalAlpha = 1;
   l.globalCompositeOperation = "multiply";
