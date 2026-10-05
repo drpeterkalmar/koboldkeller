@@ -105,7 +105,7 @@ await page.evaluate(([sp, mega]) => {
     const st = Lv.stairs;
     if (!st.sealed && !st.armed && Math.hypot(st.x - p.x, st.y - p.y) < 1.3) {   // stand beim Entsiegeln drauf: einmal runter
       if (!p.path || !p.path.length) { p.foe = null; const f = KK.path(st.x + 2.2, st.y - 2.2) ? { x: st.x + 2.2, y: st.y - 2.2 } : { x: st.x - 2.2, y: st.y - 2.2 }; tap(f.x, f.y); }
-    } else if (!p.path || !p.path.length) { p.foe = null; const tg = st.sealed && bo ? bo : st; tapToward(tg.x, tg.y); }
+    } else if (!p.path || !p.path.length) { p.foe = null; const tg = st.sealed && G.boss ? G.boss : st; tapToward(tg.x, tg.y); }   // v11: versiegelt → zur Arenamitte (dort wächst der Boss heraus)
     const ps = Math.round(p.x * 10) + "," + Math.round(p.y * 10);
     if (ps === B.lastPos) B.stuck++; else B.stuck = 0;
     B.lastPos = ps;

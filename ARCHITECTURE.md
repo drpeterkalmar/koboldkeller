@@ -147,8 +147,14 @@ Ehrenhall: `koboldkeller_hall_v1` `{gold:[…5], time:[…5]}` (validiert, kompa
 - **Treppe:** hinterste Arena-Ecke. `L.stairs.sealed` (= Boss-Ebene und Ebene nicht in `G.bossDone`) → kein Auslösen, kein Tap-Einrasten,
   statt Treppe eine versiegelte Platte, kein Licht/Glow, nicht auf der Minikarte, Ebene 20 ohne Portal. Sieg → `bossDone` + Speichern,
   nach 1,3 s `unsealStairs()` (Effekt, Ton, Kamera-Schwenk). `armed`: wer gerade draufsteht, muss einmal herunter.
-- **`arenaTick` (jeder Frame):** Boss wacht auf, wenn der Kobold ≥ 1,5 Kacheln in der Arena steht; Tore schließen, wenn Kobold und Boss
-  drin sind und der Kobold ≥ 1,7 von jedem Tor entfernt ist (bereits besiegte Bosse: Tore bleiben offen). Wellen im Takt der Phase,
+- **`arenaTick` (jeder Frame):** v11 — der Boss ist angelegt (`G.boss`), aber **nicht in `G.ents`** (nicht gezeichnet, nicht treffbar,
+  keine KI). `riseReady`: Kobold ≥ 1,5 Kacheln in der Arena und > 1,7 von jedem Tor → Tore schließen (besiegte Bosse: bleiben offen) und
+  `startRise` legt `G.rise` an (Abschnitte `RISE` in config.js: Beben → Aufbruch → Herauswachsen → Landung). `riseTick` treibt Partikel
+  (nur Pools, `FX.budget`), Shake (`prefers-reduced-motion` ×0,4), Kamera (`camFocus` mit `w`/`up`), schubst den Kobold vom
+  Erscheinungspunkt (`moveEnt`), hält ihn unverwundbar; am Ende `G.ents.push(b)` + `wakeBoss` (Titelkarte, Intro). Zeichnen:
+  `render.js drawCrater` (Risse/Loch/Brocken, pro Frame nur während des Auftritts), `drawRise` (Boss mit Clip-Kante an der Lochmitte,
+  Vorderkante darüber), `riseGlow` (Rune, Risse, Lichtstrahl). Danach `A.crater` → `bakeCrater` malt den Krater einmal in die
+  vorhandenen Boden-Chunks (Clip auf die eigenen Bodenkacheln), `chunk()` in neu gebaute → keine Kosten pro Frame. Wellen im Takt der Phase,
   Spawn-Kreise (`G.spawns`) werden nach 0,8 s zu Handlangern (`minion`). Heimportal ist im Bosskampf aus.
 - **Sieg:** `despawnMinions()` entfernt alle Handlanger + Spawn-Kreise + feindliche Geschosse/Warnungen + alle `later(…, "boss")`-Timer;
   `A.done` verhindert neue Wellen, Tore öffnen sich.

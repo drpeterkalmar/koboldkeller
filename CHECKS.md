@@ -72,7 +72,7 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | V19 | Haptik-Stub (`navigator.vibrate` protokolliert), je 60 s Kampf vorher (`?hap=alt`) / nachher: v7 nur große Ereignisse, keine Pulse < 25 ms, Abstand ≥ 400 ms, ≤ 350 ms/s; „Vibration aus“ → 0 Aufrufe; „📳 Vibration testen“ vibriert + Hinweis | ja |
 | V19b | iPhone-Muster (`?haptouch=1`): Switch nur in DOM-Knöpfen, deckt ≥ 75 % des Knopfs, nie über dem Canvas, nicht auf ⚔️; echter Tipp auf 🧪 wirkt + schaltet; Tap-to-move + Joystick ungestört; aus → Switches weg | ja |
 | V20 | Weg-Pfeil nach 2,0 s Stillstand (nicht früher), Winkelfehler zum Pfad-Wegpunkt < 20° (Stadt, E1, Frost, Glut, versiegelt, „um die Ecke“ mit Luftlinie > 90° daneben), nie in eine Wand, bei Bewegung sofort weg, erneut erst nach 2 s | ja |
-| V20b | Ziel-Regel (Stadt → Portal, Keller → Treppe, versiegelt → Boss), kein Pfeil während Titelkarte und im Bosskampf, Einstellung greift, `findPath` nur beim Einblenden | ja |
+| V20b | Ziel-Regel (Stadt → Portal, Keller → Treppe, versiegelt → Arena bzw. Boss), kein Pfeil während Titelkarte und im Bosskampf, Einstellung greift, `findPath` nur beim Einblenden | ja |
 | V21 | Save v6 → v7: Spielstand-Datei (v3) unverändert, alle Felder gleich, Einstellungen bleiben + 🧭 neu an, Weiterspielen stellt alles her | ja |
 | Bot | `tools/bot.mjs 8731 20 6 --out=v7`: Normal durchspielbar | 0 Tode |
 
@@ -95,6 +95,13 @@ Jeder Punkt: **PASS/FAIL + Messwert** im Abschlussbericht.
 | V30 | Tab „🦄 Kostüme“ hoch + quer: 8 Tabs ≥ 48 px, 15 Felder ≥ 48 px, ≤ 4 je Reihe, gesperrte = dunkle Silhouette + „Besiege …“, Stufen-Rahmen, Zähler „6 / 14“, Tipp auf Gesperrtes ändert nichts, „🎩 Hut statt Kopfteil“ wirkt im Spiel; `?kostueme=alle`: alles frei + Hinweis, Sammlung und Spielstand unverändert | ja |
 | V31 | Kellerkönig-Kampf (Wut-Phase, 9 Handlanger, Warnungen) mit Phönix bzw. Sternendrache, CPU 4× ≥ 45 FPS (hoch + quer); 400 Kostümwechsel → Sprite-Cache begrenzt (LRU) | ja |
 | Bot | `tools/bot.mjs 8731 20 6 --out=v9 --myth=phoenix`: Normal mit Phönix durchspielbar | 0 Tode |
+
+## V11 — Boss-Auftritt (automatisch, `tools/checks_v11.mjs`, Bildfolgen in `shots/neubau/v11/`)
+| # | Check | Ziel |
+|---|---|---|
+| V33 | Haupt (E4), Mini (E2, E10), Flug-Mini (E6), König (E20), hoch + quer: vorher Boss nicht in `G.ents`, kein Kampf, Pfeil → Arena; Kobold im Torbogen / 1 Kachel hinter der Torlinie → nichts; 4 Seifenblasen durchs Tor → kein Treffer, kein Auftritt; 2 Kacheln drin → Tore zu + Auftritt; je Frame unverwundbar, kein Schaden, Boss nicht in `G.ents`; danach wach + Bosskampf, Dauer = Tabelle, kein Überlappen, Krater gebacken | ja |
+| V33b | Besiegte Ebene: Tore bleiben offen, gleicher Auslöser; während des Bebens hinaus → Auftritt läuft zu Ende; Kobold genau auf dem Erscheinungspunkt → weggeschoben | ja |
+| V33c | Frame-Zeit p95 während des Kellerkönig-Auftritts, CPU 4×, hoch + quer | ≥ 45 fps oder nicht schlechter als der Kampf danach |
 
 Hinweis: Der ganze Lauf dauert ~27 min. In zwei Teilen: `--v7=skip` (A/B/C/V1–V17, ~9 min) und `--v7=only` (V18–V31, ~18 min).
 Testserver: `python3 tools/serve.py 8731` (großer Backlog; der Standard-`http.server` ließ vereinzelt Modul-Anfragen > 30 s hängen).

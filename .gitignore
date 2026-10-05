@@ -3,3 +3,5 @@ node_modules/
 shots/neubau/_*.png
 shots/neubau/*.png
 shots/audio/
+shots/neubau/v11/*_[0-9]_*.png
+shots/neubau/*.log

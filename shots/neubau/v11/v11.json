@@ -1,0 +1,516 @@
+{
+  "cases": [
+    {
+      "tag": "hoch",
+      "nm": "haupt",
+      "pre": {
+        "d": 4,
+        "name": "Moosbart",
+        "kind": "Haupt",
+        "optional": false,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "arena"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": true,
+        "blocked": 2,
+        "inEnts": false,
+        "dur": 2.65,
+        "invul": 3.23,
+        "guideBlocked": true
+      },
+      "fin": {
+        "riseSecs": 2.65,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": true,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 2897,
+        "card": true,
+        "dist": 8.49,
+        "minDist": 1,
+        "crater": true,
+        "baked": true
+      }
+    },
+    {
+      "tag": "hoch",
+      "nm": "mini",
+      "pre": {
+        "d": 2,
+        "name": "Schlabbo",
+        "kind": "Mini",
+        "optional": false,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "arena"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": true,
+        "blocked": 4,
+        "inEnts": false,
+        "dur": 2.25,
+        "invul": 2.83,
+        "guideBlocked": true
+      },
+      "fin": {
+        "riseSecs": 2.25,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": true,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 3444,
+        "card": true,
+        "dist": 5.02,
+        "minDist": 1.05,
+        "crater": true,
+        "baked": true
+      }
+    },
+    {
+      "tag": "hoch",
+      "nm": "flug",
+      "pre": {
+        "d": 6,
+        "name": "Funkelflatter",
+        "kind": "Flug-Mini",
+        "optional": false,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "arena"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": true,
+        "blocked": 2,
+        "inEnts": false,
+        "dur": 2.25,
+        "invul": 2.83,
+        "guideBlocked": true
+      },
+      "fin": {
+        "riseSecs": 2.25,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": true,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 1970,
+        "card": true,
+        "dist": 6.5,
+        "minDist": 1,
+        "crater": true,
+        "baked": true
+      }
+    },
+    {
+      "tag": "hoch",
+      "nm": "koenig",
+      "pre": {
+        "d": 20,
+        "name": "Kellerkönig",
+        "kind": "König",
+        "optional": false,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "arena"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": true,
+        "blocked": 16,
+        "inEnts": false,
+        "dur": 3.5,
+        "invul": 4.08,
+        "guideBlocked": true
+      },
+      "fin": {
+        "riseSecs": 3.53,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": true,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 3321,
+        "card": true,
+        "dist": 10.11,
+        "minDist": 1.4,
+        "crater": true,
+        "baked": true
+      }
+    },
+    {
+      "tag": "quer",
+      "nm": "haupt",
+      "pre": {
+        "d": 4,
+        "name": "Moosbart",
+        "kind": "Haupt",
+        "optional": false,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "arena"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": true,
+        "blocked": 2,
+        "inEnts": false,
+        "dur": 2.65,
+        "invul": 3.23,
+        "guideBlocked": true
+      },
+      "fin": {
+        "riseSecs": 2.65,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": true,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 2300,
+        "card": true,
+        "dist": 8.49,
+        "minDist": 1,
+        "crater": true,
+        "baked": true
+      }
+    },
+    {
+      "tag": "quer",
+      "nm": "lutz",
+      "pre": {
+        "d": 10,
+        "name": "Lolli-Lutz",
+        "kind": "Mini",
+        "optional": false,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "arena"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": true,
+        "blocked": 2,
+        "inEnts": false,
+        "dur": 2.25,
+        "invul": 2.83,
+        "guideBlocked": true
+      },
+      "fin": {
+        "riseSecs": 2.25,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": true,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 1488,
+        "card": true,
+        "dist": 7.5,
+        "minDist": 1.05,
+        "crater": true,
+        "baked": true
+      }
+    },
+    {
+      "tag": "quer",
+      "nm": "koenig",
+      "pre": {
+        "d": 20,
+        "name": "Kellerkönig",
+        "kind": "König",
+        "optional": false,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "arena"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": true,
+        "blocked": 16,
+        "inEnts": false,
+        "dur": 3.5,
+        "invul": 4.08,
+        "guideBlocked": true
+      },
+      "fin": {
+        "riseSecs": 3.5,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": true,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 3065,
+        "card": true,
+        "dist": 10.11,
+        "minDist": 1.4,
+        "crater": true,
+        "baked": true
+      }
+    }
+  ],
+  "optional": [
+    {
+      "tag": "hoch",
+      "pre": {
+        "d": -4,
+        "name": "Moosbart",
+        "kind": "Haupt",
+        "optional": true,
+        "start": {
+          "inEnts": false,
+          "awake": false,
+          "fight": false,
+          "target": "stairs"
+        },
+        "gate": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        },
+        "bubbles": {
+          "shots": 4,
+          "hpSame": true,
+          "inEnts": false,
+          "rise": false,
+          "awake": false
+        },
+        "oneIn": {
+          "rise": false,
+          "inEnts": false,
+          "closed": false
+        }
+      },
+      "seq": {
+        "started": true,
+        "closed": false,
+        "blocked": 0,
+        "inEnts": false,
+        "dur": 2.65,
+        "invul": 3.23,
+        "guideBlocked": true
+      },
+      "leave": {
+        "outside": true,
+        "rise": true,
+        "phase": "quake"
+      },
+      "fin": {
+        "riseSecs": 2.65,
+        "inEnts": true,
+        "awake": true,
+        "fight": true,
+        "closed": false,
+        "invulOk": true,
+        "hpOk": true,
+        "hidden": true,
+        "frames": 1094,
+        "card": true,
+        "dist": 12.35,
+        "minDist": 1,
+        "crater": true,
+        "baked": true
+      }
+    }
+  ],
+  "perf": [
+    {
+      "tag": "hoch",
+      "throttle": 4,
+      "frames": 296,
+      "medMs": 11.5,
+      "p95Ms": 27.7,
+      "fpsMed": 87,
+      "fpsP95": 36.1,
+      "fight": {
+        "frames": 224,
+        "medMs": 11.9,
+        "p95Ms": 28.9,
+        "fpsMed": 84,
+        "fpsP95": 34.6
+      },
+      "q": 0
+    },
+    {
+      "tag": "quer",
+      "throttle": 4,
+      "frames": 237,
+      "medMs": 14.2,
+      "p95Ms": 31.7,
+      "fpsMed": 70.4,
+      "fpsP95": 31.5,
+      "fight": {
+        "frames": 182,
+        "medMs": 16,
+        "p95Ms": 32,
+        "fpsMed": 62.5,
+        "fpsP95": 31.3
+      },
+      "q": 0
+    }
+  ],
+  "onSpot": {
+    "started": true,
+    "dist": 1.78,
+    "minDist": 1.05,
+    "awake": true
+  }
+}

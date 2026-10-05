@@ -45,9 +45,15 @@ während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten pe
   Lolli-Lutz (Zuckerpilz-Riese: Streusel-Hüpfkästchen, Brause-Puff) · Bibber (Schneegespenst: Frost-Atem, Buh-Blinzeln) ·
   Glutpanzer Gustav (Lava-Käfer: Lava-Kleckse mit Glut-Pfützen, Hornstoß). Kleinere Titelkarte/Leiste, eigene Musikvariante.
 - **Boss-Arenen** (v5): jede Boss-Ebene hat eine große Arena (14 → 24 Kacheln, mit der Tiefe wachsend) mit Säulen als Deckung,
-  Boden-Mosaik und Welt-Licht. Sobald man drin ist und der Boss erwacht, schließen sich die Tore (Ranken, Kristall-Gitter,
+  Boden-Mosaik und Welt-Licht. Sobald man drin ist, schließen sich die Tore (Ranken, Kristall-Gitter,
   Zuckerstangen, Eiszapfen, Lava-Steine); **Handlanger** erscheinen laufend in Wellen am Rand (0,8 s vorher ein Spawn-Kreis),
   Anzahl/Takt steigen mit Tiefe und Phase (höchstens 3–9 gleichzeitig). Beim Sieg verschwinden **alle** Handlanger mit Glitzer.
+- **Boss-Auftritt (v11, [V11_BERICHT.md](V11_BERICHT.md)):** Vor dem Kampf ist der Boss **gar nicht da** (nicht sichtbar, nicht
+  treffbar, nicht mit Seifenblasen von außen anlockbar). Erst wenn der Kobold ganz in der Arena steht (≥ 1,5 Kacheln hinter der
+  Torlinie, nicht im Torbogen), schlagen die Tore zu und der Boss **wächst aus dem Boden**: Beben mit sternförmig leuchtenden Rissen →
+  Boden bricht auf (Blitz, Brocken-Fontäne, Lichtstrahl) → der Boss steigt aus dem Loch, Welt-Material rieselt ab (Moos, Kristall,
+  Streusel, Eis, Glut) → Landung mit Schockwelle, kurzer Zeitlupe und Titelkarte. Flug-Minis schießen aus dem Loch und schweben ein.
+  Dauer ≈ 2,3–2,7 s (Kellerkönig 3,5 s), der Kobold ist währenddessen unverwundbar. Der Krater bleibt liegen.
 - **Treppe auf Boss-Ebenen versiegelt** (v5-Bugfix): solange der Boss lebt, ist die Treppe (Ebene 20: das 20. Portal) eine
   versiegelte Platte — nicht betretbar, kein Licht, nicht auf der Minikarte. Nach dem Sieg zerbricht das Siegel sichtbar.
   Besiegte Bosse werden gespeichert: dort bleibt die Treppe offen und der Kampf ist freiwillig.
@@ -129,7 +135,7 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
 `KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
 v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
-`KK.editor()` (Editor-Look, Name, Würfe). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
+`KK.editor()` (Editor-Look, Name, Würfe). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
 
 ### Testen
 ```bash
@@ -139,6 +145,7 @@ node tools/check.mjs --port=8731 --throttle=4 --v7=skip   # Teil 1 (~9 min) …
 node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V31 (~18 min), einzeln: node tools/checks_v7.mjs --only=V20
 node tools/checks_v8.mjs --port=8731 --ref=8732          # v8-Checks V22–V25 einzeln; --ref = Server mit altem Stand (Vorher/Nachher)
 node tools/checks_v9.mjs --port=8731 --only=V26          # v9-Kostüm-Checks V26–V31 einzeln
+node tools/checks_v11.mjs --port=8731 --throttle=4     # v11: Boss-Auftritt (V33), Bildfolgen → shots/neubau/v11/
 node tools/mythsheet.mjs 8731 130 out.png                # Kontaktbogen aller Kostüme × 8 Tierarten
 node tools/bot.mjs 8731 20 6 --out=v9 --myth=phoenix     # Bot mit angezogenem Kostüm
 node tools/icons.mjs 8731            # PWA-Icons aus eigenem Art-Code neu erzeugen

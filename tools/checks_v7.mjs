@@ -341,8 +341,8 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
     R("V20", "Weg-Pfeil: erscheint nach 2,0 s Stillstand (nicht früher), zeigt zum Pfad-Wegpunkt (Winkelfehler < 20°, nie in eine Wand), weg bei Bewegung und erst nach erneut 2 s wieder",
       timing.a19 === 0 && timing.idleFirst >= 1.99 && timing.idleFirst < 2.2 && timing.tFirst >= 1950 && maxErr < 20 && allErr.every(x => x.noWall) && gone.a === 0 && gone.t === -1 && again >= 1.99 && again < 2.3 && town.kind === "portal" && e1.kind === "stairs" && ok1,
       `erst nach ${timing.tFirst} ms (Stillstand ${timing.idleFirst.toFixed(2)} s, davor a=${timing.a19}), Winkelfehler Stadt ${deg(town.err)}° · E1 ${deg(e1.err)}° · Frost ${pal.frost ? deg(pal.frost.err) : "–"}° · Glut ${pal.glut ? deg(pal.glut.err) : "–"}° · versiegelt ${deg(sealed.err)}°${eWall ? ` · um die Ecke ${deg(eWall.err)}° (Luftlinie wäre ${deg(eWall.errAir)}° daneben)` : ""}, max. ${maxErr}°; nach Tipp a=${gone.a}, wieder nach ${again && again.toFixed(2)} s`);
-    R("V20b", "Weg-Pfeil: Ziel-Regel (Stadt → Portal, Keller → Treppe, versiegelt → Boss), kein Pfeil während Titelkarte und im Bosskampf, Einstellung „🧭 Weg-Pfeil“ greift, Pfad nur beim Einblenden",
-      duringCard.a === 0 && sealedSt && sealed.kind === "boss" && okB && bf.fight && bf.maxA === 0 && bf.shows === 0 && offSet === false && sOff1 === sOff0 && (c1.calcs - c0.calcs) <= (c1.shows - c0.shows) + 1 && (c1.shows - c0.shows) >= 1 && pal.frost && pal.glut,
+    R("V20b", "Weg-Pfeil: Ziel-Regel (Stadt → Portal, Keller → Treppe, versiegelt → Arena bzw. Boss), kein Pfeil während Titelkarte und im Bosskampf, Einstellung „🧭 Weg-Pfeil“ greift, Pfad nur beim Einblenden",
+      duringCard.a === 0 && sealedSt && (sealed.kind === "boss" || sealed.kind === "arena") && okB && bf.fight && bf.maxA === 0 && bf.shows === 0 && offSet === false && sOff1 === sOff0 && (c1.calcs - c0.calcs) <= (c1.shows - c0.shows) + 1 && (c1.shows - c0.shows) >= 1 && pal.frost && pal.glut,
       `Titelkarte a=${duringCard.a}; E4 versiegelt ${sealedSt} → Ziel ${sealed.kind}; Bosskampf ${bf.fight}: max a=${bf.maxA}, Einblendungen ${bf.shows}; aus: ${sOff1 - sOff0} Einblendungen; 12 s Stillstand: ${c1.shows - c0.shows} Einblendungen, ${c1.calcs - c0.calcs} Pfad-Berechnungen`);
     // Querformat-Screenshots
     const { ctx: cq, page: pq } = await np("index.html", 915, 412);
@@ -353,7 +353,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
     const q2 = await pq.evaluate(() => KK.guide().target.kind);
     await pq.screenshot({ path: V7 + "pfeil_versiegelt_zum_boss_quer.png" });
     await cq.close();
-    if (q2 !== "boss") errors.push("v7 quer: Pfeil auf E2 zeigt nicht zum Boss (" + q2 + ")");
+    if (q2 !== "boss" && q2 !== "arena") errors.push("v7 quer: Pfeil auf E2 zeigt nicht zum Boss bzw. zur Arena (" + q2 + ")");   // v11: Boss steckt noch im Boden → Arenamitte
   }
 
   // ===================================================================
