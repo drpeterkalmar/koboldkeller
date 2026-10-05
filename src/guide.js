@@ -30,7 +30,7 @@ export function guideTarget() {
 }
 /** Situationen ohne Pfeil */
 export function guideBlocked() {
-  return !G.arrowOn || G.screen !== "play" || G.demo || !G.p || G.p.hp <= 0 || bossFight() || G.tutStep >= 0 ||
+  return !G.arrowOn || G.screen !== "play" || G.demo || !G.p || G.p.hp <= 0 || bossFight() || !!G.rise ||G.tutStep >= 0 ||
     performance.now() < (G.cardUntil || 0) || G.winQueued;
 }
 /** Zielrichtung: Punkt ARROW.ahead Kacheln voraus auf dem Pfad; liegt er hinter einer Ecke, rückwärts bis er sichtbar ist */

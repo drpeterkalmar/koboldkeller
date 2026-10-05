@@ -2,14 +2,16 @@
    mit gut lesbaren Warnkreisen/-linien, Arena-Effekte, Phasenwechsel mit Kamera-Kick, Sieg mit Zeitlupe + Konfetti + Beute-Regen (MIT)
    v5: Mini-Bosse (Ebene 2/6/10/14/18, 2 Phasen, eigene Wesen + Angriffe), große Arena mit Toren, Handlanger-Wellen mit
    Spawn-Kreis, beim Sieg verschwinden alle Handlanger + Treppe/Portal entsiegelt sich.
-   Fairness für Kinder: jede Gefahr wird ≥ 0,8 s vorher angezeigt (MEGASCHWER ×0,75), Phasenwechsel räumen alle Warnungen ab. */
-import { BOSSES, BOSS_PHASES, BOSS_HP_MUL, MEGA, MINIS, MINI_PHASE, ARENA, MINION, MINION_CAP, MAX_DEPTH } from "./config.js";
+   Fairness für Kinder: jede Gefahr wird ≥ 0,8 s vorher angezeigt (MEGASCHWER ×0,75), Phasenwechsel räumen alle Warnungen ab.
+   v11: Der Boss ist vorher gar nicht da (nicht in G.ents: unsichtbar, nicht treffbar). Erst wenn der Kobold ganz in der Arena
+   steht, schlagen die Tore zu und der Boss wächst aus dem Boden (Beben → Aufbruch → Herauswachsen → Landung, G.rise). */
+import { BOSSES, BOSS_PHASES, BOSS_HP_MUL, MEGA, MINIS, MINI_PHASE, ARENA, MINION, MINION_CAP, MAX_DEPTH, RISE } from "./config.js";
 import { G, H, later, playerHurt, makeEnt, steer, walk, faceTo, flyItem, rainItem, winGame, segDist, save } from "./game.js";
-import { canStand, nearestFree } from "./world.js";
+import { canStand, nearestFree, moveEnt } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash } from "./fx.js";
 import { SFX } from "./audio.js";
 import { haptic } from "./platform.js";
-import { rand, randi, pick, weighted, TAU, clamp } from "./util.js";
+import { rand, randi, pick, weighted, TAU, clamp, easeOutBack } from "./util.js";
 
 // ---------- Aufbau ----------
 export function initBoss(e, lvl) {
@@ -102,7 +104,7 @@ export function bossAI(e, dt) {
   const d = Math.hypot(p.x - e.x, p.y - e.y);
   arenaFx(e, dt);
   if (e.fly && e.state !== "atk" && e.state !== "dash") e.z += (0 - e.z) * Math.min(1, dt * 6);
-  if (e.state === "sleep") { e.moving = false; if (d < 7.5) wakeBoss(e); return; }
+  if (e.state === "sleep") { e.moving = false; return; }      // v11: geweckt wird nur noch über den Auftritt (arenaTick)
   if (e.state !== "dash") faceTo(e, p.x, p.y);
   const RS = e.isKing ? 3.2 : 2.5;
   switch (e.state) {
@@ -167,6 +169,7 @@ function chooseAttack(e, d, RS) {
 /** Test-/Debug-Hilfe: bestimmten Angriff sofort starten */
 export function forceAttack(e, k) {
   if (!e || !ATK[k]) return false;
+  if (!G.ents.includes(e)) { G.rise = null; e.z = 0; G.ents.push(e); }      // v11: Test-Abkürzung ohne Auftritt
   if (!e.awake) { e.awake = true; H().boss(e); }
   e.invulT = 0; e.state = "atk"; e.lastAtk = k; e.cur = { k, t: 0, dur: 1, rec: 0.8 };
   ATK[k].start(e, e.cur);
@@ -525,12 +528,19 @@ export function arenaTick(dt) {
     if (Math.random() < dt * 16 * FX.budget) part({ x: s.x + rand(-0.5, 0.5), y: s.y + rand(-0.5, 0.5), z: rand(0, 10), vz: rand(30, 70), kind: "puff", col: s.col, add: false, s0: 8, s1: 18, life: 0.6, g: 0, fade: 0.5 });
     if (s.t >= s.max) { G.spawns.splice(i, 1); materialize(s); }
   }
-  if (G.screen !== "play" || !b || b.hp <= 0 || !G.ents.includes(b)) return;
-  // Boss wacht auf, sobald der Kobold wirklich in der (großen) Arena steht
-  if (!b.awake && inArena(A, p.x, p.y, 1.5)) wakeBoss(b);
+  if (G.rise && G.rise.b !== b) G.rise = null;                // Boss inzwischen weg (Test-Kill) → Auftritt abbrechen
+  if (G.screen !== "play" || !b || b.hp <= 0) return;
+  // v11: Der Boss ist erst da, wenn er aus dem Boden gewachsen ist. Auslöser NUR: Kobold ganz in der Arena
+  // (≥ 1,5 Kacheln hinter der Torlinie, nicht im Torbogen) — nicht Annäherung, Sichtlinie oder Seifenblasen von außen.
+  if (!G.ents.includes(b)) {
+    if (G.rise) riseTick(dt);                                 // läuft zu Ende, auch wenn der Kobold wieder hinausläuft
+    else if (riseReady(A, p)) startRise(A, b);
+    return;
+  }
+  if (!b.awake && inArena(A, p.x, p.y, 1.5)) wakeBoss(b);     // Sicherheitsnetz (Boss per Test direkt eingesetzt)
   if (!b.awake) return;
   // Tore schließen sich hinter dem Kobold — fair: erst wenn er drin und weg vom Eingang ist; nach dem Sieg wieder auf
-  if (!A.closed && !A.optional && !A.done && inArena(A, p.x, p.y, 1.2) && inArena(A, b.x, b.y, 0.5) && A.gates.every(g => Math.hypot(g.x - p.x, g.y - p.y) > 1.7)) closeGates(A, b);
+  if (!A.closed && !A.optional && !A.done && riseReady(A, p)) closeGates(A, b);
   if (b.state === "intro") return;
   if (A.waveT === undefined) A.waveT = MINION.first;
   A.waveT -= dt;
@@ -540,6 +550,113 @@ export function arenaTick(dt) {
     spawnWave(b, ad.n[ph]);
   }
 }
+// ---------- v11: Auftritt — der Boss wächst aus dem Boden ----------
+/** Kobold ganz in der Arena: ≥ 1,5 Kacheln hinter der Torlinie und nicht im/direkt am Torbogen (wie die Tor-Bedingung) */
+export function riseReady(A, p) { return inArena(A, p.x, p.y, 1.5) && A.gates.every(g => Math.hypot(g.x - p.x, g.y - p.y) > 1.7); }
+const calm = () => G.calm ?? (G.calm = !!(typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches));
+// Material je Welt, das beim Herauswachsen von ihm abfällt: Moos/Ranken · Kristallsplitter · Zuckerstreusel · Eisschollen · Lava-Spritzer
+const RISE_MAT = [null,
+  { kind: "heart", cols: ["#8fdc6a", "#5fae4a", "#c8f09a"], add: false },
+  { kind: "star", cols: ["#9ff0ff", "#ffffff", "#c8b8ff"], add: true },
+  { kind: "conf", cols: ["#ff8fd0", "#8fe9ff", "#fff38a", "#b3ff9a", "#c79bff"], add: false },
+  { kind: "rock", cols: ["#f4fbff", "#cfeaff", "#a8d8f8"], add: false },
+  { kind: "dot", cols: ["#ffb060", "#ff7a2a", "#ffd060"], add: true },
+];
+function startRise(A, b) {
+  const T = RISE[b.isKing ? "king" : b.isMini ? "mini" : "main"], p = G.p;
+  const cracks = [];
+  for (let i = 0; i < T.n; i++) {                            // sternförmige Risse (Welt-Koordinaten relativ zur Mitte)
+    const a = (i + rand(-0.3, 0.3)) / T.n * TAU, len = T.crack * rand(0.7, 1.15), pts = [[0, 0]];
+    for (let s = 1; s <= 5; s++) { const r = len * s / 5, j = s < 5 ? rand(-0.16, 0.16) * Math.min(1, r) : 0; pts.push([Math.cos(a) * r - Math.sin(a) * j, Math.sin(a) * r + Math.cos(a) * j]); }
+    cracks.push(pts);
+    if (i % 2 === 0) { const s0 = pts[2 + (i % 3 === 0 ? 1 : 0)], ab = a + (Math.random() < 0.5 ? 0.6 : -0.6), lb = len * 0.35; cracks.push([s0, [s0[0] + Math.cos(ab) * lb, s0[1] + Math.sin(ab) * lb]]); }
+  }
+  const dur = T.quake + T.burst + T.grow + T.land;
+  G.rise = { b, A, T, t: 0, dur, x: b.x, y: b.y, col: b.aura || G.B.dust || "#ffe9a8", earth: G.B.left || "#6a5a4a", fly: !!b.fly, hole: T.hole, cracks, seed: (Math.random() * 1e9) | 0,
+    ph: "quake", u: 0, open: 0, lift: 0, sndT: 0, burst: false, landed: false, mat: RISE_MAT[G.biome] || RISE_MAT[1] };
+  b.z = 0; b.sq = 0; b.alpha = 1; A.rose = { t0: G.t, t1: 0 };
+  p.invulT = Math.max(p.invulT, dur + 0.6);                  // während des ganzen Auftritts unverwundbar
+  p.foe = null;
+  G.camFocus = G.rise.cam = { x: b.x, y: b.y, t: dur, w: 0.85, up: (b.isMini ? 95 : 150) * b.scale * 0.3 };   // Kamera aufs Loch, hohe Bosse ganz im Bild
+  if (!A.optional && !A.done && !A.closed) closeGates(A, b);  // Tore schlagen hinter dem Kobold zu (besiegte Ebene: bleiben offen)
+  SFX.tele({ x: b.x, y: b.y }); haptic("boss");
+}
+/** Kobold sanft vom Erscheinungspunkt wegschieben (kein Überlappen mit dem Boss) */
+function nudge(R0, dt, rad) {
+  const p = G.p, dx = p.x - R0.x, dy = p.y - R0.y, d = Math.hypot(dx, dy);
+  if (d >= rad) return;
+  const ux = d > 0.05 ? dx / d : -0.7071, uy = d > 0.05 ? dy / d : -0.7071, s = Math.min(rad - d, dt * 6);
+  moveEnt(G.L.map, p, ux * s, uy * s, p.r);
+}
+function riseTick(dt) {
+  const R0 = G.rise, b = R0.b, p = G.p, T = R0.T, x = R0.x, y = R0.y, mot = calm() ? 0.4 : 1;
+  R0.t += dt; b.t += dt;
+  R0.cam.t = 0.3; G.camFocus = R0.cam;                       // Kamera bleibt auf dem Loch, solange der Auftritt läuft (auch in Pause/Zeitlupe)
+  const t = R0.t, t1 = T.quake, t2 = t1 + T.burst, t3 = t2 + T.grow, t4 = t3 + T.land, big = b.isKing ? 1.4 : b.isMini ? 0.8 : 1;
+  const sp = (n) => Math.random() < n * dt * FX.budget;      // Partikel-Rate je Sekunde (Budget beachtet)
+  if (t < t1) {                                               // 1) Beben: wird stärker, Risse laufen nach außen, Steinchen hüpfen
+    const k = t / t1;
+    R0.ph = "quake"; R0.u = k;
+    FX.trauma = Math.max(FX.trauma, (0.2 + 0.42 * k) * mot * (b.isKing ? 1.15 : 1));
+    if (sp(36 * big)) { const a = rand(0, TAU), r = rand(0.2, T.crack * k + 0.4); part({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, z: 2, vz: rand(70, 170), kind: "rock", col: R0.earth, add: false, s0: rand(6, 10), s1: 5, life: rand(0.5, 0.8), g: -620, drag: 0.5, bounce: 0.3, fade: 0.3 }); }
+    if (sp(8)) { const a = rand(0, TAU), r = T.crack * k; part({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, z: 4, vz: rand(10, 30), kind: "puff", col: "#d8ccc0", add: false, s0: 10, s1: 22, life: 0.6, g: 0, fade: 0.4 }); }
+    R0.sndT -= dt; if (R0.sndT <= 0) { R0.sndT = 0.3 - 0.12 * k; SFX.impact({ x, y }); }
+  } else if (t < t2) {                                        // 2) Aufbruch: Blitz, Brocken-Fontäne, Staubring, Lichtstrahl
+    R0.ph = "burst"; R0.u = (t - t1) / T.burst; R0.open = Math.min(1, R0.u * 2.2);
+    if (!R0.burst) {
+      R0.burst = true;
+      flash(R0.col, 0.55); shake(0.65 * mot); FX.zoomPunch = Math.max(FX.zoomPunch, 0.5 * mot);
+      burst(x, y, Math.round(28 * big), { kind: "rock", col: R0.earth, add: false, s0: 16, s1: 9, sp0: 0.8, sp1: 3.6 * big, z: 4, vz0: 300, vz1: 620, g: -1100, l0: 0.9, l1: 1.5, drag: 0.5, bounce: 0.32, fade: 0.25 });
+      burst(x, y, Math.round(14 * big), { kind: R0.mat.kind, col: pick(R0.mat.cols), add: R0.mat.add, s0: 14, s1: 4, sp0: 0.6, sp1: 3, z: 10, vz0: 260, vz1: 520, g: -800, l0: 0.8, l1: 1.3, drag: 0.6, fade: 0.4 });
+      burst(x, y, Math.round(16 * big), { kind: "puff", col: "#e8dcc8", add: false, s0: 30, s1: 12, sp0: 2.2, sp1: 4.5 * big, z: 4, vz0: 0, vz1: 30, g: 0, drag: 3.2, l0: 0.6, l1: 1.0, fade: 0.6 });
+      ring(x, y, R0.hole * 2.6, "#efe4d4", 0.6, 1.8); ring(x, y, R0.hole * 1.4, R0.col, 0.5, 1.4);
+      part({ x, y, z: 30, kind: "glow", col: R0.col, s0: 420 * big, s1: 80, life: 0.6 });
+      SFX.slam({ x, y }); SFX.impact({ x, y });
+      const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1;
+      if (d < 2.6) { p.vx += dx / d * 8; p.vy += dy / d * 8; }   // Druckwelle schubst (ohne Schaden)
+    }
+    if (sp(30)) part({ x: x + rand(-0.3, 0.3), y: y + rand(-0.3, 0.3), z: rand(10, 60), vz: rand(200, 420), kind: R0.mat.add ? "dot" : "star", col: R0.col, s0: 10, s1: 0, life: 0.6, g: 0, drag: 0.4 });
+    nudge(R0, dt, b.r + p.r + 0.3);
+  } else if (t < t3) {                                        // 3) Herauswachsen (Ease-out-Back, Squash & Stretch, Material rieselt ab)
+    const u = (t - t2) / T.grow;
+    R0.ph = "grow"; R0.u = u; R0.open = 1;
+    if (R0.fly) {                                             // Flug-Minis schießen hoch und schweben ein
+      const k1 = Math.min(1, u / 0.38), k2 = Math.max(0, (u - 0.38) / 0.62), top = 190;
+      b.z = u < 0.38 ? -95 * b.scale + (top + 95 * b.scale) * (1 - Math.pow(1 - k1, 3)) : top * (1 - k2 * k2 * (3 - 2 * k2));
+      R0.lift = 1; b.sq = u < 0.38 ? -0.22 : 0.06 * Math.sin(u * 20);
+    } else {
+      R0.lift = easeOutBack(u); b.z = 0;
+      b.sq = u < 0.85 ? -0.17 * (1 - u) + 0.03 * Math.sin(u * 26) : 0.12 * Math.sin((u - 0.85) / 0.15 * Math.PI);
+    }
+    const hgt = (b.isMini ? 95 : 150) * b.scale * Math.min(1, R0.lift);
+    if (sp(22 * big)) { const m = R0.mat; part({ x: x + rand(-0.45, 0.45) * b.scale / 1.7, y: y + rand(-0.45, 0.45) * b.scale / 1.7, z: (R0.fly ? Math.max(0, b.z) : 0) + rand(0.2, 0.9) * hgt, vz: rand(-20, 40), vx: rand(-0.6, 0.6), vy: rand(-0.6, 0.6), kind: m.kind, col: pick(m.cols), add: m.add, s0: rand(9, 14), s1: 5, life: rand(0.6, 1.0), g: -520, drag: 0.8, bounce: 0.2, fade: 0.4, vr: rand(-6, 6) }); }
+    if (sp(18 * big)) part({ x: x + rand(-0.4, 0.4), y: y + rand(-0.4, 0.4), z: rand(0.3, 1) * hgt, vz: rand(-10, 20), kind: "rock", col: R0.earth, add: false, s0: rand(4, 7), s1: 3, life: rand(0.4, 0.7), g: -600, drag: 0.6, fade: 0.3 });
+    if (sp(6)) { const a = rand(0, TAU); part({ x: x + Math.cos(a) * R0.hole, y: y + Math.sin(a) * R0.hole, z: 3, vz: rand(10, 30), kind: "puff", col: "#d8ccc0", add: false, s0: 12, s1: 24, life: 0.6, g: 0, fade: 0.4 }); }
+    if (b.isKing && sp(30)) P.ember(x + rand(-1, 1), y + rand(-1, 1), pick(["#ff7a2a", "#ffd060"]));
+    FX.trauma = Math.max(FX.trauma, 0.22 * mot * (1 - u));
+    nudge(R0, dt, b.r + p.r + 0.3);
+  } else if (t < t4) {                                        // 4) Landung/Brüller: Schockwelle, Staub, kurze Zeitlupe, Zoom-Punch
+    const lt = t - t3;
+    R0.ph = "land"; R0.u = lt / T.land; R0.lift = 1; b.z = 0;
+    b.sq = 0.3 * Math.exp(-lt * 7) * Math.cos(lt * 24);
+    if (!R0.landed) {
+      R0.landed = true;
+      ring(x, y, 4.2 * big, R0.col, 0.7, 2.4); ring(x, y, 2.6 * big, "#ffffff", 0.5, 1.5);
+      burst(x, y, Math.round(18 * big), { kind: "puff", col: "#efe4d4", add: false, s0: 30, s1: 10, sp0: 2.5, sp1: 5 * big, z: 4, vz0: 0, vz1: 40, g: 0, drag: 3, l0: 0.6, l1: 1.0, fade: 0.6 });
+      slowmo(0.3, 0.4); FX.zoomPunch = 1 * mot; shake(0.55 * mot);
+      SFX.slam({ x, y });
+      const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1;
+      if (d < 3) { p.vx += dx / d * 7; p.vy += dy / d * 7; }
+    }
+    nudge(R0, dt, b.r + p.r + 0.3);
+  } else {                                                    // fertig: Boss ist da → Titelkarte, Intro, dann Tore/Wellen wie bisher
+    G.rise = null; b.sq = 0; b.z = 0; if (R0.A.rose) R0.A.rose.t1 = G.t;
+    R0.A.crater = { x, y, hole: R0.hole, cracks: R0.cracks, col: R0.col, earth: R0.earth, seed: R0.seed };   // bleibt liegen (render.js backt ihn einmal in den Boden)
+    G.ents.push(b);
+    if (!b.awake) wakeBoss(b); else H().boss(b);
+  }
+}
+
 /** Welle: Spawn-Kreise an den Rand-Punkten der Arena (nicht direkt neben dem Kobold), Deckel beachtet */
 export function spawnWave(b, n) {
   const A = G.L.arena, p = G.p;
@@ -576,8 +693,8 @@ function closeGates(A, b) {
   }
   G.flowT = 0;
   SFX.slam({ x: G.p.x, y: G.p.y }); shake(0.3); haptic("slam");
-  // Hinweis erst nach der Boss-Titelkarte (sonst überdecken sie sich)
-  const wait = Math.max(0, 2.7 - (G.t - (b.wokeT ?? G.t)));
+  // Hinweis erst nach Auftritt + Boss-Titelkarte (sonst überdecken sie sich)
+  const wait = G.rise ? G.rise.dur - G.rise.t + 2.7 : Math.max(0, 2.7 - (G.t - (b.wokeT ?? G.t)));
   later(wait, () => { if (A.closed && G.boss === b) H().toast("🚪 Die Tore sind zu — besiege " + b.name + ", dann gehen sie wieder auf!"); }, "boss");
 }
 function openGates(A) {

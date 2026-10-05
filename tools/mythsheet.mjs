@@ -2,7 +2,7 @@
 import { loadPlaywright } from "./pw.mjs";
 const port = process.argv[2] || 8731, px = +(process.argv[3] || 120), out = process.argv[4] || "shots/neubau/v9/kontaktbogen.png", only = process.argv[5] ? process.argv[5].split(",") : null;
 const { chromium } = loadPlaywright();
-const b = await chromium.launch({ channel: "chromium", args: ["--use-angle=metal", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const b = await chromium.launch({ channel: "chromium", args: [(process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=default"), "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const page = await (await b.newContext({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: 1 })).newPage();
 const errs = []; page.on("pageerror", e => errs.push(e.message)); page.on("console", m => { if (m.type() === "error") errs.push(m.text()); });
 await page.goto(`http://localhost:${port}/index.html`);

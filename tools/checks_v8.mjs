@@ -6,7 +6,7 @@ import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-export const GPU_FLAGS = ["--use-angle=metal", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit",
+export const GPU_FLAGS = [(process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=default"), "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit",
   "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
 const V8 = "shots/neubau/v8/";
 const sleep = ms => new Promise(r => setTimeout(r, ms));

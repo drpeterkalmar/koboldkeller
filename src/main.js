@@ -118,7 +118,7 @@ function frame(now) {
   let dt = rd;
   if (FX.hitstop > 0) { FX.hitstop -= rd; dt = 0; }
   if (FX.slowT > 0) { FX.slowT -= rd; dt *= FX.slowF; }
-  if (G.screen === "pause" || G.screen === "bag" || G.screen === "edit") dt = 0;
+  if (G.screen === "pause" || G.screen === "bag" || G.screen === "edit" || G.dbgFreeze) dt = 0;
   if (IN.attackHeld && G.screen === "play") attack();
   inputFrame();                                           // v8: Halten-Folgen läuft weiter, solange der Finger hält
   const t0 = performance.now();
@@ -191,6 +191,8 @@ window.KK = {
   perf: (reset) => { if (reset) perfReset(); return perfStats(); },
   bossAtk: (k) => forceAttack(G.boss, k), bossHit: () => { if (G.boss) bossHit(G.boss, false); return G.boss && G.boss.phase; },
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },
+  freeze: (on = true) => { G.dbgFreeze = !!on; return G.dbgFreeze; },   // v11: Spielzeit anhalten (Bildfolgen exakt fotografieren)
+  rise: () => G.rise ? { ph: G.rise.ph, u: +G.rise.u.toFixed(2), t: +G.rise.t.toFixed(2), dur: G.rise.dur } : null,
   quality: (q) => { if (q !== undefined) setQuality(q); return R.q; },
   screenOf: (x, y, z = 0) => toScreen(x, y, z),          // v10-Check: Weltpunkt → Bildschirm (CSS-px), z. B. zum Antippen der Oma
   save: () => { save(); return true; },

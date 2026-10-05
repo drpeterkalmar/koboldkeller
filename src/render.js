@@ -2,7 +2,7 @@
 import * as A from "./art.js";
 import { FX } from "./fx.js";
 import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_FX } from "./config.js";
-import { clamp, TAU, rgba, mixHex } from "./util.js";
+import { clamp, TAU, rgba, mixHex, shade, mulberry32 } from "./util.js";
 
 export const R = {
   cv: null, ctx: null, VW: 0, VH: 0, RS: 1, U: 64, Z: 1, Z0: 1, cz: 1, q: 0, qScales: [1, 0.8, 0.65, 0.5],
@@ -117,7 +117,10 @@ function chunk(cx, cy) {
       A.drawFloorTile(g, (x - y) * 32 - ox, (x + y) * 16 - oy, B, R.biome, m.v[i], m.deco[i], ao);
     }
   }
-  c = { cv, ox, oy, W, H };
+  c = { cv, ox, oy, W, H, K };
+  R.chunkBuilds = (R.chunkBuilds || 0) + 1;
+  const cr = L.arena && L.arena.crater;
+  if (cr && cr.baked) paintCraterOn(c, cx, cy, cr);            // v11: Krater gehört ab jetzt zum Boden (gecacht)
   R.chunks.set(key, c);
   R.chunkOrder.push(key);
   if (R.chunkOrder.length > CH_MAX) { const old = R.chunkOrder.shift(); R.chunks.delete(old); }
@@ -136,7 +139,8 @@ export function prewarm(G) {
   for (let v = 0; v < 4; v++) A.wallSprite(B, R.biome, v);
   for (const k of ["heart", "coin"]) A.itemSprite(k);
   if (R.L.traps && R.L.traps.length) { A.trapPlate(B.left); A.trapSpikes(B.top); }
-  for (const e of G.ents) {
+  A.fx("rock");
+  for (const e of G.boss && !G.ents.includes(G.boss) ? [...G.ents, G.boss] : G.ents) {      // v11: Boss steckt noch im Boden
     if (e.isMini) { for (const m of ["open", "hurt"]) A.flashOf(A.miniSprite(e.kind, m)); if (e.kind === "funkelflatter") A.flashOf(A.enemySprite("wing", "#8a6ae0")); continue; }
     if (e.isBoss) { A.flashOf(A.body(e.rig.look, e.rig.outfit, e.rig.cape)); for (const m of ["angry", "hurt"]) A.flashOf(A.head(e.rig.look, m)); A.hat("krone", e.rig.hatRed); A.weapon(e.rig.wpn); continue; }
     for (const m of ["open", "hurt"]) A.flashOf(A.enemySprite(e.type, e.tint, m));
@@ -248,7 +252,9 @@ export function draw(G, dt) {
   R.Z = R.Z0 * R.cz; R.U = 64 * R.Z;
   // Kamera (Boss-Intro/Phasenwechsel/Sieg: kurz zum Boss schwenken)
   const cf = G.camFocus;
-  let tx = cf ? p.x + (cf.x - p.x) * 0.7 : p.x + (p.vx || 0) * 0.3, ty = cf ? p.y + (cf.y - p.y) * 0.7 : p.y + (p.vy || 0) * 0.3;
+  // (v11: cf.w = Gewicht zum Ziel, cf.up = Ziel um so viele Design-Pixel nach oben schieben — hohe Bosse beim Auftritt ganz im Bild)
+  const cw = cf ? cf.w ?? 0.7 : 0, cu = cf && cf.up ? cf.up / 32 : 0;
+  let tx = cf ? p.x + (cf.x - cu - p.x) * cw : p.x + (p.vx || 0) * 0.3, ty = cf ? p.y + (cf.y - cu - p.y) * cw : p.y + (p.vy || 0) * 0.3;
   if (!cf && bz) { const b = G.boss, d = Math.hypot(b.x - p.x, b.y - p.y), k = d > 0.1 ? Math.min(d, 7) * 0.4 / d : 0; tx += (b.x - p.x) * k; ty += (b.y - p.y) * k; }
   // v8: Nachführung skaliert mit dem Tempo — Abstand Kamera↔Kobold in Kacheln bleibt wie bei 3,6 (nichts hinkt hinterher)
   const f = Math.min(1, dt * 6 * clamp(Math.hypot(p.vx || 0, p.vy || 0) / PLAYER.speed0, 1, 1.5));
@@ -274,6 +280,11 @@ export function draw(G, dt) {
     if (c) { ctx.drawImage(c.cv, sx, sy, c.W * Z, c.H * Z); nCh++; }
   }
   R.chunksVis = nCh;
+  // v11: Boss-Auftritt am Boden (Risse, aufbrechendes Loch); danach bleibt der Krater als Teil der Boden-Chunks liegen
+  const crt = L.arena && L.arena.crater;
+  if (crt && !crt.baked) bakeCrater(crt);
+  const RS = G.rise;
+  if (RS) { const [sx, sy] = toScreen(RS.x, RS.y); drawCrater(ctx, sx, sy, Z, RS, RS.ph === "quake" ? RS.u : 1, RS.ph === "quake" ? 0 : RS.open, RS.ph === "grow" ? "back" : "all", 0.9); }
 
   // --- Boden-Ebene: Treppe, Portal-Ringe, Warnkreise, Schockwellen, Schatten ---
   if (L.stairs) {
@@ -372,6 +383,7 @@ export function draw(G, dt) {
   }
   for (const it of G.items) shadowAt(it.x, it.y, 0.32, 0.8);
   for (const s of G.shots) shadowAt(s.x, s.y, 0.3, 0.5);
+  if (RS && (RS.ph === "grow" || RS.ph === "land")) { const b = RS.b; shadowAt(RS.x, RS.y, b.scale * (b.isMini ? 0.75 : 1.1) * Math.min(1, RS.lift), b.fly ? 0.55 : 0.9); }
   ctx.globalAlpha = 1;
   for (const r of FX.rings) {
     const [sx, sy] = toScreen(r.x, r.y), k = 1 - r.life / r.max;
@@ -399,6 +411,7 @@ export function draw(G, dt) {
   for (const po of portals) { const [sx, sy] = toScreen(po.x, po.y); if (onScreen(sx, sy, 160) && !po.locked) add(po.x + po.y, 8, po, sx, sy); }
   if (L.npc) { const [sx, sy] = toScreen(L.npc.x, L.npc.y); add(L.npc.x + L.npc.y, 7, L.npc, sx, sy); }
   for (const e of G.ents) { const [sx, sy] = toScreen(e.x, e.y); if (onScreen(sx, sy, e.isBoss ? 300 : 140)) add(e.x + e.y, 3, e, sx, sy); }
+  if (RS && (RS.ph === "grow" || RS.ph === "land")) { const [sx, sy] = toScreen(RS.x, RS.y); add(RS.x + RS.y, 9, RS, sx, sy); }
   { const [sx, sy] = toScreen(p.x, p.y); add(pd + 0.01, 4, p, sx, sy); }
   for (const it of G.items) { const [sx, sy] = toScreen(it.x, it.y); if (onScreen(sx, sy)) add(it.x + it.y, 5, it, sx, sy); }
   for (const s of G.shots) { const [sx, sy] = toScreen(s.x, s.y); if (onScreen(sx, sy)) add(s.x + s.y, 6, s, sx, sy); }
@@ -438,6 +451,7 @@ export function draw(G, dt) {
         ctx.restore();
         break;
       }
+      case 9: drawRise(ctx, e.o, e.sx, e.sy); break;
     }
   }
   ctx.globalAlpha = 1;
@@ -551,8 +565,105 @@ function allPortals(G) {
 /** Bosskampf in der Arena (Kobold in/nahe der Arena, Boss wach) → Kamera zoomt heraus */
 function bossZoom(G) {
   const b = G.boss, A = R.L && R.L.arena, p = G.p;
-  if (!b || !A || !b.awake || b.hp <= 0 || G.depth === 0) return false;
+  if (!b || !A || !(b.awake || G.rise) || b.hp <= 0 || G.depth === 0) return false;
   return p.x > A.x - 3 && p.y > A.y - 3 && p.x < A.x + A.w + 3 && p.y < A.y + A.h + 3;
+}
+
+// ---------- v11: Boss-Auftritt — Risse, Loch, Krater ----------
+/** Krater/Risse zeichnen. (X, Y) = Mitte in Pixeln des Ziel-Kontexts, S = Design → Pixel, k = Risslänge 0…1, open = Loch 0…1,
+ *  part = "all" | "back" | "front" (Vorderkante liegt über der aufsteigenden Figur), glow = Deckkraft der leuchtenden Risslinie.
+ *  Wird während des Auftritts pro Frame gezeichnet und danach einmal in die Boden-Chunks gebacken (gleiche Zufallsfolge → deckungsgleich). */
+function drawCrater(c, X, Y, S, cr, k, open, part, glow) {
+  const iso = (dx, dy) => [X + (dx - dy) * 32 * S, Y + (dx + dy) * 16 * S];
+  c.lineCap = "round"; c.lineJoin = "round";
+  if (part !== "front" && k > 0) {
+    c.beginPath();
+    for (const pts of cr.cracks) {
+      const n = pts.length - 1, upto = k * n;
+      for (let i = 0; i <= n && i <= upto + 1; i++) {
+        let [px, py] = pts[i];
+        if (i > upto) { const f = upto - (i - 1), [qx, qy] = pts[i - 1]; px = qx + (px - qx) * f; py = qy + (py - qy) * f; }
+        const [sx, sy] = iso(px, py);
+        if (i) c.lineTo(sx, sy); else c.moveTo(sx, sy);
+      }
+    }
+    c.strokeStyle = "rgba(16,6,20,.78)"; c.lineWidth = 5.5 * S; c.stroke();
+    c.globalAlpha = glow; c.strokeStyle = cr.col; c.lineWidth = 1.9 * S; c.stroke(); c.globalAlpha = 1;
+  }
+  if (open <= 0) return;
+  const r = cr.hole * (0.3 + 0.7 * open), rx = 0.707 * r * 64 * S, ry = rx * 0.5, rnd = mulberry32(cr.seed);
+  if (part !== "front") {
+    c.fillStyle = shade(cr.earth, -0.3); c.beginPath(); c.ellipse(X, Y, rx * 1.2, ry * 1.24, 0, 0, TAU); c.fill();      // aufgeworfener Erdwall
+    c.fillStyle = shade(cr.earth, -0.55); c.beginPath(); c.ellipse(X, Y, rx, ry, 0, 0, TAU); c.fill();                    // Rückwand der Grube
+    c.fillStyle = "#07030b"; c.beginPath(); c.ellipse(X, Y + ry * 0.2, rx * 0.86, ry * 0.76, 0, 0, TAU); c.fill();         // Tiefe
+    c.globalAlpha = 0.16 * glow; c.fillStyle = cr.col; c.beginPath(); c.ellipse(X, Y + ry * 0.3, rx * 0.4, ry * 0.3, 0, 0, TAU); c.fill(); c.globalAlpha = 1;   // Glimmen tief unten
+  }
+  // Brocken rund um den Rand (hinten: unter der Figur, vorne: als Vorderkante darüber)
+  const N = Math.round(9 + cr.hole * 5);
+  for (let i = 0; i < N; i++) {
+    const a = (i + rnd() * 0.6) / N * TAU, rr = r * (1.02 + rnd() * 0.25), sz = (5 + rnd() * 6) * S * (0.5 + 0.5 * open), v = rnd();
+    const front = Math.cos(a) + Math.sin(a) > 0;
+    if ((part === "back" && front) || (part === "front" && !front)) continue;
+    const [px, py] = iso(Math.cos(a) * rr, Math.sin(a) * rr);
+    c.beginPath();
+    for (let j = 0; j < 6; j++) { const b = j / 6 * TAU, q = sz * (0.75 + 0.35 * ((v * 7 + j * 3.7) % 1)); const qx = px + Math.cos(b) * q, qy = py + Math.sin(b) * q * 0.7; if (j) c.lineTo(qx, qy); else c.moveTo(qx, qy); }
+    c.closePath(); c.fillStyle = shade(cr.earth, 0.05 + v * 0.22); c.fill();
+    c.strokeStyle = "rgba(20,8,24,.7)"; c.lineWidth = 1.4 * S; c.stroke();
+  }
+  if (part === "front") {                                       // Vorderkante: Erdlippe vor der Grube
+    c.strokeStyle = shade(cr.earth, -0.2); c.lineWidth = 5 * S;
+    c.beginPath(); c.ellipse(X, Y, rx * 1.02, ry * 1.05, 0, 0.12, Math.PI - 0.12); c.stroke();
+  }
+}
+/** aufsteigender Boss: nur der Teil über dem Boden (Clip-Kante = Lochmitte), danach Vorderkante des Lochs darüber */
+function drawRise(ctx, RS, sx, sy) {
+  const b = RS.b, Z = R.Z, H = (b.isMini ? 95 : 150) * b.scale * Z;
+  const off = RS.fly ? 0 : (1 - RS.lift) * H, clip = RS.ph === "grow";
+  if (clip) { ctx.save(); ctx.beginPath(); ctx.rect(-20, -20, R.VW + 40, sy + 20 + 1.5 * Z); ctx.clip(); }
+  drawEnemy(ctx, b, sx, sy + off);
+  if (clip) { ctx.restore(); drawCrater(ctx, sx, sy, Z, RS, 1, 1, "front", 0.9); }
+}
+/** Leuchten im Glow-Pass: Bodenrune lädt sich auf, Risse glühen, beim Aufbruch Lichtstrahl nach oben */
+function riseGlow(ctx, RS, g) {
+  const Z = R.Z, T = R.t, big = RS.b.isKing ? 1.4 : RS.b.isMini ? 0.85 : 1, [sx, sy] = toScreen(RS.x, RS.y);
+  const k = RS.ph === "quake" ? RS.u : 1;
+  const ga = RS.ph === "quake" ? 0.2 + 0.5 * k : RS.ph === "burst" ? 0.8 : RS.ph === "grow" ? 0.3 * (1 - RS.u) : 0;   // Rune lädt sich auf, verglimmt beim Herauswachsen
+  if (ga > 0) g(RS.x, RS.y, 4, (110 + 150 * k) * big, RS.col, ga * (0.85 + 0.15 * Math.sin(T * 31)));
+  if (RS.ph === "quake" || RS.ph === "burst") {                  // Risse glühen additiv nach
+    ctx.globalAlpha = 0.45 * k; ctx.strokeStyle = RS.col; ctx.lineWidth = 4 * Z; ctx.lineCap = "round"; ctx.beginPath();
+    for (const pts of RS.cracks) { const n = pts.length - 1, upto = k * n; pts.forEach(([px, py], i) => { if (i > upto) return; const x = sx + (px - py) * 32 * Z, y = sy + (px + py) * 16 * Z; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }); }
+    ctx.stroke();
+  }
+  const beam = RS.ph === "burst" ? Math.min(1, RS.u * 3) : RS.ph === "grow" ? Math.max(0, 1 - RS.u / 0.4) : 0;
+  if (beam > 0) {                                               // Licht-/Glutstrahl aus dem Loch
+    const s = A.tinted(A.fx("glow"), RS.col), w = 170 * Z * big, h = 760 * Z * big;
+    ctx.globalAlpha = 0.85 * beam; ctx.drawImage(s.cv, sx - w / 2, sy - h * 0.92, w, h);
+    ctx.globalAlpha = 0.7 * beam; ctx.drawImage(A.fx("glow").cv, sx - w * 0.17, sy - h * 0.8, w * 0.34, h * 0.8);
+  }
+  ctx.globalAlpha = 1;
+}
+/** Krater einmal in alle vorhandenen Boden-Chunks malen (neue Chunks bekommen ihn in chunk()) — keine Kosten pro Frame */
+function bakeCrater(cr) {
+  const t0 = performance.now();
+  cr.baked = true;
+  cr.ext = Math.max(cr.hole * 1.4, ...cr.cracks.map(p => Math.max(...p.map(([x, y]) => Math.hypot(x, y))))) + 0.6;
+  for (const [key, c] of R.chunks) if (c) paintCraterOn(c, key % 64, Math.floor(key / 64), cr);
+  R.bakeMs = +(performance.now() - t0).toFixed(2);
+}
+function paintCraterOn(c, cx, cy, cr) {
+  const x0 = cx * CH, y0 = cy * CH, e = cr.ext || 6, m = R.L.map;
+  if (cr.x + e < x0 || cr.x - e > x0 + CH || cr.y + e < y0 || cr.y - e > y0 + CH) return;
+  const g = c.cv.getContext("2d");
+  g.save(); g.setTransform(c.K, 0, 0, c.K, 0, 0);
+  g.beginPath();                                                // nur auf den eigenen Bodenkacheln (keine doppelten Ränder an Chunk-Grenzen)
+  for (let y = y0; y < Math.min(m.h, y0 + CH); y++) for (let x = x0; x < Math.min(m.w, x0 + CH); x++) {
+    if (m.solid[y * m.w + x]) continue;
+    const sx = (x - y) * 32 - c.ox, sy = (x + y) * 16 - c.oy;
+    g.moveTo(sx, sy); g.lineTo(sx + 32, sy + 16); g.lineTo(sx, sy + 32); g.lineTo(sx - 32, sy + 16); g.closePath();
+  }
+  g.clip();
+  drawCrater(g, (cr.x - cr.y) * 32 - c.ox, (cr.x + cr.y) * 16 - c.oy, 1, cr, 1, 1, "all", 0.5);
+  g.restore();
 }
 
 function drawPlayer(ctx, p, sx, sy, G) {
@@ -786,10 +897,10 @@ function drawParticles(ctx, additive) {
     const size = (p.s1 + (p.s0 - p.s1) * k) * Z;
     if (size <= 0.3) continue;
     const base = A.fx(p.kind);
-    const s = p.col === "#fff" || p.col === "#ffffff" ? base : A.tinted(base, p.col);
+    const s = p.kind === "rock" ? A.multiplied(base, p.col) : p.col === "#fff" || p.col === "#ffffff" ? base : A.tinted(base, p.col);
     ctx.globalAlpha = Math.min(1, k * (1 + (1 - p.fade) * 4));
     const w = size, h = size * s.h / s.w;
-    if (p.kind === "star" || p.kind === "star5" || p.kind === "conf") {
+    if (p.kind === "star" || p.kind === "star5" || p.kind === "conf" || p.kind === "rock") {
       ctx.save(); ctx.translate(sx, sy); ctx.rotate(p.rot); ctx.drawImage(s.cv, -w / 2, -h / 2, w, h); ctx.restore();
     } else ctx.drawImage(s.cv, sx - w / 2, sy - h / 2, w, h);
   }
@@ -837,6 +948,7 @@ function lighting(G, B, portals) {
   if (p.spinT > 0) light(p.x, p.y, 3.4, "#fff8e0", p.spinT / 0.28 * 0.7);
   for (const t of G.teles) { if (t.t < 0) continue; if (t.burn) { light(t.x, t.y, t.r * 1.6, "#ff8a3a", 0.8); continue; } if (t.kind === "ring") { light(t.x, t.y, t.r * 1.2, "#ffe0e6", 0.8); continue; } if (t.kind === "line") light((t.x + t.x2) / 2, (t.y + t.y2) / 2, Math.hypot(t.x2 - t.x, t.y2 - t.y) * 0.55, "#ffe0e6", 0.6); else light(t.x, t.y, t.r * 1.5, "#ffe0e6", 0.95); }
   if (L.traps) for (const tr of L.traps) if (tr.st === 1) light(tr.x, tr.y, 1.4, "#ff9ab0", 0.6);
+  if (G.rise) { const RS = G.rise, kk = RS.ph === "quake" ? RS.u : RS.ph === "burst" ? 1 : RS.ph === "grow" ? 1 - 0.4 * RS.u : 0.6 * (1 - RS.u); light(RS.x, RS.y, (2.4 + 3.2 * kk) * (RS.b.isKing ? 1.4 : 1), RS.col, 0.4 + 0.5 * kk); }
   l.globalAlpha = 1;
   l.globalCompositeOperation = "multiply";
   l.drawImage(R.vign, 0, 0);
@@ -876,6 +988,7 @@ function glowPass(ctx, G, B, portals) {
   if (L.wallTraps) for (const w of L.wallTraps) if (w.st === 1) { const k = Math.min(1, w.t / WALLTRAP.warn); g(w.x0, w.y0, 18, 40 + 50 * k, w.look.glow, 0.35 + 0.35 * k + 0.1 * Math.sin(T * 26)); }
   for (const s of G.shots) if (s.kind === "wall") g(s.x, s.y, s.z, 56, s.col, s.look === "ember" ? 0.55 : 0.3);
   drawGuide(ctx, G, "glow");
+  if (G.rise) riseGlow(ctx, G.rise, g);
   // v9: „mythisch“ glänzt — weiche Aura unter dem Kobold (klein und leise, Warnkreise der Bosse bleiben lesbar)
   { const M = p.look && p.look.myth && MYTH_BY_ID[p.look.myth]; if (M && M.aura) { const n = M.aura.length, k = (T * 0.6) % n, c1 = M.aura[Math.floor(k)], w = 1 + 0.08 * Math.sin(T * 3);
     g(p.x, p.y, 16, 150 * MYTH_FX.auraR * w, c1, 0.26); g(p.x, p.y, 60, 90 * w, M.aura[(Math.floor(k) + 1) % n], 0.14); } }

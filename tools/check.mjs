@@ -1,6 +1,7 @@
 // Koboldkeller 2 — Akzeptanz-Check (CHECKS.md)
 // node tools/check.mjs [--port=8731] [--throttle=4] [--no-perf] [--profile=gpu|software] [--v7=all|skip|only] [--hapsecs=60] [--ref=8732]
-// v7-Checks (V18–V21) in tools/checks_v7.mjs, v8 (V22–V25) in tools/checks_v8.mjs, v9-Kostüme (V26–V31) in tools/checks_v9.mjs (alle einzeln lauffähig).
+// v7-Checks (V18–V21) in tools/checks_v7.mjs, v8 (V22–V25) in tools/checks_v8.mjs, v9-Kostüme (V26–V31) in tools/checks_v9.mjs,
+// v10 Oma (V32) in tools/checks_v10.mjs, v11 Boss-Auftritt (V33) in tools/checks_v11.mjs (alle einzeln lauffähig).
 // Langer Lauf in Teilen: --v7=skip (A/B/C/V1–V17), dann --v7=only (V18–V31). --ref=PORT: v7-Vergleichsserver für Vorher/Nachher in V22.
 // Profil „gpu" (Standard): Chromium new-headless mit GPU-Raster (wie Canvas2D am Handy) und
 // ungedrosseltem Frame-Takt (--disable-gpu-vsync/--disable-frame-rate-limit), weil headless-rAF
@@ -13,6 +14,7 @@ import { runV7, GPU_FLAGS } from "./checks_v7.mjs";
 import { runV8 } from "./checks_v8.mjs";
 import { runV9 } from "./checks_v9.mjs";
 import { runV10 } from "./checks_v10.mjs";
+import { runV11 } from "./checks_v11.mjs";
 
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith("--" + k)); if (!a) return d; const v = a.split("=")[1]; return v === undefined ? true : v; };
 const PORT = +arg("port", 8731), THROTTLE = +arg("throttle", 4), PERF = !arg("no-perf", false), PROFILE = arg("profile", "gpu");
@@ -273,7 +275,9 @@ if (PERF) {
 
 // Boss Ebene 4
 await page.evaluate(() => { KK.god(true); KK.goto(4); KK.teleport("boss"); KK.G.p.x -= 3; KK.G.p.y -= 3; });
-await sleep(2200);
+// v11: der Boss wächst erst aus dem Boden (Auftritt ≈ 2,7 s), dann ist er wach
+await waitFor(page, () => KK.G.boss && KK.G.boss.awake && KK.G.ents.includes(KK.G.boss), null, 9000);
+await sleep(500);
 st = await S(page);
 R("B7a", "Ebene 4: Boss vorhanden & erwacht", !!st.boss && !!(await page.evaluate(() => KK.G.boss && KK.G.boss.awake)), st.boss && st.boss.name);
 await shot(page, "11_boss_ebene4");
@@ -291,7 +295,8 @@ for (const [d, n] of [[5, "13_ebene5_kristall"], [9, "14_ebene9_zucker"], [13, "
 }
 // Ebene 20 Kellerkönig
 await page.evaluate(() => { KK.goto(20); KK.teleport("boss"); KK.G.p.x -= 4.5; KK.G.p.y -= 4.5; });
-await sleep(2500);
+await waitFor(page, () => KK.G.boss && KK.G.boss.awake && KK.G.ents.includes(KK.G.boss), null, 10000);   // v11: Auftritt ≈ 3,5 s
+await sleep(800);
 st = await S(page);
 R("B7c", "Ebene 20: Kellerkönig riesig & knallrot mit Krone", st.boss && st.boss.king && st.boss.scale >= 2.5 && st.boss.skin === "#ff2a2a", JSON.stringify(st.boss));
 await shot(page, "17_kellerkoenig");
@@ -562,7 +567,8 @@ mkdirSync(V4, { recursive: true });
   const bossRes = [];
   for (const [d, sigs] of [[4, ["spores", "vines"]], [8, ["crystals", "prism"]], [12, ["candy", "rush"]], [16, ["icicles", "snowball"]], [20, ["meteors", "flameCross"]]]) {
     await p7.evaluate((d) => { KK.goto(d); KK.god(true); KK.G.portalCd = 1e9; KK.teleport("boss"); KK.G.p.x -= 3.2; KK.G.p.y -= 3.2; }, d);
-    await sleep(2600);
+    await waitFor(p7, () => KK.G.boss && KK.G.boss.awake && KK.G.ents.includes(KK.G.boss), null, 10000);   // v11: erst der Auftritt
+    await sleep(2000);
     const r = { d, phases: [], teles: [] };
     for (let ph = 1; ph <= 3; ph++) {
       if (ph > 1) { await p7.evaluate((ph) => { const b = KK.G.boss; b.hp = b.maxHp * (ph === 2 ? 0.6 : 0.3); KK.bossHit(); }, ph); await sleep(1800); }
@@ -703,11 +709,11 @@ if (PERF) {
   if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
   await p11.evaluate(() => {
     KK.god(true); KK.goto(20); KK.G.portalCd = 1e9; KK.teleport("boss"); KK.G.p.x -= 2.5; KK.G.p.y -= 2.5;
-    setTimeout(() => { const b = KK.G.boss; b.hp = b.maxHp * 0.3; KK.bossHit(); }, 2500);
+    setTimeout(() => { const b = KK.G.boss; b.hp = b.maxHp * 0.3; KK.bossHit(); }, 4200);   // v11: nach dem Auftritt (≈ 3,5 s)
     let i = 0; const atk = ["meteors", "flameCross", "fireRing", "meteors", "slam"];
-    window.__bf = setInterval(() => { const b = KK.G.boss; if (!b) return; b.hp = Math.max(b.hp, b.maxHp * 0.2); if (b.state !== "phase" && b.state !== "intro" && (b.state !== "atk" || Math.random() < 0.3)) KK.bossAtk(atk[i++ % atk.length]); KK.attack(); if (Math.random() < 0.3) { KK.G.p.ammo = 20; KK.bubbles(); } if (Math.random() < 0.08) { KK.G.p.spec = 1; KK.special(); } for (const e of KK.G.ents) if (e.minion && e.hp < 3) e.hp = 30; KK.wave(9); window.__maxMin = Math.max(window.__maxMin || 0, KK.arena().count); window.__maxCh = Math.max(window.__maxCh || 0, KK.R.chunksVis || 0); }, 300);
+    window.__bf = setInterval(() => { const b = KK.G.boss; if (!b || KK.G.rise) return; b.hp = Math.max(b.hp, b.maxHp * 0.2); if (b.state !== "phase" && b.state !== "intro" && (b.state !== "atk" || Math.random() < 0.3)) KK.bossAtk(atk[i++ % atk.length]); KK.attack(); if (Math.random() < 0.3) { KK.G.p.ammo = 20; KK.bubbles(); } if (Math.random() < 0.08) { KK.G.p.spec = 1; KK.special(); } for (const e of KK.G.ents) if (e.minion && e.hp < 3) e.hp = 30; KK.wave(9); window.__maxMin = Math.max(window.__maxMin || 0, KK.arena().count); window.__maxCh = Math.max(window.__maxCh || 0, KK.R.chunksVis || 0); }, 300);
   });
-  await sleep(4500);
+  await sleep(6000);                                      // v11: Auftritt (3,5 s) + Wut-Phasenwechsel abwarten
   await p11.evaluate(() => KK.perf(true));
   await sleep(6000);
   const fb = await p11.evaluate(() => { clearInterval(window.__bf); return { ...KK.perf(), teles: KK.G.teles.length, minions: window.__maxMin, cap: KK.arena().cap, zoom: KK.state().zoom, chunks: window.__maxCh }; });
@@ -928,6 +934,7 @@ if (V7MODE !== "skip") await runV7({ browser, BASE, R, errors, secs: HAPSECS });
 if (V7MODE !== "skip") await runV8({ browser, BASE, R, errors, REF });
 if (V7MODE !== "skip") await runV9({ browser, BASE, R, errors });
 if (V7MODE !== "skip") await runV10({ browser, BASE, R, errors });
+if (V7MODE !== "skip") await runV11({ browser, BASE, R, errors, throttle: THROTTLE });
 R("A1", "Keine pageerrors/console.errors (hoch + quer)", errors.length === 0, errors.length ? errors.slice(0, 5).join(" | ") : "0");
 R("A5", "Keine externen Requests", foreign.length === 0, foreign.length ? foreign.slice(0, 3).join(", ") : "0");
 await browser.close();

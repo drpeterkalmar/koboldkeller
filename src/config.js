@@ -353,6 +353,13 @@ const AT = {
 export const ARENA = Object.fromEntries(Object.entries(AT).map(([d, a]) => [d, { size: a[0], pillars: a[1], wave: a[2], n: a[3], cap: a[4] }]));
 export const MINION_CAP = 9;                 // Performance-Deckel: nie mehr Handlanger gleichzeitig (auch MEGASCHWER)
 export const MINION = { spawnT: 0.8, first: 3, hp: 0.75, xp: 1 / 3 };   // Spawn-Kreis 0,8 s vorher, erste Welle 3 s nach dem Intro
+// v11: Boss-Auftritt (Sekunden je Abschnitt): Beben → Aufbruch → Herauswachsen → Landung; hole = Loch-Radius,
+// crack = Risslänge (Kacheln), n = Anzahl Risse. Haupt-Boss ≈ 2,65 s, Mini ≈ 2,25 s, Kellerkönig ≈ 3,5 s.
+export const RISE = {
+  main: { quake: 0.7, burst: 0.3, grow: 1.25, land: 0.4, hole: 1.7, crack: 3.4, n: 8 },
+  mini: { quake: 0.6, burst: 0.3, grow: 1.0, land: 0.35, hole: 1.8, crack: 3.0, n: 7 },
+  king: { quake: 1.0, burst: 0.4, grow: 1.6, land: 0.5, hole: 2.5, crack: 5.0, n: 11 },
+};
 
 // ---------- v8: Wand-Schützen (Wandfallen) ----------
 // Ein Steingesicht in der Wand bläht sich warn s lang auf (Glühen + Bodenlinie + Ton), dann fliegt EIN Geschoss geradeaus quer durch

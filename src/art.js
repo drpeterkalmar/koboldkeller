@@ -1013,6 +1013,13 @@ export function fx(kind) {
       for (const [x, y, r] of [[16, 22, 12], [28, 16, 13], [34, 25, 10], [22, 28, 9]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
     });
     case "conf": return spr("fx:conf", 16, 16, 8, 8, (c) => { c.fillStyle = "#fff"; c.beginPath(); c.roundRect(2, 5, 12, 6, 2); c.fill(); });
+    // v11: Erdbrocken (Boss-Auftritt) — hell oben, dunkler unten; wird multipliziert eingefärbt (Schattierung bleibt)
+    case "rock": return spr("fx:rock", 20, 18, 10, 9, (c) => {
+      const P = [[3, 9], [6, 3], [12, 2], [17, 6], [17, 12], [11, 16], [4, 14]];
+      c.beginPath(); P.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath();
+      c.fillStyle = "#9a9a9a"; c.fill(); c.strokeStyle = "#2a2a2a"; c.lineWidth = 1.6; c.stroke();
+      c.beginPath(); c.moveTo(4, 9); c.lineTo(6.5, 4); c.lineTo(12, 3.2); c.lineTo(16, 6.5); c.lineTo(11, 9.5); c.closePath(); c.fillStyle = "#ffffff"; c.fill();
+    });
     case "heart": return spr("fx:heart", 28, 26, 14, 13, (c) => { c.beginPath(); heartPath(c, 14, 13, 9); c.fillStyle = "#fff"; c.fill(); });
     case "ring": return spr("fx:ring", 128, 128, 64, 64, (c) => {
       c.strokeStyle = "#fff"; c.lineWidth = 7; c.beginPath(); c.arc(64, 64, 58, 0, TAU); c.stroke();

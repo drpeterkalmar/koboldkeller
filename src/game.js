@@ -182,7 +182,7 @@ export function buildLevel(depth) {
   const bk = bossKindOf(depth);
   const L = depth === 0 ? buildTown(seed) : buildDungeon(seed, depth, G.biome, diffOf(depth).room, bk ? ARENA[depth] : null);
   G.L = L;
-  G.ents = []; G.items = []; G.shots = []; G.teles = []; G.spawns = []; G.boss = null; G.later = []; G.specFx = null; G.camFocus = null;
+  G.ents = []; G.items = []; G.shots = []; G.teles = []; G.spawns = []; G.boss = null; G.later = []; G.specFx = null; G.camFocus = null; G.rise = null;
   if (L.stairs) {
     // v5: Auf Boss-Ebenen ist die Treppe (Ebene 20: das 20. Portal) versiegelt, solange der Boss dieser Ebene nicht besiegt ist
     L.bossKind = bk; L.stairs.sealed = !!bk && !G.bossDone.includes(depth); L.stairs.armed = true;
@@ -248,8 +248,8 @@ function populate(L, depth) {
   // Boss
   if (L.isBoss) {
     const a = L.arena;
-    const boss = makeEnt(depth >= 20 ? "king" : L.bossKind === "mini" ? "mini" : "boss", a.cx, a.cy);
-    G.ents.push(boss); G.boss = boss;
+    // v11: Boss angelegt (HUD/Musik/Tests lesen G.boss), aber NICHT in G.ents — er wächst erst aus dem Boden, wenn der Kobold in der Arena steht
+    G.boss = makeEnt(depth >= 20 ? "king" : L.bossKind === "mini" ? "mini" : "boss", a.cx, a.cy);
   }
   // Fallen (Pieks-Platten): nicht am Eingang, nicht in der Boss-Arena
   L.traps = [];
@@ -906,7 +906,7 @@ function triggers(dt) {
   }
   // Heimportal: unsichtbar/unbenutzbar, solange versteckt; danach erst nach Verlassen scharf
   const hp = L.homePortal;
-  if (hp && !hp.hidden && !bossFight()) {                 // v5: kein Heimportal mitten im Bosskampf
+  if (hp && !hp.hidden && !bossFight() && !G.rise) {      // v5: kein Heimportal mitten im Bosskampf (v11: auch nicht im Auftritt)
     const d = Math.hypot(hp.x - p.x, hp.y - p.y);
     if (d > 1.6) L.homeArmed = true;
     if (L.homeArmed && d < 0.6) { G.portalCd = 2; SFX.portal(); haptic("stairs"); enterLevel(0); return; }
