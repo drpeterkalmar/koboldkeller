@@ -1,0 +1,125 @@
+{
+  "tag": "nachher",
+  "q": "",
+  "shots": [
+    {
+      "nm": "menu",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_menu_hoch.png"
+    },
+    {
+      "nm": "stadt",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_stadt_hoch.png",
+      "depth": 0
+    },
+    {
+      "nm": "moos",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_moos_hoch.png",
+      "depth": 1
+    },
+    {
+      "nm": "kristall",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_kristall_hoch.png",
+      "depth": 5
+    },
+    {
+      "nm": "zucker",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_zucker_hoch.png",
+      "depth": 9
+    },
+    {
+      "nm": "frost",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_frost_hoch.png",
+      "depth": 13
+    },
+    {
+      "nm": "glut",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_glut_hoch.png",
+      "depth": 17
+    },
+    {
+      "nm": "boss",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_boss_hoch.png",
+      "depth": 4
+    },
+    {
+      "nm": "bossdown",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_bossdown_hoch.png",
+      "depth": 8
+    },
+    {
+      "nm": "sieg",
+      "tag": "hoch",
+      "file": "tests/shots/deko/nachher_sieg_hoch.png",
+      "depth": 20
+    },
+    {
+      "nm": "menu",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_menu_quer.png"
+    },
+    {
+      "nm": "stadt",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_stadt_quer.png",
+      "depth": 0
+    },
+    {
+      "nm": "moos",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_moos_quer.png",
+      "depth": 1
+    },
+    {
+      "nm": "kristall",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_kristall_quer.png",
+      "depth": 5
+    },
+    {
+      "nm": "zucker",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_zucker_quer.png",
+      "depth": 9
+    },
+    {
+      "nm": "frost",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_frost_quer.png",
+      "depth": 13
+    },
+    {
+      "nm": "glut",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_glut_quer.png",
+      "depth": 17
+    },
+    {
+      "nm": "boss",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_boss_quer.png",
+      "depth": 4
+    },
+    {
+      "nm": "bossdown",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_bossdown_quer.png",
+      "depth": 8
+    },
+    {
+      "nm": "sieg",
+      "tag": "quer",
+      "file": "tests/shots/deko/nachher_sieg_quer.png",
+      "depth": 20
+    }
+  ],
+  "errors": []
+}

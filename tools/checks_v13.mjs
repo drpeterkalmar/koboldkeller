@@ -91,7 +91,7 @@ export async function runV13({ browser, BASE, R, errors, perf = false, perfBrows
   }
   // V35d — Speicher + Ladegröße + externe Requests
   {
-    const html = readFileSync("index.html", "utf8"), files = ["index.html", "style.css", "manifest.webmanifest", ...[...html.matchAll(/"\.\/(src\/[a-z0-9]+\.js)\?v=\d+"/g)].map(m => m[1])];
+    const html = readFileSync("index.html", "utf8"), files = ["index.html", "style.css", "manifest.webmanifest", ...[...html.matchAll(/"\.\/(src\/[a-z0-9]+\.js)\?v=[\d.]+"/g)].map(m => m[1])];
     const uniq = [...new Set(files)];
     let gz = 0; for (const f of uniq) gz += gzipSync(readFileSync(f), { level: 9 }).length;
     let gzDeko = gzipSync(readFileSync("src/deko.js"), { level: 9 }).length;

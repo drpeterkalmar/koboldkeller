@@ -25,6 +25,8 @@ const [VW, VH] = FMT === "quer" ? [915, 412] : [412, 915];
 
 async function open(S) {
   const ctx = await browser.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: 2.6, hasTouch: true, isMobile: true, locale: "de-AT" });
+  // gleicher Zufall in beiden Ständen (v13 verbraucht für Optik keinen Spiel-Zufall, siehe V35b) → Gegner/Beute laufen vergleichbar
+  await ctx.addInitScript(() => { Math.random = (() => { let s = 777; return () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296); })(); });
   const page = await ctx.newPage();
   const load = { bytes: 0, gz: 0, n: 0, ext: 0 };
   page.on("response", async r => { try { const u = r.url(); if (!u.startsWith("http://localhost")) { load.ext++; return; } const b = await r.body(); load.n++; load.bytes += b.length; load.gz += gzipSync(b, { level: 9 }).length; } catch (e) { } });
@@ -50,6 +52,7 @@ async function scene(P, nm, q) {
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   await page.evaluate(async ([nm, q]) => {
     const w = ms => new Promise(r => setTimeout(r, ms)), G = KK.G;
+    { let s = 777; Math.random = () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296); }   // je Szene gleicher Startpunkt
     clearInterval(window.__walk); clearInterval(window.__fight);
     G.bossDone = []; G.winQueued = false;
     const d = nm === "moos" ? 1 : nm === "kampf" ? 9 : 8;
@@ -73,8 +76,7 @@ async function scene(P, nm, q) {
   await page.evaluate(() => { window.__ft.length = 0; window.__on = true; });
   await sleep(SECS * 1000);
   const r = await page.evaluate(() => { window.__on = false; const a = window.__ft.slice().sort((x, y) => x - y), n = a.length; const q = f => +a[Math.min(n - 1, Math.floor(n * f))].toFixed(2);
-    return { n, p50: q(0.5), p95: q(0.95), p99: q(0.99), fps: +(1000 / (a.reduce((s, v) => s + v, 0) / n)).toFixed(1), q: KK.R.q, parts: KK.G ? undefined : 0, chunks: KK.R.chunksVis }; });
-  r.parts = await page.evaluate(() => KK.R.G && window.KK ? (KK.R.decoStats ? KK.R.decoStats() : null) : null);
+    return { n, p50: q(0.5), p95: q(0.95), p99: q(0.99), fps: +(1000 / (a.reduce((s, v) => s + v, 0) / n)).toFixed(1), q: KK.R.q, chunks: KK.R.chunksVis, all: window.__ft.map(v => +v.toFixed(2)) }; });
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   return r;
 }
@@ -93,13 +95,17 @@ const med = a => { const v = a.slice().sort((x, y) => x - y); return +((v[(v.len
 const agg = [];
 for (const q of QS) for (const nm of SCENES) {
   const a = res.filter(r => r.who === A.name && r.q === q && r.nm === nm), b = res.filter(r => r.who === B.name && r.q === q && r.nm === nm);
-  agg.push({ q, nm, aP50: med(a.map(r => r.p50)), bP50: med(b.map(r => r.p50)), aP95: med(a.map(r => r.p95)), bP95: med(b.map(r => r.p95)), aFps: med(a.map(r => r.fps)), bFps: med(b.map(r => r.fps)) });
+  // gepoolt: alle Frames aller Wiederholungen zusammen (p95 eines einzelnen Fensters ist nur der drittgrößte Wert → verrauscht)
+  const pool = rs => { const v = rs.flatMap(r => r.all).sort((x, y) => x - y); return { p50: +v[v.length >> 1].toFixed(2), p95: +v[Math.floor(v.length * 0.95)].toFixed(2), n: v.length, fps: +(1000 / (v.reduce((s, x) => s + x, 0) / v.length)).toFixed(1) }; };
+  const pa = pool(a), pb = pool(b);
+  agg.push({ q, nm, aP50: pa.p50, bP50: pb.p50, aP95: pa.p95, bP95: pb.p95, aFps: pa.fps, bFps: pb.fps, aN: pa.n, bN: pb.n, aP95med: med(a.map(r => r.p95)), bP95med: med(b.map(r => r.p95)) });
 }
-for (const g of agg) g.dP95 = +((g.bP95 / g.aP95 - 1) * 100).toFixed(1);
+for (const g of agg) { g.dP95 = +((g.bP95 / g.aP95 - 1) * 100).toFixed(1); g.dP50 = +((g.bP50 / g.aP50 - 1) * 100).toFixed(1); }
+for (const r of res) delete r.all;
 const out = { tag: TAG, profile: PROFILE, fmt: FMT, throttle: TH, secs: SECS, reps: REPS, A, B, loadA: PA.load, loadB: PB.load, agg, res, errors };
 await browser.close();
 writeFileSync(`${DIR}perf_${TAG}.json`, JSON.stringify(out, null, 2));
 console.log("\nStufe Szene | p50 " + A.name + " → " + B.name + " | p95 " + A.name + " → " + B.name + " (Δ) | fps");
-for (const g of agg) console.log(`q${g.q} ${g.nm.padEnd(6)} | ${g.aP50} → ${g.bP50} ms | ${g.aP95} → ${g.bP95} ms (${g.dP95 > 0 ? "+" : ""}${g.dP95} %) | ${g.aFps} → ${g.bFps}`);
+for (const g of agg) console.log(`q${g.q} ${g.nm.padEnd(6)} | ${g.aP50} → ${g.bP50} ms (${g.dP50 > 0 ? "+" : ""}${g.dP50} %) | ${g.aP95} → ${g.bP95} ms (${g.dP95 > 0 ? "+" : ""}${g.dP95} %) | ${g.aFps} → ${g.bFps}`);
 console.log(`Ladegröße ${A.name}: ${(PA.load.gz / 1024).toFixed(1)} KB gzip (${PA.load.n} Dateien, extern ${PA.load.ext}) · ${B.name}: ${(PB.load.gz / 1024).toFixed(1)} KB gzip (${PB.load.n} Dateien, extern ${PB.load.ext})`);
 console.log("Fehler:", errors.length, errors.slice(0, 3).join(" | "));

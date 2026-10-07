@@ -7,7 +7,7 @@
       "zoom": 1,
       "vis": 15,
       "rock": {
-        "ms": 0.8,
+        "ms": 0.3,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -24,7 +24,7 @@
       "zoom": 1,
       "vis": 6,
       "rock": {
-        "ms": 4.6,
+        "ms": 5.5,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -32,7 +32,7 @@
         "chunks": 24,
         "vis": 6
       },
-      "black": 0.1
+      "black": 0
     },
     {
       "nm": "kristall",
@@ -41,7 +41,7 @@
       "zoom": 1,
       "vis": 9,
       "rock": {
-        "ms": 2.4,
+        "ms": 1.2,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -49,7 +49,7 @@
         "chunks": 24,
         "vis": 9
       },
-      "black": 1.9
+      "black": 0
     },
     {
       "nm": "zucker",
@@ -58,7 +58,7 @@
       "zoom": 1,
       "vis": 13,
       "rock": {
-        "ms": 1.6,
+        "ms": 2.8,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -75,7 +75,7 @@
       "zoom": 1,
       "vis": 14,
       "rock": {
-        "ms": 1.8,
+        "ms": 1.2,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -83,7 +83,7 @@
         "chunks": 24,
         "vis": 14
       },
-      "black": 0.1
+      "black": 0
     },
     {
       "nm": "glut",
@@ -92,7 +92,7 @@
       "zoom": 1,
       "vis": 6,
       "rock": {
-        "ms": 1.4,
+        "ms": 1,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -100,7 +100,7 @@
         "chunks": 24,
         "vis": 6
       },
-      "black": 1.2
+      "black": 0.1
     },
     {
       "nm": "boss_e4",
@@ -109,7 +109,7 @@
       "zoom": 0.8,
       "vis": 18,
       "rock": {
-        "ms": 3.2,
+        "ms": 1.1,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -117,7 +117,7 @@
         "chunks": 36,
         "vis": 18
       },
-      "black": 0.9
+      "black": 0.6
     },
     {
       "nm": "boss_e20",
@@ -126,7 +126,7 @@
       "zoom": 0.8,
       "vis": 22,
       "rock": {
-        "ms": 2.5,
+        "ms": 0.9,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -134,7 +134,7 @@
         "chunks": 34,
         "vis": 22
       },
-      "black": 2.9
+      "black": 1.8
     },
     {
       "nm": "kante",
@@ -143,7 +143,7 @@
       "zoom": 1,
       "vis": 10,
       "rock": {
-        "ms": 3.6,
+        "ms": 0.8,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -151,7 +151,7 @@
         "chunks": 27,
         "vis": 10
       },
-      "black": 0.1
+      "black": 0
     },
     {
       "nm": "wackeln",
@@ -160,7 +160,7 @@
       "zoom": 1,
       "vis": 11,
       "rock": {
-        "ms": 2,
+        "ms": 25.1,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -168,7 +168,7 @@
         "chunks": 24,
         "vis": 11
       },
-      "black": 0.4
+      "black": 0
     },
     {
       "nm": "stadt",
@@ -177,7 +177,7 @@
       "zoom": 1,
       "vis": 15,
       "rock": {
-        "ms": 1.1,
+        "ms": 0.5,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -194,7 +194,7 @@
       "zoom": 1,
       "vis": 12,
       "rock": {
-        "ms": 5.7,
+        "ms": 1.1,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -202,7 +202,7 @@
         "chunks": 24,
         "vis": 12
       },
-      "black": 0.1
+      "black": 0
     },
     {
       "nm": "kristall",
@@ -211,7 +211,7 @@
       "zoom": 1,
       "vis": 10,
       "rock": {
-        "ms": 1.8,
+        "ms": 1,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -219,7 +219,7 @@
         "chunks": 24,
         "vis": 10
       },
-      "black": 0.9
+      "black": 0
     },
     {
       "nm": "zucker",
@@ -228,7 +228,7 @@
       "zoom": 1,
       "vis": 12,
       "rock": {
-        "ms": 3.8,
+        "ms": 14.8,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -245,7 +245,7 @@
       "zoom": 1,
       "vis": 14,
       "rock": {
-        "ms": 4.1,
+        "ms": 1,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -253,7 +253,7 @@
         "chunks": 24,
         "vis": 14
       },
-      "black": 0.1
+      "black": 0
     },
     {
       "nm": "glut",
@@ -262,7 +262,7 @@
       "zoom": 1,
       "vis": 12,
       "rock": {
-        "ms": 1.9,
+        "ms": 17.9,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -270,7 +270,7 @@
         "chunks": 24,
         "vis": 12
       },
-      "black": 2.5
+      "black": 0.6
     },
     {
       "nm": "boss_e4",
@@ -279,7 +279,7 @@
       "zoom": 0.84,
       "vis": 16,
       "rock": {
-        "ms": 3.3,
+        "ms": 1.2,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -296,7 +296,7 @@
       "zoom": 0.84,
       "vis": 23,
       "rock": {
-        "ms": 2,
+        "ms": 1,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -304,7 +304,7 @@
         "chunks": 34,
         "vis": 23
       },
-      "black": 2.3
+      "black": 1.8
     },
     {
       "nm": "kante",
@@ -313,7 +313,7 @@
       "zoom": 1,
       "vis": 9,
       "rock": {
-        "ms": 3.6,
+        "ms": 1,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -321,7 +321,7 @@
         "chunks": 28,
         "vis": 9
       },
-      "black": 0.1
+      "black": 0
     },
     {
       "nm": "wackeln",
@@ -330,7 +330,7 @@
       "zoom": 1,
       "vis": 11,
       "rock": {
-        "ms": 2.3,
+        "ms": 4.3,
         "bytes": 1289388,
         "w": 668,
         "h": 334,
@@ -338,7 +338,7 @@
         "chunks": 24,
         "vis": 11
       },
-      "black": 0.4
+      "black": 0
     }
   ],
   "ab": [
@@ -351,7 +351,7 @@
       "rock": {
         "fels": false
       },
-      "black": 61
+      "black": 57.9
     },
     {
       "nm": "kristall",
@@ -362,7 +362,7 @@
       "rock": {
         "fels": false
       },
-      "black": 71.2
+      "black": 69.2
     },
     {
       "nm": "glut",
@@ -373,14 +373,14 @@
       "rock": {
         "fels": false
       },
-      "black": 55.2
+      "black": 54.8
     }
   ],
   "perf": {
     "builds": [
       {
         "d": 0,
-        "ms": 1.7,
+        "ms": 0.5,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -390,7 +390,7 @@
       },
       {
         "d": 1,
-        "ms": 5,
+        "ms": 2.5,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -400,7 +400,7 @@
       },
       {
         "d": 5,
-        "ms": 1.7,
+        "ms": 3.2,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -410,7 +410,7 @@
       },
       {
         "d": 9,
-        "ms": 3.2,
+        "ms": 2.5,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -420,7 +420,7 @@
       },
       {
         "d": 13,
-        "ms": 28.6,
+        "ms": 29,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -430,7 +430,7 @@
       },
       {
         "d": 17,
-        "ms": 3.6,
+        "ms": 2.4,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -440,7 +440,7 @@
       },
       {
         "d": 20,
-        "ms": 5.7,
+        "ms": 0.8,
         "bytes": 1721388,
         "w": 772,
         "h": 386,
@@ -453,16 +453,16 @@
       {
         "th": 1,
         "fels": true,
-        "fps": 1028.7,
-        "p5": 769.2,
-        "frames": 2179,
-        "jsUpdate": 0.03,
-        "jsDraw": 0.72,
-        "avgAll": 866.9,
+        "fps": 686.5,
+        "p5": 434.8,
+        "frames": 1821,
+        "jsUpdate": 0.02,
+        "jsDraw": 0.4,
+        "avgAll": 732.4,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 0.6,
+        "drawMed": 0.2,
         "drawP95": 1,
         "drawN": 600,
         "vis": 11
@@ -470,342 +470,342 @@
       {
         "th": 1,
         "fels": false,
-        "fps": 949.7,
-        "p5": 769.2,
-        "frames": 2412,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.61,
-        "avgAll": 965.3,
+        "fps": 1085.5,
+        "p5": 1250,
+        "frames": 3257,
+        "jsUpdate": 0.01,
+        "jsDraw": 0.23,
+        "avgAll": 1289.3,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 0.6,
-        "drawP95": 1,
+        "drawMed": 0.2,
+        "drawP95": 0.3,
         "drawN": 600,
         "vis": 12
       },
       {
         "th": 1,
         "fels": false,
-        "fps": 1323,
-        "p5": 1000,
-        "frames": 2663,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.57,
-        "avgAll": 1060.5,
+        "fps": 1415.9,
+        "p5": 909.1,
+        "frames": 3341,
+        "jsUpdate": 0.01,
+        "jsDraw": 0.22,
+        "avgAll": 1335.4,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 0.6,
-        "drawP95": 0.9,
+        "drawMed": 0.2,
+        "drawP95": 0.6,
         "drawN": 600,
         "vis": 10
       },
       {
         "th": 1,
         "fels": true,
-        "fps": 1153.8,
-        "p5": 588.2,
-        "frames": 2405,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.7,
-        "avgAll": 959.9,
+        "fps": 1071.4,
+        "p5": 476.2,
+        "frames": 2350,
+        "jsUpdate": 0.01,
+        "jsDraw": 0.37,
+        "avgAll": 929.3,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 0.6,
-        "drawP95": 1.2,
+        "drawMed": 0.2,
+        "drawP95": 1.6,
         "drawN": 600,
         "vis": 13
       },
       {
         "th": 1,
         "fels": true,
-        "fps": 774.9,
-        "p5": 666.7,
-        "frames": 2256,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.72,
-        "avgAll": 883.5,
+        "fps": 786.6,
+        "p5": 476.2,
+        "frames": 2324,
+        "jsUpdate": 0.01,
+        "jsDraw": 0.38,
+        "avgAll": 924,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 0.7,
-        "drawP95": 1.9,
+        "drawMed": 0.3,
+        "drawP95": 1.7,
         "drawN": 600,
         "vis": 11
       },
       {
         "th": 1,
         "fels": false,
-        "fps": 1116.3,
-        "p5": 625,
-        "frames": 2468,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.61,
-        "avgAll": 991.8,
+        "fps": 1346.8,
+        "p5": 1111.1,
+        "frames": 3268,
+        "jsUpdate": 0.01,
+        "jsDraw": 0.23,
+        "avgAll": 1297.3,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 0.5,
-        "drawP95": 1.1,
-        "drawN": 600,
-        "vis": 9
-      },
-      {
-        "th": 1,
-        "fels": false,
-        "fps": 796.8,
-        "p5": 666.7,
-        "frames": 2527,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.59,
-        "avgAll": 978.7,
-        "scale": 2,
-        "q": 0,
-        "budget": 1,
-        "drawMed": 0.6,
-        "drawP95": 0.8,
-        "drawN": 600,
-        "vis": 12
-      },
-      {
-        "th": 1,
-        "fels": true,
-        "fps": 1327.4,
-        "p5": 1000,
-        "frames": 2484,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.66,
-        "avgAll": 990.2,
-        "scale": 2,
-        "q": 0,
-        "budget": 1,
-        "drawMed": 0.5,
+        "drawMed": 0.2,
         "drawP95": 0.7,
         "drawN": 600,
+        "vis": 9
+      },
+      {
+        "th": 1,
+        "fels": false,
+        "fps": 1354.4,
+        "p5": 1111.1,
+        "frames": 3287,
+        "jsUpdate": 0.02,
+        "jsDraw": 0.25,
+        "avgAll": 1313.2,
+        "scale": 2,
+        "q": 0,
+        "budget": 1,
+        "drawMed": 0.2,
+        "drawP95": 0.4,
+        "drawN": 600,
         "vis": 10
       },
       {
         "th": 1,
         "fels": true,
-        "fps": 785.9,
-        "p5": 454.5,
-        "frames": 2293,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.77,
-        "avgAll": 911,
+        "fps": 1172.4,
+        "p5": 625,
+        "frames": 2417,
+        "jsUpdate": 0.01,
+        "jsDraw": 0.33,
+        "avgAll": 956.7,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 0.9,
-        "drawP95": 2,
-        "drawN": 600,
-        "vis": 13
-      },
-      {
-        "th": 1,
-        "fels": false,
-        "fps": 1063.8,
-        "p5": 666.7,
-        "frames": 2514,
-        "jsUpdate": 0.02,
-        "jsDraw": 0.6,
-        "avgAll": 992,
-        "scale": 2,
-        "q": 0,
-        "budget": 1,
-        "drawMed": 0.5,
+        "drawMed": 0.2,
         "drawP95": 1.1,
         "drawN": 600,
-        "vis": 7
+        "vis": 10
+      },
+      {
+        "th": 1,
+        "fels": true,
+        "fps": 754,
+        "p5": 454.5,
+        "frames": 2306,
+        "jsUpdate": 0.01,
+        "jsDraw": 0.38,
+        "avgAll": 921.2,
+        "scale": 2,
+        "q": 0,
+        "budget": 1,
+        "drawMed": 0.3,
+        "drawP95": 1.8,
+        "drawN": 600,
+        "vis": 13
+      },
+      {
+        "th": 1,
+        "fels": false,
+        "fps": 1785.7,
+        "p5": 769.2,
+        "frames": 3167,
+        "jsUpdate": 0.02,
+        "jsDraw": 0.26,
+        "avgAll": 1256.2,
+        "scale": 2,
+        "q": 0,
+        "budget": 1,
+        "drawMed": 0.2,
+        "drawP95": 1,
+        "drawN": 600,
+        "vis": 10
       },
       {
         "th": 4,
         "fels": true,
-        "fps": 182.1,
-        "p5": 135.1,
-        "frames": 452,
-        "jsUpdate": 0.14,
-        "jsDraw": 3.84,
-        "avgAll": 179.5,
+        "fps": 730.6,
+        "p5": 277.8,
+        "frames": 1585,
+        "jsUpdate": 0.05,
+        "jsDraw": 0.96,
+        "avgAll": 633,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.7,
-        "drawP95": 5.7,
-        "drawN": 452,
+        "drawMed": 0.3,
+        "drawP95": 3.4,
+        "drawN": 600,
         "vis": 13
       },
       {
         "th": 4,
         "fels": false,
-        "fps": 185.1,
-        "p5": 138.9,
-        "frames": 454,
-        "jsUpdate": 0.14,
-        "jsDraw": 3.42,
-        "avgAll": 180.3,
+        "fps": 932.4,
+        "p5": 285.7,
+        "frames": 2242,
+        "jsUpdate": 0.03,
+        "jsDraw": 0.65,
+        "avgAll": 894.8,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.3,
-        "drawP95": 4.8,
-        "drawN": 454,
+        "drawMed": 0.2,
+        "drawP95": 3.2,
+        "drawN": 600,
         "vis": 10
       },
       {
         "th": 4,
         "fels": false,
-        "fps": 193.8,
-        "p5": 138.9,
-        "frames": 487,
-        "jsUpdate": 0.14,
-        "jsDraw": 3.26,
-        "avgAll": 193.5,
+        "fps": 783.8,
+        "p5": 270.3,
+        "frames": 2170,
+        "jsUpdate": 0.03,
+        "jsDraw": 0.65,
+        "avgAll": 865.9,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.1,
-        "drawP95": 4.7,
-        "drawN": 487,
+        "drawMed": 0.2,
+        "drawP95": 3.2,
+        "drawN": 600,
         "vis": 12
       },
       {
         "th": 4,
         "fels": true,
-        "fps": 174,
-        "p5": 122,
-        "frames": 463,
-        "jsUpdate": 0.13,
-        "jsDraw": 3.7,
-        "avgAll": 184.9,
+        "fps": 862.7,
+        "p5": 277.8,
+        "frames": 2012,
+        "jsUpdate": 0.03,
+        "jsDraw": 0.77,
+        "avgAll": 804.1,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.4,
-        "drawP95": 5.9,
-        "drawN": 463,
+        "drawMed": 0.2,
+        "drawP95": 3.3,
+        "drawN": 600,
         "vis": 11
       },
       {
         "th": 4,
         "fels": true,
-        "fps": 182.4,
-        "p5": 140.8,
-        "frames": 447,
-        "jsUpdate": 0.14,
-        "jsDraw": 3.74,
-        "avgAll": 177.8,
+        "fps": 860.5,
+        "p5": 285.7,
+        "frames": 2094,
+        "jsUpdate": 0.03,
+        "jsDraw": 0.73,
+        "avgAll": 835,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.5,
-        "drawP95": 5.5,
-        "drawN": 447,
+        "drawMed": 0.2,
+        "drawP95": 3.3,
+        "drawN": 600,
         "vis": 13
       },
       {
         "th": 4,
         "fels": false,
-        "fps": 193.9,
-        "p5": 140.8,
-        "frames": 501,
-        "jsUpdate": 0.13,
-        "jsDraw": 3.18,
-        "avgAll": 198.7,
+        "fps": 922.7,
+        "p5": 285.7,
+        "frames": 2181,
+        "jsUpdate": 0.02,
+        "jsDraw": 0.66,
+        "avgAll": 873.3,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3,
-        "drawP95": 4.5,
-        "drawN": 501,
+        "drawMed": 0.2,
+        "drawP95": 3.2,
+        "drawN": 600,
         "vis": 10
       },
       {
         "th": 4,
         "fels": false,
-        "fps": 202,
-        "p5": 151.5,
-        "frames": 496,
-        "jsUpdate": 0.14,
-        "jsDraw": 3.18,
-        "avgAll": 197.7,
+        "fps": 1049.4,
+        "p5": 294.1,
+        "frames": 2264,
+        "jsUpdate": 0.03,
+        "jsDraw": 0.65,
+        "avgAll": 903.6,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 2.9,
-        "drawP95": 4.7,
-        "drawN": 496,
+        "drawMed": 0.2,
+        "drawP95": 3.2,
+        "drawN": 600,
         "vis": 9
       },
       {
         "th": 4,
         "fels": true,
-        "fps": 172.9,
-        "p5": 128.2,
-        "frames": 438,
-        "jsUpdate": 0.14,
-        "jsDraw": 3.89,
-        "avgAll": 174.5,
+        "fps": 673.4,
+        "p5": 263.2,
+        "frames": 1971,
+        "jsUpdate": 0.03,
+        "jsDraw": 0.81,
+        "avgAll": 786.9,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.6,
-        "drawP95": 5.9,
-        "drawN": 438,
-        "vis": 10
+        "drawMed": 0.3,
+        "drawP95": 3.4,
+        "drawN": 600,
+        "vis": 13
       },
       {
         "th": 4,
         "fels": true,
-        "fps": 178.2,
-        "p5": 131.6,
-        "frames": 448,
-        "jsUpdate": 0.14,
-        "jsDraw": 3.82,
-        "avgAll": 178.6,
+        "fps": 897.5,
+        "p5": 277.8,
+        "frames": 2023,
+        "jsUpdate": 0.03,
+        "jsDraw": 0.77,
+        "avgAll": 808,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.6,
-        "drawP95": 5.7,
-        "drawN": 448,
-        "vis": 10
+        "drawMed": 0.2,
+        "drawP95": 3.3,
+        "drawN": 600,
+        "vis": 11
       },
       {
         "th": 4,
         "fels": false,
-        "fps": 194.4,
-        "p5": 137,
-        "frames": 484,
-        "jsUpdate": 0.13,
-        "jsDraw": 3.29,
-        "avgAll": 191.7,
+        "fps": 781.8,
+        "p5": 285.7,
+        "frames": 2201,
+        "jsUpdate": 0.02,
+        "jsDraw": 0.68,
+        "avgAll": 879.2,
         "scale": 2,
         "q": 0,
         "budget": 1,
-        "drawMed": 3.1,
-        "drawP95": 4.8,
-        "drawN": 484,
-        "vis": 10
+        "drawMed": 0.2,
+        "drawP95": 3.2,
+        "drawN": 600,
+        "vis": 12
       }
     ],
     "desk": {
-      "onMed": 0.6,
-      "offMed": 0.6,
-      "onP95": 1.2,
-      "offP95": 1,
-      "onFps": 1028.7,
-      "offFps": 1063.8
+      "onMed": 0.2,
+      "offMed": 0.2,
+      "onP95": 1.6,
+      "offP95": 0.6,
+      "onFps": 786.6,
+      "offFps": 1354.4
     },
     "thr": {
-      "onMed": 3.6,
-      "offMed": 3.1,
-      "onP95": 5.7,
-      "offP95": 4.7,
-      "onFps": 178.2,
-      "offFps": 193.9
+      "onMed": 0.2,
+      "offMed": 0.2,
+      "onP95": 3.3,
+      "offP95": 3.2,
+      "onFps": 860.5,
+      "offFps": 922.7
     }
   }
 }

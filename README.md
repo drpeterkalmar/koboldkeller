@@ -90,6 +90,12 @@ während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten pe
   bleibt. Die Wandkronen laufen in Brocken aus, vor den Wänden liegt Geröll. Eine langsamere Tiefen-Ebene (Wurzeln, Kristalle, Eiszapfen,
   Glutadern) und wenige glimmende Punkte geben Tiefe. Um die Stadt: Wiese und Wald. Alles einmal je Ebene vorgerendert (1 Füllaufruf pro Frame),
   Anteil schwarzer Pixel 42–71 % → 0–3 %. A/B-Vergleich: `?fels=0` (wie bisher).
+- **Mehr Details und Eye Candy (v13, [DEKO_BERICHT.md](DEKO_BERICHT.md)):** Boden-Kleinkram je Welt (Moos, Pilze, Pfützen mit Spiegelung,
+  Kristallsterne, Bonbons, Eisflächen, Lavatümpel, Knochen …), Wand-Schmuck (Banner, Spinnweben, Ranken, Eiszapfen, Zuckerguss, Lavanähte),
+  Fackel-Lichtkegel, schräge Lichtstrahlen mit Staub, leuchtende Lava/Kristalle, Glühteilchen, Vignette in Weltfarbe, Treffer-Funken,
+  Lichtpuff beim Besiegen, Lichtsäulen für Beute und Treppe, Strahlenkranz an Truhen, Boss-Auftritt mit Abdunkeln und Kamera-Heranrücken.
+  Statisches ist eingebacken (0 Kosten pro Bild), Effekte hängen an der Auto-Qualität (Stufe 3: nur Gebackenes), „Bewegung reduzieren“ wird
+  beachtet, die Optik nutzt eigenen Zufall (Beute bleibt gleich). A/B-Vergleich: `?deko=0` (wie v12).
 - **Schwierigkeitskurve:** Tabelle `DIFF` in `src/config.js` — mehr/zähere/schnellere Gegner je Ebene, Elite-Gegner mit Krone,
   Pieks-Platten-Fallen, engere Räume, neue Muster (Schleime teilen sich, 3er-Fächer, blinzelnde Gespenster, Doppel-Sturm).
 - **Wandfallen (v8):** Ab Ebene 3 sitzen wenige freundliche Steingesichter in den Wänden (1 → 5 je Ebene, MEGASCHWER +1). Ab und zu
@@ -127,7 +133,8 @@ additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md).
 | `src/world.js` | Stadt-/Dungeon-Generator, Kollision, BFS-Wegfindung |
 | `src/ui.js` · `src/input.js` | Menüs/HUD · Touch/Joystick/Tastatur |
 | `src/audio.js` · `src/music.js` · `src/sfxlib.js` | Audio-Engine (vor-gerenderte Effekte, Busse, Hall, Limiter) · adaptive Musik · Klang-Rezepte |
-| `src/fx.js` | Partikel, Shake, Hit-Stop |
+| `src/fx.js` | Partikel, Shake, Hit-Stop, v13: Lichtblitze, Treffer-Funken |
+| `src/deko.js` | v13: Boden-/Wand-Deko (gebacken), Lichtstrahlen, Fackel-Lichtkegel, Glühteilchen, Beute-/Treppen-Glühen (an Qualitätsstufe gekoppelt) |
 | `src/save.js` · `src/platform.js` | Speichern/Migration/Ehrenhall · Vollbild, Wake-Lock, Vibration |
 
 **Version erhöhen:** in `index.html` alle `?v=N` (Import-Map, CSS, Manifest) und `window.KK_VER` anpassen.
@@ -140,7 +147,7 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
 `KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
 v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
-`KK.editor()` (Editor-Look, Name, Würfe). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v12: `KK.rock()` (Fels-Muster: Bauzeit, Speicher, Chunks), `KK.perf()` liefert zusätzlich `drawMed`/`drawP95` (reine draw()-Zeit). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
+`KK.editor()` (Editor-Look, Name, Würfe). v13: `KK.deko()` (Deko-Zustand), `KK.deko(false)` (Effekte pro Frame aus, für Messungen). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v12: `KK.rock()` (Fels-Muster: Bauzeit, Speicher, Chunks), `KK.perf()` liefert zusätzlich `drawMed`/`drawP95` (reine draw()-Zeit). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
 
 ### Testen
 ```bash
@@ -152,6 +159,9 @@ node tools/checks_v8.mjs --port=8731 --ref=8732          # v8-Checks V22–V25 e
 node tools/checks_v9.mjs --port=8731 --only=V26          # v9-Kostüm-Checks V26–V31 einzeln
 node tools/checks_v11.mjs --port=8731 --throttle=4     # v11: Boss-Auftritt (V33), Bildfolgen → shots/neubau/v11/
 node tools/checks_v12.mjs --port=8731 --throttle=4     # v12: Fels-Hintergrund (V34), Bilder → shots/neubau/v12/
+node tools/checks_v13.mjs --port=8731                  # v13 Deko: V35 an/aus, V35b gleiche Beute, V35c Bewegung reduzieren, V35d Speicher, V35e Kosten (Software-Raster)
+node tools/deko_shots.mjs --tag=nachher [--q=deko=0]   # Rundgang-Bilder hoch + quer → tests/shots/deko/; Collage: python3 tools/deko_collage.py vergleich vorher nachher hoch
+node tools/deko_perf.mjs --a=8732 --b=8731 --qs=0,3     # vorher/nachher im Wechsel (8732 = alter Stand), CPU 4×, p50/p95, Ladegröße; deko_ab.mjs = Effekte an/aus in einer Seite
 node tools/fels_shots.mjs --tag=vorher --q=fels=0      # Fels: Bilder je Welt + Schwarz-Anteil (vorher/nachher); fels_perf.mjs = Kosten je Qualitätsstufe
 node tools/mythsheet.mjs 8731 130 out.png                # Kontaktbogen aller Kostüme × 8 Tierarten
 node tools/bot.mjs 8731 20 6 --out=v9 --myth=phoenix     # Bot mit angezogenem Kostüm

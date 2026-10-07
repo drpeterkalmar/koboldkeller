@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-29T22:48:58.250Z",
+  "date": "2026-10-07T07:13:58.542Z",
   "profile": "gpu",
   "throttle": 4,
   "fpsNormal": null,
@@ -28,25 +28,25 @@
       "id": "V19",
       "name": "Haptik dezent (Stub, je 60 s Kampf): v7 nur große Ereignisse, keine Pulse < 25 ms, Abstand ≥ 400 ms, Budget ≤ 350 ms/s; „Vibration aus“ → 0 Aufrufe; „📳 Vibration testen“ vibriert + Hinweis",
       "pass": true,
-      "value": "vorher (v6) 100 Vibrationen (101 < 25 ms, kürzester 5 ms, Abstand ≥ 22 ms) · nachher (v7) 10 Vibrationen [levelup 5, hurt 2, stairs 1, boss 1, bossKill 1], kürzester 35 ms, Abstand ≥ 407 ms, max. 180 ms/s · aus: 0 Aufrufe · Test-Knopf: [50,90,50], Hinweis true"
+      "value": "vorher (v6) 87 Vibrationen (86 < 25 ms, kürzester 5 ms, Abstand ≥ 0 ms) · nachher (v7) 12 Vibrationen [levelup 5, boss 2, hurt 2, stairs 1, bossKill 1, chest 1], kürzester 35 ms, Abstand ≥ 404 ms, max. 240 ms/s · aus: 0 Aufrufe · Test-Knopf: [50,90,50], Hinweis true"
     },
     {
       "id": "V19b",
       "name": "iPhone ab iOS 26.5: Haptik-Switch nur in DOM-Knöpfen (✨, 🧪, ⏸️, 🎒, Menü) — nie über dem Canvas; echter Tipp auf 🧪 wirkt + tickt; Tap-to-move + Joystick ungestört; „aus“ blendet die Switches aus",
       "pass": true,
-      "value": "26 Switches (btnPause, btnBag, bSpec, bPot, btnCont, btnNew, btnHall, btnSet, btnFull1, btnDice, btnLookDice, btnGo), deckungsgleich true, Canvas-Stichproben 120/120 frei, ⚔️ ohne Switch true; 🧪: Trank 3→2, Ticks 0→1; Tap-to-move 4.86 Kacheln, Joystick 2.95; aus: Trank 2→1, Ticks 1, Switch none"
+      "value": "26 Switches (btnPause, btnBag, bSpec, bPot, btnCont, btnNew, btnHall, btnSet, btnFull1, btnDice, btnLookDice, btnGo), deckungsgleich true, Canvas-Stichproben 120/120 frei, ⚔️ ohne Switch true; 🧪: Trank 3→2, Ticks 0→1; Tap-to-move 4.80 Kacheln, Joystick 3.05; aus: Trank 2→1, Ticks 1, Switch none"
     },
     {
       "id": "V20",
       "name": "Weg-Pfeil: erscheint nach 2,0 s Stillstand (nicht früher), zeigt zum Pfad-Wegpunkt (Winkelfehler < 20°, nie in eine Wand), weg bei Bewegung und erst nach erneut 2 s wieder",
       "pass": true,
-      "value": "erst nach 2002 ms (Stillstand 2.00 s, davor a=0), Winkelfehler Stadt 0° · E1 0° · Frost 0° · Glut 0° · versiegelt 0° · um die Ecke 5.1° (Luftlinie wäre 124.7° daneben), max. 5.1°; nach Tipp a=0, wieder nach 2.00 s"
+      "value": "erst nach 2011 ms (Stillstand 2.01 s, davor a=0), Winkelfehler Stadt 0° · E1 0° · Frost 0° · Glut 0° · versiegelt 0° · um die Ecke 5.1° (Luftlinie wäre 124.7° daneben), max. 5.1°; nach Tipp a=0, wieder nach 2.00 s"
     },
     {
       "id": "V20b",
-      "name": "Weg-Pfeil: Ziel-Regel (Stadt → Portal, Keller → Treppe, versiegelt → Boss), kein Pfeil während Titelkarte und im Bosskampf, Einstellung „🧭 Weg-Pfeil“ greift, Pfad nur beim Einblenden",
+      "name": "Weg-Pfeil: Ziel-Regel (Stadt → Portal, Keller → Treppe, versiegelt → Arena bzw. Boss), kein Pfeil während Titelkarte und im Bosskampf, Einstellung „🧭 Weg-Pfeil“ greift, Pfad nur beim Einblenden",
       "pass": true,
-      "value": "Titelkarte a=0; E4 versiegelt true → Ziel boss; Bosskampf true: max a=0, Einblendungen 0; aus: 0 Einblendungen; 12 s Stillstand: 2 Einblendungen, 2 Pfad-Berechnungen"
+      "value": "Titelkarte a=0; E4 versiegelt true → Ziel arena; Bosskampf true: max a=0, Einblendungen 0; aus: 0 Einblendungen; 12 s Stillstand: 2 Einblendungen, 2 Pfad-Berechnungen"
     },
     {
       "id": "V21",
@@ -58,7 +58,7 @@
       "id": "V22",
       "name": "Schneller laufen: Tempo ≈ 4,7 (+31 %), Schritt-Animation skaliert (Schrittweite ≈ gleich), Kamera läuft vorn mit, Finger still halten = weiterlaufen, ein Tipp weit = ganzer Weg, Wand dicht bei dt 0,05 s",
       "pass": true,
-      "value": "Tempo 4.7 Kacheln/s (v7 3.6, ×1.306) · Schritt 14.34 rad/s, Schrittweite 2.059 (v7 11.76 rad/s, 1.923) · Kamera 0.871 Kacheln voraus (v7 0.517) · Finger 2,5 s still: 11.7 Kacheln, läuft noch true, stoppt beim Loslassen true (v7: 3.03 Kacheln, läuft noch false) · Tipp 5 Kacheln: an in 1.06 s (v7 1.35 s) · Wand: 400 Sprünge/Stöße, 0 Frames in der Wand"
+      "value": "Tempo 4.7 Kacheln/s · Schritt 14.34 rad/s, Schrittweite 2.059 · Kamera 0.919 Kacheln voraus · Finger 2,5 s still: 11.75 Kacheln, läuft noch true, stoppt beim Loslassen true · Tipp 5 Kacheln: an in 1.06 s · Wand: 400 Sprünge/Stöße, 0 Frames in der Wand"
     },
     {
       "id": "V23",
@@ -70,19 +70,19 @@
       "id": "V24",
       "name": "Ebenen-Wahl: 5 Welt-Wege mit Welttor, 20 Portale (je Ebene eins, Name + 👑/⚡/🔒), offen bis „tiefste“, gesperrte zeigen Hinweis, Abstand ≥ 2, Brunnen → jedes Portal ≤ 6 s, Vorbeilaufen löst nichts aus, Pfeil/Tutorial/Ehrenhall/Spielstand unverändert",
       "pass": true,
-      "value": "20 Portale (Karte 38×36), Tore 1:2P 2:2P 3:2P 4:2P 5:2P, min. Abstand 2.1 · Brunnen → weitestes Portal (E6) 11.7 Kacheln = 2.49 s, Eingang → weitestes 4.22 s · offen 1,2,3,4,5,6,7,8,9 / gesperrt 11 · Symbole+Namen true · Pfeil → portal 9 · Tipp auf 9: Ebene 9 nach 1.05 s, from 9 · gesperrt 12: bleibt 0, Hinweis true · drüberlaufen (0.04 Kacheln nah): Ebene 0, stehen: Ebene 5 nach 1.1 s · Tutorial: {\"depth\":1,\"flag\":true,\"step\":-1,\"prof\":true,\"from\":1} · Spielstand v3, Felder wie v7 (32)"
+      "value": "20 Portale (Karte 38×36), Tore 1:2P 2:2P 3:2P 4:2P 5:2P, min. Abstand 2.1 · Brunnen → weitestes Portal (E6) 11.7 Kacheln = 2.49 s, Eingang → weitestes 4.22 s · offen 1,2,3,4,5,6,7,8,9 / gesperrt 11 · Symbole+Namen true · Pfeil → portal 9 · Tipp auf 9: Ebene 9 nach 1 s, from 9 · gesperrt 12: bleibt 0, Hinweis true · drüberlaufen (0 Kacheln nah): Ebene 0, stehen: Ebene 5 nach 1.06 s · Tutorial: {\"depth\":1,\"flag\":true,\"step\":-1,\"prof\":true,\"from\":1} · Spielstand v3, Felder wie v7 (32)"
     },
     {
       "id": "V25",
       "name": "Wandfallen: ab Ebene 3 wenige Schützen (1–2 → 3–5, MEGASCHWER +1), nie am Eingang/in Arenen, nie zwei auf demselben Gang, Vorwarnung ≥ 0,8 s, Treffer = Pieks-Schaden, 💨 schützt, nur der Treffer vibriert, Takt mit Lücke, FPS ≥ 45 (4×)",
       "pass": true,
-      "value": "200 Ebenen geprüft (5 Seeds × Normal/MEGA), Fehler 0, Anzahl 00112222333344445554 (MEGA 00223333444455556665) · min. Abstand zweier Bahnen 4.0 · min. Abstand zum Eingang 6.0 · Vorwarnung 0.92 s · Treffer −2 ❤️ (Pieks 2) · mit 💨 −0 · Haptik beim Schuss [], beim Treffer [hurt] · kürzester Abstand zweier Schüsse 5.11 s (3 in 12 s) · FPS 4× 263.1 (p5 144.9, 0 Geschosse) · Screenshots 10"
+      "value": "200 Ebenen geprüft (5 Seeds × Normal/MEGA), Fehler 0, Anzahl 00112222333344445554 (MEGA 00223333444455556665) · min. Abstand zweier Bahnen 4.0 · min. Abstand zum Eingang 6.0 · Vorwarnung 0.93 s · Treffer −2 ❤️ (Pieks 2) · mit 💨 −0 · Haptik beim Schuss [], beim Treffer [hurt] · kürzester Abstand zweier Schüsse 4.3 s (3 in 12 s) · FPS 4× 221.8 (p5 133.3, 0 Geschosse) · Screenshots 10"
     },
     {
       "id": "V26",
       "name": "Alle 14 Kostüme × 8 Tierarten zeichnen fehlerfrei (Spielfigur laufend, Porträt, Editor-Vorschau; hoch + quer), Gesicht bleibt frei (Kopfteil verdeckt < 3 % des Gesichtsfelds, auch mit Brille/Blume)",
       "pass": true,
-      "value": "hoch: 112 Figuren, 112 Porträts, 112 Vorschauen, Fehler 0, Gesicht verdeckt max. 0 % (Gegenprobe Stirn unter Kapuzen ≥ 59 %), Sprites 265 · quer: 112 Figuren, 112 Porträts, 112 Vorschauen, Fehler 0, Gesicht verdeckt max. 0 % (Gegenprobe Stirn unter Kapuzen ≥ 56.1 %), Sprites 268 · Kontaktbogen 1194×1954"
+      "value": "hoch: 112 Figuren, 112 Porträts, 112 Vorschauen, Fehler 0, Gesicht verdeckt max. 0 % (Gegenprobe Stirn unter Kapuzen ≥ 59 %), Sprites 284 · quer: 112 Figuren, 112 Porträts, 112 Vorschauen, Fehler 0, Gesicht verdeckt max. 0 % (Gegenprobe Stirn unter Kapuzen ≥ 56.1 %), Sprites 287 · Kontaktbogen 1194×1954"
     },
     {
       "id": "V27",
@@ -112,7 +112,73 @@
       "id": "V31",
       "name": "Leistung mit Kostüm: Kellerkönig-Kampf (Wut-Phase, 9 Handlanger, Warnungen) mit Phönix/Sternendrache, CPU 4× ≥ 45 FPS (hoch + quer); Sprite-Cache bei 400 Kostümwechseln begrenzt (LRU)",
       "pass": true,
-      "value": "hoch:phoenix 174.7 fps (p5 119, Handlanger 9, Warnungen 8) · hoch:sternendrache 227.9 fps (p5 142.9, Handlanger 9, Warnungen 5) · quer:phoenix 173.4 fps (p5 128.2, Handlanger 9, Warnungen 0) · quer:sternendrache 218.2 fps (p5 135.1, Handlanger 9, Warnungen 11) · Cache nach 50…400 Wechseln: 237 → 237 → 237 → 237 → 237 → 237 → 237 → 237 (zweite Hälfte +0)"
+      "value": "hoch:phoenix 126.1 fps (p5 74.1, Handlanger 9, Warnungen 0) · hoch:sternendrache 142.1 fps (p5 92.6, Handlanger 9, Warnungen 0) · quer:phoenix 150.7 fps (p5 100, Handlanger 9, Warnungen 0) · quer:sternendrache 149 fps (p5 94.3, Handlanger 9, Warnungen 0) · Cache nach 50…400 Wechseln: 255 → 255 → 255 → 255 → 255 → 255 → 255 → 255 (zweite Hälfte +0)"
+    },
+    {
+      "id": "V32",
+      "name": "Oma Pilzhut gibt beim Vorbeigehen Tipps (hoch): Sprechblase beim Näherkommen, nicht im Tutorial, nicht beim Stehenbleiben, 20-s-Sperre, passender Tipp (Talentpunkte), Blase im Bild, Antippen",
+      "pass": true,
+      "value": "Tutorial still true (Schritt 0) · weit weg still true (Schritt -1) · 1. „Halte ⚔️ gedrückt — dann schlägst du imm…“ · Stehen true · Sperre true · 2. „Du hast 2 ⭐ Talentpunkte frei! Tipp auf …“ · 2 Zeilen, 241 px · Antippen true · Toasts vorher 0"
+    },
+    {
+      "id": "V32q",
+      "name": "Oma Pilzhut gibt beim Vorbeigehen Tipps (quer): Sprechblase beim Näherkommen, nicht im Tutorial, nicht beim Stehenbleiben, 20-s-Sperre, passender Tipp (Talentpunkte), Blase im Bild, Antippen",
+      "pass": true,
+      "value": "Tutorial still true (Schritt 0) · weit weg still true (Schritt -1) · 1. „Halte ⚔️ gedrückt — dann schlägst du imm…“ · Stehen true · Sperre true · 2. „Du hast 2 ⭐ Talentpunkte frei! Tipp auf …“ · 2 Zeilen, 241 px · Antippen true · Toasts vorher 0"
+    },
+    {
+      "id": "V33",
+      "name": "Boss-Auftritt: vorher nicht da (Tor/1 Kachel/Seifenblasen → nichts), 2 Kacheln drin → Tore zu + Boss wächst aus dem Boden, unverwundbar, danach wach + Krater",
+      "pass": true,
+      "value": "hoch E4 Haupt: vorher leer · Auftritt 2.65 s (gemessen 2.65 s), Tore zu · danach wach, Abstand 8.49 ≥ 1, Krater ja | hoch E2 Mini: vorher leer · Auftritt 2.25 s (gemessen 2.26 s), Tore zu · danach wach, Abstand 5.02 ≥ 1.05, Krater ja | hoch E6 Flug-Mini: vorher leer · Auftritt 2.25 s (gemessen 2.25 s), Tore zu · danach wach, Abstand 6.5 ≥ 1, Krater ja | hoch E20 König: vorher leer · Auftritt 3.5 s (gemessen 3.5 s), Tore zu · danach wach, Abstand 10.11 ≥ 1.4, Krater ja | quer E4 Haupt: vorher leer · Auftritt 2.65 s (gemessen 2.65 s), Tore zu · danach wach, Abstand 8.49 ≥ 1, Krater ja | quer E10 Mini: vorher leer · Auftritt 2.25 s (gemessen 2.25 s), Tore zu · danach wach, Abstand 7.5 ≥ 1.05, Krater ja | quer E20 König: vorher leer · Auftritt 3.5 s (gemessen 3.5 s), Tore zu · danach wach, Abstand 10.11 ≥ 1.4, Krater ja"
+    },
+    {
+      "id": "V33b",
+      "name": "Besiegte Ebene: Tore bleiben offen, gleicher Auslöser; Hinauslaufen während des Bebens → Auftritt läuft zu Ende; Kobold auf dem Erscheinungspunkt → weggeschoben",
+      "pass": true,
+      "value": "optional true, Tore offen (blockiert 0), hinaus: Auftritt läuft (quake), danach Boss wach · auf dem Punkt: Abstand danach 1.73 ≥ 1.05"
+    },
+    {
+      "id": "V33c",
+      "name": "Frame-Zeit während des Kellerkönig-Auftritts, CPU 4× (p95 ≥ 45 fps oder nicht schlechter als der Kampf danach)",
+      "pass": true,
+      "value": "hoch: Auftritt Median 3.2 ms (312.5 fps), p95 6.3 ms (158.7 fps), 1168 Frames · Kampf danach p95 7.2 ms (138.9 fps) · quer: Auftritt Median 4 ms (250 fps), p95 7 ms (142.9 fps), 949 Frames · Kampf danach p95 10.2 ms (98 fps)"
+    },
+    {
+      "id": "V34",
+      "name": "Kein schwarzes Nichts: Anteil Schwarz-Pixel (< 4 % Helligkeit, Spielbild) je Welt, hoch + quer, Boss-Zoom, Kartenkante, Wackeln < 10 %",
+      "pass": true,
+      "value": "stadt/hoch 0 % · moos/hoch 0 % · kristall/hoch 0 % · zucker/hoch 0 % · frost/hoch 0 % · glut/hoch 0.1 % · boss_e4/hoch 0.6 % · boss_e20/hoch 1.8 % · kante/hoch 0 % · wackeln/hoch 0 % · stadt/quer 0 % · moos/quer 0 % · kristall/quer 0 % · zucker/quer 0 % · frost/quer 0 % · glut/quer 0.6 % · boss_e4/quer 0.6 % · boss_e20/quer 1.8 % · kante/quer 0 % · wackeln/quer 0 % | vorher (?fels=0): moos 57.9 → 0 %, kristall 69.2 → 0 %, glut 54.8 → 0.1 %"
+    },
+    {
+      "id": "V34b",
+      "name": "Kosten Fels (Qualität 0, volle Auflösung): Muster < 30 ms, Speicher ≤ 2 MB, sichtbare Chunks < 28, draw()-Median an − aus ≤ 0,3 ms Desktop / ≤ 0,5 ms CPU 4×",
+      "pass": true,
+      "value": "Muster max 29 ms, 1.64 MB · Chunks max 23 · Desktop: draw Median an 0.2 / aus 0.2 ms (Δ 0), p95 1.6 / 0.6 · CPU 4×: Median an 0.2 / aus 0.2 ms (Δ 0), p95 3.3 / 3.2, FPS 860.5 / 922.7"
+    },
+    {
+      "id": "V35",
+      "name": "Deko an: Boden-Deko, Wand-Deko, Lichtstrahlen, Weltfarben-Vignette, Lichtblitz je Welt · ?deko=0: nichts davon (wie v12)",
+      "pass": true,
+      "value": "an: E1 Wand 60/350, Boden 194, Strahlen 5, Glühen 0, Glanz 16 · E4 Wand 47/346, Boden 214, Strahlen 6, Glühen 0, Glanz 15 · E5 Wand 43/325, Boden 177, Strahlen 5, Glühen 98, Glanz 23 · E9 Wand 58/394, Boden 195, Strahlen 4, Glühen 0, Glanz 31 · E13 Wand 45/400, Boden 181, Strahlen 6, Glühen 0, Glanz 69 · E17 Wand 55/419, Boden 170, Strahlen 6, Glühen 78, Glanz 0 · E20 Wand 71/484, Boden 331, Strahlen 5, Glühen 171, Glanz 0 · Lichtblitze 1 | aus: Wand 0/0/0/0/0/0/0/0, Strahlen 0/0/0/0/0/0/0/0, Lichtblitze 0"
+    },
+    {
+      "id": "V35b",
+      "name": "Spielmechanik unberührt: gleiche Zufallsfolge → gleiche Gegner, Beute, Gold, Folge-Zufall (mit und ohne Deko)",
+      "pass": true,
+      "value": "E3: 9 Gegner, 39 Beute, 🪙 6 gleich · E7: 12 Gegner, 66 Beute, 🪙 18 gleich · E11: 14 Gegner, 60 Beute, 🪙 32 gleich"
+    },
+    {
+      "id": "V35c",
+      "name": "„Bewegung reduzieren“: erkannt, Wackeln ≤ 35 % · versteckter Tab zeichnet nichts",
+      "pass": true,
+      "value": "normal: Wackeln max 20.6 px · reduziert: 7.07 px (calm true) · versteckt: Zeichnen angehalten true"
+    },
+    {
+      "id": "V35d",
+      "name": "Speicher + Laden: Sprite-Cache nach allen Welten ≤ +40 ggü. ?deko=0 · Code gzip ≤ +1 MB ggü. v12 · 0 externe Requests",
+      "pass": true,
+      "value": "Sprites 194 vs. 175 (Δ 19) · Code+HTML+CSS gzip 212.9 KB, davon deko.js 11.8 KB (Audio/Icons unverändert) · extern 0"
     },
     {
       "id": "A1",

@@ -2,7 +2,7 @@
    pro Frame laufen nur wenige additive Sprites im vorhandenen Glow-Pass und Lichter in der ¼-Lightmap.
    Eigener Zufall (Hash je Kachel / eigener PRNG) → die Zufallsfolge des Spiels (Math.random) bleibt unberührt.
    Aus mit ?deko=0 (Aussehen wie v12). Qualitätsstufe (Auto-Drosselung): q 0 alles · q 1 ohne Pfützen-Glanz · q 2 ohne Lichtstrahlen, Glüh-Puls und Funken,
-   halbe Schwebeteilchen · q 3 nur Gebackenes + Lichter in der Lightmap (kostet dort praktisch nichts). */
+   halbe Schwebeteilchen · q 3 nur Gebackenes + kurze Lichtblitze (kostet dort praktisch nichts). */
 import * as A from "./art.js";
 import { DEKO, CALM } from "./config.js";
 import { TAU, shade, rgba, mixHex, mulberry32 } from "./util.js";
@@ -387,11 +387,12 @@ const SHAFT_COL = [null, "#e8ffd0", "#d8f4ff", "#fff0f8", "#f0faff", "#ffd8a8"];
 /** einmal beim Betreten: Lichtstrahlen (≤ 1 je Raum, höchstens 7), Deko-Listen je Chunk (für Licht/Puls/Glanz) */
 export function setupLevel(L, R, CH) {
   const m = L.map, bi = R.biome, seed = R.dkSeed = (m.w * 131 + m.h * 17 + (R.B.depth || 0) * 997 + bi * 7) | 0;
-  R.dkShafts = []; R.dkGlow = new Map(); R.dkShine = new Map(); R.dkGlowVis = []; R.dkShineVis = [];
+  R.dkShafts = []; R.dkChests = []; R.dkGlow = new Map(); R.dkShine = new Map(); R.dkGlowVis = []; R.dkShineVis = [];
   R.dkFloorN = 0;
   if (!DK.on) return;
   A.dropArt("wallD:", "wallD:" + (R.B.key || bi) + ":");          // Wand-Deko-Sprites nur der aktuellen Ebene behalten (Speicher)
-  for (const pr of L.props || []) if (pr.kind === "chest") pr._dkWas = pr.open;
+  R.dkChests = (L.props || []).filter(pr => pr.kind === "chest");
+  for (const pr of R.dkChests) pr._dkWas = pr.open;
   if (!bi) return;
   const rooms = L.rooms || [];
   rooms.forEach((r, i) => {
@@ -453,6 +454,7 @@ export function warmSprites() { if (!DK.on) return; shaftSprite(); beamSprite();
 export function lights(light, G, R, FXL, T) {
   const L = R.L;
   if (DK.skip & 64) return;
+  if (R.q >= 3) { for (const f of FXL) light(f.x, f.y, f.r * (0.7 + 0.3 * f.life / f.max), f.col, f.a * f.life / f.max); return; }   // niedrigste Stufe: nur kurze Lichtblitze
   for (const t of L.torches) {                                   // Fackel: Lichtfleck an der Wand über der Flamme + Lichtkegel in den Raum
     const fl = 0.78 + 0.1 * Math.sin(T * 9.3 + t.x * 3) + 0.07 * Math.sin(T * 23.1 + t.y) + 0.05 * Math.sin(T * 41 + t.x * 7);
     light(t.wx + 0.5, t.wy + 0.5, 1.7, R.B.torch, 0.55 * fl, 46);
@@ -558,8 +560,7 @@ export function glow(ctx, G, R, g, toScreen, T) {
     ctx.globalAlpha = a; ctx.drawImage(A.tinted(bmS, col).cv, sx - w / 2, sy - h + 4 * Z, w, h); ctx.globalAlpha = 1;
   }
   // Truhe geht auf: Strahlenkranz
-  for (const pr of L.props || []) {
-    if (pr.kind !== "chest") continue;
+  for (const pr of R.dkChests) {
     if (pr.open && !pr._dkWas) { pr._dkWas = true; pr._dkT = T; }
     if (pr._dkT === undefined || T - pr._dkT > 1.4) continue;
     const k = (T - pr._dkT) / 1.4, [sx, sy] = toScreen(pr.x, pr.y, 26), s = (90 + 70 * k) * Z, rs = A.tinted(raysSprite(), "#ffd75e");

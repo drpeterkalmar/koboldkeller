@@ -519,7 +519,8 @@ export function draw(G, dt) {
       case 1: {
         const w = e.o;
         ctx.globalAlpha = w.a;
-        blit(ctx, w.dk ? D.wallDecoSprite(B, R.biome, w.v, w.dk.kind, w.dk.side) : A.wallSprite(B, R.biome, w.v), e.sx, e.sy);
+        if (w.dk && w.dk.K !== A.artScale()) { w.dk.K = A.artScale(); w.dk.s = D.wallDecoSprite(B, R.biome, w.v, w.dk.kind, w.dk.side); }   // v13: Sprite am Objekt merken
+        blit(ctx, w.dk ? w.dk.s : A.wallSprite(B, R.biome, w.v), e.sx, e.sy);
         const t = R.wallTorch.get(w.y * m.w + w.x);
         if (t) blit(ctx, A.torchSprite(), e.sx + (t.face === "L" ? -16 : 16) * Z, e.sy - 8 * Z);
         const wt = R.wallTrapAt && R.wallTrapAt.get(w.y * m.w + w.x);

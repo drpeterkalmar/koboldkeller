@@ -196,7 +196,7 @@ window.KK = {
   audio: () => audioStats(),
   perf: (reset) => { if (reset) perfReset(); return { ...perfStats(), ...drawStats() }; },
   /** v13: Deko-Zustand (Lichtstrahlen, Wand-Deko, glühende/glänzende Boden-Deko, Lichtblitze); deko(false) schaltet nur die Effekte pro Frame aus (Messung) */
-  deko: (on) => { if (on !== undefined) DK.on = !!on; return { on: DK.on, calm: DK.calm, shafts: (R.dkShafts || []).length, walls: R.walls.filter(w => w.dk).length, wallsAll: R.walls.length,
+  deko: (on) => { if (on !== undefined) DK.on = FX.deko = !!on; return { on: DK.on, calm: DK.calm, shafts: (R.dkShafts || []).length, walls: R.walls.filter(w => w.dk).length, wallsAll: R.walls.length,
     glow: [...(R.dkGlow || new Map()).values()].reduce((s, a) => s + a.length, 0), shine: [...(R.dkShine || new Map()).values()].reduce((s, a) => s + a.length, 0), lights: FX.lights.length, vign: R.vignCol || null, art: artCount(), floor: R.dkFloorN || 0 }; },
   dekoSkip: (m) => (DK.skip = m | 0),
   rock: () => R.rock ? { ms: R.rock.ms, bytes: R.rock.bytes, w: R.rock.mass.width, h: R.rock.mass.height, fels: R.fels, chunks: R.chunks.size, vis: R.chunksVis } : { fels: R.fels },
