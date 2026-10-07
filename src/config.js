@@ -212,6 +212,10 @@ export const ARROW = {
   r0: 0.62, r1: 1.5,                          // Pfeil liegt 0,62 … 1,5 Kacheln neben der Figur auf dem Boden
 };
 export const URLQ = _q;
+// v13: Deko (Boden-/Wand-Details, Licht, Partikel, Rückmeldung) — A/B: ?deko=0 = Aussehen wie v12
+export const DEKO = _q.get("deko") !== "0";
+// v13: „Bewegung reduzieren“ des Geräts → weniger Wackeln, weniger Partikelregen
+export const CALM = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Biome: Block à 4 Ebenen. amb = Umgebungslicht (0..1 pro Kanal)
 export const BIOMES = [

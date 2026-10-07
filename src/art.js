@@ -1012,6 +1012,11 @@ export function fx(kind) {
       c.fillStyle = "#fff";
       for (const [x, y, r] of [[16, 22, 12], [28, 16, 13], [34, 25, 10], [22, 28, 9]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
     });
+    // v13: Treffer-Funke (länglich, weiche Enden) — wird in Flugrichtung gedreht
+    case "streak": return spr("fx:streak", 32, 8, 16, 4, (c) => {
+      const g = c.createLinearGradient(0, 0, 32, 0); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.65, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,.2)");
+      c.fillStyle = g; c.beginPath(); c.moveTo(0, 4); c.quadraticCurveTo(20, 0.5, 32, 4); c.quadraticCurveTo(20, 7.5, 0, 4); c.fill();
+    });
     case "conf": return spr("fx:conf", 16, 16, 8, 8, (c) => { c.fillStyle = "#fff"; c.beginPath(); c.roundRect(2, 5, 12, 6, 2); c.fill(); });
     // v11: Erdbrocken (Boss-Auftritt) — hell oben, dunkler unten; wird multipliziert eingefärbt (Schattierung bleibt)
     case "rock": return spr("fx:rock", 20, 18, 10, 9, (c) => {

@@ -4,6 +4,7 @@ import { artCount } from "./art.js";
 import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, special, killEnt, winGame, makeEnt, makeElite, gainXp, finishTut, recalc, skillUp, skillReset, setLook, magnetOf, unlockMyth, lookForSave } from "./game.js";
 import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality, toScreen } from "./render.js";
 import { FX, updateFx } from "./fx.js";
+import { DK } from "./deko.js";
 import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
 import { hardenTouch, wakeLock, watchVisibility, PF } from "./platform.js";
 import { GD, guideUpdate, guideInput, guideTarget, guideAim } from "./guide.js";
@@ -194,6 +195,10 @@ window.KK = {
   spawn: (type, dx = 1.5, dy = 0, elite = false) => { const e = makeEnt(type, G.p.x + dx, G.p.y + dy); if (elite) makeElite(e); G.ents.push(e); return e.hp; },
   audio: () => audioStats(),
   perf: (reset) => { if (reset) perfReset(); return { ...perfStats(), ...drawStats() }; },
+  /** v13: Deko-Zustand (Lichtstrahlen, Wand-Deko, glühende/glänzende Boden-Deko, Lichtblitze); deko(false) schaltet nur die Effekte pro Frame aus (Messung) */
+  deko: (on) => { if (on !== undefined) DK.on = !!on; return { on: DK.on, calm: DK.calm, shafts: (R.dkShafts || []).length, walls: R.walls.filter(w => w.dk).length, wallsAll: R.walls.length,
+    glow: [...(R.dkGlow || new Map()).values()].reduce((s, a) => s + a.length, 0), shine: [...(R.dkShine || new Map()).values()].reduce((s, a) => s + a.length, 0), lights: FX.lights.length, vign: R.vignCol || null, art: artCount() }; },
+  dekoSkip: (m) => (DK.skip = m | 0),
   rock: () => R.rock ? { ms: R.rock.ms, bytes: R.rock.bytes, w: R.rock.mass.width, h: R.rock.mass.height, fels: R.fels, chunks: R.chunks.size, vis: R.chunksVis } : { fels: R.fels },
   bossAtk: (k) => forceAttack(G.boss, k), bossHit: () => { if (G.boss) bossHit(G.boss, false); return G.boss && G.boss.phase; },
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },

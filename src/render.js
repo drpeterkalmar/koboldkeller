@@ -3,6 +3,8 @@ import * as A from "./art.js";
 import { FX } from "./fx.js";
 import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_FX, URLQ } from "./config.js";
 import { clamp, TAU, rgba, mixHex, shade, mulberry32 } from "./util.js";
+import * as D from "./deko.js";
+const DK = D.DK;
 
 export const R = {
   cv: null, ctx: null, VW: 0, VH: 0, RS: 1, U: 64, Z: 1, Z0: 1, cz: 1, q: 0, qScales: [1, 0.8, 0.65, 0.5],
@@ -24,7 +26,7 @@ export function initRender(cv) {
   R.lctx = R.lcv.getContext("2d");
   resize();
 }
-export function setQuality(q) { q = clamp(q, 0, R.qScales.length - 1); if (q !== R.q) { R.q = q; resize(); } }
+export function setQuality(q) { q = clamp(q, 0, R.qScales.length - 1); if (q !== R.q) { R.q = q; FX.dq = q; resize(); } }
 export function resize() {
   const VW = Math.max(200, window.innerWidth), VH = Math.max(200, window.innerHeight);
   R.VW = VW; R.VH = VH;
@@ -38,15 +40,15 @@ export function resize() {
   A.setArtScale(R.Z0 * R.RS);
   R.lw = Math.ceil(VW / R.LS); R.lh = Math.ceil(VH / R.LS);
   R.lcv.width = R.lw; R.lcv.height = R.lh;
-  R.vign = makeVignette(R.lw, R.lh);
+  R.vign = makeVignette(R.lw, R.lh, R.vignCol);
   R.focusY = VH > VW ? 0.46 : 0.52;
   R.chunks.clear(); R.chunkOrder.length = 0;
 }
-function makeVignette(w, h) {
+function makeVignette(w, h, col) {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d");
   const g = x.createRadialGradient(w / 2, h * 0.48, Math.min(w, h) * 0.25, w / 2, h * 0.5, Math.hypot(w, h) * 0.62);
-  g.addColorStop(0, "#fff"); g.addColorStop(1, "#6a5a7a");
+  g.addColorStop(0, "#fff"); if (col) g.addColorStop(0.55, "#f4f0f6"); g.addColorStop(1, col || "#6a5a7a");   // v13: Ränder in Weltfarbe
   x.fillStyle = g; x.fillRect(0, 0, w, h);
   return c;
 }
@@ -75,13 +77,22 @@ export function setLevel(L, biome, B) {
       const nx = x + dx, ny = y + dy;
       if (nx >= 0 && ny >= 0 && nx < m.w && ny < m.h && !m.solid[ny * m.w + nx]) { near = true; break; }
     }
-    if (near) R.walls.push({ x, y, v: m.v[y * m.w + x], d: x + y + 1, a: 1 });
+    if (near) {
+      const w = { x, y, v: m.v[y * m.w + x], d: x + y + 1, a: 1, dk: null };
+      if (DK.on) w.dk = D.wallKind(biome, x, y, (m.w * 131 + m.h * 17 + ((B || BIOMES[biome]).depth || 0) * 997 + biome * 7) | 0,
+        y + 1 < m.h && !m.solid[(y + 1) * m.w + x], x + 1 < m.w && !m.solid[y * m.w + x + 1]);   // v13: Wand-Deko auf einer sichtbaren Seite
+      R.walls.push(w);
+    }
   }
   R.wallTorch.clear();
   for (const t of L.torches || []) R.wallTorch.set(t.wy * m.w + t.wx, t);
   R.wallTrapAt = new Map();                                   // v8: Wand-Schützen sitzen auf ihrer Wand-Kachel
   for (const t of L.wallTraps || []) R.wallTrapAt.set(t.wy * m.w + t.wx, t);
+  for (const w of R.walls) if (w.dk && (R.wallTorch.has(w.y * m.w + w.x) || R.wallTrapAt.has(w.y * m.w + w.x))) w.dk = null;   // Fackel/Steingesicht bleiben frei
   setRock(L);
+  D.setupLevel(L, R, CH);                                      // v13: Lichtstrahlen, glühende/glänzende Boden-Deko je Chunk
+  const vc = DK.on ? D.VIGN[biome] || null : null;
+  if (vc !== (R.vignCol || null)) { R.vignCol = vc; R.vign = makeVignette(R.lw, R.lh, vc); }
 }
 export function snapCamera(x, y) { R.camX = x; R.camY = y; }
 
@@ -182,6 +193,11 @@ function chunk(cx, cy) {
       if (m.solid[i]) continue;
       const ao = (y > 0 && m.solid[i - m.w] ? 1 : 0) | (x > 0 && m.solid[i - 1] ? 2 : 0);
       A.drawFloorTile(g, (x - y) * 32 - ox, (x + y) * 16 - oy, B, R.biome, m.v[i], m.deco[i], ao);
+      if (DK.on) {                                              // v13: Boden-Details je Welt + Wandfuß (gebacken, 0 Kosten pro Frame)
+        const tx = (x - y) * 32 - ox, ty = (x + y) * 16 - oy, kd = D.floorKind(R.biome, x, y, R.dkSeed, m.deco[i]);
+        if (ao && R.biome && D.h01(x, y, R.dkSeed + 19) < 0.55) D.drawWallFoot(g, tx, ty, B, R.biome, ao, (x * 7919 + y * 104729 + R.dkSeed) | 0);
+        if (kd) D.drawFloorDeco(g, tx, ty, B, R.biome, kd, (x * 31337 + y * 7331 + R.dkSeed) | 0);
+      }
     }
   }
   if (R.fels && R.biome) for (let s = x0 + y0; s <= x0 + y0 + 2 * (CH - 1); s++) for (let x = x0; x < x0 + CH; x++) {   // v12: Felskanten (gebacken)
@@ -209,6 +225,8 @@ export function prewarm(G) {
   // Sprites vorwärmen (sonst Mini-Ruckler beim ersten Auftauchen)
   const B = R.B;
   for (let v = 0; v < 4; v++) A.wallSprite(B, R.biome, v);
+  for (const w of R.walls) if (w.dk) D.wallDecoSprite(B, R.biome, w.v, w.dk.kind, w.dk.side);   // v13
+  D.warmSprites();
   for (const k of ["heart", "coin"]) A.itemSprite(k);
   if (R.L.traps && R.L.traps.length) { A.trapPlate(B.left); A.trapSpikes(B.top); }
   A.fx("rock");
@@ -319,7 +337,8 @@ export function draw(G, dt) {
   const B = R.B;
   // v5: Bosskampf in der großen Arena → Kamera zoomt heraus und schaut zwischen Kobold und Boss (Boss + Warnungen im Bild)
   const bz = bossZoom(G);
-  R.cz += ((bz ? (R.VW > R.VH ? 0.84 : 0.8) : 1) - R.cz) * Math.min(1, dt * 2.2);
+  const rz = D.riseZoom(G);                                     // v13: beim Beben rückt die Kamera kurz näher
+  R.cz += ((rz || (bz ? (R.VW > R.VH ? 0.84 : 0.8) : 1)) - R.cz) * Math.min(1, dt * 2.2);
   if (Math.abs(R.cz - 1) < 0.002) R.cz = 1;
   R.Z = R.Z0 * R.cz; R.U = 64 * R.Z;
   // Kamera (Boss-Intro/Phasenwechsel/Sieg: kurz zum Boss schwenken)
@@ -332,7 +351,7 @@ export function draw(G, dt) {
   const f = Math.min(1, dt * 6 * clamp(Math.hypot(p.vx || 0, p.vy || 0) / PLAYER.speed0, 1, 1.5));
   R.camX += (tx - R.camX) * f; R.camY += (ty - R.camY) * f;
   R.camDX = (R.camX - R.camY) * 32; R.camDY = (R.camX + R.camY) * 16 - 44;
-  const amp = FX.trauma * FX.trauma * 16;
+  const amp = FX.trauma * FX.trauma * 16 * (DK.calm ? 0.35 : 1);   // v13: „Bewegung reduzieren“ → wenig Wackeln
   R.shx = amp * Math.sin(R.t * 47.3) * Math.cos(R.t * 13.1);
   R.shy = amp * Math.cos(R.t * 53.7) * Math.sin(R.t * 11.9);
   R.zp = 1 + FX.zoomPunch * 0.04;
@@ -344,12 +363,13 @@ export function draw(G, dt) {
   // --- Boden-Chunks --- (R.chunksVis: sichtbare Chunks, muss unter CH_MAX bleiben, sonst würde der Cache flattern)
   const m = L.map;
   let nCh = 0;
-  R.glowVis.length = 0;
+  R.glowVis.length = 0; R.dkGlowVis.length = 0; R.dkShineVis.length = 0;
   for (let cy = 0; cy * CH < m.h; cy++) for (let cx = 0; cx * CH < m.w; cx++) {
     const ox = (cx * CH - cy * CH - CH) * 32 - 4, oy = (cx * CH + cy * CH) * 16 - CHT;
     const sx = (ox - R.camDX) * Z + R.VW / 2 + R.shx, sy = (oy - R.camDY) * Z + R.VH * R.focusY + R.shy;
     if (sx > R.VW || sy > R.VH || sx + (CH * 64 + 8) * Z < 0 || sy + CHH * Z < 0) continue;
     if (R.glowAt) { const gl = R.glowAt.get(cy * 64 + cx); if (gl) R.glowVis.push(gl); }   // v12: Glimmpunkte nur in sichtbaren Chunks
+    if (DK.on) { const a = R.dkGlow.get(cy * 64 + cx), b = R.dkShine.get(cy * 64 + cx); if (a) R.dkGlowVis.push(a); if (b) R.dkShineVis.push(b); }
     const c = chunk(cx, cy);
     if (c) { ctx.drawImage(c.cv, sx, sy, c.W * Z, c.H * Z); nCh++; }
   }
@@ -499,7 +519,7 @@ export function draw(G, dt) {
       case 1: {
         const w = e.o;
         ctx.globalAlpha = w.a;
-        blit(ctx, A.wallSprite(B, R.biome, w.v), e.sx, e.sy);
+        blit(ctx, w.dk ? D.wallDecoSprite(B, R.biome, w.v, w.dk.kind, w.dk.side) : A.wallSprite(B, R.biome, w.v), e.sx, e.sy);
         const t = R.wallTorch.get(w.y * m.w + w.x);
         if (t) blit(ctx, A.torchSprite(), e.sx + (t.face === "L" ? -16 : 16) * Z, e.sy - 8 * Z);
         const wt = R.wallTrapAt && R.wallTrapAt.get(w.y * m.w + w.x);
@@ -974,7 +994,7 @@ function drawParticles(ctx, additive) {
     const s = p.kind === "rock" ? A.multiplied(base, p.col) : p.col === "#fff" || p.col === "#ffffff" ? base : A.tinted(base, p.col);
     ctx.globalAlpha = Math.min(1, k * (1 + (1 - p.fade) * 4));
     const w = size, h = size * s.h / s.w;
-    if (p.kind === "star" || p.kind === "star5" || p.kind === "conf" || p.kind === "rock") {
+    if (p.kind === "star" || p.kind === "star5" || p.kind === "conf" || p.kind === "rock" || p.kind === "streak") {
       ctx.save(); ctx.translate(sx, sy); ctx.rotate(p.rot); ctx.drawImage(s.cv, -w / 2, -h / 2, w, h); ctx.restore();
     } else ctx.drawImage(s.cv, sx - w / 2, sy - h / 2, w, h);
   }
@@ -987,7 +1007,7 @@ function lighting(G, B, portals) {
   l.setTransform(1, 0, 0, 1, 0, 0);
   l.globalCompositeOperation = "source-over";
   const a = B.amb;
-  const dark = G.darkness || 0;
+  const dark = Math.max(G.darkness || 0, D.riseDim(G));       // v13: Boss-Auftritt dunkelt die Welt ab
   l.fillStyle = "rgb(" + Math.round(a[0] * 255 * (1 - dark)) + "," + Math.round(a[1] * 255 * (1 - dark)) + "," + Math.round(a[2] * 255 * (1 - dark)) + ")";
   l.fillRect(0, 0, R.lw, R.lh);
   l.globalCompositeOperation = "lighter";
@@ -1027,6 +1047,7 @@ function lighting(G, B, portals) {
     let n = 0;
     for (const gl of R.glowVis) { for (const gp of gl) if (light(gp.x, gp.y, 1.5, gp.c, 0.4 + 0.25 * Math.sin(T * gp.f + gp.ph)) && ++n >= 10) break; if (n >= 10) break; }
   }
+  if (DK.on) D.lights(light, G, R, FX.lights, T);             // v13: Fackel-Lichtkegel, Lichtstrahl-Pfützen, glühende Deko, Lichtblitze
   if (G.rise) { const RS = G.rise, kk = RS.ph === "quake" ? RS.u : RS.ph === "burst" ? 1 : RS.ph === "grow" ? 1 - 0.4 * RS.u : 0.6 * (1 - RS.u); light(RS.x, RS.y, (2.4 + 3.2 * kk) * (RS.b.isKing ? 1.4 : 1), RS.col, 0.4 + 0.5 * kk); }
   l.globalAlpha = 1;
   l.globalCompositeOperation = "multiply";
@@ -1067,6 +1088,7 @@ function glowPass(ctx, G, B, portals) {
   if (L.wallTraps) for (const w of L.wallTraps) if (w.st === 1) { const k = Math.min(1, w.t / WALLTRAP.warn); g(w.x0, w.y0, 18, 40 + 50 * k, w.look.glow, 0.35 + 0.35 * k + 0.1 * Math.sin(T * 26)); }
   for (const s of G.shots) if (s.kind === "wall") g(s.x, s.y, s.z, 56, s.col, s.look === "ember" ? 0.55 : 0.3);
   drawGuide(ctx, G, "glow");
+  if (DK.on) D.glow(ctx, G, R, g, toScreen, T);                // v13: Lichtstrahlen, Schwebeteilchen, Glanz, Treppe/Portal/Beute
   if (G.rise) riseGlow(ctx, G.rise, g);
   // v9: „mythisch“ glänzt — weiche Aura unter dem Kobold (klein und leise, Warnkreise der Bosse bleiben lesbar)
   { const M = p.look && p.look.myth && MYTH_BY_ID[p.look.myth]; if (M && M.aura) { const n = M.aura.length, k = (T * 0.6) % n, c1 = M.aura[Math.floor(k)], w = 1 + 0.08 * Math.sin(T * 3);
