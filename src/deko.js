@@ -24,13 +24,13 @@ const el = (c, x, y, rx, ry, rot = 0) => { c.beginPath(); c.ellipse(x, y, rx, ry
 const FLOOR_SET = [
   [["pebbles", 3], ["clover", 3], ["daisy", 2]],
   [["moss", 5], ["tuft", 4], ["shrooms", 3], ["puddle", 2], ["pebbles", 3], ["leaves", 2], ["crack", 2]],
-  [["shards", 4], ["glowcrack", 3], ["puddle", 2], ["pebbles", 3], ["geode", 2], ["crack", 2]],
+  [["shards", 4], ["glowcrack", 3], ["puddle", 2], ["pebbles", 3], ["starshards", 2], ["crack", 2]],
   [["bonbon", 4], ["syrup", 3], ["crumbs", 3], ["sugarcube", 2], ["heartcandy", 2], ["crack", 1]],
   [["icepatch", 4], ["drift", 4], ["frozenpuddle", 2], ["snowpebbles", 3], ["froststar", 2]],
   [["lavacrack", 4], ["ash", 3], ["bone", 2], ["obsidian", 3], ["embers", 3], ["lavapool", 1]],
 ];
 const FLAT = { puddle: 1, syrup: 1, icepatch: 1, frozenpuddle: 1, lavapool: 1, glowcrack: 1, lavacrack: 1, crack: 1, moss: 1, ash: 1, drift: 1 };
-export const GLOW_KINDS = { glowcrack: 1, shards: 1, lavacrack: 1, lavapool: 1, embers: 1, geode: 1 };
+export const GLOW_KINDS = { glowcrack: 1, shards: 1, lavacrack: 1, lavapool: 1, embers: 1, starshards: 1 };
 export const SHINE_KINDS = { puddle: 1, syrup: 1, icepatch: 1, frozenpuddle: 1 };
 const RATE = [0.12, 0.32, 0.32, 0.3, 0.32, 0.32];
 /** Art der Bodendeko für Kachel (x, y) oder null. Nur auf freien Kacheln ohne eigene Deko/Arena-Mosaik. */
@@ -113,13 +113,14 @@ export function drawFloorDeco(c, sx, sy, B, bi, kind, rs) {
       break;
     // ---- Pfützen mit Spiegelung (Wasser, Sirup, Eis) ----
     case "puddle": case "syrup": case "frozenpuddle": case "icepatch": {
-      const col = kind === "syrup" ? "#e05aa0" : kind === "puddle" ? (bi === 2 ? "#2a2a6a" : "#24524e") : "#bfe6ff";
+      const col = kind === "syrup" ? "#e05aa0" : kind === "puddle" ? (bi === 2 ? "#5a58b8" : "#2f6a64") : "#bfe6ff";
       const rx = (kind === "icepatch" ? 15 : 12) + r() * 3, ry = rx * 0.46, x = sx + (r() - 0.5) * 6, y = sy + 16 + (r() - 0.5) * 3;
       el(c, x, y + 0.8, rx + 1.2, ry + 1); c.fillStyle = "rgba(10,0,20,.25)"; c.fill();
       c.save(); el(c, x, y, rx, ry); c.clip();
       const g = c.createLinearGradient(x, y - ry, x, y + ry);         // Spiegelbild: oben hell (Raumlicht), unten tief
       g.addColorStop(0, mixHex(col, "#ffffff", kind === "icepatch" ? 0.55 : 0.45)); g.addColorStop(0.55, col); g.addColorStop(1, shade(col, -0.35));
       c.fillStyle = g; c.fillRect(x - rx, y - ry, rx * 2, ry * 2);
+      if (kind === "puddle") { c.fillStyle = "rgba(255,255,255,.8)"; for (let k = 0; k < 3; k++) { el(c, x + (r() - 0.3) * rx, y + (r() - 0.5) * ry, 0.8, 0.5); c.fill(); } }   // gespiegelte Funkel-Punkte
       c.globalAlpha = kind === "icepatch" ? 0.75 : 0.55; c.fillStyle = "#ffffff";   // gespiegelte Wandkante + Lichtstreifen
       c.beginPath(); c.moveTo(x - rx * 0.7, y - ry * 0.1); c.lineTo(x - rx * 0.2, y - ry * 0.75); c.lineTo(x - rx * 0.02, y - ry * 0.75); c.lineTo(x - rx * 0.5, y - ry * 0.1); c.fill();
       c.globalAlpha = 0.35; c.beginPath(); c.moveTo(x + rx * 0.05, y + ry * 0.2); c.lineTo(x + rx * 0.4, y - ry * 0.5); c.lineTo(x + rx * 0.5, y - ry * 0.5); c.lineTo(x + rx * 0.15, y + ry * 0.2); c.fill();
@@ -147,11 +148,15 @@ export function drawFloorDeco(c, sx, sy, B, bi, kind, rs) {
       path(); c.strokeStyle = hot ? "#fff0a0" : "#e8fbff"; c.lineWidth = 0.7; c.stroke();
       break;
     }
-    case "geode":
-      ol(c, c => c.ellipse(cx, cy, 6.5, 3.6, 0, 0, TAU), "#5a5088", "#2a2050", 1.2);
-      el(c, cx, cy - 0.3, 4.4, 2.3); c.fillStyle = "#b8a8ff"; c.fill();
-      c.fillStyle = "#ffffff"; for (let k = 0; k < 4; k++) { el(c, cx + (r() - 0.5) * 6, cy + (r() - 0.5) * 2.4, 0.9, 0.7); c.fill(); }
+    case "starshards": {                                       // Kristallstern: liegende Splitter strahlenförmig um einen Funkel-Kern
+      const col = r() < 0.5 ? "#c8b8ff" : "#9ff0ff";
+      for (let k = 0; k < 5; k++) {
+        const a = k / 5 * TAU + r() * 0.4, l = 6 + r() * 3, ex = cx + Math.cos(a) * l, ey = cy + Math.sin(a) * l * 0.5, nx = -Math.sin(a) * 1.6, ny = Math.cos(a) * 0.8;
+        ol(c, c => { c.moveTo(cx + nx, cy + ny); c.lineTo(ex, ey); c.lineTo(cx - nx, cy - ny); c.closePath(); }, col, shade(col, -0.55), 0.8);
+      }
+      el(c, cx, cy, 2, 1.2); c.fillStyle = "#ffffff"; c.fill();
       break;
+    }
     // ---- Zucker ----
     case "bonbon": {
       const col = ["#ff6fae", "#7fd8ff", "#ffe36e", "#9cf09a"][(r() * 4) | 0], x = cx, y = cy - 1, a = (r() - 0.5) * 0.8;
@@ -383,8 +388,9 @@ const SHAFT_COL = [null, "#e8ffd0", "#d8f4ff", "#fff0f8", "#f0faff", "#ffd8a8"];
 export function setupLevel(L, R, CH) {
   const m = L.map, bi = R.biome, seed = R.dkSeed = (m.w * 131 + m.h * 17 + (R.B.depth || 0) * 997 + bi * 7) | 0;
   R.dkShafts = []; R.dkGlow = new Map(); R.dkShine = new Map(); R.dkGlowVis = []; R.dkShineVis = [];
-  R.dkFloor = new Uint8Array(0);
+  R.dkFloorN = 0;
   if (!DK.on) return;
+  A.dropArt("wallD:", "wallD:" + (R.B.key || bi) + ":");          // Wand-Deko-Sprites nur der aktuellen Ebene behalten (Speicher)
   for (const pr of L.props || []) if (pr.kind === "chest") pr._dkWas = pr.open;
   if (!bi) return;
   const rooms = L.rooms || [];
@@ -394,9 +400,11 @@ export function setupLevel(L, R, CH) {
     if (m.solid[y * m.w + x]) return;
     R.dkShafts.push({ x: r.arena ? r.x + r.w / 2 : x + 0.5, y: r.arena ? r.y + r.h / 2 : y + 0.5, w: r.arena ? 1.25 : 1, ph: h01(x, y, seed) * TAU, col: SHAFT_COL[bi] });
   });
+  R.dkFloorN = 0;
   for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
     const i = y * m.w + x; if (m.solid[i]) continue;
     const k = floorKind(bi, x, y, seed, m.deco[i]); if (!k) continue;
+    R.dkFloorN++;
     const map = GLOW_KINDS[k] ? R.dkGlow : SHINE_KINDS[k] ? R.dkShine : null; if (!map) continue;
     const key = Math.floor(y / CH) * 64 + Math.floor(x / CH);
     let list = map.get(key); if (!list) map.set(key, list = []);

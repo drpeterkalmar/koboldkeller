@@ -12,6 +12,8 @@ export function setArtScale(k) {
   if (k !== K) { K = k; cache.clear(); }
 }
 export function clearArt() { cache.clear(); }
+/** v13: Sprites mit Präfix entfernen, außer denen mit keep-Präfix (z. B. Wand-Deko anderer Ebenen beim Ebenenwechsel) */
+export function dropArt(prefix, keep) { for (const k of cache.keys()) if (k.startsWith(prefix) && !k.startsWith(keep)) cache.delete(k); }
 export function artCount() { return cache.size; }
 // v9: Aussehen-abhängige Sprites (Körper/Kopf/Kostümteile je Look) in einer LRU halten — Kostümwechsel lassen den Cache nicht unbegrenzt wachsen
 const lru = new Map();

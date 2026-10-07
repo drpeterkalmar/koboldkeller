@@ -197,7 +197,7 @@ window.KK = {
   perf: (reset) => { if (reset) perfReset(); return { ...perfStats(), ...drawStats() }; },
   /** v13: Deko-Zustand (Lichtstrahlen, Wand-Deko, glühende/glänzende Boden-Deko, Lichtblitze); deko(false) schaltet nur die Effekte pro Frame aus (Messung) */
   deko: (on) => { if (on !== undefined) DK.on = !!on; return { on: DK.on, calm: DK.calm, shafts: (R.dkShafts || []).length, walls: R.walls.filter(w => w.dk).length, wallsAll: R.walls.length,
-    glow: [...(R.dkGlow || new Map()).values()].reduce((s, a) => s + a.length, 0), shine: [...(R.dkShine || new Map()).values()].reduce((s, a) => s + a.length, 0), lights: FX.lights.length, vign: R.vignCol || null, art: artCount() }; },
+    glow: [...(R.dkGlow || new Map()).values()].reduce((s, a) => s + a.length, 0), shine: [...(R.dkShine || new Map()).values()].reduce((s, a) => s + a.length, 0), lights: FX.lights.length, vign: R.vignCol || null, art: artCount(), floor: R.dkFloorN || 0 }; },
   dekoSkip: (m) => (DK.skip = m | 0),
   rock: () => R.rock ? { ms: R.rock.ms, bytes: R.rock.bytes, w: R.rock.mass.width, h: R.rock.mass.height, fels: R.fels, chunks: R.chunks.size, vis: R.chunksVis } : { fels: R.fels },
   bossAtk: (k) => forceAttack(G.boss, k), bossHit: () => { if (G.boss) bossHit(G.boss, false); return G.boss && G.boss.phase; },
@@ -223,6 +223,6 @@ window.KK = {
   myths: () => ({ have: G.myth.have.slice(), real: G.myth.real.slice(), view: G.myth.view, count: G.myth.real.length, total: MYTHS.length, wearing: G.p ? G.p.look.myth : "", mhat: G.p ? G.p.look.mhat : false, art: artCount(), toasts: UI.UI.mythToasts || 0 }),
   unlock: (id) => { const ids = id === "all" ? MYTHS.map(m => m.id) : [id]; let n = 0; for (const i of ids) if (unlockMyth(i)) n++; return n; },
   wear: (id, mhat = false) => { if (!G.p) return null; setLook({ ...lookForSave(G.p.look), myth: id || "", mhat }); return G.p.look.myth; },
-  G, R,
+  G, R, FX,
 };
 console.log("Koboldkeller 2 v" + VERSION);

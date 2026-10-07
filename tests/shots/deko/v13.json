@@ -1,0 +1,252 @@
+{
+  "on": [
+    {
+      "d": 0,
+      "on": true,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 128,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 62,
+      "floor": 0
+    },
+    {
+      "d": 1,
+      "on": true,
+      "calm": false,
+      "shafts": 5,
+      "walls": 60,
+      "wallsAll": 350,
+      "glow": 0,
+      "shine": 16,
+      "lights": 0,
+      "vign": "#3c5a52",
+      "art": 91,
+      "floor": 194
+    },
+    {
+      "d": 4,
+      "on": true,
+      "calm": false,
+      "shafts": 6,
+      "walls": 47,
+      "wallsAll": 346,
+      "glow": 0,
+      "shine": 15,
+      "lights": 0,
+      "vign": "#3c5a52",
+      "art": 110,
+      "floor": 214
+    },
+    {
+      "d": 5,
+      "on": true,
+      "calm": false,
+      "shafts": 5,
+      "walls": 43,
+      "wallsAll": 325,
+      "glow": 98,
+      "shine": 23,
+      "lights": 0,
+      "vign": "#3e3672",
+      "art": 128,
+      "floor": 177
+    },
+    {
+      "d": 9,
+      "on": true,
+      "calm": false,
+      "shafts": 4,
+      "walls": 58,
+      "wallsAll": 394,
+      "glow": 0,
+      "shine": 31,
+      "lights": 0,
+      "vign": "#6a3a5e",
+      "art": 144,
+      "floor": 195
+    },
+    {
+      "d": 13,
+      "on": true,
+      "calm": false,
+      "shafts": 6,
+      "walls": 45,
+      "wallsAll": 400,
+      "glow": 0,
+      "shine": 69,
+      "lights": 0,
+      "vign": "#3e5a7a",
+      "art": 162,
+      "floor": 181
+    },
+    {
+      "d": 17,
+      "on": true,
+      "calm": false,
+      "shafts": 6,
+      "walls": 55,
+      "wallsAll": 419,
+      "glow": 78,
+      "shine": 0,
+      "lights": 0,
+      "vign": "#6a3424",
+      "art": 176,
+      "floor": 170
+    },
+    {
+      "d": 20,
+      "on": true,
+      "calm": false,
+      "shafts": 5,
+      "walls": 71,
+      "wallsAll": 484,
+      "glow": 171,
+      "shine": 0,
+      "lights": 0,
+      "vign": "#6a3424",
+      "art": 194,
+      "floor": 331
+    }
+  ],
+  "off": [
+    {
+      "d": 0,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 128,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 59,
+      "floor": 0
+    },
+    {
+      "d": 1,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 350,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 73,
+      "floor": 0
+    },
+    {
+      "d": 4,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 346,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 93,
+      "floor": 0
+    },
+    {
+      "d": 5,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 325,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 110,
+      "floor": 0
+    },
+    {
+      "d": 9,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 394,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 126,
+      "floor": 0
+    },
+    {
+      "d": 13,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 400,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 144,
+      "floor": 0
+    },
+    {
+      "d": 17,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 419,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 158,
+      "floor": 0
+    },
+    {
+      "d": 20,
+      "on": false,
+      "calm": false,
+      "shafts": 0,
+      "walls": 0,
+      "wallsAll": 484,
+      "glow": 0,
+      "shine": 0,
+      "lights": 0,
+      "vign": null,
+      "art": 175,
+      "floor": 0
+    }
+  ],
+  "art": {
+    "on": 194,
+    "off": 175
+  },
+  "ext": [],
+  "calm": {
+    "n": {
+      "mx": 20.6,
+      "calm": false,
+      "frozen": true
+    },
+    "c": {
+      "mx": 7.07,
+      "calm": true,
+      "frozen": true
+    }
+  },
+  "load": {
+    "files": 22,
+    "codeGz": 218059,
+    "dekoGz": 12047
+  }
+}

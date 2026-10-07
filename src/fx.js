@@ -81,7 +81,7 @@ export const P = {
     if (DEKO) {                                                // v13: Licht-Puff, Bodenring, ein Seelchen-Funkeln steigt auf
       lightFlash(x, y, 2.4 * k, col, 0.35, 1);
       if (FX.dq < 3) ring(x, y, 1.1 * k, col, 0.32, 0.7);
-      if (dk()) for (let i = 0; i < 2 * k; i++) part({ x: x + drr(-0.15, 0.15), y: y + drr(-0.15, 0.15), z: 34, vz: drr(70, 110), vx: drr(-0.25, 0.25), kind: "star5", col: "#ffffff", s0: 4, s1: 15, life: drr(0.9, 1.3), g: 0, drag: 0.6, fade: 0.25, vr: drr(-3, 3) });
+      if (dk()) for (let i = 0; i < 2 * k; i++) part({ x: x + drr(-0.15, 0.15), y: y + drr(-0.15, 0.15), z: 34, vz: drr(70, 110), vx: drr(-0.25, 0.25), kind: "star5", col: "#ffffff", s0: 4, s1: 15, life: drr(0.9, 1.3), g: 0, drag: 0.6, fade: 0.25, rot: dr() * TAU, vr: drr(-3, 3) });
     }
   },
   sparkle(x, y, col = "#fff6a0", n = 3, z = 30) {
