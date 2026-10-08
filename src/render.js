@@ -4,6 +4,7 @@ import { FX } from "./fx.js";
 import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_FX, URLQ } from "./config.js";
 import { clamp, TAU, rgba, mixHex, shade, mulberry32 } from "./util.js";
 import * as D from "./deko.js";
+import { DREH, drehIndex, drehMasse, sortiereNachBild } from "./buendel.js";
 const DK = D.DK;
 
 export const R = {
@@ -983,7 +984,62 @@ function drawShot(ctx, s, sx, sy) {
   }
 }
 
+// Technik E1: Partikel gebündelt (src/buendel.js) — vorgedrehte Bilder statt save/rotate/restore je Partikel, Projektion ohne
+// neue Arrays (kein Müll für den Garbage Collector), additive Partikel nach Bild sortiert. ?pbuendel=0 = wie v13.
+const PB = URLQ.get("pbuendel") !== "0";
+const PBN = 1024, pbC = new Array(PBN).fill(null), pbX = new Float32Array(PBN), pbY = new Float32Array(PBN), pbW = new Float32Array(PBN), pbH = new Float32Array(PBN),
+  pbA = new Float32Array(PBN), pbK = new Float64Array(PBN), pbO = new Uint16Array(PBN);
+let pbId = 1;
+R.pbDreh = 0;   // Anzahl gebackener Dreh-Sätze (Debug)
+/** 8 (Funken 16) vorgedrehte Bilder eines (eingefärbten) Sprites, am Sprite gemerkt — fällt mit dem Art-Cache weg */
+function drehSatz(s, kind) {
+  const K = A.artScale();
+  if (s.rots && s.rotK === K) return s.rots;
+  const [n, per, smax] = DREH[kind], m = drehMasse(s.w, s.h, smax), px = Math.max(2, Math.ceil(m.d * K));
+  const w = smax * K, h = w * s.h / s.w, rots = [];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement("canvas"); c.width = c.height = px;
+    const x = c.getContext("2d");
+    x.translate(px / 2, px / 2); x.rotate(i * per / n); x.drawImage(s.cv, -w / 2, -h / 2, w, h);
+    c._pb = pbId++;
+    rots.push(c);
+  }
+  s.rots = rots; s.rotK = K; s.rotF = m.faktor; R.pbDreh++;
+  return rots;
+}
 function drawParticles(ctx, additive) {
+  if (!PB) return drawParticlesV13(ctx, additive);
+  const Z = R.Z, cdx = R.camDX, cdy = R.camDY, ox = R.VW / 2 + R.shx, oy = R.VH * R.focusY + R.shy, VW = R.VW, VH = R.VH;
+  let n = 0;
+  for (const p of FX.parts) {
+    if (p.add !== additive) continue;
+    const sx = ((p.x - p.y) * 32 - cdx) * Z + ox, sy = ((p.x + p.y) * 16 - p.z - cdy) * Z + oy;
+    if (sx < -40 || sy < -40 || sx > VW + 40 || sy > VH + 40) continue;
+    const k = p.life / p.max;
+    const size = (p.s1 + (p.s0 - p.s1) * k) * Z;
+    if (size <= 0.3) continue;
+    const base = A.fx(p.kind);
+    const s = p.kind === "rock" ? A.multiplied(base, p.col) : p.col === "#fff" || p.col === "#ffffff" ? base : A.tinted(base, p.col);
+    let cv = s.cv, w = size, h = size * s.h / s.w;
+    const dr = DREH[p.kind];
+    if (dr) { cv = drehSatz(s, p.kind)[drehIndex(p.rot, dr[1], dr[0])]; w = h = size * s.rotF; }
+    else if (!cv._pb) cv._pb = pbId++;
+    if (n >= PBN) break;
+    pbC[n] = cv; pbX[n] = sx - w / 2; pbY[n] = sy - h / 2; pbW[n] = w; pbH[n] = h; pbK[n] = cv._pb;
+    pbA[n] = Math.min(1, k * (1 + (1 - p.fade) * 4));
+    n++;
+  }
+  if (additive) {
+    const ord = sortiereNachBild(pbO, pbK, n);
+    for (let j = 0; j < n; j++) { const i = ord[j]; ctx.globalAlpha = pbA[i]; ctx.drawImage(pbC[i], pbX[i], pbY[i], pbW[i], pbH[i]); }
+  } else {
+    for (let i = 0; i < n; i++) { ctx.globalAlpha = pbA[i]; ctx.drawImage(pbC[i], pbX[i], pbY[i], pbW[i], pbH[i]); }
+  }
+  for (let i = 0; i < n; i++) pbC[i] = null;              // keine alten Bilder festhalten (Art-Cache darf sie freigeben)
+  ctx.globalAlpha = 1;
+}
+/** v13-Fassung (A/B mit ?pbuendel=0) */
+function drawParticlesV13(ctx, additive) {
   const Z = R.Z;
   for (const p of FX.parts) {
     if (p.add !== additive) continue;

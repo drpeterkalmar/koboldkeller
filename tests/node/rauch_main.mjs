@@ -70,5 +70,5 @@ for (let i = 0; i < 6; i++) KK.spawn("slime", 1 + i * 0.3, 0.5);
 for (let i = 0; i < 40; i++) { KK.attack(); bilder(5, 60); }
 bilder(60, 30);
 const st = KK.state(), perf = KK.perf(), takt = KK.takt ? KK.takt() : null, auto = KK.auto ? KK.auto() : null;
-out({ ok: fehler.length === 0, fehler: fehler.slice(0, 5), depth: st.depth, ents: st.ents, x: st.x, y: st.y, perf: { frames: perf.frames, workP95: perf.workP95, drawP95: perf.drawP95 }, takt, auto: auto && { stufe: auto.stufe, aktiv: auto.aktiv } });
+out({ ok: fehler.length === 0, fehler: fehler.slice(0, 5), depth: st.depth, ents: st.ents, x: st.x, y: st.y, perf: { frames: perf.frames, workP95: perf.workP95, drawP95: perf.drawP95 }, takt, auto: auto && { stufe: auto.stufe, aktiv: auto.aktiv }, dreh: KK.R.pbDreh, post: KK.post ? KK.post() : null });
 process.exit(fehler.length ? 1 : 0);
