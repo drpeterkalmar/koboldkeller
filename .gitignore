@@ -10,3 +10,4 @@ shots/neubau/v12/vorher_*.png
 shots/neubau/v12/nachher_*.png
 tests/shots/deko/*.png
 tests/shots/deko/_*.jpg
+tests/perf/audio_kandidaten/*.m4a

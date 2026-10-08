@@ -56,10 +56,17 @@ export function bossIntro(e) {
 }
 
 // ---------- Blende ----------
-export function fade(cb, after) {
+/** warte (Technik E4): liefert optional ein Promise — die Blende bleibt zu, bis es erfüllt ist (Back-Worker, höchstens ~1,2 s) */
+export function fade(cb, after, warte) {
   const f = $("fade");
   f.classList.add("on");
-  setTimeout(() => { try { cb(); after && after(); } finally { requestAnimationFrame(() => f.classList.remove("on")); } }, 230);
+  setTimeout(() => {
+    let w = null;
+    try { cb(); after && after(); w = warte ? warte() : null; } finally {
+      const auf = () => requestAnimationFrame(() => f.classList.remove("on"));
+      if (w && w.then) w.then(auf, auf); else auf();
+    }
+  }, 230);
 }
 
 // ---------- Einstellungen ----------

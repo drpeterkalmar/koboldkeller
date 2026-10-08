@@ -4,6 +4,9 @@ import { FX } from "./fx.js";
 import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_FX, URLQ } from "./config.js";
 import { clamp, TAU, rgba, mixHex, shade, mulberry32 } from "./util.js";
 import * as D from "./deko.js";
+import { DREH, drehIndex, drehMasse, sortiereNachBild } from "./buendel.js";
+import { POST, postMasse, postGroesse } from "./post.js";
+import { CH, CH_MAX, CHT, CHH, chunkMasse, chunkLeer, backeChunk, backListe, aeltesterUngenutzt, felsRing } from "./chunkbacken.js";
 const DK = D.DK;
 
 export const R = {
@@ -13,13 +16,13 @@ export const R = {
   chunks: new Map(), chunkOrder: [], walls: [], wallTorch: new Map(), L: null, biome: 0, B: BIOMES[0], t: 0,
   lightSpr: new Map(), drawn: 0, focusY: 0.5,
 };
-const CH = 8, CH_MAX = 28;
-// v12: Chunk-Rand oben (Design-Px) — Platz für die Felskanten auf Wandkronen-Höhe; CHH = Chunk-Höhe
-const CHT = 40, CHH = CH * 32 + 30 + (CHT - 24);
+const embR = mulberry32(9001);                                // Technik E2: Fackel-Glut ohne Spiel-Zufall (Math.random)
+// (CH, CHT, CHH, CH_MAX stehen jetzt in chunkbacken.js — gemeinsam mit dem Back-Worker)
 // v12: Fels-Hintergrund (A/B: ?fels=0 = bisher, schwarze Fläche)
 R.fels = URLQ.get("fels") !== "0"; R.glowVis = [];
 
 export function initRender(cv) {
+  workerStart();
   R.cv = cv;
   R.ctx = cv.getContext("2d", { alpha: false });
   R.lcv = document.createElement("canvas");
@@ -34,7 +37,9 @@ export function resize() {
   const U0 = clamp(VW <= VH ? VW / 6.4 : Math.min(VW / 6.4, VH / 7.4), 50, 84);
   R.Z0 = U0 / 64; R.Z = R.Z0 * R.cz; R.U = 64 * R.Z;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  R.RS = Math.max(1, dpr * R.qScales[R.q]);
+  // Technik E3: mit Endbild (post.js) rendert die 2D-Szene kleiner (Skala 0,8 … 0,5), das Endbild skaliert hoch + schärft nach
+  const pm = POST.an ? postMasse(VW, VH, window.devicePixelRatio, R.q) : null;
+  R.RS = pm ? pm.RS : Math.max(1, dpr * R.qScales[R.q]);
   R.cv.width = Math.round(VW * R.RS); R.cv.height = Math.round(VH * R.RS);
   R.cv.style.width = VW + "px"; R.cv.style.height = VH + "px";
   A.setArtScale(R.Z0 * R.RS);
@@ -42,7 +47,12 @@ export function resize() {
   R.lcv.width = R.lw; R.lcv.height = R.lh;
   R.vign = makeVignette(R.lw, R.lh, R.vignCol);
   R.focusY = VH > VW ? 0.46 : 0.52;
-  R.chunks.clear(); R.chunkOrder.length = 0;
+  chunksLeeren();
+  if (pm) {                                                   // Glow-Ebene in halber Szenen-Auflösung (Quelle für den Schein)
+    if (!R.gcv) { R.gcv = document.createElement("canvas"); R.gctx = R.gcv.getContext("2d"); }
+    R.gcv.width = pm.gw; R.gcv.height = pm.gh;
+    postGroesse({ ...pm, VW, VH });
+  } else { R.gcv = null; R.gctx = null; }
 }
 function makeVignette(w, h, col) {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
@@ -68,7 +78,7 @@ function lightSprite(col) {
 // ---------- Level-Setup ----------
 export function setLevel(L, biome, B) {
   R.L = L; R.biome = biome; R.B = B || BIOMES[biome];
-  R.chunks.clear(); R.chunkOrder.length = 0;
+  chunksLeeren();
   const m = L.map; R.walls = [];
   for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
     if (!m.solid[y * m.w + x]) continue;
@@ -91,6 +101,7 @@ export function setLevel(L, biome, B) {
   for (const w of R.walls) if (w.dk && (R.wallTorch.has(w.y * m.w + w.x) || R.wallTrapAt.has(w.y * m.w + w.x))) w.dk = null;   // Fackel/Steingesicht bleiben frei
   setRock(L);
   D.setupLevel(L, R, CH);                                      // v13: Lichtstrahlen, glühende/glänzende Boden-Deko je Chunk
+  workerEbene();                                              // Technik E4: Worker bekommt die neue Ebene (backt erst auf Auftrag)
   const vc = DK.on ? D.VIGN[biome] || null : null;
   if (vc !== (R.vignCol || null)) { R.vignCol = vc; R.vign = makeVignette(R.lw, R.lh, vc); }
 }
@@ -100,23 +111,8 @@ export function snapCamera(x, y) { R.camX = x; R.camY = y; }
 const GLOW_COL = [null, ["#c8ff8a", "#fff27a"], ["#9ff0ff", "#c8b8ff"], ["#ffb3e6", "#fff38a"], ["#dff6ff", "#a8e6ff"], ["#ff8a3a", "#ffc060"]];
 /** je Ebene einmal: Kachel-Klassen (Boden/Wand/Felskante/Masse), Muster-Kacheln, Glimmpunkte im Fels (nach Chunks sortiert) */
 function setRock(L) {
-  const m = L.map, n = m.w * m.h, ring = R.ring = new Uint8Array(n).fill(3), front = R.edgeFront = new Uint8Array(n);
-  const at = (x, y) => x >= 0 && y >= 0 && x < m.w && y < m.h ? ring[y * m.w + x] : 3;
-  for (let i = 0; i < n; i++) if (!m.solid[i]) ring[i] = 0;
-  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
-    const i = y * m.w + x; if (ring[i] !== 3) continue;
-    for (let dy = -1; dy <= 1 && ring[i] === 3; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy) === 0) { ring[i] = 1; break; }
-  }
-  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
-    const i = y * m.w + x; if (ring[i] !== 3) continue;
-    let near = false;
-    for (let dy = -1; dy <= 1 && !near; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy) === 1) { near = true; break; }
-    if (!near) continue;
-    ring[i] = 2;
-    // vor einer Wand (Wand liegt dahinter, Richtung −x/−y) und nicht zugleich hinter einer → Geröll am Wandfuß statt Kronen-Brocken
-    const behind = at(x + 1, y) === 1 || at(x, y + 1) === 1 || at(x + 1, y + 1) === 1;
-    front[i] = !behind && (at(x - 1, y) === 1 || at(x, y - 1) === 1 || at(x - 1, y - 1) === 1) ? 1 : 0;
-  }
+  const m = L.map, fr = felsRing(m), ring = R.ring = fr.ring;   // Technik E4: Berechnung in chunkbacken.js (auch für den Worker-Test)
+  R.edgeFront = fr.front;
   R.rock = null;                                                // Muster entsteht beim ersten Zeichnen (Art-Maßstab bekannt)
   // Glimmpunkte: Glühwürmchen, Kristall-Glitzer, Zucker-Funkeln, Eis-Glitzern, Glutadern — nur tief in der Masse, gecacht je Chunk
   R.glowAt = null;
@@ -144,7 +140,10 @@ function buildRock() {
 }
 /** Hintergrund: 1 Füllaufruf mit dem an der Kamera ausgerichteten Muster (+ ab Qualität < 2 die langsamere Tiefen-Ebene) */
 function fillRock(ctx) {
-  if (!R.rock || R.rock.K !== A.artScale()) buildRock();
+  if (!R.rock || R.rock.K !== A.artScale()) {
+    if (WK.an && R.blende && WK.felsOffen) return;            // Technik E4: hinter der Blende backt der Worker das Muster
+    buildRock();
+  }
   const rk = R.rock, Z = R.Z, mx = rk.m, s = Z * A.ROCK_W / rk.mass.width, sd = Z * A.DEEP_W / rk.deep.width;
   const ox = R.VW / 2 + R.shx, oy = R.VH * R.focusY + R.shy;
   if (R.q < 2) {                                                // Tiefen-Ebene zuerst: Faktor 0,5 zur Kamera → wirkt weiter weg
@@ -168,60 +167,147 @@ export function toWorld(sx, sy) {
 }
 
 // ---------- Boden-Chunks ----------
+// ---------- Technik E4: Back-Worker (src/backwerk.js) ----------
+// Beim Ebenenwechsel backt ein Worker die Boden-Chunks und das Fels-Muster (OffscreenCanvas → ImageBitmap), der Hauptthread
+// rechnet weiter. Fehlt beim Zeichnen ein Chunk, backt ihn der Hauptthread selbst (wie v13) — außer hinter der Blende des
+// Ebenenwechsels, wenn der Worker ihn gerade backt (dann bleibt die Blende kurz zu, bis die nächsten Chunks da sind).
+// ?worker=0, kein Worker/OffscreenCanvas oder Fehler im Worker → alles synchron wie v13.
+const WK = { an: false, w: null, id: 0, offen: new Set(), wichtig: new Set(), felsOffen: false, warte: null, grund: "", fehler: null,
+  geliefert: 0, leer: 0, verworfen: 0, sync: 0, msSumme: 0, msMax: 0 };
+R.bild = 0;
+function workerStart() {
+  if (URLQ.get("worker") === "0") { WK.grund = "?worker=0"; return; }
+  try {
+    if (typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined") { WK.grund = "kein Worker/OffscreenCanvas"; return; }
+    const t = new OffscreenCanvas(1, 1);
+    if (!t.getContext("2d") || !t.transferToImageBitmap) { WK.grund = "OffscreenCanvas ohne 2D"; return; }
+    WK.an = true; WK.grund = "bereit (startet beim ersten Ebenenwechsel mit Blende)";
+  } catch (e) { WK.an = false; WK.grund = "Start: " + (e && e.message || e); }
+}
+// erst beim ersten Ebenenwechsel mit Blende starten: der Worker lädt art/deko/chunkbacken (gleiche ?v=, aus dem Cache) und
+// deren Importe util/config/myth OHNE ?v= (Module Worker kennen die Importmap nicht) → ≈ 90 KB roh / 27 KB gzip mehr
+function workerHolen() {
+  if (WK.w || !WK.an) return WK.w;
+  try {
+    const v = new URL(import.meta.url).search;                  // gleiche ?v= wie dieses Modul
+    WK.w = new Worker(new URL("./backwerk.js" + v, import.meta.url), { type: "module" });
+    WK.w.onmessage = (e) => workerAntwort(e.data);
+    WK.w.onerror = (e) => workerAus("Fehler: " + (e && e.message || "Worker"));
+    WK.grund = "an";
+  } catch (e) { workerAus("Start: " + (e && e.message || e)); }
+  return WK.w;
+}
+function workerAus(grund) {
+  WK.an = false; WK.grund = grund; WK.fehler = grund;
+  try { if (WK.w) WK.w.terminate(); } catch (e) { }
+  WK.w = null; WK.offen.clear(); WK.wichtig.clear(); WK.felsOffen = false;
+  if (WK.warte) { const r = WK.warte; WK.warte = null; r(); }
+}
+function chunksLeeren() {
+  for (const c of R.chunks.values()) if (c && c.cv && c.cv.close) c.cv.close();   // ImageBitmaps sofort freigeben
+  R.chunks.clear(); R.chunkOrder.length = 0;
+  WK.id++; WK.offen.clear(); WK.wichtig.clear(); WK.felsOffen = false;           // alte Worker-Aufträge verfallen
+  if (WK.an && WK.w) try { WK.w.postMessage({ typ: "stopp" }); } catch (e) { }     // Worker hört sofort auf (Resize, neue Ebene)
+  if (WK.warte) { const r = WK.warte; WK.warte = null; r(); }
+}
+function workerEbene() {
+  if (!WK.an || !R.L || !(WK.w || R.blende)) return;
+  if (!workerHolen()) return;
+  const m = R.L.map;
+  try {
+    WK.w.postMessage({ typ: "ebene", id: WK.id, K: A.artScale(), d: { map: { w: m.w, h: m.h, solid: m.solid, v: m.v, deco: m.deco }, ring: R.ring, edgeFront: R.edgeFront,
+      B: R.B, biome: R.biome, fels: R.fels, dk: DK.on, dkSeed: R.dkSeed } });
+    if (R.fels && R.blende) { WK.w.postMessage({ typ: "fels", id: WK.id }); WK.felsOffen = true; }
+  } catch (e) { workerAus("Senden: " + (e && e.message || e)); }
+}
+function einsortieren(key, c) {
+  R.chunks.set(key, c);
+  R.chunkOrder.push(key);
+  while (R.chunkOrder.length > CH_MAX) {
+    // v13: den ältesten verdrängen; mit Worker: den am längsten nicht gezeichneten (sichtbare bleiben)
+    const i = WK.an ? aeltesterUngenutzt(R.chunks, R.chunkOrder) : 0;
+    const old = R.chunkOrder.splice(i, 1)[0], oc = R.chunks.get(old);
+    R.chunks.delete(old);
+    if (oc && oc.cv && oc.cv.close) oc.cv.close();
+  }
+}
+function zuLeinwand(c) {                                       // ImageBitmap → Canvas (nur wenn darauf gemalt wird: Krater)
+  if (c.cv.getContext) return;
+  const cv = document.createElement("canvas"); cv.width = c.cv.width; cv.height = c.cv.height;
+  cv.getContext("2d").drawImage(c.cv, 0, 0);
+  if (c.cv.close) c.cv.close();
+  c.cv = cv;
+}
+function workerAntwort(m) {
+  if (m.typ === "fehler") { workerAus("Fehler: " + m.text); return; }
+  if (m.typ === "fels") {
+    WK.felsOffen = false;
+    if (m.id === WK.id && m.K === A.artScale() && !(R.rock && R.rock.K === m.K)) {
+      R.rock = { K: m.K, mass: m.mass, deep: m.deep, pm: R.ctx.createPattern(m.mass, "repeat"), pd: R.ctx.createPattern(m.deep, "repeat"), m: new DOMMatrix(), ms: m.ms, worker: true,
+        bytes: (m.mass.width * m.mass.height + m.deep.width * m.deep.height) * 4 };
+    } else { m.mass.close(); m.deep.close(); WK.verworfen++; }
+  } else if (m.typ === "chunk") {
+    if (m.id === WK.id) { WK.offen.delete(m.key); WK.wichtig.delete(m.key); }
+    if (m.id !== WK.id || m.K !== A.artScale() || R.chunks.has(m.key)) { if (m.bild) m.bild.close(); WK.verworfen++; }
+    else if (m.leer) { R.chunks.set(m.key, null); WK.leer++; }
+    else {
+      const c = { cv: m.bild, ox: m.ox, oy: m.oy, W: m.W, H: m.H, K: m.K, zuletzt: R.bild };
+      const cr = R.L && R.L.arena && R.L.arena.crater;
+      if (cr && cr.baked) paintCraterOn(c, m.key % 64, Math.floor(m.key / 64), cr);
+      einsortieren(m.key, c);
+      WK.geliefert++; WK.msSumme += m.ms || 0; WK.msMax = Math.max(WK.msMax, m.ms || 0);
+    }
+  }
+  if (WK.warte && !WK.wichtig.size && !WK.felsOffen) { const r = WK.warte; WK.warte = null; r(); }
+}
+/** Promise: die nächsten Chunks der neuen Ebene sind da (höchstens maxMs). null = nichts zu warten (kein Worker) */
+export function chunksBereit(maxMs = 1200) {
+  if (!WK.an || (!WK.wichtig.size && !WK.felsOffen)) return null;
+  if (WK.warte) { const alt = WK.warte; WK.warte = null; alt(); }   // eine ältere Blende nicht hängen lassen
+  return new Promise((res) => {
+    WK.warte = res;
+    setTimeout(() => { if (WK.warte === res) { WK.warte = null; res(); } }, maxMs);
+  });
+}
+export function workerZustand() {
+  return { an: WK.an, laeuft: !!WK.w, grund: WK.grund, fehler: WK.fehler, offen: WK.offen.size, wichtig: WK.wichtig.size, geliefert: WK.geliefert, leer: WK.leer, verworfen: WK.verworfen,
+    sync: WK.sync, msMittel: WK.geliefert ? +(WK.msSumme / WK.geliefert).toFixed(1) : 0, msMax: WK.msMax, blende: !!R.blende, felsWorker: !!(R.rock && R.rock.worker) };
+}
+
 function chunk(cx, cy) {
   const key = cy * 64 + cx;
   let c = R.chunks.get(key);
-  if (c !== undefined) return c;
-  const L = R.L, m = L.map, B = R.B;
-  const x0 = cx * CH, y0 = cy * CH;
-  let any = false;
-  const ring = R.ring;                                         // v12: 0 Boden · 1 Wand · 2 Felskante · 3 Masse
-  for (let y = y0; y < y0 + CH && !any; y++) for (let x = x0; x < x0 + CH; x++) if (x < m.w && y < m.h && (R.fels ? ring[y * m.w + x] < 3 : !m.solid[y * m.w + x])) { any = true; break; }
-  if (!any) { R.chunks.set(key, null); return null; }
-  const ox = (x0 - y0 - CH) * 32 - 4, oy = (x0 + y0) * 16 - CHT;
-  const W = CH * 64 + 8, H = CHH;
+  if (c !== undefined) { if (c) c.zuletzt = R.bild; return c; }
+  if (WK.an && R.blende && WK.offen.has(key)) return null;     // hinter der Blende: kommt gleich vom Worker
+  const L = R.L, d = { map: L.map, ring: R.ring, edgeFront: R.edgeFront, B: R.B, biome: R.biome, fels: R.fels, dk: DK.on, dkSeed: R.dkSeed };
+  if (chunkLeer(d, cx, cy)) { R.chunks.set(key, null); return null; }
+  const { ox, oy, W, H } = chunkMasse(cx, cy);
   const K = A.artScale();
   const cv = document.createElement("canvas");
   cv.width = Math.ceil(W * K); cv.height = Math.ceil(H * K);
   const g = cv.getContext("2d");
-  g.scale(K, K); g.lineJoin = "round"; g.lineCap = "round";
-  for (let s = x0 + y0; s <= x0 + y0 + 2 * (CH - 1); s++) {
-    for (let x = x0; x < x0 + CH; x++) {
-      const y = s - x;
-      if (y < y0 || y >= y0 + CH || x >= m.w || y >= m.h) continue;
-      const i = y * m.w + x;
-      if (m.solid[i]) continue;
-      const ao = (y > 0 && m.solid[i - m.w] ? 1 : 0) | (x > 0 && m.solid[i - 1] ? 2 : 0);
-      A.drawFloorTile(g, (x - y) * 32 - ox, (x + y) * 16 - oy, B, R.biome, m.v[i], m.deco[i], ao);
-      if (DK.on) {                                              // v13: Boden-Details je Welt + Wandfuß (gebacken, 0 Kosten pro Frame)
-        const tx = (x - y) * 32 - ox, ty = (x + y) * 16 - oy, kd = D.floorKind(R.biome, x, y, R.dkSeed, m.deco[i]);
-        if (ao && R.biome && D.h01(x, y, R.dkSeed + 19) < 0.55) D.drawWallFoot(g, tx, ty, B, R.biome, ao, (x * 7919 + y * 104729 + R.dkSeed) | 0);
-        if (kd) D.drawFloorDeco(g, tx, ty, B, R.biome, kd, (x * 31337 + y * 7331 + R.dkSeed) | 0);
-      }
-    }
-  }
-  if (R.fels && R.biome) for (let s = x0 + y0; s <= x0 + y0 + 2 * (CH - 1); s++) for (let x = x0; x < x0 + CH; x++) {   // v12: Felskanten (gebacken)
-    const y = s - x;
-    if (y < y0 || y >= y0 + CH || x >= m.w || y >= m.h || ring[y * m.w + x] !== 2) continue;
-    A.drawRockEdge(g, (x - y) * 32 - ox, (x + y) * 16 - oy, B, R.biome, m.v[y * m.w + x] + x * 7 + y * 13, R.edgeFront[y * m.w + x] === 1);
-  }
-  c = { cv, ox, oy, W, H, K };
+  g.scale(K, K);
+  backeChunk(g, d, cx, cy, A, D);                             // Technik E4: derselbe Code wie im Worker
+  c = { cv, ox, oy, W, H, K, zuletzt: R.bild };
   R.chunkBuilds = (R.chunkBuilds || 0) + 1;
+  if (WK.an) WK.sync++;
   const cr = L.arena && L.arena.crater;
   if (cr && cr.baked) paintCraterOn(c, cx, cy, cr);            // v11: Krater gehört ab jetzt zum Boden (gecacht)
-  R.chunks.set(key, c);
-  R.chunkOrder.push(key);
-  if (R.chunkOrder.length > CH_MAX) { const old = R.chunkOrder.shift(); R.chunks.delete(old); }
+  einsortieren(key, c);
   return c;
 }
 /** alle Chunks vorab bauen (beim Levelwechsel, versteckt hinter Blende) */
 export function prewarm(G) {
   const m = R.L.map;
-  const px = G.p.x, py = G.p.y;
-  const list = [];
-  for (let cy = 0; cy * CH < m.h; cy++) for (let cx = 0; cx * CH < m.w; cx++) list.push([cx, cy, Math.hypot(cx * CH + 4 - px, cy * CH + 4 - py)]);
-  list.sort((a, b) => a[2] - b[2]);
-  for (const [cx, cy] of list.slice(0, CH_MAX - 4)) chunk(cx, cy);
+  const list = backListe(m.w, m.h, G.p.x, G.p.y, CH_MAX - 4);
+  // Technik E4: nur hinter der Blende backt der Worker (nächste zuerst, die ersten 12 hält die Blende ab). Ohne Blende (Spielstart,
+  // KK.goto) braucht das nächste Bild die Chunks sofort → synchron wie v13, sonst würde doppelt gebacken
+  const nutz = WK.an && R.blende;
+  if (nutz) {
+    for (const [i, [cx, cy]] of list.entries()) { const key = cy * 64 + cx; if (R.chunks.has(key)) continue; WK.offen.add(key); if (i < 12) WK.wichtig.add(key); }
+    try { WK.w.postMessage({ typ: "chunks", id: WK.id, liste: list.map(([cx, cy]) => [cx, cy]) }); } catch (e) { workerAus("Senden: " + (e && e.message || e)); }
+  }
+  if (!nutz) for (const [cx, cy] of list) chunk(cx, cy);
   // Sprites vorwärmen (sonst Mini-Ruckler beim ersten Auftauchen)
   const B = R.B;
   for (let v = 0; v < 4; v++) A.wallSprite(B, R.biome, v);
@@ -333,7 +419,7 @@ export function draw(G, dt) {
   const ctx = R.ctx, L = R.L, p = G.p;
   R.G = G;
   if (!L || !p) return;
-  R.t += dt;
+  R.t += dt; R.dtF = dt; R.bild++;
   const B = R.B;
   // v5: Bosskampf in der großen Arena → Kamera zoomt heraus und schaut zwischen Kobold und Boss (Boss + Warnungen im Bild)
   const bz = bossZoom(G);
@@ -581,7 +667,16 @@ export function draw(G, dt) {
   ctx.drawImage(R.lcv, -2, -2, R.VW + 4, R.VH + 4);
   // --- Glow (additiv) ---
   ctx.globalCompositeOperation = "lighter";
-  glowPass(ctx, G, B, portals);
+  const gc = POST.an && R.gctx;
+  if (gc) {                                                   // Technik E3: weiche Glows in die Glow-Ebene (halbe Auflösung)
+    gc.setTransform(1, 0, 0, 1, 0, 0); gc.globalCompositeOperation = "source-over"; gc.globalAlpha = 1;
+    gc.clearRect(0, 0, R.gcv.width, R.gcv.height);
+    const gs = R.RS * R.gcv.width / R.cv.width, k = gs * R.zp;
+    gc.setTransform(k, 0, 0, k, gs * (1 - R.zp) * R.VW / 2, gs * (1 - R.zp) * R.VH / 2);
+    gc.globalCompositeOperation = "lighter";
+    glowPass(gc, G, B, portals, ctx);
+    gc.globalCompositeOperation = "source-over"; gc.globalAlpha = 1;
+  } else glowPass(ctx, G, B, portals, ctx);
   drawParticles(ctx, true);
   ctx.globalCompositeOperation = "source-over";
   // --- Texte ---
@@ -748,6 +843,7 @@ function bakeCrater(cr) {
 function paintCraterOn(c, cx, cy, cr) {
   const x0 = cx * CH, y0 = cy * CH, e = cr.ext || 6, m = R.L.map;
   if (cr.x + e < x0 || cr.x - e > x0 + CH || cr.y + e < y0 || cr.y - e > y0 + CH) return;
+  zuLeinwand(c);                                              // Technik E4: Worker-Chunks sind ImageBitmaps
   const g = c.cv.getContext("2d");
   g.save(); g.setTransform(c.K, 0, 0, c.K, 0, 0);
   g.beginPath();                                                // nur auf den eigenen Bodenkacheln (keine doppelten Ränder an Chunk-Grenzen)
@@ -982,7 +1078,62 @@ function drawShot(ctx, s, sx, sy) {
   }
 }
 
+// Technik E1: Partikel gebündelt (src/buendel.js) — vorgedrehte Bilder statt save/rotate/restore je Partikel, Projektion ohne
+// neue Arrays (kein Müll für den Garbage Collector), additive Partikel nach Bild sortiert. ?pbuendel=0 = wie v13.
+const PB = URLQ.get("pbuendel") !== "0";
+const PBN = 1024, pbC = new Array(PBN).fill(null), pbX = new Float32Array(PBN), pbY = new Float32Array(PBN), pbW = new Float32Array(PBN), pbH = new Float32Array(PBN),
+  pbA = new Float32Array(PBN), pbK = new Float64Array(PBN), pbO = new Uint16Array(PBN);
+let pbId = 1;
+R.pbDreh = 0;   // Anzahl gebackener Dreh-Sätze (Debug)
+/** 8 (Funken 16) vorgedrehte Bilder eines (eingefärbten) Sprites, am Sprite gemerkt — fällt mit dem Art-Cache weg */
+function drehSatz(s, kind) {
+  const K = A.artScale();
+  if (s.rots && s.rotK === K) return s.rots;
+  const [n, per, smax] = DREH[kind], m = drehMasse(s.w, s.h, smax), px = Math.max(2, Math.ceil(m.d * K));
+  const w = smax * K, h = w * s.h / s.w, rots = [];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement("canvas"); c.width = c.height = px;
+    const x = c.getContext("2d");
+    x.translate(px / 2, px / 2); x.rotate(i * per / n); x.drawImage(s.cv, -w / 2, -h / 2, w, h);
+    c._pb = pbId++;
+    rots.push(c);
+  }
+  s.rots = rots; s.rotK = K; s.rotF = m.faktor; R.pbDreh++;
+  return rots;
+}
 function drawParticles(ctx, additive) {
+  if (!PB) return drawParticlesV13(ctx, additive);
+  const Z = R.Z, cdx = R.camDX, cdy = R.camDY, ox = R.VW / 2 + R.shx, oy = R.VH * R.focusY + R.shy, VW = R.VW, VH = R.VH;
+  let n = 0;
+  for (const p of FX.parts) {
+    if (p.add !== additive) continue;
+    const sx = ((p.x - p.y) * 32 - cdx) * Z + ox, sy = ((p.x + p.y) * 16 - p.z - cdy) * Z + oy;
+    if (sx < -40 || sy < -40 || sx > VW + 40 || sy > VH + 40) continue;
+    const k = p.life / p.max;
+    const size = (p.s1 + (p.s0 - p.s1) * k) * Z;
+    if (size <= 0.3) continue;
+    const base = A.fx(p.kind);
+    const s = p.kind === "rock" ? A.multiplied(base, p.col) : p.col === "#fff" || p.col === "#ffffff" ? base : A.tinted(base, p.col);
+    let cv = s.cv, w = size, h = size * s.h / s.w;
+    const dr = DREH[p.kind];
+    if (dr) { cv = drehSatz(s, p.kind)[drehIndex(p.rot, dr[1], dr[0])]; w = h = size * s.rotF; }
+    else if (!cv._pb) cv._pb = pbId++;
+    if (n >= PBN) break;
+    pbC[n] = cv; pbX[n] = sx - w / 2; pbY[n] = sy - h / 2; pbW[n] = w; pbH[n] = h; pbK[n] = cv._pb;
+    pbA[n] = Math.min(1, k * (1 + (1 - p.fade) * 4));
+    n++;
+  }
+  if (additive) {
+    const ord = sortiereNachBild(pbO, pbK, n);
+    for (let j = 0; j < n; j++) { const i = ord[j]; ctx.globalAlpha = pbA[i]; ctx.drawImage(pbC[i], pbX[i], pbY[i], pbW[i], pbH[i]); }
+  } else {
+    for (let i = 0; i < n; i++) { ctx.globalAlpha = pbA[i]; ctx.drawImage(pbC[i], pbX[i], pbY[i], pbW[i], pbH[i]); }
+  }
+  for (let i = 0; i < n; i++) pbC[i] = null;              // keine alten Bilder festhalten (Art-Cache darf sie freigeben)
+  ctx.globalAlpha = 1;
+}
+/** v13-Fassung (A/B mit ?pbuendel=0) */
+function drawParticlesV13(ctx, additive) {
   const Z = R.Z;
   for (const p of FX.parts) {
     if (p.add !== additive) continue;
@@ -1051,12 +1202,16 @@ function lighting(G, B, portals) {
   if (DK.on) D.lights(light, G, R, FX.lights, T);             // v13: Fackel-Lichtkegel, Lichtstrahl-Pfützen, glühende Deko, Lichtblitze
   if (G.rise) { const RS = G.rise, kk = RS.ph === "quake" ? RS.u : RS.ph === "burst" ? 1 : RS.ph === "grow" ? 1 - 0.4 * RS.u : 0.6 * (1 - RS.u); light(RS.x, RS.y, (2.4 + 3.2 * kk) * (RS.b.isKing ? 1.4 : 1), RS.col, 0.4 + 0.5 * kk); }
   l.globalAlpha = 1;
-  l.globalCompositeOperation = "multiply";
-  l.drawImage(R.vign, 0, 0);
+  if (!(POST.an && POST.vign)) {                              // Technik E3: nur mit ?pvign=1 macht der Shader die Vignette (s. post.js)
+    l.globalCompositeOperation = "multiply";
+    l.drawImage(R.vign, 0, 0);
+  }
   l.globalCompositeOperation = "source-over";
 }
 
-function glowPass(ctx, G, B, portals) {
+/** sc = Leinwand für scharfe Dinge (Fackel- und Königsflammen, Rundumschlag-Sichel, Spezial-Ring): mit Endbild die Szene,
+    sonst dieselbe wie ctx. Weich in der Glow-Ebene (halbe Auflösung) bleiben Scheine, Auren, Lichtstrahlen, Weg-Pfeil-Glow, Risse */
+function glowPass(ctx, G, B, portals, sc = ctx) {
   const Z = R.Z, L = R.L, p = G.p, T = R.t;
   const glow = A.fx("glow");
   const g = (x, y, z, size, col, al) => {
@@ -1074,11 +1229,11 @@ function glowPass(ctx, G, B, portals) {
     const [wx, wy] = toScreen(t.wx + 0.5, t.wy + 0.5);
     const px = wx + (t.face === "L" ? -16 : 16) * Z, py = wy - 38 * Z;
     const fl = 1 + Math.sin(T * 17 + t.x) * 0.12 + Math.sin(T * 29) * 0.06;
-    ctx.globalAlpha = 0.95;
-    ctx.drawImage(A.tinted(flame, B.torch).cv, px - 9 * Z, py - 24 * Z * fl, 18 * Z, 26 * Z * fl);
-    ctx.drawImage(flame.cv, px - 5 * Z, py - 14 * Z * fl, 10 * Z, 15 * Z * fl);
+    sc.globalAlpha = 0.95;                                    // Flammen scharf (mit Endbild in der Szene), Schein weich
+    sc.drawImage(A.tinted(flame, B.torch).cv, px - 9 * Z, py - 24 * Z * fl, 18 * Z, 26 * Z * fl);
+    sc.drawImage(flame.cv, px - 5 * Z, py - 14 * Z * fl, 10 * Z, 15 * Z * fl);
     ctx.globalAlpha = 0.5; const s = A.tinted(glow, B.torch), w = 70 * Z * fl; ctx.drawImage(s.cv, px - w / 2, py - 8 * Z - w / 2, w, w);
-    if (Math.random() < 0.04) G.emberAt = t;
+    if (embR() < 0.04 * Math.min(3, R.dtF * 60)) G.emberAt = t;   // Technik E2: eigener Zufall, je Sekunde gleich oft (egal ob 60 oder 120 Hz)
   }
   if (L.props) for (const pr of L.props) {
     if (pr.kind === "lantern") { const [sx, sy] = toScreen(pr.x, pr.y); ctx.globalAlpha = 0.55 + Math.sin(T * 5 + pr.x) * 0.08; const s = A.tinted(glow, "#ffd27a"), w = 60 * Z; ctx.drawImage(s.cv, sx - w / 2, sy - 76 * Z - w / 2, w, w); }
@@ -1109,8 +1264,8 @@ function glowPass(ctx, G, B, portals) {
         const a = k / 10 * TAU + T * 0.8, rx = Math.cos(a) * 1.25 * R.U, ry = Math.sin(a) * 0.62 * R.U;
         const front = Math.sin(a) > 0;
         const h = (1 + 0.35 * Math.sin(T * 9 + k * 1.7)) * (front ? 50 : 72) * R.Z, w = h * 0.62;
-        ctx.globalAlpha = (front ? 0.45 : 0.8) + 0.2 * Math.sin(T * 7 + k);
-        ctx.drawImage((k % 2 ? fl : fr).cv, kx + rx - w / 2, ky + ry - h * 0.92, w, h);
+        sc.globalAlpha = (front ? 0.45 : 0.8) + 0.2 * Math.sin(T * 7 + k);
+        sc.drawImage((k % 2 ? fl : fr).cv, kx + rx - w / 2, ky + ry - h * 0.92, w, h);
       }
     }
     else if (e.isBoss && e.awake) {
@@ -1124,10 +1279,10 @@ function glowPass(ctx, G, B, portals) {
   if (G.specFx) {   // Spezialangriff: große Licht-Welle
     const f = G.specFx, k = f.t / f.max, [sx, sy] = toScreen(f.x, f.y);
     const rx = 0.707 * f.r * R.U * (0.3 + k * 0.9);
-    ctx.globalAlpha = (1 - k) * 0.8; ctx.strokeStyle = f.c1; ctx.lineWidth = (26 - 18 * k) * Z;
-    ctx.beginPath(); ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); ctx.stroke();
-    ctx.globalAlpha = (1 - k) * 0.5; ctx.strokeStyle = f.c2; ctx.lineWidth = 10 * Z;
-    ctx.beginPath(); ctx.ellipse(sx, sy, rx * 0.7, rx * 0.35, 0, 0, TAU); ctx.stroke();
+    sc.globalAlpha = (1 - k) * 0.8; sc.strokeStyle = f.c1; sc.lineWidth = (26 - 18 * k) * Z;
+    sc.beginPath(); sc.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); sc.stroke();
+    sc.globalAlpha = (1 - k) * 0.5; sc.strokeStyle = f.c2; sc.lineWidth = 10 * Z;
+    sc.beginPath(); sc.ellipse(sx, sy, rx * 0.7, rx * 0.35, 0, 0, TAU); sc.stroke();
     g(f.x, f.y, 30, 420 * (0.5 + k), f.c1, (1 - k) * 0.45);
   }
   for (const it of G.items) {
@@ -1140,13 +1295,13 @@ function glowPass(ctx, G, B, portals) {
     const k = p.spinT / 0.28, [sx, sy] = toScreen(p.x, p.y, 26);
     const sl = A.tinted(A.fx("slash"), weaponOf(p.atk).trail);
     const r = 0.707 * 2.9 * R.U;
-    ctx.save(); ctx.translate(sx, sy); ctx.scale(1, 0.5); ctx.rotate((1 - k) * TAU * 1.1 * (p.face > 0 ? 1 : -1));
-    ctx.globalAlpha = Math.min(1, k * 1.6);
-    ctx.drawImage(sl.cv, -r * 1.2, -r * 1.2, r * 2.4, r * 2.4);
-    ctx.restore();
+    sc.save(); sc.translate(sx, sy); sc.scale(1, 0.5); sc.rotate((1 - k) * TAU * 1.1 * (p.face > 0 ? 1 : -1));
+    sc.globalAlpha = Math.min(1, k * 1.6);
+    sc.drawImage(sl.cv, -r * 1.2, -r * 1.2, r * 2.4, r * 2.4);
+    sc.restore();
   }
   if (FX.flashA > 0) g(p.x, p.y, 40, 200, "#fff6c0", FX.flashA * 0.4);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1; sc.globalAlpha = 1;
 }
 
 function textPass(ctx, G, portals) {

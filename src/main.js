@@ -1,8 +1,8 @@
 /* main.js — Boot, Game-Loop, Verdrahtung, Debug-API window.KK (MIT) */
-import { VERSION, SPECIES, PLAYER, MAX_DEPTH, levelName, makeLook, MYTHS } from "./config.js";
+import { VERSION, SPECIES, PLAYER, MAX_DEPTH, levelName, makeLook, MYTHS, URLQ } from "./config.js";
 import { artCount } from "./art.js";
 import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, special, killEnt, winGame, makeEnt, makeElite, gainXp, finishTut, recalc, skillUp, skillReset, setLook, magnetOf, unlockMyth, lookForSave } from "./game.js";
-import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality, toScreen } from "./render.js";
+import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality, toScreen, chunksBereit, workerZustand } from "./render.js";
 import { FX, updateFx } from "./fx.js";
 import { DK } from "./deko.js";
 import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
@@ -14,14 +14,33 @@ import { IN, initInput, resetInput, inputFrame } from "./input.js";
 import * as UI from "./ui.js";
 import { forceAttack, bossHit, spawnWave, minionCount, arenaCap, bossFight } from "./boss.js";
 import { pick } from "./util.js";
+import { Takt, spielDt, Zwischenbild } from "./takt.js";
+import { Automatik2D } from "./automatik.js";
+import { POST, postInit, postBild, postAus, postZustand } from "./post.js";
 
 const cv = document.getElementById("cv");
-const ft = new Float32Array(240); let fi = 0, fn = 0, qT = 0, perfFrames = 0, perfTime = 0;
+const ft = new Float32Array(240); let fi = 0, fn = 0, perfFrames = 0, perfTime = 0;
 let last = performance.now();
 let jsU = 0, jsD = 0, jsN = 0;
 const drawT = new Float32Array(600); let di = 0, dn = 0;
 hardenTouch();
+// Technik E3: WebGL2-Endbild über dem 2D-Zeichner (src/post.js). ?post=0, kein WebGL2 oder Kontextverlust → reines 2D wie v13
+postInit(cv, { an: URLQ.get("post") !== "0", aus: () => resize() });
 initRender(cv);
+// Technik E2: fester Simulationstakt 60 Hz (src/takt.js) + Zwischenbild beim Zeichnen. ?takt=0 = bisherige Schleife (dt je Bild).
+const TAKT = URLQ.get("takt") !== "0";
+const TK = new Takt(), ZB = new Zwischenbild();
+const workT = new Float32Array(600); let wi = 0, wn = 0;
+// Technik E1: Qualitäts-Automatik (src/automatik.js) — misst Arbeitszeit statt nur Bildabstand, geht mit Hysterese auch
+// wieder rauf, merkt sich die Stufe je Gerät. ?auto=0 = aus (Stufe bleibt bei 0 bzw. KK.quality()).
+const AUTO_KEY = "koboldkeller2_auto", AUTO_ON = URLQ.get("auto") !== "0";
+const fxBudget = (q) => { FX.budget = q >= 2 ? 0.6 : 1; };
+const AUTO = new Automatik2D({ stufen: R.qScales.length, start: R.q, aktiv: AUTO_ON,
+  setzen: (q) => { setQuality(q); fxBudget(q); try { localStorage.setItem(AUTO_KEY, JSON.stringify({ q, t: Date.now() })); } catch (e) { } } });
+if (AUTO_ON) {                                              // letzte Stufe dieses Geräts (höchstens 30 Tage alt) als Start
+  try { const s = JSON.parse(localStorage.getItem(AUTO_KEY) || "null"); if (s && s.q > 0 && Date.now() - s.t < 30 * 864e5) { setQuality(s.q); fxBudget(R.q); AUTO.festsetzen(R.q); } } catch (e) { }
+}
+
 // Effekte/Instrumente/Stadtmelodie schon im Menü vor-rendern (OfflineAudioContext braucht keine Geste)
 setTimeout(initAudio, 250);
 
@@ -39,8 +58,10 @@ G.hooks = {
     if (!G.demo) UI.showTut(G.depth === 0 && G.tutStep >= 0 ? G.tutStep : -1);
     if (!G.demo && G.depth === 1 && G.deepest <= 1) setTimeout(() => UI.toast("🔎 Finde die Treppe ⬇️ — tipp auf Gegner zum Angreifen!"), 1400);
     perfReset();
+    TK.zuruecksetzen(); ZB.vergiss(); AUTO.schonen(2);    // Technik: neue Ebene → nichts überblenden, Ladespitze nicht werten
   },
-  fade: (cb) => UI.fade(() => { UI.clearToasts(); cb(); }),
+  // Technik E4: hinter der Blende backt der Worker die neue Ebene; die Blende bleibt zu, bis die nächsten Chunks da sind
+  fade: (cb) => UI.fade(() => { UI.clearToasts(); R.blende = true; cb(); }, null, () => { const w = chunksBereit(); if (!w) { R.blende = false; return null; } return w.finally(() => { R.blende = false; }); }),
   boss: (e) => UI.showBoss(e),
   win: (rec, hall) => UI.showWin(rec, hall),
   dead: () => UI.showDead(),
@@ -87,9 +108,15 @@ window.addEventListener("resize", () => resize());
 window.addEventListener("orientationchange", () => setTimeout(resize, 120));
 
 // ---------- Perf / adaptive Qualität ----------
-function perfReset() { fi = 0; fn = 0; qT = -2.5; perfFrames = 0; perfTime = 0; jsU = jsD = jsN = 0; di = dn = 0; }
-/** v12: draw()-Zeit je Frame (ms): Median + 95 % */
-function drawStats() { if (!dn) return { drawMed: 0, drawP95: 0 }; const a = Array.from(drawT.slice(0, dn)).sort((x, y) => x - y); return { drawMed: +a[dn >> 1].toFixed(3), drawP95: +a[Math.floor(dn * 0.95)].toFixed(3), drawN: dn }; }
+// KK.perf(true) hält wie bisher die Automatik fest (Mess-Skripte rufen es jede Sekunde auf → Stufe bleibt während der Messung)
+function perfReset() { fi = 0; fn = 0; perfFrames = 0; perfTime = 0; jsU = jsD = jsN = 0; di = dn = 0; wi = wn = 0; AUTO.schonen(1.2); }
+/** v12: draw()-Zeit je Frame (ms): Median + 95 %; Technik: dazu Arbeitszeit je Bild (Logik + Zeichnen + Audio) */
+function drawStats() {
+  if (!dn) return { drawMed: 0, drawP95: 0 };
+  const a = Array.from(drawT.slice(0, dn)).sort((x, y) => x - y), w = Array.from(workT.slice(0, wn)).sort((x, y) => x - y);
+  return { drawMed: +a[dn >> 1].toFixed(3), drawP95: +a[Math.floor(dn * 0.95)].toFixed(3), drawN: dn,
+    workMed: wn ? +w[wn >> 1].toFixed(3) : 0, workP95: wn ? +w[Math.floor(wn * 0.95)].toFixed(3) : 0, workMax: wn ? +w[wn - 1].toFixed(3) : 0 };
+}
 function perfTrack(ms) {
   ft[fi] = ms; fi = (fi + 1) % ft.length; fn = Math.min(ft.length, fn + 1);
   perfFrames++; perfTime += ms;
@@ -101,44 +128,60 @@ function perfStats() {
   return {
     fps: Math.round(10000 / avg) / 10, p5: Math.round(10000 / a[Math.floor(fn * 0.95)]) / 10,
     frames: perfFrames, jsUpdate: jsN ? +(jsU / jsN).toFixed(2) : 0, jsDraw: jsN ? +(jsD / jsN).toFixed(2) : 0, avgAll: perfTime ? Math.round(perfFrames / perfTime * 10000) / 10 : 0, scale: R.RS, q: R.q, budget: FX.budget,
+    takt: TAKT, schritte: TK.schritteGesamt,
   };
 }
-function adapt(dt) {
-  if (G.screen !== "play" || G.demo) return;
-  qT += dt;
-  if (qT < 2 || fn < 60) return;
-  qT = 0;
-  const s = perfStats();
-  if (s.fps < 47 && R.q < R.qScales.length - 1) { setQuality(R.q + 1); FX.budget = R.q >= 2 ? 0.6 : 1; fi = 0; fn = 0; qT = -1; }
-}
-
 // ---------- Game-Loop ----------
+const sammle = (f) => { f(G.p); for (const e of G.ents) f(e); for (const it of G.items) f(it); for (const s of G.shots) f(s); for (const q of FX.parts) f(q); };
+// R.blende (Technik E4): die Blende des Ebenenwechsels wartet auf den Back-Worker → Spielzeit steht (wie früher, als das
+// synchrone Backen den Hauptthread blockierte; sonst liefe z. B. der Schutz nach dem Betreten unsichtbar ab)
+const paused = () => G.screen === "pause" || G.screen === "bag" || G.screen === "edit" || G.dbgFreeze || R.blende;
+/** ein fester Spielschritt der Länge h (s) — Hitstop/Zeitlupe/Pause wie bisher je Bild, jetzt je Schritt */
+function schritt(h) {
+  const dt = spielDt(FX, h, paused());
+  if (IN.attackHeld && G.screen === "play") attack();
+  for (let k = 0; k < (G.dbgSpeed || 1); k++) { update(dt, h); updateFx(dt, h); }
+  tutUpdate();
+  if (IN.attackHeld || IN.joy || IN.hold) guideInput();
+  guideUpdate(dt * (G.dbgSpeed || 1));
+}
 function frame(now) {
   requestAnimationFrame(frame);
   const raw = now - last; last = now;
   if (G.hidden) return;
+  const tA = performance.now();
   if (raw > 0 && raw < 250) perfTrack(raw);
   const rd = Math.min(0.05, Math.max(0, raw / 1000));
-  let dt = rd;
-  if (FX.hitstop > 0) { FX.hitstop -= rd; dt = 0; }
-  if (FX.slowT > 0) { FX.slowT -= rd; dt *= FX.slowF; }
-  if (G.screen === "pause" || G.screen === "bag" || G.screen === "edit" || G.dbgFreeze) dt = 0;
-  if (IN.attackHeld && G.screen === "play") attack();
-  inputFrame();                                           // v8: Halten-Folgen läuft weiter, solange der Finger hält
   const t0 = performance.now();
-  for (let k = 0; k < (G.dbgSpeed || 1); k++) { update(dt, rd); updateFx(dt, rd); }
-  tutUpdate();
-  if (IN.attackHeld || IN.joy || IN.hold) guideInput();
-  guideUpdate(dt * (G.dbgSpeed || 1));
+  if (TAKT) {
+    inputFrame();                                         // v8: Halten-Folgen läuft weiter, solange der Finger hält
+    const n = TK.schritte(raw / 1000);
+    for (let i = 0; i < n; i++) { if (i === n - 1) ZB.merke(sammle); schritt(TK.h); }
+  } else {
+    let dt = rd;
+    if (FX.hitstop > 0) { FX.hitstop -= rd; dt = 0; }
+    if (FX.slowT > 0) { FX.slowT -= rd; dt *= FX.slowF; }
+    if (paused()) dt = 0;
+    if (IN.attackHeld && G.screen === "play") attack();
+    inputFrame();
+    for (let k = 0; k < (G.dbgSpeed || 1); k++) { update(dt, rd); updateFx(dt, rd); }
+    tutUpdate();
+    if (IN.attackHeld || IN.joy || IN.hold) guideInput();
+    guideUpdate(dt * (G.dbgSpeed || 1));
+  }
   const t1 = performance.now();
   UI.hud(rd);
   const tdr = performance.now();
-  draw(G, rd);
+  if (TAKT) ZB.setze(TK.alpha);                          // Zeichenposition zwischen vorletztem und letztem Schritt
+  try { draw(G, rd); } finally { if (TAKT) ZB.zurueck(); }   // Spiel-Logik sieht nie eine Zwischenposition
+  if (POST.an) { try { postBild(R.cv, R.gcv, R.biome, R.vignCol || null, R.VW, R.VH, rd); } catch (e) { POST.fehler = String(e && e.message || e); postAus("Fehler"); } }
   drawT[di] = performance.now() - tdr; di = (di + 1) % drawT.length; dn = Math.min(drawT.length, dn + 1);   // v12: reine draw()-Zeit
   audioFrame(G, rd);
   const t2 = performance.now();
   jsU += t1 - t0; jsD += t2 - t1; jsN++;
-  adapt(rd);
+  const work = t2 - tA;
+  workT[wi] = work; wi = (wi + 1) % workT.length; wn = Math.min(workT.length, wn + 1);
+  if (G.screen === "play" && !G.demo) AUTO.bild(raw / 1000, work);
 }
 requestAnimationFrame(frame);
 
@@ -204,7 +247,14 @@ window.KK = {
   speed: (k = 1) => { G.dbgSpeed = Math.max(1, Math.min(8, k | 0)); return G.dbgSpeed; },
   freeze: (on = true) => { G.dbgFreeze = !!on; return G.dbgFreeze; },   // v11: Spielzeit anhalten (Bildfolgen exakt fotografieren)
   rise: () => G.rise ? { ph: G.rise.ph, u: +G.rise.u.toFixed(2), t: +G.rise.t.toFixed(2), dur: G.rise.dur } : null,
-  quality: (q) => { if (q !== undefined) setQuality(q); return R.q; },
+  quality: (q) => { if (q !== undefined) { setQuality(q); fxBudget(R.q); AUTO.festsetzen(R.q); } return R.q; },
+  /** Technik E1/E2: Automatik-Zustand (Stufe, fps, Arbeitszeit, gedeckelt, Sperre, letzte Wechsel) und Takt */
+  auto: () => AUTO.zustand(),
+  /** Technik E3: Endbild-Zustand (an/aus + Grund, Maße, Welt-Farbkorrektur); post(false) schaltet zur Laufzeit auf reines 2D */
+  post: (an) => { if (an === false) postAus("KK.post(false)"); return postZustand(); },
+  /** Technik E4: Back-Worker (an/aus + Grund, gelieferte/verworfene Chunks, synchron nachgebackene, ms je Chunk im Worker) */
+  worker: () => workerZustand(),
+  takt: () => ({ an: TAKT, hz: TK.hz, alpha: +TK.alpha.toFixed(3), vsync: TK.vs ? Math.round(1 / TK.vs) : 0, schritte: TK.schritteGesamt, verworfen: +TK.verworfen.toFixed(2), zwischen: ZB.gesetzt }),
   screenOf: (x, y, z = 0) => toScreen(x, y, z),          // v10-Check: Weltpunkt → Bildschirm (CSS-px), z. B. zum Antippen der Oma
   save: () => { save(); return true; },
   pause: () => UI.openPause(), resume: () => UI.resume(),
