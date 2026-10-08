@@ -1,0 +1,25 @@
+[
+ {
+  "datei": "town.m4a (heute)",
+  "bytes": 924153,
+  "snr_db": null
+ },
+ {
+  "datei": "tests/perf/audio_kandidaten/town_24k_64.m4a",
+  "bytes": 610835,
+  "snr_db": 18.8,
+  "versatz_samples": 0
+ },
+ {
+  "datei": "tests/perf/audio_kandidaten/town_24k_80.m4a",
+  "bytes": 760417,
+  "snr_db": 23.0,
+  "versatz_samples": 0
+ },
+ {
+  "datei": "tests/perf/audio_kandidaten/town_24k_96.m4a",
+  "bytes": 909926,
+  "snr_db": 26.8,
+  "versatz_samples": 0
+ }
+]
