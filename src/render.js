@@ -181,12 +181,21 @@ function workerStart() {
     if (typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined") { WK.grund = "kein Worker/OffscreenCanvas"; return; }
     const t = new OffscreenCanvas(1, 1);
     if (!t.getContext("2d") || !t.transferToImageBitmap) { WK.grund = "OffscreenCanvas ohne 2D"; return; }
+    WK.an = true; WK.grund = "bereit (startet beim ersten Ebenenwechsel mit Blende)";
+  } catch (e) { WK.an = false; WK.grund = "Start: " + (e && e.message || e); }
+}
+// erst beim ersten Ebenenwechsel mit Blende starten: der Worker lädt art/deko/chunkbacken (gleiche ?v=, aus dem Cache) und
+// deren Importe util/config/myth OHNE ?v= (Module Worker kennen die Importmap nicht) → ≈ 90 KB roh / 27 KB gzip mehr
+function workerHolen() {
+  if (WK.w || !WK.an) return WK.w;
+  try {
     const v = new URL(import.meta.url).search;                  // gleiche ?v= wie dieses Modul
     WK.w = new Worker(new URL("./backwerk.js" + v, import.meta.url), { type: "module" });
     WK.w.onmessage = (e) => workerAntwort(e.data);
     WK.w.onerror = (e) => workerAus("Fehler: " + (e && e.message || "Worker"));
-    WK.an = true; WK.grund = "an";
-  } catch (e) { WK.an = false; WK.grund = "Start: " + (e && e.message || e); }
+    WK.grund = "an";
+  } catch (e) { workerAus("Start: " + (e && e.message || e)); }
+  return WK.w;
 }
 function workerAus(grund) {
   WK.an = false; WK.grund = grund; WK.fehler = grund;
@@ -202,7 +211,8 @@ function chunksLeeren() {
   if (WK.warte) { const r = WK.warte; WK.warte = null; r(); }
 }
 function workerEbene() {
-  if (!WK.an || !R.L) return;
+  if (!WK.an || !R.L || !(WK.w || R.blende)) return;
+  if (!workerHolen()) return;
   const m = R.L.map;
   try {
     WK.w.postMessage({ typ: "ebene", id: WK.id, K: A.artScale(), d: { map: { w: m.w, h: m.h, solid: m.solid, v: m.v, deco: m.deco }, ring: R.ring, edgeFront: R.edgeFront,
@@ -260,7 +270,7 @@ export function chunksBereit(maxMs = 1200) {
   });
 }
 export function workerZustand() {
-  return { an: WK.an, grund: WK.grund, fehler: WK.fehler, offen: WK.offen.size, wichtig: WK.wichtig.size, geliefert: WK.geliefert, leer: WK.leer, verworfen: WK.verworfen,
+  return { an: WK.an, laeuft: !!WK.w, grund: WK.grund, fehler: WK.fehler, offen: WK.offen.size, wichtig: WK.wichtig.size, geliefert: WK.geliefert, leer: WK.leer, verworfen: WK.verworfen,
     sync: WK.sync, msMittel: WK.geliefert ? +(WK.msSumme / WK.geliefert).toFixed(1) : 0, msMax: WK.msMax, blende: !!R.blende, felsWorker: !!(R.rock && R.rock.worker) };
 }
 
