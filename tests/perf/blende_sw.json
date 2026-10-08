@@ -1,0 +1,138 @@
+{
+ "profil": "sw",
+ "throttle": 4,
+ "ergebnisse": {
+  "v13": {
+   "einzel": [
+    {
+     "d": 3,
+     "blende": 598,
+     "bildMax": 355,
+     "aufgabeMax": 106
+    },
+    {
+     "d": 7,
+     "blende": 758,
+     "bildMax": 371,
+     "aufgabeMax": 286
+    },
+    {
+     "d": 11,
+     "blende": 841,
+     "bildMax": 442,
+     "aufgabeMax": 337
+    },
+    {
+     "d": 15,
+     "blende": 708,
+     "bildMax": 394,
+     "aufgabeMax": 110
+    },
+    {
+     "d": 18,
+     "blende": 761,
+     "bildMax": 356,
+     "aufgabeMax": 109
+    },
+    {
+     "d": 5,
+     "blende": 664,
+     "bildMax": 370,
+     "aufgabeMax": 101
+    }
+   ],
+   "blendeMed": 758,
+   "bildMaxMed": 371,
+   "aufgabeMaxMed": 110,
+   "fehler": []
+  },
+  "worker": {
+   "einzel": [
+    {
+     "d": 3,
+     "blende": 579,
+     "bildMax": 154,
+     "aufgabeMax": 72
+    },
+    {
+     "d": 7,
+     "blende": 615,
+     "bildMax": 170,
+     "aufgabeMax": 86
+    },
+    {
+     "d": 11,
+     "blende": 591,
+     "bildMax": 152,
+     "aufgabeMax": 71
+    },
+    {
+     "d": 15,
+     "blende": 522,
+     "bildMax": 164,
+     "aufgabeMax": 93
+    },
+    {
+     "d": 18,
+     "blende": 541,
+     "bildMax": 157,
+     "aufgabeMax": 85
+    },
+    {
+     "d": 5,
+     "blende": 604,
+     "bildMax": 149,
+     "aufgabeMax": 67
+    }
+   ],
+   "blendeMed": 591,
+   "bildMaxMed": 157,
+   "aufgabeMaxMed": 85,
+   "fehler": []
+  },
+  "synchron": {
+   "einzel": [
+    {
+     "d": 3,
+     "blende": 522,
+     "bildMax": 298,
+     "aufgabeMax": 76
+    },
+    {
+     "d": 7,
+     "blende": 571,
+     "bildMax": 314,
+     "aufgabeMax": 100
+    },
+    {
+     "d": 11,
+     "blende": 572,
+     "bildMax": 363,
+     "aufgabeMax": 241
+    },
+    {
+     "d": 15,
+     "blende": 583,
+     "bildMax": 322,
+     "aufgabeMax": 93
+    },
+    {
+     "d": 18,
+     "blende": 631,
+     "bildMax": 307,
+     "aufgabeMax": 102
+    },
+    {
+     "d": 5,
+     "blende": 549,
+     "bildMax": 300,
+     "aufgabeMax": 84
+    }
+   ],
+   "blendeMed": 572,
+   "bildMaxMed": 314,
+   "aufgabeMaxMed": 100,
+   "fehler": []
+  }
+ }
+}

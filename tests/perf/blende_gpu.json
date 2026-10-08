@@ -1,0 +1,138 @@
+{
+ "profil": "gpu",
+ "throttle": 4,
+ "ergebnisse": {
+  "v13": {
+   "einzel": [
+    {
+     "d": 3,
+     "blende": 308,
+     "bildMax": 139,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 7,
+     "blende": 331,
+     "bildMax": 141,
+     "aufgabeMax": 77
+    },
+    {
+     "d": 11,
+     "blende": 328,
+     "bildMax": 137,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 15,
+     "blende": 331,
+     "bildMax": 138,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 18,
+     "blende": 291,
+     "bildMax": 151,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 5,
+     "blende": 311,
+     "bildMax": 135,
+     "aufgabeMax": 0
+    }
+   ],
+   "blendeMed": 328,
+   "bildMaxMed": 139,
+   "aufgabeMaxMed": 0,
+   "fehler": []
+  },
+  "worker": {
+   "einzel": [
+    {
+     "d": 3,
+     "blende": 439,
+     "bildMax": 130,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 7,
+     "blende": 428,
+     "bildMax": 130,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 11,
+     "blende": 406,
+     "bildMax": 137,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 15,
+     "blende": 342,
+     "bildMax": 135,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 18,
+     "blende": 405,
+     "bildMax": 121,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 5,
+     "blende": 385,
+     "bildMax": 123,
+     "aufgabeMax": 0
+    }
+   ],
+   "blendeMed": 406,
+   "bildMaxMed": 130,
+   "aufgabeMaxMed": 0,
+   "fehler": []
+  },
+  "synchron": {
+   "einzel": [
+    {
+     "d": 3,
+     "blende": 326,
+     "bildMax": 124,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 7,
+     "blende": 308,
+     "bildMax": 122,
+     "aufgabeMax": 57
+    },
+    {
+     "d": 11,
+     "blende": 351,
+     "bildMax": 123,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 15,
+     "blende": 333,
+     "bildMax": 123,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 18,
+     "blende": 292,
+     "bildMax": 123,
+     "aufgabeMax": 0
+    },
+    {
+     "d": 5,
+     "blende": 301,
+     "bildMax": 123,
+     "aufgabeMax": 0
+    }
+   ],
+   "blendeMed": 326,
+   "bildMaxMed": 123,
+   "aufgabeMaxMed": 0,
+   "fehler": []
+  }
+ }
+}
