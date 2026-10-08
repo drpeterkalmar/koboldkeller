@@ -2,7 +2,7 @@
 import { VERSION, SPECIES, PLAYER, MAX_DEPTH, levelName, makeLook, MYTHS, URLQ } from "./config.js";
 import { artCount } from "./art.js";
 import { G, startGame, enterLevel, update, tutUpdate, save, attack, bubbles, dodge, potion, special, killEnt, winGame, makeEnt, makeElite, gainXp, finishTut, recalc, skillUp, skillReset, setLook, magnetOf, unlockMyth, lookForSave } from "./game.js";
-import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality, toScreen } from "./render.js";
+import { R, initRender, resize, setLevel, snapCamera, prewarm, draw, setQuality, toScreen, chunksBereit, workerZustand } from "./render.js";
 import { FX, updateFx } from "./fx.js";
 import { DK } from "./deko.js";
 import { AUDIO, unlockAudio, suspendAudio, initAudio, audioFrame, audioStats } from "./audio.js";
@@ -60,7 +60,8 @@ G.hooks = {
     perfReset();
     TK.zuruecksetzen(); ZB.vergiss(); AUTO.schonen(2);    // Technik: neue Ebene → nichts überblenden, Ladespitze nicht werten
   },
-  fade: (cb) => UI.fade(() => { UI.clearToasts(); cb(); }),
+  // Technik E4: hinter der Blende backt der Worker die neue Ebene; die Blende bleibt zu, bis die nächsten Chunks da sind
+  fade: (cb) => UI.fade(() => { UI.clearToasts(); R.blende = true; cb(); }, null, () => { const w = chunksBereit(); if (!w) { R.blende = false; return null; } return w.finally(() => { R.blende = false; }); }),
   boss: (e) => UI.showBoss(e),
   win: (rec, hall) => UI.showWin(rec, hall),
   dead: () => UI.showDead(),
@@ -249,6 +250,8 @@ window.KK = {
   auto: () => AUTO.zustand(),
   /** Technik E3: Endbild-Zustand (an/aus + Grund, Maße, Welt-Farbkorrektur); post(false) schaltet zur Laufzeit auf reines 2D */
   post: (an) => { if (an === false) postAus("KK.post(false)"); return postZustand(); },
+  /** Technik E4: Back-Worker (an/aus + Grund, gelieferte/verworfene Chunks, synchron nachgebackene, ms je Chunk im Worker) */
+  worker: () => workerZustand(),
   takt: () => ({ an: TAKT, hz: TK.hz, alpha: +TK.alpha.toFixed(3), vsync: TK.vs ? Math.round(1 / TK.vs) : 0, schritte: TK.schritteGesamt, verworfen: +TK.verworfen.toFixed(2), zwischen: ZB.gesetzt }),
   screenOf: (x, y, z = 0) => toScreen(x, y, z),          // v10-Check: Weltpunkt → Bildschirm (CSS-px), z. B. zum Antippen der Oma
   save: () => { save(); return true; },

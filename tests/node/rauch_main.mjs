@@ -41,13 +41,27 @@ globalThis.matchMedia = () => ({ matches: false, addEventListener() { } });
 try { Object.defineProperty(globalThis, "navigator", { value: { userAgent: "node", maxTouchPoints: 0, vibrate: () => true }, configurable: true }); } catch (e) { }
 globalThis.Audio = function () { return attrappe("audio"); };
 for (const k of ["DOMMatrix", "Path2D", "ImageData", "Image"]) globalThis[k] = function () { return attrappe(k); };
-let rafCb = null; globalThis.requestAnimationFrame = (cb) => { rafCb = cb; return 1; };
+let rafQ = []; globalThis.requestAnimationFrame = (cb) => { rafQ.push(cb); return rafQ.length; };
 let uhr = 0; const echtNow = performance.now.bind(performance);
 globalThis.performance.now = () => uhr + echtNow() * 0;   // Uhr steuern wir selbst
 const timer = []; globalThis.setTimeout = (fn, ms) => { timer.push([uhr + (ms || 0), fn]); return timer.length; }; globalThis.clearTimeout = () => { };
 globalThis.setInterval = () => 0; globalThis.clearInterval = () => { };
 globalThis.requestIdleCallback = undefined;
 
+// RAUCH_WORKER=1: OffscreenCanvas + Worker als Attrappe — die echte backwerk.js läuft im selben Prozess, Nachrichten asynchron
+if (process.env.RAUCH_WORKER === "1") {
+  class Leinwand { constructor(w, h) { this.width = w; this.height = h; } getContext() { return attrappe("octx"); } transferToImageBitmap() { return { width: this.width, height: this.height, close() { } }; } }
+  globalThis.OffscreenCanvas = Leinwand;
+  globalThis.Worker = class {
+    constructor() {
+      const scope = { postMessage: (m) => queueMicrotask(() => this.onmessage && this.onmessage({ data: m })) };
+      this.bereit = Promise.all([import("../../src/art.js"), import("../../src/deko.js"), import("../../src/chunkbacken.js"), import("../../src/backwerk.js")])
+        .then(([A, D, CB, BW]) => { BW.starteBackwerk(scope, { A, D, CB }, Leinwand); this.scope = scope; });
+    }
+    postMessage(m) { const k = structuredClone(m); this.bereit.then(() => this.scope.onmessage({ data: k })); }
+    terminate() { }
+  };
+}
 const fehler = [];
 process.on("uncaughtException", (e) => { fehler.push(String(e && e.stack || e)); });
 console.log = () => { };   // Boot-Meldung leise
@@ -57,22 +71,31 @@ try {
   await import("../../src/main.js");
 } catch (e) { out({ ok: false, phase: "laden", fehler: String(e.stack || e) }); process.exit(1); }
 const KK = globalThis.KK;
-function bilder(n, hz) {
+async function bilder(n, hz) {
   for (let i = 0; i < n; i++) {
     uhr += 1000 / hz;
-    for (let j = timer.length - 1; j >= 0; j--) if (timer[j][0] <= uhr) { const [, fn] = timer.splice(j, 1)[0]; try { fn(); } catch (e) { fehler.push("timer: " + (e.stack || e)); } }
-    const cb = rafCb; rafCb = null;
-    try { cb(uhr); } catch (e) { fehler.push("bild: " + String(e.stack || e).split("\n").slice(0, 4).join(" | ")); if (fehler.length > 5) return; }
+    const faellig = timer.filter((t) => t[0] <= uhr).sort((a, b) => a[0] - b[0]);
+    for (const t of faellig) { timer.splice(timer.indexOf(t), 1); try { t[1](); } catch (e) { fehler.push("timer: " + (e.stack || e)); } }
+    const q = rafQ; rafQ = [];
+    for (const cb of q) try { cb(uhr); } catch (e) { fehler.push("bild: " + String(e.stack || e).split("\n").slice(0, 4).join(" | ")); if (fehler.length > 5) return; }
+    await new Promise((r) => setImmediate(r));               // Mikroaufgaben (Worker-Attrappe, Promises) dürfen laufen
   }
 }
-bilder(30, 60);
+await bilder(30, 60);
 KK.start({ name: "Rauch" }); KK.god(true);
-bilder(120, 60);
+await bilder(120, 60);
 KK.goto(2);
-bilder(60, 120);
+await bilder(60, 120);
 for (let i = 0; i < 6; i++) KK.spawn("slime", 1 + i * 0.3, 0.5);
-for (let i = 0; i < 40; i++) { KK.attack(); bilder(5, 60); }
-bilder(60, 30);
+for (let i = 0; i < 40; i++) { KK.attack(); await bilder(5, 60); }
+await bilder(60, 30);
+// Ebenenwechsel mit Blende (wie über die Treppe): Blende bleibt zu, bis der Worker die nächsten Chunks geliefert hat
+const vorBlende = KK.worker ? KK.worker() : null;
+KK.G.hooks.fade(() => KK.goto(3));
+await bilder(120, 60);
+const nachBlende = KK.worker ? KK.worker() : null, blendeNach = !!KK.R.blende;
+KK.goto(2);                                                   // zurück auf Ebene 2 (Prüfwerte unten)
+await bilder(30, 60);
 const st = KK.state(), perf = KK.perf(), takt = KK.takt ? KK.takt() : null, auto = KK.auto ? KK.auto() : null;
-out({ ok: fehler.length === 0, fehler: fehler.slice(0, 5), depth: st.depth, ents: st.ents, x: st.x, y: st.y, perf: { frames: perf.frames, workP95: perf.workP95, drawP95: perf.drawP95 }, takt, auto: auto && { stufe: auto.stufe, aktiv: auto.aktiv }, dreh: KK.R.pbDreh, post: KK.post ? KK.post() : null, glZuege, rs: KK.R.RS, glow: !!KK.R.gcv });
+out({ ok: fehler.length === 0, fehler: fehler.slice(0, 5), depth: st.depth, ents: st.ents, x: st.x, y: st.y, perf: { frames: perf.frames, workP95: perf.workP95, drawP95: perf.drawP95 }, takt, auto: auto && { stufe: auto.stufe, aktiv: auto.aktiv }, dreh: KK.R.pbDreh, post: KK.post ? KK.post() : null, glZuege, rs: KK.R.RS, glow: !!KK.R.gcv, worker: nachBlende, vorBlende, blende: blendeNach });
 process.exit(fehler.length ? 1 : 0);
