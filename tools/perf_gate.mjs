@@ -12,7 +12,7 @@
 // Vsync bleibt AN (60 Hz): ohne Bildraten-Deckel würde der feste Takt (E2) die Logik auf viele Bilder verteilen und die
 // Arbeit je Bild künstlich klein aussehen lassen.
 // Szenen: stadt (Ebene 0, Kobold läuft), kampf (Ebene 9, 8 Gegner, Schläge + Blasen = viele Partikel), boss (Ebene 8,
-// Arena, Boss wach), wechsel (alle 2,5 s Ebenenwechsel 3 → 4 → 5 …: Backen von Boden-Chunks/Art-Caches/Lightmap → Spitzen).
+// Arena, Boss wach), wechsel (alle 3 s Ebenenwechsel 3 → 4 → 5 … mit Blende wie über die Treppe: Backen → Spitzen; max zählt).
 // Stufen: ?auto=0 + KK.quality(q) je Lauf (Automatik aus, damit „je Stufe“ vergleichbar ist).
 //
 // Aufruf (Server selbst starten, z. B. python3 tools/serve.py 8731; für „vorher“ einen Worktree von main bedienen:
@@ -109,7 +109,8 @@ async function szene(P, nm, q) {
     let k = 0; const x0 = G.p.x, y0 = G.p.y;
     window.__walk = setInterval(() => { k++; const bx = nm === "wechsel" ? G.L.entry.x : x0, by = nm === "wechsel" ? G.L.entry.y : y0, tx = bx + (k % 2 ? 2.5 : -2.5), ty = by + (k % 2 ? 1 : -1); const pth = KK.path(tx, ty); if (pth && pth.length) G.p.path = pth; }, 1300);
     if (nm === "kampf" || nm === "boss") window.__fight = setInterval(() => { KK.attack(); if (Math.random() < 0.4) KK.bubbles(); }, 650);
-    if (nm === "wechsel") { let e = 3; window.__wechsel = setInterval(() => { e = e >= 7 ? 3 : e + 1; KK.goto(e); G.portalCd = 1e9; G.homeHideT = 1e9; zaeh(); }, 2500); }
+    // Ebenenwechsel wie über die Treppe: mit Blende (G.hooks.fade) — nur dann backt ab Technik-E4 der Worker; v13 hat denselben Weg
+    if (nm === "wechsel") { let e = 3; window.__wechsel = setInterval(() => { e = e >= 7 ? 3 : e + 1; G.hooks.fade(() => { KK.goto(e); G.portalCd = 1e9; G.homeHideT = 1e9; zaeh(); }); }, 3000); }
   }, [nm, q]);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: TH });
   await sleep(1500);
@@ -122,7 +123,7 @@ async function szene(P, nm, q) {
     const pf = KK.perf();
     return { work: st(W.work), frame: st(W.frame), fps: W.frame.length ? +(1000 / (W.frame.reduce((s, x) => s + x, 0) / W.frame.length)).toFixed(1) : 0,
       kk: { drawMed: pf.drawMed, drawP95: pf.drawP95, workMed: pf.workMed, workP95: pf.workP95, workMax: pf.workMax, jsUpdate: pf.jsUpdate, jsDraw: pf.jsDraw },
-      q: KK.R.q, rs: KK.R.RS, parts: KK.FX.parts.length, post: KK.post ? KK.post() : null, takt: KK.takt ? KK.takt() : null,
+      q: KK.R.q, rs: KK.R.RS, parts: KK.FX.parts.length, post: KK.post ? KK.post() : null, takt: KK.takt ? KK.takt() : null, worker: KK.worker ? KK.worker() : null,
       allWork: W.work.map((v) => +v.toFixed(2)) };
   });
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
