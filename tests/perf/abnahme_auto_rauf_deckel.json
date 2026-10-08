@@ -1,0 +1,52 @@
+{
+ "engine": "chromium",
+ "res": [
+  {
+   "id": "A2",
+   "name": "starkes Gerät: Stufe 2 → 1 → 0, je frühestens nach 8 s",
+   "ok": true,
+   "wert": {
+    "raufNachS": [
+     10.2,
+     20.8
+    ],
+    "fps": 581.9,
+    "arbeit": 0.41,
+    "log": [
+     {
+      "t": 10.6,
+      "stufe": 1,
+      "richtung": 1,
+      "grund": "rauf",
+      "fps": 603.8,
+      "arbeit": 0.48,
+      "streu": 1.136
+     },
+     {
+      "t": 21.2,
+      "stufe": 0,
+      "richtung": 1,
+      "grund": "rauf",
+      "fps": 581.9,
+      "arbeit": 0.41,
+      "streu": 1.164
+     }
+    ]
+   }
+  },
+  {
+   "id": "A3",
+   "name": "30-Hz-Deckel (wenig Arbeit) → Stufe bleibt 0",
+   "ok": true,
+   "wert": {
+    "stufe": 0,
+    "fps": 30,
+    "arbeit": 0.6,
+    "streu": 0.004,
+    "gedeckelt": true,
+    "log": []
+   }
+  }
+ ],
+ "fehler": []
+}

@@ -6,6 +6,7 @@
 //   takt   : ungedrosselter Bildtakt → Logik ≈ 60 Schritte/s; Spielzeit läuft mit echter Zeit
 //   auto   : CPU ×6 im Kampf → Automatik stuft ab; Drosselung weg → nach ≥ 8 s eine Stufe rauf (Profil --sw=1 --frei=1:
 //            Software-Raster, freier Bildtakt → Pixelarbeit bremst wie ein schwaches Handy)
+//   audio  : Stadtmusik (town.m4a 24 kHz) und Rückfall town.mp3 laden und werden zur Schleife
 //   rauf   : starkes Gerät (GPU-Raster, --frei=1): Stufe 2 → 1 → 0, je frühestens nach 8 s Luft
 //   deckel : 30-Hz-Deckel bei wenig Arbeit (Stromsparmodus) → Stufe bleibt 0 (--frei=1, GPU-Raster)
 //   pixel  : Boden/Felskanten vom Worker = synchron gebacken (gleiche Ebene, Spielzeit angehalten, Bildvergleich)
@@ -149,6 +150,23 @@ if (NUR.includes("auto") && ENGINE === "chromium") {
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   // „wieder rauf“ prüft A2 (--nur=rauf): im Software-Raster bleibt die Arbeit auch ohne Drosselung über 55 % des Takts (richtig: keine Luft)
   await ctx.close();
+}
+
+if (NUR.includes("audio")) {
+  // Stadtmusik: neue town.m4a (24 kHz) lädt und wird zur Schleife; Rückfall town.mp3 (canPlayType für AAC = "") ebenso
+  for (const [nm, init] of [["m4a", null], ["mp3", () => { const o = HTMLMediaElement.prototype.canPlayType; HTMLMediaElement.prototype.canPlayType = function (t) { return /mp4|aac|m4a/.test(t) ? "" : o.call(this, t); }; }]]) {
+    const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, locale: "de-AT" });
+    if (ENGINE === "webkit") await ctx.addInitScript(STUMM);
+    if (init) await ctx.addInitScript(init);
+    const page = await ctx.newPage(); const f0 = nf();
+    page.on("pageerror", (e) => fehler.push("audio " + e.message));
+    await page.goto(`http://localhost:${PORT}/index.html?auto=0`);
+    await page.waitForFunction(() => window.KK && KK.G && KK.G.L, null, { timeout: 30000 });
+    await page.waitForFunction(() => KK.audio().rec || (KK.state().track && KK.audio().pre && KK.audio().pre.done && performance.now() > 25000), null, { timeout: 60000 }).catch(() => { });
+    const a = await page.evaluate(() => ({ rec: KK.audio().rec, track: KK.state().track, pre: KK.audio().pre && KK.audio().pre.done }));
+    R("AU-" + nm, `Stadtmusik lädt als Schleife (${nm})`, a.rec && a.track.endsWith("." + nm) && nf() === f0, a);
+    await ctx.close();
+  }
 }
 
 if (NUR.includes("rauf") && ENGINE === "chromium") {

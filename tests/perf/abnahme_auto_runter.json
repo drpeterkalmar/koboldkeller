@@ -1,0 +1,28 @@
+{
+ "engine": "chromium",
+ "res": [
+  {
+   "id": "A1",
+   "name": "CPU ×6 → Automatik stuft ab",
+   "ok": true,
+   "wert": {
+    "nachS": 4.169,
+    "stufe": 1,
+    "fps": 7.2,
+    "arbeit": 119.07,
+    "log": [
+     {
+      "t": 4.2,
+      "stufe": 1,
+      "richtung": -1,
+      "grund": "runter",
+      "fps": 7.2,
+      "arbeit": 119.07,
+      "streu": 0.218
+     }
+    ]
+   }
+  }
+ ],
+ "fehler": []
+}

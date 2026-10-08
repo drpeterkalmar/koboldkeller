@@ -68,7 +68,7 @@ export const HAP_GAP = HAP_ALT ? 0 : 400;           // ms Mindestabstand zwische
 export const HAP_BUDGET = 350;                      // ms Vibration pro Sekunde (gleitend)
 PF.hapMode = HAP_ALT ? "alt" : "v7";
 PF.hapStats = { calls: {}, fired: {} };             // Zähler je Ereignis-Art (für check.mjs)
-let hBusy = 0, hPrio = -1, hLastLight = 0, hLastAny = -1e9, hPend = null;
+let hBusy = 0, hPrio = -1, hLastLight = 0, hLastAny = -1e9, hPend = null, hLastCall = -1e9;
 const hLast = {}, hWin = [];
 export function haptic(kind) {
   const st = PF.hapStats; st.calls[kind] = (st.calls[kind] || 0) + 1;
@@ -94,7 +94,9 @@ function fire(kind) {
   if ((h.prio < 2 || !HAP_ALT) && hWin.reduce((s, x) => s + x[1], 0) + on > HAP_BUDGET) return false;
   hWin.push([now, on]); hLast[kind] = now; hLastAny = now; if (h.prio === 0) hLastLight = now;
   hBusy = now + total; hPrio = h.prio; PF.hapCount++; st.fired[kind] = (st.fired[kind] || 0) + 1;
-  const go = () => vibrate(h.p);
+  // Technik 08.10.: Mindestabstand am ECHTEN Aufruf sichern — der Versatz läuft über setTimeout, und ein verspäteter Timer
+  // (voller Hauptthread) gefolgt von einem pünktlichen ergab im Test einmal 396 statt ≥ 400 ms
+  const go = () => { const w = HAP_GAP - (performance.now() - hLastCall); if (w > 0) { setTimeout(go, w + 1); return; } hLastCall = performance.now(); vibrate(h.p); };
   // Schall kommt mit Ausgabe-Latenz aus dem Lautsprecher → Vibration um dieselbe Zeit versetzen (Transient-synchron)
   if (PF.hapDelay > 3) setTimeout(go, PF.hapDelay); else go();
   return true;

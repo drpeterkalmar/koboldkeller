@@ -82,6 +82,19 @@ test("120-Hz-Bildschirm mit 70 fps: kein Abstufen (Ziel ist 60, nicht 120)", () 
   assert.equal(a.stufe, 0);
 });
 
+test("30-Hz-Stromsparmodus mit gelegentlichen Hängern (langes Bild + kurzes Aufholbild, im Browser gemessen) → bleibt 0", () => {
+  const a = new Automatik2D({ stufen: 4 });
+  const r = lcg(11);
+  let t = 0;
+  while (t < 15) {
+    let ms = 1000 / 30 + (r() - 0.5) * 0.6;
+    if (r() < 0.08) { a.bild(0.068, 2); t += 0.068; ms = 1000 / 30 - 16; }   // Hänger, danach schnelles Aufholbild
+    a.bild(ms / 1000, 2); t += ms / 1000;
+  }
+  assert.equal(a.stufe, 0, JSON.stringify(a.zustand()));
+  assert.ok(a.zustand().gedeckelt);
+});
+
 test("aus (?auto=0): misst, ändert aber nichts", () => {
   const a = new Automatik2D({ aktiv: false });
   for (let i = 0; i < 3000; i++) a.bild(0.05, 40);

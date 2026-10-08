@@ -5,21 +5,33 @@
   "snr_db": null
  },
  {
+  "datei": "tests/perf/audio_kandidaten/town_96k_96_ff.m4a (Bezug)",
+  "bytes": 932330,
+  "snr_db": 16.1,
+  "versatz_samples": 0
+ },
+ {
+  "datei": "tests/perf/audio_kandidaten/town_48k_96.m4a (Bezug)",
+  "bytes": 917509,
+  "snr_db": 20.4,
+  "versatz_samples": 0
+ },
+ {
   "datei": "tests/perf/audio_kandidaten/town_24k_64.m4a",
-  "bytes": 610835,
-  "snr_db": 18.8,
+  "bytes": 610819,
+  "snr_db": 18.9,
   "versatz_samples": 0
  },
  {
   "datei": "tests/perf/audio_kandidaten/town_24k_80.m4a",
-  "bytes": 760417,
-  "snr_db": 23.0,
+  "bytes": 760418,
+  "snr_db": 23.1,
   "versatz_samples": 0
  },
  {
   "datei": "tests/perf/audio_kandidaten/town_24k_96.m4a",
-  "bytes": 909926,
-  "snr_db": 26.8,
+  "bytes": 909889,
+  "snr_db": 26.9,
   "versatz_samples": 0
  }
 ]

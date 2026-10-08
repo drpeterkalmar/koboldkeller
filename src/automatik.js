@@ -85,11 +85,15 @@ export class Automatik2D {
   }
   auswerten() {
     const o = this.o, n = this.n;
-    const ab = gestutztesMittel(this.ab, n, o.trim, this.tmp);
+    // Bildabstände robust: Mittel beidseitig gestutzt (unterste und oberste 10 %), Streuung aus dem Quartilsabstand
+    // (≈ σ bei Normalverteilung). Ein Hänger erzeugt ein Paar „langes Bild + kurzes Aufholbild“ — mit σ über alle Bilder
+    // hielte schon das einen 30-Hz-Stromsparmodus für unruhig (im Browser gemessen), und das kurze Bild schöbe die Bildrate hoch.
+    const a = this.tmp.subarray(0, n); for (let i = 0; i < n; i++) a[i] = this.ab[i]; a.sort();
+    const i0 = Math.floor(n * o.trim), i1 = Math.max(i0 + 1, n - i0);
+    let ab = 0; for (let i = i0; i < i1; i++) ab += a[i]; ab /= i1 - i0;
+    this.streu = (a[Math.floor(n * 0.75)] - a[Math.floor(n * 0.25)]) / (1.35 * a[n >> 1]);
     this.arbeit = gestutztesMittel(this.ar, n, o.trim, this.tmp);
     this.fps = 1000 / ab;
-    let v = 0; for (let i = 0; i < n; i++) { const d = this.ab[i] - ab; v += d * d; }
-    this.streu = Math.sqrt(v / n) / ab;
     if (!this.aktiv) return false;
     if (this.ruheRest > 0) { this.ruheRest--; return false; }
     const takt = o.takt;

@@ -10,9 +10,16 @@ Aber:
 
 Aufruf:
   python3 tools/audio_diaet.py rueckfall    → audio/town.mp3 neu aus town.m4a (32 kHz, 96 kbit/s, ≈ 0,9 MB statt 3,0 MB)
+  python3 tools/audio_diaet.py einsetzen    → audio/town.m4a = 24 kHz, 80 kbit/s (Heavy-Job 08.10., Begründung unten)
   python3 tools/audio_diaet.py messen       → AAC-Kandidaten mit 24 kHz (64/80/96 kbit/s) nach tests/perf/audio_kandidaten/,
                                                Größe + Wellenform-Abstand (SNR) zur heutigen town.m4a. Nur Messung — ob man
                                                einen Unterschied HÖRT, muss ein Mensch entscheiden (Peter).
+
+Entscheidung Heavy-Job (08.10.): 24 kHz, 80 kbit/s eingesetzt (−164 KB Ladegröße). Maßstab ist der Generationsverlust: die
+heutige Datei MIT IHREN EIGENEN Einstellungen neu kodiert (96 kHz/96 kbit/s, ffmpeg) weicht um 16,1 dB vom Original ab,
+Apple-AAC 48 kHz/96 kbit/s um 20,4 dB — der 24-kHz-Kandidat mit 80 kbit/s nur um 23,1 dB. Er ist also mindestens so
+originalgetreu wie eine Kodierung in der heutigen Qualitätsklasse; die 96 kHz der alten Datei hört das Spiel nie (es dekodiert
+auf 24 kHz). Die alte Datei liegt in Git (Commit vor „Technik E1 Audio“); Rückweg = eine Datei zurückkopieren.
 """
 import os, subprocess, sys, json
 import numpy as np
@@ -59,11 +66,26 @@ def rueckfall():
     print(json.dumps({"datei": "audio/town.mp3", "bytes": os.path.getsize(ziel), "snr_db": s, "versatz_samples": k}))
 
 
+def einsetzen():
+    neu = os.path.join(AUDIO, "town_neu.m4a")
+    subprocess.run(["afconvert", "-f", "m4af", "-d", "aac@24000", "-b", "80000", "-q", "127", "-s", "0", VORLAGE, neu], check=True)
+    s, k = snr(dekodiere(VORLAGE), dekodiere(neu))
+    os.replace(neu, VORLAGE)
+    print(json.dumps({"datei": "audio/town.m4a", "bytes": os.path.getsize(VORLAGE), "snr_db": s, "versatz_samples": k}))
+
+
 def messen():
     ordner = os.path.join(WURZEL, "tests", "perf", "audio_kandidaten")
     os.makedirs(ordner, exist_ok=True)
     ref = dekodiere(VORLAGE)
     zeilen = [{"datei": "town.m4a (heute)", "bytes": os.path.getsize(VORLAGE), "snr_db": None}]
+    # Bezug „Generationsverlust“: heutige Einstellungen (96 kHz, 96 kbit/s) bzw. 48 kHz noch einmal kodiert
+    for nm, cmd in (("town_96k_96_ff.m4a", ["ffmpeg", "-v", "error", "-y", "-i", VORLAGE, "-c:a", "aac", "-b:a", "96k", "-ar", "96000"]),
+                    ("town_48k_96.m4a", ["afconvert", "-f", "m4af", "-d", "aac@48000", "-b", "96000", "-q", "127", "-s", "0", VORLAGE])):
+        ziel = os.path.join(ordner, nm)
+        subprocess.run(cmd + [ziel], check=True)
+        s, k = snr(ref, dekodiere(ziel))
+        zeilen.append({"datei": os.path.relpath(ziel, WURZEL) + " (Bezug)", "bytes": os.path.getsize(ziel), "snr_db": s, "versatz_samples": k})
     for br in (64000, 80000, 96000):
         ziel = os.path.join(ordner, f"town_24k_{br // 1000}.m4a")
         subprocess.run(["afconvert", "-f", "m4af", "-d", "aac@24000", "-b", str(br), "-q", "127", "-s", "0", VORLAGE, ziel], check=True)
@@ -78,5 +100,6 @@ def messen():
 if __name__ == "__main__":
     was = sys.argv[1] if len(sys.argv) > 1 else ""
     if was == "rueckfall": rueckfall()
+    elif was == "einsetzen": einsetzen()
     elif was == "messen": messen()
     else: print(__doc__)

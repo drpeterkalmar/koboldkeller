@@ -1,0 +1,26 @@
+{
+ "engine": "webkit",
+ "res": [
+  {
+   "id": "AU-m4a",
+   "name": "Stadtmusik lädt als Schleife (m4a)",
+   "ok": true,
+   "wert": {
+    "rec": true,
+    "track": "audio/town.m4a",
+    "pre": false
+   }
+  },
+  {
+   "id": "AU-mp3",
+   "name": "Stadtmusik lädt als Schleife (mp3)",
+   "ok": true,
+   "wert": {
+    "rec": true,
+    "track": "audio/town.mp3",
+    "pre": false
+   }
+  }
+ ],
+ "fehler": []
+}
