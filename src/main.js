@@ -16,6 +16,7 @@ import { forceAttack, bossHit, spawnWave, minionCount, arenaCap, bossFight } fro
 import { pick } from "./util.js";
 import { Takt, spielDt, Zwischenbild } from "./takt.js";
 import { Automatik2D } from "./automatik.js";
+import { POST, postInit, postBild, postAus, postZustand } from "./post.js";
 
 const cv = document.getElementById("cv");
 const ft = new Float32Array(240); let fi = 0, fn = 0, perfFrames = 0, perfTime = 0;
@@ -23,6 +24,8 @@ let last = performance.now();
 let jsU = 0, jsD = 0, jsN = 0;
 const drawT = new Float32Array(600); let di = 0, dn = 0;
 hardenTouch();
+// Technik E3: WebGL2-Endbild über dem 2D-Zeichner (src/post.js). ?post=0, kein WebGL2 oder Kontextverlust → reines 2D wie v13
+postInit(cv, { an: URLQ.get("post") !== "0", aus: () => resize() });
 initRender(cv);
 // Technik E2: fester Simulationstakt 60 Hz (src/takt.js) + Zwischenbild beim Zeichnen. ?takt=0 = bisherige Schleife (dt je Bild).
 const TAKT = URLQ.get("takt") !== "0";
@@ -168,6 +171,7 @@ function frame(now) {
   const tdr = performance.now();
   if (TAKT) ZB.setze(TK.alpha);                          // Zeichenposition zwischen vorletztem und letztem Schritt
   try { draw(G, rd); } finally { if (TAKT) ZB.zurueck(); }   // Spiel-Logik sieht nie eine Zwischenposition
+  if (POST.an) { try { postBild(R.cv, R.gcv, R.biome, R.vignCol || null, R.VW, R.VH, rd); } catch (e) { POST.fehler = String(e && e.message || e); postAus("Fehler"); } }
   drawT[di] = performance.now() - tdr; di = (di + 1) % drawT.length; dn = Math.min(drawT.length, dn + 1);   // v12: reine draw()-Zeit
   audioFrame(G, rd);
   const t2 = performance.now();
@@ -243,6 +247,8 @@ window.KK = {
   quality: (q) => { if (q !== undefined) { setQuality(q); fxBudget(R.q); AUTO.festsetzen(R.q); } return R.q; },
   /** Technik E1/E2: Automatik-Zustand (Stufe, fps, Arbeitszeit, gedeckelt, Sperre, letzte Wechsel) und Takt */
   auto: () => AUTO.zustand(),
+  /** Technik E3: Endbild-Zustand (an/aus + Grund, Maße, Welt-Farbkorrektur); post(false) schaltet zur Laufzeit auf reines 2D */
+  post: (an) => { if (an === false) postAus("KK.post(false)"); return postZustand(); },
   takt: () => ({ an: TAKT, hz: TK.hz, alpha: +TK.alpha.toFixed(3), vsync: TK.vs ? Math.round(1 / TK.vs) : 0, schritte: TK.schritteGesamt, verworfen: +TK.verworfen.toFixed(2), zwischen: ZB.gesetzt }),
   screenOf: (x, y, z = 0) => toScreen(x, y, z),          // v10-Check: Weltpunkt → Bildschirm (CSS-px), z. B. zum Antippen der Oma
   save: () => { save(); return true; },

@@ -5,6 +5,7 @@ import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_F
 import { clamp, TAU, rgba, mixHex, shade, mulberry32 } from "./util.js";
 import * as D from "./deko.js";
 import { DREH, drehIndex, drehMasse, sortiereNachBild } from "./buendel.js";
+import { POST, postMasse, postGroesse } from "./post.js";
 const DK = D.DK;
 
 export const R = {
@@ -36,7 +37,9 @@ export function resize() {
   const U0 = clamp(VW <= VH ? VW / 6.4 : Math.min(VW / 6.4, VH / 7.4), 50, 84);
   R.Z0 = U0 / 64; R.Z = R.Z0 * R.cz; R.U = 64 * R.Z;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  R.RS = Math.max(1, dpr * R.qScales[R.q]);
+  // Technik E3: mit Endbild (post.js) rendert die 2D-Szene kleiner (Skala 0,8 … 0,5), das Endbild skaliert hoch + schärft nach
+  const pm = POST.an ? postMasse(VW, VH, window.devicePixelRatio, R.q) : null;
+  R.RS = pm ? pm.RS : Math.max(1, dpr * R.qScales[R.q]);
   R.cv.width = Math.round(VW * R.RS); R.cv.height = Math.round(VH * R.RS);
   R.cv.style.width = VW + "px"; R.cv.style.height = VH + "px";
   A.setArtScale(R.Z0 * R.RS);
@@ -45,6 +48,11 @@ export function resize() {
   R.vign = makeVignette(R.lw, R.lh, R.vignCol);
   R.focusY = VH > VW ? 0.46 : 0.52;
   R.chunks.clear(); R.chunkOrder.length = 0;
+  if (pm) {                                                   // Glow-Ebene in halber Szenen-Auflösung (Quelle für den Schein)
+    if (!R.gcv) { R.gcv = document.createElement("canvas"); R.gctx = R.gcv.getContext("2d"); }
+    R.gcv.width = pm.gw; R.gcv.height = pm.gh;
+    postGroesse({ ...pm, VW, VH });
+  } else { R.gcv = null; R.gctx = null; }
 }
 function makeVignette(w, h, col) {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
@@ -583,7 +591,16 @@ export function draw(G, dt) {
   ctx.drawImage(R.lcv, -2, -2, R.VW + 4, R.VH + 4);
   // --- Glow (additiv) ---
   ctx.globalCompositeOperation = "lighter";
-  glowPass(ctx, G, B, portals);
+  const gc = POST.an && R.gctx;
+  if (gc) {                                                   // Technik E3: weiche Glows in die Glow-Ebene (halbe Auflösung)
+    gc.setTransform(1, 0, 0, 1, 0, 0); gc.globalCompositeOperation = "source-over"; gc.globalAlpha = 1;
+    gc.clearRect(0, 0, R.gcv.width, R.gcv.height);
+    const gs = R.RS * R.gcv.width / R.cv.width, k = gs * R.zp;
+    gc.setTransform(k, 0, 0, k, gs * (1 - R.zp) * R.VW / 2, gs * (1 - R.zp) * R.VH / 2);
+    gc.globalCompositeOperation = "lighter";
+    glowPass(gc, G, B, portals, ctx);
+    gc.globalCompositeOperation = "source-over"; gc.globalAlpha = 1;
+  } else glowPass(ctx, G, B, portals, ctx);
   drawParticles(ctx, true);
   ctx.globalCompositeOperation = "source-over";
   // --- Texte ---
@@ -1108,12 +1125,15 @@ function lighting(G, B, portals) {
   if (DK.on) D.lights(light, G, R, FX.lights, T);             // v13: Fackel-Lichtkegel, Lichtstrahl-Pfützen, glühende Deko, Lichtblitze
   if (G.rise) { const RS = G.rise, kk = RS.ph === "quake" ? RS.u : RS.ph === "burst" ? 1 : RS.ph === "grow" ? 1 - 0.4 * RS.u : 0.6 * (1 - RS.u); light(RS.x, RS.y, (2.4 + 3.2 * kk) * (RS.b.isKing ? 1.4 : 1), RS.col, 0.4 + 0.5 * kk); }
   l.globalAlpha = 1;
-  l.globalCompositeOperation = "multiply";
-  l.drawImage(R.vign, 0, 0);
+  if (!POST.an) {                                             // Technik E3: mit Endbild macht der Shader die Vignette
+    l.globalCompositeOperation = "multiply";
+    l.drawImage(R.vign, 0, 0);
+  }
   l.globalCompositeOperation = "source-over";
 }
 
-function glowPass(ctx, G, B, portals) {
+/** sc = Leinwand für scharfe Dinge (Rundumschlag-Sichel, Spezial-Ring): mit Endbild die Szene, sonst dieselbe wie ctx */
+function glowPass(ctx, G, B, portals, sc = ctx) {
   const Z = R.Z, L = R.L, p = G.p, T = R.t;
   const glow = A.fx("glow");
   const g = (x, y, z, size, col, al) => {
@@ -1181,10 +1201,10 @@ function glowPass(ctx, G, B, portals) {
   if (G.specFx) {   // Spezialangriff: große Licht-Welle
     const f = G.specFx, k = f.t / f.max, [sx, sy] = toScreen(f.x, f.y);
     const rx = 0.707 * f.r * R.U * (0.3 + k * 0.9);
-    ctx.globalAlpha = (1 - k) * 0.8; ctx.strokeStyle = f.c1; ctx.lineWidth = (26 - 18 * k) * Z;
-    ctx.beginPath(); ctx.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); ctx.stroke();
-    ctx.globalAlpha = (1 - k) * 0.5; ctx.strokeStyle = f.c2; ctx.lineWidth = 10 * Z;
-    ctx.beginPath(); ctx.ellipse(sx, sy, rx * 0.7, rx * 0.35, 0, 0, TAU); ctx.stroke();
+    sc.globalAlpha = (1 - k) * 0.8; sc.strokeStyle = f.c1; sc.lineWidth = (26 - 18 * k) * Z;
+    sc.beginPath(); sc.ellipse(sx, sy, rx, rx * 0.5, 0, 0, TAU); sc.stroke();
+    sc.globalAlpha = (1 - k) * 0.5; sc.strokeStyle = f.c2; sc.lineWidth = 10 * Z;
+    sc.beginPath(); sc.ellipse(sx, sy, rx * 0.7, rx * 0.35, 0, 0, TAU); sc.stroke();
     g(f.x, f.y, 30, 420 * (0.5 + k), f.c1, (1 - k) * 0.45);
   }
   for (const it of G.items) {
@@ -1197,10 +1217,10 @@ function glowPass(ctx, G, B, portals) {
     const k = p.spinT / 0.28, [sx, sy] = toScreen(p.x, p.y, 26);
     const sl = A.tinted(A.fx("slash"), weaponOf(p.atk).trail);
     const r = 0.707 * 2.9 * R.U;
-    ctx.save(); ctx.translate(sx, sy); ctx.scale(1, 0.5); ctx.rotate((1 - k) * TAU * 1.1 * (p.face > 0 ? 1 : -1));
-    ctx.globalAlpha = Math.min(1, k * 1.6);
-    ctx.drawImage(sl.cv, -r * 1.2, -r * 1.2, r * 2.4, r * 2.4);
-    ctx.restore();
+    sc.save(); sc.translate(sx, sy); sc.scale(1, 0.5); sc.rotate((1 - k) * TAU * 1.1 * (p.face > 0 ? 1 : -1));
+    sc.globalAlpha = Math.min(1, k * 1.6);
+    sc.drawImage(sl.cv, -r * 1.2, -r * 1.2, r * 2.4, r * 2.4);
+    sc.restore();
   }
   if (FX.flashA > 0) g(p.x, p.y, 40, 200, "#fff6c0", FX.flashA * 0.4);
   ctx.globalAlpha = 1;

@@ -20,7 +20,11 @@ const attrappe = (name = "a") => {
     set(t, k, v) { t[k] = v; return true; },
   });
 };
-const el = () => { const e = attrappe("el"); e.width = 300; e.height = 150; e.style = { setProperty() { }, removeProperty() { } }; e.classList = { add() { }, remove() { }, toggle() { }, contains: () => false }; e.dataset = {}; e.children = []; e.value = ""; e.checked = false; return e; };
+// WebGL2-Attrappe: alles gelingt (Shader, Framebuffer), drawArrays wird gezählt. RAUCH_GL=0 → kein WebGL2 (Rückfall-Weg)
+let glZuege = 0;
+const fakeGL = () => { const gl = attrappe("gl"); gl.FRAMEBUFFER_COMPLETE = 36053; gl.checkFramebufferStatus = () => 36053; gl.getShaderParameter = () => true;
+  gl.getProgramParameter = () => true; gl.isContextLost = () => false; gl.drawArrays = () => { glZuege++; }; return gl; };
+const el = () => { const e = attrappe("el"); e.getContext = (typ) => (typ === "webgl2" ? (process.env.RAUCH_GL === "0" ? null : fakeGL()) : attrappe("ctx2d")); e.width = 300; e.height = 150; e.style = { setProperty() { }, removeProperty() { } }; e.classList = { add() { }, remove() { }, toggle() { }, contains: () => false }; e.dataset = {}; e.children = []; e.value = ""; e.checked = false; return e; };
 const els = new Map();
 globalThis.window = globalThis;
 globalThis.innerWidth = 412; globalThis.innerHeight = 915; globalThis.devicePixelRatio = 2;
@@ -70,5 +74,5 @@ for (let i = 0; i < 6; i++) KK.spawn("slime", 1 + i * 0.3, 0.5);
 for (let i = 0; i < 40; i++) { KK.attack(); bilder(5, 60); }
 bilder(60, 30);
 const st = KK.state(), perf = KK.perf(), takt = KK.takt ? KK.takt() : null, auto = KK.auto ? KK.auto() : null;
-out({ ok: fehler.length === 0, fehler: fehler.slice(0, 5), depth: st.depth, ents: st.ents, x: st.x, y: st.y, perf: { frames: perf.frames, workP95: perf.workP95, drawP95: perf.drawP95 }, takt, auto: auto && { stufe: auto.stufe, aktiv: auto.aktiv }, dreh: KK.R.pbDreh, post: KK.post ? KK.post() : null });
+out({ ok: fehler.length === 0, fehler: fehler.slice(0, 5), depth: st.depth, ents: st.ents, x: st.x, y: st.y, perf: { frames: perf.frames, workP95: perf.workP95, drawP95: perf.drawP95 }, takt, auto: auto && { stufe: auto.stufe, aktiv: auto.aktiv }, dreh: KK.R.pbDreh, post: KK.post ? KK.post() : null, glZuege, rs: KK.R.RS, glow: !!KK.R.gcv });
 process.exit(fehler.length ? 1 : 0);
