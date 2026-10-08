@@ -3,7 +3,7 @@ import { loadPlaywright } from "./pw.mjs";
 import { writeFileSync, mkdirSync } from "node:fs";
 const port = process.argv[2] || 8731;
 const { chromium } = loadPlaywright();
-const b = await chromium.launch();
+const b = await chromium.launch({ args: ["--mute-audio"] });
 const page = await b.newPage();
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.KK && KK.G.L);

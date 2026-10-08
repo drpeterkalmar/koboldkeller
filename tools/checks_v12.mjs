@@ -51,7 +51,7 @@ async function scenes(browser, BASE, errors, w, h, q = "", tag = "nachher", only
         KK.teleport(best.x, best.y);
       }
       await w(2900);                                             // Titelkarte ausblenden lassen
-      if (nm === "wackeln") { const { FX } = await import("./src/fx.js?v=" + window.KK_VER); FX.trauma = 1; await w(60); }
+      if (nm === "wackeln") { const { FX } = await import("./src/fx.js"); FX.trauma = 1; await w(60); }
       return { zoom: KK.state().zoom, vis: KK.R.chunksVis, rock: KK.rock() };
     }, [nm, d]);
     await page.evaluate(() => { for (const el of document.body.children) if (el.id !== "cv") { el.dataset.v = el.style.visibility; el.style.visibility = "hidden"; } });

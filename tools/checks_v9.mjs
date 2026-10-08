@@ -7,7 +7,7 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 export const GPU_FLAGS = [(process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=default"), "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit",
-  "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
+  "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required", "--mute-audio"];
 const V9 = "shots/neubau/v9/";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const SAVE = { v: 3, bossDone: [], name: "Mythi", species: "hase", look: { species: "hase", skin: "#f6eee0", outfit: "#ffcf4a", eye: "#6b2f5a", hair: "#ffc2d4", style: "zoepfe", earsV: 0, acc: "blume" },
@@ -45,7 +45,7 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
       const e0 = errors.length;
       const { ctx, page } = await np("index.html?kostueme=alle", w, h);
       const r = await page.evaluate(async () => {
-        const v = "?v=" + window.KK_VER, A = await import("./src/art.js" + v), C = await import("./src/config.js" + v), G = KK.G;
+        const v = "", A = await import("./src/art.js" + v), C = await import("./src/config.js" + v), G = KK.G;
         KK.start({ name: "Kontakt", seed: 777 }); KK.goto(1); KK.god(true); G.ents.length = 0; G.portalCd = 1e9;
         const fr = () => new Promise(r => requestAnimationFrame(r));
         let rigs = 0, ports = 0, prevs = 0, faceWorst = 0, faceAt = "", browMin = 1;
@@ -85,7 +85,7 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
       for (const [d, id] of [[1, "fee"], [5, "kristallritter"], [9, "nixe"], [13, "yeti"], [17, "golem"]]) {
         await page.evaluate(({ d, id }) => { KK.goto(d); KK.wear(id); KK.god(true); KK.G.ents.length = 0; KK.G.portalCd = 1e9; }, { d, id });
         await sleep(2700);
-        await page.evaluate(async () => { const W = await import("./src/world.js?v=" + window.KK_VER), G = KK.G, p = G.p, m = G.L.map; for (const [dx, dy] of [[4, 0], [0, 4], [-4, 0], [0, -4], [3, 3]]) if (W.lineFree(m, p.x, p.y, p.x + dx, p.y + dy, 0.35)) { p.path = [{ x: p.x + dx, y: p.y + dy }]; break; } });
+        await page.evaluate(async () => { const W = await import("./src/world.js"), G = KK.G, p = G.p, m = G.L.map; for (const [dx, dy] of [[4, 0], [0, 4], [-4, 0], [0, -4], [3, 3]]) if (W.lineFree(m, p.x, p.y, p.x + dx, p.y + dy, 0.35)) { p.path = [{ x: p.x + dx, y: p.y + dy }]; break; } });
         await sleep(450);
         await page.screenshot({ path: V9 + `laufen_e${d}_${id}_${tag}.png` });
       }
@@ -95,7 +95,7 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
     // Kontaktbogen (alle Kostüme × 8 Tierarten)
     const { ctx, page } = await np("index.html", 1300, 900);
     const size = await page.evaluate(async () => {
-      const v = "?v=" + window.KK_VER, A = await import("./src/art.js" + v), C = await import("./src/config.js" + v), px = 128;
+      const v = "", A = await import("./src/art.js" + v), C = await import("./src/config.js" + v), px = 128;
       const rows = [{ id: "", name: "ohne Kostüm", emoji: "🙂", tier: "" }, ...C.MYTHS];
       const W = 170 + C.SPECIES.length * px, H = 34 + rows.length * px, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const c = cv.getContext("2d");
       c.fillStyle = "#2a2440"; c.fillRect(0, 0, W, H); c.font = "bold 14px system-ui"; c.fillStyle = "#fff"; c.textBaseline = "middle"; c.textAlign = "center";
@@ -204,7 +204,7 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
   if (want("V29")) {
     const { ctx, page } = await np("index.html?seed=11");
     const r = await page.evaluate(async () => {
-      const C = await import("./src/config.js?v=" + window.KK_VER), U = await import("./src/util.js?v=" + window.KK_VER);
+      const C = await import("./src/config.js"), U = await import("./src/util.js");
       const have = ["drache", "einhorn", "zauberer", "greif", "phoenix"], rnd = U.mulberry32(99);
       let prev = "", rep = 0, bad = 0, withM = 0, locked = 0; const seen = {};
       for (let i = 0; i < 300; i++) {
@@ -310,7 +310,7 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
     // Cache: „10 min“ Kostümwechsel im Zeitraffer (400 Wechsel über Kostüme/Tierarten/Extras + Laufen)
     const { ctx, page } = await np("index.html?kostueme=alle");
     const cache = await page.evaluate(async () => {
-      const C = await import("./src/config.js?v=" + window.KK_VER), fr = () => new Promise(r => requestAnimationFrame(r));
+      const C = await import("./src/config.js"), fr = () => new Promise(r => requestAnimationFrame(r));
       KK.start({ name: "Cache", seed: 777 }); KK.goto(3); KK.god(true); KK.G.portalCd = 1e9; KK.speed(4);
       const samples = [];
       for (let i = 0; i < 400; i++) {

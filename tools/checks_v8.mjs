@@ -7,7 +7,7 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 export const GPU_FLAGS = [(process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=default"), "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit",
-  "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
+  "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required", "--mute-audio"];
 const V8 = "shots/neubau/v8/";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const r2 = v => Math.round(v * 100) / 100;
@@ -40,7 +40,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
       await page.evaluate(() => KK.start({ name: "Flitzi", seed: 777 }));
       // gerade freie Strecke ≥ 12 Kacheln in +x (Bildschirm rechts unten) suchen, Ebene für Ebene
       const setup = await page.evaluate(async () => {
-        const W = await import("./src/world.js?v=" + window.KK_VER), G = KK.G;
+        const W = await import("./src/world.js"), G = KK.G;
         for (let d = 1; d <= 12; d++) {
           KK.goto(d); const m = G.L.map;
           for (let y = 2; y < m.h - 2; y++) for (let x = 2; x < m.w - 14; x++) {
@@ -72,7 +72,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
       await prep(); await sleep(400);
       const cdp = await ctx.newCDPSession(page);
       const tp = (type, x, y) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y, id: 3 }] });
-      const hp = await page.evaluate(async () => { const r = await import("./src/render.js?v=" + window.KK_VER); const p = KK.G.p; return r.toScreen(p.x + 3, p.y); });
+      const hp = await page.evaluate(async () => { const r = await import("./src/render.js"); const p = KK.G.p; return r.toScreen(p.x + 3, p.y); });
       const h0 = await page.evaluate(() => ({ x: KK.G.p.x, t: KK.G.t }));
       await tp("touchStart", hp[0], hp[1]); await sleep(2500);
       const h1 = await page.evaluate(() => ({ x: KK.G.p.x, t: KK.G.t, moving: KK.G.p.moving }));
@@ -80,7 +80,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
       const h2 = await page.evaluate(() => ({ x: KK.G.p.x, moving: KK.G.p.moving }));
       // 3) EIN Tipp auf eine weit entfernte sichtbare Stelle (5 Kacheln) → kommt an? Spielzeit bis dort
       await prep(); await sleep(400);
-      const tapPt = await page.evaluate(async () => { const r = await import("./src/render.js?v=" + window.KK_VER); const p = KK.G.p; return r.toScreen(p.x + 5, p.y); });
+      const tapPt = await page.evaluate(async () => { const r = await import("./src/render.js"); const p = KK.G.p; return r.toScreen(p.x + 5, p.y); });
       const g0 = await page.evaluate(() => KK.G.t);
       await page.touchscreen.tap(tapPt[0], tapPt[1]);
       const tap = await page.evaluate(async ({ s, g0 }) => { const G = KK.G, t0 = performance.now(); while (Math.hypot(G.p.x - s.x - 5, G.p.y - s.y) > 0.3 && performance.now() - t0 < 5000) await new Promise(r => requestAnimationFrame(r)); return { arrived: Math.hypot(G.p.x - s.x - 5, G.p.y - s.y) <= 0.3, secs: +(G.t - g0).toFixed(2) }; }, { s: setup, g0 });
@@ -93,7 +93,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     const { ctx, page } = await np();
     await page.evaluate(() => KK.start({ name: "Wand", seed: 4242 }));
     const wall = await page.evaluate(async () => {
-      const v = "?v=" + window.KK_VER, g = await import("./src/game.js" + v), W = await import("./src/world.js" + v), C = await import("./src/config.js" + v), G = KK.G, p = G.p;
+      const v = "", g = await import("./src/game.js" + v), W = await import("./src/world.js" + v), C = await import("./src/config.js" + v), G = KK.G, p = G.p;
       let tries = 0, bad = 0, freed = 0, worst = 0;
       for (const d of [3, 9, 14, 19]) {
         KK.goto(d); KK.god(true); G.ents.length = 0; G.portalCd = 1e9; G.L.wallTraps.length = 0;
@@ -131,7 +131,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
   if (want("V23")) {
     const { ctx, page } = await np();
     const res = await page.evaluate(async () => {
-      const C = await import("./src/config.js?v=" + window.KK_VER), G = KK.G, out = [];
+      const C = await import("./src/config.js"), G = KK.G, out = [];
       KK.start({ name: "Boss", seed: 99 }); G.p.lvl = 10;
       for (let d = 2; d <= 20; d += 2) {
         KK.goto(d); KK.god(true); G.portalCd = 1e9;
@@ -144,7 +144,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
       }
       // Handlanger-Deckel in einem langen Kampf (E20): 30 erzwungene Wellen
       KK.goto(20); KK.god(true); KK.G.portalCd = 1e9; KK.teleport("boss"); KK.G.p.x -= 3; await new Promise(r => setTimeout(r, 400));
-      let maxN = 0; const { minionCount, arenaCap } = await import("./src/boss.js?v=" + window.KK_VER);
+      let maxN = 0; const { minionCount, arenaCap } = await import("./src/boss.js");
       for (let i = 0; i < 30; i++) { KK.wave(9); maxN = Math.max(maxN, minionCount()); await new Promise(r => setTimeout(r, 60)); }
       return { rows: out, mul: C.BOSS_HP_MUL, cap: arenaCap(), maxN };
     });
@@ -162,7 +162,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     await page.evaluate(() => { KK.start({ name: "Tori", seed: 777 }); KK.G.deepest = 9; KK.goto(0); });
     await sleep(2800);
     const lay = await page.evaluate(async () => {
-      const v = "?v=" + window.KK_VER, W = await import("./src/world.js" + v), C = await import("./src/config.js" + v), G = KK.G, L = G.L, m = L.map;
+      const v = "", W = await import("./src/world.js" + v), C = await import("./src/config.js" + v), G = KK.G, L = G.L, m = L.map;
       const po = L.portals, F = L.fountain, sp = C.PLAYER.speed;
       const depths = po.map(p => p.depth).sort((a, b) => a - b).join(",");
       let minD = 99; for (let i = 0; i < po.length; i++) for (let j = i + 1; j < po.length; j++) minD = Math.min(minD, Math.hypot(po[i].x - po[j].x, po[i].y - po[j].y));
@@ -184,7 +184,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     });
     await shot(page, "stadt_eingang_hoch");
     // Weg-Pfeil in der Stadt: nach 2 s Stillstand → Portal der tiefsten erreichten Ebene
-    await page.evaluate(async () => (await import("./src/guide.js?v=" + window.KK_VER)).guideInput());
+    await page.evaluate(async () => (await import("./src/guide.js")).guideInput());
     await page.waitForFunction(() => KK.guide().a > 0.9, null, { timeout: 6000 }).catch(() => { });
     const gd = await page.evaluate(() => { const g = KK.guide(); return { a: g.a, kind: g.target && g.target.kind, depth: g.target && g.target.depth }; });
     await shot(page, "stadt_pfeil_zu_ebene9_hoch");
@@ -192,7 +192,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     await page.evaluate(() => { const po = KK.G.L.portals.find(p => p.depth === 9); KK.teleport(po.x - 2.4, po.y - 2.4); KK.G.portalCd = 0; });
     await sleep(700);
     await shot(page, "stadt_zucker_tor_hoch");
-    const tapPo = async (d) => page.evaluate(async (d) => { const r = await import("./src/render.js?v=" + window.KK_VER); const po = KK.G.L.portals.find(p => p.depth === d); return r.toScreen(po.x, po.y); }, d);
+    const tapPo = async (d) => page.evaluate(async (d) => { const r = await import("./src/render.js"); const po = KK.G.L.portals.find(p => p.depth === d); return r.toScreen(po.x, po.y); }, d);
     // Spielstand-Format: dieselben Felder wie v7 (Datei v3) — Liste aus save.js/v7 (V21), keine neuen Felder
     const save0 = "bossDone,capNote,depth,giftNote,gold,hat,hats,hp,kills,look,lvl,magic,maxHp,mega,name,potions,projN,runSecs,seed,sk,skPts,spec,species,tut,v,won,xp,xpNext,ammo,atk,deepest,migrated".split(",").sort().join(",");
     let pt = await tapPo(9); const t9 = await page.evaluate(() => KK.G.t);
@@ -213,7 +213,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     await page.evaluate(() => { KK.goto(0); }); await sleep(2600);
     const pass = await page.evaluate(async () => {
       const G = KK.G, p = G.p, po = G.L.portals.find(q => q.depth === 5), c = G.L.gates.find(g => g.w === 2);
-      const W = await import("./src/world.js?v=" + window.KK_VER), ux = (po.x - c.cx) / Math.hypot(po.x - c.cx, po.y - c.cy), uy = (po.y - c.cy) / Math.hypot(po.x - c.cx, po.y - c.cy);
+      const W = await import("./src/world.js"), ux = (po.x - c.cx) / Math.hypot(po.x - c.cx, po.y - c.cy), uy = (po.y - c.cy) / Math.hypot(po.x - c.cx, po.y - c.cy);
       p.x = po.x - ux * 2.2; p.y = po.y - uy * 2.2; G.portalCd = 0; p.goal = null;
       const far = W.nearestFree(G.L.map, po.x + ux * 1.8, po.y + uy * 1.8, 0.3);
       p.path = [{ x: po.x, y: po.y }, far];
@@ -228,7 +228,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     // Tutorial-Schritt „Portal“: neues Spiel mit Tutorial bei Schritt 5 → Portal 1 antippen → Tutorial fertig
     await page.evaluate(() => { KK.start({ name: "Tuti", seed: 777, tut: false }); KK.G.tutStep = 5; });
     await sleep(2800);
-    await page.evaluate(async () => { const g = await import("./src/game.js?v=" + window.KK_VER), po = KK.G.L.portals.find(p => p.depth === 1); KK.teleport(po.x + 1.6, po.y - 1.6); KK.G.portalCd = 0; g.tapWorld(po.x + 0.3, po.y - 0.2, null); });
+    await page.evaluate(async () => { const g = await import("./src/game.js"), po = KK.G.L.portals.find(p => p.depth === 1); KK.teleport(po.x + 1.6, po.y - 1.6); KK.G.portalCd = 0; g.tapWorld(po.x + 0.3, po.y - 0.2, null); });
     await page.waitForFunction(() => KK.state().depth === 1, null, { timeout: 6000 }).catch(() => { });
     const tut = await page.evaluate(() => ({ depth: KK.G.depth, flag: !!KK.G.tutFlags.portal, step: KK.G.tutStep, prof: !!KK.G.prof.tut, from: KK.G.runFrom }));
     await ctx.close();
@@ -261,7 +261,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     const { ctx, page } = await np();
     await page.evaluate(() => KK.start({ name: "Wandi", seed: 777 }));
     const place = await page.evaluate(async () => {
-      const v = "?v=" + window.KK_VER, W = await import("./src/world.js" + v), C = await import("./src/config.js" + v), G = KK.G;
+      const v = "", W = await import("./src/world.js" + v), C = await import("./src/config.js" + v), G = KK.G;
       const res = { counts: [], bad: [], minGap: 99, minEntry: 99, levels: 0 };
       for (const seed of [777, 1234, 99, 4242, 31337]) {
         for (const mega of [false, true]) {
@@ -291,7 +291,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     });
     // Ablauf an einer echten Falle: Vorwarnung → Schuss, Treffer = Pieks-Schaden, 💨 schützt, Haptik
     const flow = await page.evaluate(async () => {
-      const v = "?v=" + window.KK_VER, g = await import("./src/game.js" + v), C = await import("./src/config.js" + v), P = await import("./src/platform.js" + v), G = KK.G, p = G.p, fr = () => new Promise(r => requestAnimationFrame(r));
+      const v = "", g = await import("./src/game.js" + v), C = await import("./src/config.js" + v), P = await import("./src/platform.js" + v), G = KK.G, p = G.p, fr = () => new Promise(r => requestAnimationFrame(r));
       KK.goto(9); await new Promise(r => setTimeout(r, 2600));
       G.ents.length = 0; G.items.length = 0; G.portalCd = 1e9; G.homeHideT = 1e9; G.god = false; p.hp = p.maxHp = 60;
       const w = G.L.wallTraps[0]; for (const o of G.L.wallTraps) if (o !== w) { o.st = 0; o.next = 1e9; }

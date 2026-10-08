@@ -22,7 +22,7 @@ import { runV13 } from "./checks_v13.mjs";
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith("--" + k)); if (!a) return d; const v = a.split("=")[1]; return v === undefined ? true : v; };
 const PORT = +arg("port", 8731), THROTTLE = +arg("throttle", 4), PERF = !arg("no-perf", false), PROFILE = arg("profile", "gpu");
 const V7MODE = arg("v7", "all"), HAPSECS = +arg("hapsecs", 60), REF = arg("ref", null) ? `http://localhost:${arg("ref")}/` : null;
-const FLAGS = [...(PROFILE === "gpu" ? GPU_FLAGS.slice(0, 3) : []), "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
+const FLAGS = [...(PROFILE === "gpu" ? GPU_FLAGS.slice(0, 3) : []), "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required", "--mute-audio"];
 const LAUNCH = PROFILE === "gpu" ? { channel: "chromium", args: FLAGS } : { args: FLAGS };
 const BASE = `http://localhost:${PORT}/`;
 const SHOTS = "shots/neubau/";

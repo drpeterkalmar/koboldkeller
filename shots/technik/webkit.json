@@ -1,0 +1,187 @@
+{
+ "tag": "webkit",
+ "q": "",
+ "shots": [
+  {
+   "nm": "stadt",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/webkit_stadt_q0_hoch.png",
+   "depth": 0,
+   "post": {
+    "an": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 282,
+    "biome": 0,
+    "masse": {
+     "RS": 1.6,
+     "sw": 659,
+     "sh": 1464,
+     "gw": 330,
+     "gh": 732,
+     "bw": 165,
+     "bh": 366,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.8,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0,
+    "vsync": 60,
+    "schritte": 289,
+    "verworfen": 0.05,
+    "zwischen": 26
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 73,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.6
+  },
+  {
+   "nm": "kristall",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/webkit_kristall_q0_hoch.png",
+   "depth": 5,
+   "post": {
+    "an": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 503,
+    "biome": 2,
+    "masse": {
+     "RS": 1.6,
+     "sw": 659,
+     "sh": 1464,
+     "gw": 330,
+     "gh": 732,
+     "bw": 165,
+     "bh": 366,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.8,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.2,
+    "vsync": 60,
+    "schritte": 513,
+    "verworfen": 0.08,
+    "zwischen": 126
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 96,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.6
+  },
+  {
+   "nm": "glut",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/webkit_glut_q0_hoch.png",
+   "depth": 17,
+   "post": {
+    "an": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 724,
+    "biome": 5,
+    "masse": {
+     "RS": 1.6,
+     "sw": 659,
+     "sh": 1464,
+     "gw": 330,
+     "gh": 732,
+     "bw": 165,
+     "bh": 366,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.8,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.06,
+     "bloom": 0.7,
+     "heat": 1
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.98,
+    "vsync": 60,
+    "schritte": 735,
+    "verworfen": 0.13,
+    "zwischen": 109
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 118,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.6
+  }
+ ],
+ "errors": []
+}

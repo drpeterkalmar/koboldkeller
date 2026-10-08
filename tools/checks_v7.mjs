@@ -1,4 +1,7 @@
 // Koboldkeller 2 — v7-Checks (Würfel-Look + Namen, Haptik dezent, Weg-Pfeil, Save v6 → v7). Screenshots → shots/neubau/v7/
+// Technik 08.10.: Module im Test OHNE eigenes ?v= importieren (import("./src/x.js")) — die Importmap der Seite leitet auf
+// dieselbe Instanz wie das Spiel um. Vorher hieß es "?v=" + KK_VER (= 13), die Seite lud aber ?v=13.3 → zweite, unbenutzte
+// Modul-Kopie (z. B. guideInput() wirkte nicht aufs Spiel; V20/V26 maßen deshalb Unsinn).
 // Wird von tools/check.mjs aufgerufen; einzeln: node tools/checks_v7.mjs [--port=8731] [--only=V18,V20] [--secs=60]
 // Optional: KK_BLOCK_NAMES="a,b" (Umgebungsvariable, nicht im Repo) — diese Namen dürfen nirgends in den Zufallsnamen vorkommen.
 import { loadPlaywright } from "./pw.mjs";
@@ -6,7 +9,7 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 export const GPU_FLAGS = [(process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=default"), "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit",
-  "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required"];
+  "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--autoplay-policy=no-user-gesture-required", "--mute-audio"];
 const V7 = "shots/neubau/v7/";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const deg = r => Math.round(r * 180 / Math.PI * 10) / 10;
@@ -24,6 +27,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
   mkdirSync(V7, { recursive: true });
   const want = id => !only || only.includes(id);
   async function np(path = "index.html", w = 412, h = 915, init) {
+    if (process.env.KK_Q) path += (path.includes("?") ? "&" : "?") + process.env.KK_Q;   // Technik: Regler für Gegenproben, z. B. KK_Q=takt=0
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, hasTouch: true, isMobile: true, locale: "de-AT" });
     if (init) await ctx.addInitScript(init);
     const page = await ctx.newPage();
@@ -39,7 +43,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
   const G = page => page.evaluate(() => KK.guide());
   /** wartet, bis der Pfeil voll sichtbar ist (oder Timeout) */
   const waitArrow = async (page, ms = 7000) => { try { await page.waitForFunction(() => KK.guide().a > 0.9, null, { timeout: ms, polling: 50 }); return true; } catch (e) { return false; } };
-  const poke = page => page.evaluate(async () => (await import("./src/guide.js?v=" + window.KK_VER)).guideInput());
+  const poke = page => page.evaluate(async () => (await import("./src/guide.js")).guideInput());
 
   // ===================================================================
   // V18 — Würfel würfelt Name + Look, Harmonie, keine Wiederholung, ?seed= reproduzierbar, Namensliste
@@ -58,7 +62,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
       if (i < 6) await page.screenshot({ path: V7 + `wuerfel_${i + 1}_hoch.png` });
     }
     const chk = await page.evaluate(async (seq) => {
-      const C = await import("./src/config.js?v=" + window.KK_VER);
+      const C = await import("./src/config.js");
       return seq.map(e => { const L = C.makeLook(e.look); return { key: C.lookKey(L), bad: C.lookHarmony(L), name: e.name }; });
     }, [e0, ...seq]);
     const keys = chk.map(c => c.key), names = chk.slice(1).map(c => c.name);
@@ -81,7 +85,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
     // Großer Wurf-Test im Modul (300×) + Namenslisten
     const stat = await p2.evaluate(async (args) => {
       const [V6, BAD, BLOCK] = args;
-      const C = await import("./src/config.js?v=" + window.KK_VER), U = await import("./src/util.js?v=" + window.KK_VER);
+      const C = await import("./src/config.js"), U = await import("./src/util.js");
       const r = U.mulberry32(99); let prev = "", acc = 0, bad = 0, rep = 0; const ks = new Set(), sp = {};
       for (let i = 0; i < 300; i++) { const L = C.makeLook(C.rollLook(r, prev)), k = C.lookKey(L); if (k === prev) rep++; prev = k; ks.add(k); if (L.acc !== "none") acc++; if (C.lookHarmony(L).length) bad++; sp[L.species] = (sp[L.species] || 0) + 1; }
       const all = [...C.NAMES, ...C.NAME_KIT];
@@ -249,13 +253,13 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
     await sleep(3000);                                               // Titelkarte „Koboldstadt" vorbei
     // Zeitpunkt: ab letzter Eingabe
     const timing = await page.evaluate(async () => {
-      const m = await import("./src/guide.js?v=" + window.KK_VER);
+      const m = await import("./src/guide.js");
       m.guideInput(); const t0 = performance.now(); let tFirst = null, idleFirst = null, a19 = 0;
       await new Promise(done => { const f = () => { const g = KK.guide(), el = performance.now() - t0; if (el < 1850) a19 = Math.max(a19, g.a); if (g.t >= 0 && tFirst === null) { tFirst = el; idleFirst = g.idle; } if (el > 3200) return done(); requestAnimationFrame(f); }; f(); });
       return { tFirst: Math.round(tFirst), idleFirst, a19, g: KK.guide() };
     });
     const angErr = async () => page.evaluate(async () => {
-      const W = await import("./src/world.js?v=" + window.KK_VER), g = KK.guide(), p = KK.G.p, tg = g.target;
+      const W = await import("./src/world.js"), g = KK.guide(), p = KK.G.p, tg = g.target;
       const path = W.findPath(KK.G.L.map, p.x, p.y, tg.x, tg.y, p.r);          // frischer Pfad (unabhängig vom Pfeil berechnet)
       // Wegpunkt ~3,5 Kacheln voraus entlang des Pfades; liegt er hinter einer Ecke: der letzte davon sichtbare Pfadpunkt
       const pts = [{ x: p.x, y: p.y }, ...path], cum = [0];
@@ -288,7 +292,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
     await page.screenshot({ path: V7 + "pfeil_ebene1_hoch.png" });
     // Pfad statt Luftlinie: Stelle suchen, an der die Luftlinie zur Treppe durch eine Wand geht und der Weg anders abbiegt
     const around = await page.evaluate(async () => {
-      const W = await import("./src/world.js?v=" + window.KK_VER), G = KK.G, m = G.L.map, st = G.L.stairs;
+      const W = await import("./src/world.js"), G = KK.G, m = G.L.map, st = G.L.stairs;
       let best = null;
       for (let y = 1; y < m.h - 1; y++) for (let x = 1; x < m.w - 1; x++) {
         if (m.block[y * m.w + x] || !W.canStand(m, x + 0.5, y + 0.5, 0.3)) continue;
@@ -298,7 +302,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
         let e = Math.abs(a1 - a2); if (e > Math.PI) e = 2 * Math.PI - e;
         if (!best || e > best.e) best = { x: x + 0.5, y: y + 0.5, e };
       }
-      if (best) { KK.teleport(best.x, best.y); (await import("./src/guide.js?v=" + window.KK_VER)).guideInput(); }
+      if (best) { KK.teleport(best.x, best.y); (await import("./src/guide.js")).guideInput(); }
       return best;
     });
     let eWall = null;
@@ -367,7 +371,7 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
     const init = `try { if (!sessionStorage.getItem("kk6")) { sessionStorage.setItem("kk6", "1"); localStorage.setItem("koboldkeller2_save", ${JSON.stringify(JSON.stringify(V6SAVE))}); localStorage.setItem("koboldkeller2_settings", ${JSON.stringify(JSON.stringify(V6SET))}); } } catch (e) { }`;
     const { ctx, page } = await np("index.html", 412, 915, init);
     const r = await page.evaluate(async () => {
-      const S = await import("./src/save.js?v=" + window.KK_VER);
+      const S = await import("./src/save.js");
       return { sv: S.loadSave(), set: S.loadSettings(), info: document.getElementById("contInfo").textContent };
     });
     const diff = Object.keys(V6SAVE).filter(k => JSON.stringify(r.sv[k]) !== JSON.stringify(V6SAVE[k]));

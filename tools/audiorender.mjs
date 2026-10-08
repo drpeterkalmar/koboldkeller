@@ -13,7 +13,7 @@ const PORT = +arg("port", 8731), SECS = +arg("secs", 60), SFX = !arg("no-sfx", f
 const OUT = "shots/audio/";
 mkdirSync(OUT + "sfx", { recursive: true });
 const { chromium } = loadPlaywright();
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ["--mute-audio"] });
 const page = await (await browser.newContext()).newPage();
 const errs = []; page.on("pageerror", e => errs.push(e.message));
 await page.goto(`http://localhost:${PORT}/index.html`);

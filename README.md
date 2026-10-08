@@ -136,6 +136,11 @@ additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md).
 | `src/fx.js` | Partikel, Shake, Hit-Stop, v13: Lichtblitze, Treffer-Funken |
 | `src/deko.js` | v13: Boden-/Wand-Deko (gebacken), Lichtstrahlen, Fackel-Lichtkegel, Glühteilchen, Beute-/Treppen-Glühen (an Qualitätsstufe gekoppelt) |
 | `src/save.js` · `src/platform.js` | Speichern/Migration/Ehrenhall · Vollbild, Wake-Lock, Vibration |
+| `src/post.js` | Technik (v13.x): WebGL2-Endbild über dem 2D-Zeichner — Hochskalieren + Nachschärfen (CAS), Schein aus der Glow-Ebene, Farbstimmung je Welt, Wärmeflimmern im Glutkeller. Rückfall auf reines 2D bei `?post=0`, ohne WebGL2 oder bei Kontextverlust |
+| `src/takt.js` | Technik: fester Spieltakt 60 Hz + Zwischenbild (gleiches Tempo bei 30/60/90/120 Hz), `?takt=0` = alte Schleife |
+| `src/automatik.js` | Technik: Qualitäts-Automatik (misst Arbeitszeit, stuft mit 8 s Hysterese auch wieder hoch, erkennt 30-Hz-Stromsparen), `?auto=0` = aus |
+| `src/buendel.js` | Technik: Partikel gebündelt (vorgedrehte Bilder statt `save/rotate/restore`), `?pbuendel=0` = alt |
+| `src/chunkbacken.js` · `src/backwerk.js` | Technik: Boden-Chunks backen (gemeinsamer Code) · Back-Worker (OffscreenCanvas) beim Ebenenwechsel, `?worker=0` = synchron |
 
 **Version erhöhen:** in `index.html` alle `?v=N` (Import-Map, CSS, Manifest) und `window.KK_VER` anpassen.
 Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
@@ -147,12 +152,16 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.bossAtk(name)/bossHit()`, `KK.spawn(type,dx,dy,elite)`, `KK.perf(reset)`, `KK.quality(q)`, `KK.save()`, `KK.pause()/resume()`,
 `KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
 v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
-`KK.editor()` (Editor-Look, Name, Würfe). v13: `KK.deko()` (Deko-Zustand), `KK.deko(false)` (Effekte pro Frame aus, für Messungen). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v12: `KK.rock()` (Fels-Muster: Bauzeit, Speicher, Chunks), `KK.perf()` liefert zusätzlich `drawMed`/`drawP95` (reine draw()-Zeit). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
+`KK.editor()` (Editor-Look, Name, Würfe). Technik: `KK.post()` (Endbild an/aus + Grund, Maße; `KK.post(false)` = zur Laufzeit 2D), `KK.takt()`, `KK.auto()` (Automatik: Stufe, fps, Arbeit, gedeckelt, Verlauf), `KK.worker()` (Back-Worker: geliefert/synchron), `KK.perf()` zusätzlich `workMed/workP95/workMax`. v13: `KK.deko()` (Deko-Zustand), `KK.deko(false)` (Effekte pro Frame aus, für Messungen). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v12: `KK.rock()` (Fels-Muster: Bauzeit, Speicher, Chunks), `KK.perf()` liefert zusätzlich `drawMed`/`drawP95` (reine draw()-Zeit). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
 
 ### Testen
 ```bash
 python3 tools/serve.py 8731          # Testserver (wie http.server, aber großer Backlog — sonst hängen Modul-Anfragen)
-node tools/check.mjs --port=8731 --throttle=4   # Flow hoch+quer, FPS, Saves, v7 → shots/neubau/ (~14 min)
+node tools/check.mjs --port=8731 --throttle=4   # Flow hoch+quer, FPS, Saves, v7 → shots/neubau/ (~14 min); Regler für Gegenproben: KK_Q=takt=0 node tools/checks_v7.mjs …
+node --test tests/node/*.test.mjs        # Technik: Takt (gleiche Simulation bei 30–144 Hz), Automatik, Endbild, Bündel, Back-Worker, Rauchtest (≈ 5 s)
+node tools/perf_gate.mjs --ziele=vorher@8732,nachher@8731 --tag=technik   # Mess-Gate: Hauptthread-Zeit je Bild p95 je Stufe/Szene, hoch+quer, CPU 4×, Ladegröße → tests/perf/
+node tools/technik_abnahme.mjs [--engine=webkit]   # Endbild an/Kontextverlust, Back-Worker, Takt; --nur=auto --frei=1 --sw=1 / --nur=rauf,deckel --frei=1: Automatik
+node tools/technik_shots.mjs --tag=post [--q=post=0] [--qs=0,2]   # A/B-Bilder Endbild → shots/technik/; Collage: python3 tools/technik_collage.py ab hoch 0 v13 post
 node tools/check.mjs --port=8731 --throttle=4 --v7=skip   # Teil 1 (~9 min) …
 node tools/check.mjs --port=8731 --throttle=4 --v7=only   # … Teil 2: V18–V31 (~18 min), einzeln: node tools/checks_v7.mjs --only=V20
 node tools/checks_v8.mjs --port=8731 --ref=8732          # v8-Checks V22–V25 einzeln; --ref = Server mit altem Stand (Vorher/Nachher)

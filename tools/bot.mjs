@@ -14,7 +14,7 @@ const SECS = flag("secs") ? +flag("secs").split("=")[1] : 30 * 60, AUD = !!flag(
 const OUT = flag("out") ? flag("out").split("=")[1] : (MEGA ? "mega" : "normal");
 const MYTH = flag("myth") ? flag("myth").split("=")[1] : "";          // v9: Kostüm anziehen (z. B. --myth=phoenix) — nur Optik
 const { chromium } = loadPlaywright();
-const flags = [(process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=default"), "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", ...(AUD ? ["--autoplay-policy=no-user-gesture-required"] : [])];
+const flags = [(process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=default"), "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-gpu-vsync", "--disable-frame-rate-limit", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--mute-audio", ...(AUD ? ["--autoplay-policy=no-user-gesture-required"] : [])];
 const b = await chromium.launch({ channel: "chromium", args: flags });
 const page = await (await b.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true })).newPage();
 const errs = []; page.on("pageerror", e => errs.push((e.stack || e.message).split("\n").slice(0, 4).join(" ← ")));
@@ -22,7 +22,7 @@ await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.KK && KK.G.L);
 if (AUD) { await page.touchscreen.tap(200, 300); await page.waitForFunction(() => KK.audio().pre.done && KK.audio().state === "running", null, { timeout: 30000 }); }
 await page.evaluate(async () => {
-  const v = "?v=" + window.KK_VER, m = await import("./src/game.js" + v), r = await import("./src/render.js" + v);
+  const v = "", m = await import("./src/game.js" + v), r = await import("./src/render.js" + v);
   window.__tap = (x, y) => m.tapWorld(x, y, null); window.__seg = m.segDist;
   // sichtbarer Bildschirmbereich ohne HUD oben und Knöpfe unten (Kind tippt nur, was es sieht)
   window.__vis = (x, y) => { const [sx, sy] = r.toScreen(x, y); return sx > 30 && sx < r.R.VW - 30 && sy > 140 && sy < r.R.VH - 230; };

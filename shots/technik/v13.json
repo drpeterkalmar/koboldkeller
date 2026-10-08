@@ -1,0 +1,289 @@
+{
+ "tag": "v13",
+ "q": "post=0",
+ "shots": [
+  {
+   "nm": "stadt",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/v13_stadt_q0_hoch.png",
+   "depth": 0,
+   "post": {
+    "an": false,
+    "vign": false,
+    "grund": "?post=0",
+    "fehler": null,
+    "bilder": 0,
+    "biome": 0,
+    "masse": null,
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.294,
+    "vsync": 30,
+    "schritte": 281,
+    "verworfen": 0.48,
+    "zwischen": 27
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 73,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 2
+  },
+  {
+   "nm": "moos",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/v13_moos_q0_hoch.png",
+   "depth": 1,
+   "post": {
+    "an": false,
+    "vign": false,
+    "grund": "?post=0",
+    "fehler": null,
+    "bilder": 0,
+    "biome": 0,
+    "masse": null,
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.304,
+    "vsync": 30,
+    "schritte": 485,
+    "verworfen": 1.37,
+    "zwischen": 194
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 97,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 2
+  },
+  {
+   "nm": "kristall",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/v13_kristall_q0_hoch.png",
+   "depth": 5,
+   "post": {
+    "an": false,
+    "vign": false,
+    "grund": "?post=0",
+    "fehler": null,
+    "bilder": 0,
+    "biome": 0,
+    "masse": null,
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.298,
+    "vsync": 0,
+    "schritte": 638,
+    "verworfen": 3.22,
+    "zwischen": 127
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 120,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 2
+  },
+  {
+   "nm": "frost",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/v13_frost_q0_hoch.png",
+   "depth": 13,
+   "post": {
+    "an": false,
+    "vign": false,
+    "grund": "?post=0",
+    "fehler": null,
+    "bilder": 0,
+    "biome": 0,
+    "masse": null,
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.28,
+    "vsync": 30,
+    "schritte": 791,
+    "verworfen": 4.87,
+    "zwischen": 99
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 142,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 2
+  },
+  {
+   "nm": "glut",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/v13_glut_q0_hoch.png",
+   "depth": 17,
+   "post": {
+    "an": false,
+    "vign": false,
+    "grund": "?post=0",
+    "fehler": null,
+    "bilder": 0,
+    "biome": 0,
+    "masse": null,
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.288,
+    "vsync": 60,
+    "schritte": 942,
+    "verworfen": 6.58,
+    "zwischen": 118
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 164,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 2
+  },
+  {
+   "nm": "boss",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/v13_boss_q0_hoch.png",
+   "depth": 4,
+   "post": {
+    "an": false,
+    "vign": false,
+    "grund": "?post=0",
+    "fehler": null,
+    "bilder": 0,
+    "biome": 0,
+    "masse": null,
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.284,
+    "vsync": 0,
+    "schritte": 1269,
+    "verworfen": 10.6,
+    "zwischen": 86
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 190,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 2
+  }
+ ],
+ "errors": []
+}

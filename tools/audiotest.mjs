@@ -3,7 +3,7 @@
 import { loadPlaywright } from "./pw.mjs";
 const URL = process.argv[2] || "http://localhost:8731/";
 const { chromium } = loadPlaywright();
-const browser = await chromium.launch({ args: [] });
+const browser = await chromium.launch({ args: ["--mute-audio"] });
 const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true, locale: "de-AT" });
 await ctx.addInitScript(() => {
   window.__vib = [];

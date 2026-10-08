@@ -3,7 +3,7 @@ import { loadPlaywright } from "./pw.mjs";
 const { chromium } = loadPlaywright();
 const port = process.argv[2] || 8731;
 const steps = process.argv.slice(3);
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ["--mute-audio"] });
 const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
 const page = await ctx.newPage();
 const errs = [];
