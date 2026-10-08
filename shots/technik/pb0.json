@@ -1,0 +1,187 @@
+{
+ "tag": "pb0",
+ "q": "pbuendel=0",
+ "shots": [
+  {
+   "nm": "moos",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/pb0_moos_q0_hoch.png",
+   "depth": 1,
+   "post": {
+    "an": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 66,
+    "biome": 1,
+    "masse": {
+     "RS": 1.6,
+     "sw": 659,
+     "sh": 1464,
+     "gw": 330,
+     "gh": 732,
+     "bw": 165,
+     "bh": 366,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.8,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.03,
+     "bloom": 0.5,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.292,
+    "vsync": 0,
+    "schritte": 184,
+    "verworfen": 2.72,
+    "zwischen": 187
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 72,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.6
+  },
+  {
+   "nm": "kristall",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/pb0_kristall_q0_hoch.png",
+   "depth": 5,
+   "post": {
+    "an": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 115,
+    "biome": 2,
+    "masse": {
+     "RS": 1.6,
+     "sw": 659,
+     "sh": 1464,
+     "gw": 330,
+     "gh": 732,
+     "bw": 165,
+     "bh": 366,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.8,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.288,
+    "vsync": 0,
+    "schritte": 324,
+    "verworfen": 4.88,
+    "zwischen": 129
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 95,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.6
+  },
+  {
+   "nm": "glut",
+   "fmt": "hoch",
+   "q": 0,
+   "file": "shots/technik/pb0_glut_q0_hoch.png",
+   "depth": 17,
+   "post": {
+    "an": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 162,
+    "biome": 5,
+    "masse": {
+     "RS": 1.6,
+     "sw": 659,
+     "sh": 1464,
+     "gw": 330,
+     "gh": 732,
+     "bw": 165,
+     "bh": 366,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.8,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.06,
+     "bloom": 0.7,
+     "heat": 0.999
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.286,
+    "vsync": 0,
+    "schritte": 461,
+    "verworfen": 7.08,
+    "zwischen": 114
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 117,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.6
+  }
+ ],
+ "errors": []
+}

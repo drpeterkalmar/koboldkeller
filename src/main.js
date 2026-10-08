@@ -177,7 +177,7 @@ function frame(now) {
   const tdr = performance.now();
   if (TAKT) ZB.setze(TK.alpha);                          // Zeichenposition zwischen vorletztem und letztem Schritt
   try { draw(G, rd); } finally { if (TAKT) ZB.zurueck(); }   // Spiel-Logik sieht nie eine Zwischenposition
-  if (POST.an) { try { postBild(R.cv, R.gcv, R.biome, R.vignCol || null, R.VW, R.VH, rd); } catch (e) { POST.fehler = String(e && e.message || e); postAus("Fehler"); } }
+  if (POST.an && R.gcv) { try { postBild(R.cv, R.gcv, R.biome, R.vignCol || null, R.VW, R.VH, rd); } catch (e) { POST.fehler = String(e && e.message || e); postAus("Fehler"); } }
   drawT[di] = performance.now() - tdr; di = (di + 1) % drawT.length; dn = Math.min(drawT.length, dn + 1);   // v12: reine draw()-Zeit
   audioFrame(G, rd);
   const t2 = performance.now();

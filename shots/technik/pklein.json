@@ -1,12 +1,12 @@
 {
- "tag": "post",
- "q": "",
+ "tag": "pklein",
+ "q": "pszene=0.8,0.66,0.56",
  "shots": [
   {
    "nm": "stadt",
-   "fmt": "quer",
-   "q": 0,
-   "file": "shots/technik/post_stadt_q0_quer.png",
+   "fmt": "hoch",
+   "q": 1,
+   "file": "shots/technik/pklein_stadt_q1_hoch.png",
    "depth": 0,
    "post": {
     "an": true,
@@ -14,21 +14,21 @@
     "vign": false,
     "grund": "an",
     "fehler": null,
-    "bilder": 111,
+    "bilder": 96,
     "biome": 0,
     "masse": {
-     "RS": 1.6,
-     "sw": 1464,
-     "sh": 659,
-     "gw": 732,
-     "gh": 330,
-     "bw": 366,
-     "bh": 165,
-     "ow": 1830,
-     "oh": 824,
-     "skala": 0.8,
-     "VW": 915,
-     "VH": 412
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
     },
     "grade": {
      "sat": 1.04,
@@ -39,11 +39,11 @@
    "takt": {
     "an": true,
     "hz": 60,
-    "alpha": 0.308,
-    "vsync": 20,
-    "schritte": 302,
-    "verworfen": 0.23,
-    "zwischen": 30
+    "alpha": 0.3,
+    "vsync": 60,
+    "schritte": 196,
+    "verworfen": 1.78,
+    "zwischen": 28
    },
    "worker": {
     "an": true,
@@ -55,80 +55,19 @@
     "geliefert": 0,
     "leer": 0,
     "verworfen": 0,
-    "sync": 72,
+    "sync": 88,
     "msMittel": 0,
     "msMax": 0,
     "blende": false,
     "felsWorker": false
    },
-   "rs": 1.6
-  },
-  {
-   "nm": "moos",
-   "fmt": "quer",
-   "q": 0,
-   "file": "shots/technik/post_moos_q0_quer.png",
-   "depth": 1,
-   "post": {
-    "an": true,
-    "ruht": false,
-    "vign": false,
-    "grund": "an",
-    "fehler": null,
-    "bilder": 191,
-    "biome": 1,
-    "masse": {
-     "RS": 1.6,
-     "sw": 1464,
-     "sh": 659,
-     "gw": 732,
-     "gh": 330,
-     "bw": 366,
-     "bh": 165,
-     "ow": 1830,
-     "oh": 824,
-     "skala": 0.8,
-     "VW": 915,
-     "VH": 412
-    },
-    "grade": {
-     "sat": 1.03,
-     "bloom": 0.5,
-     "heat": 0
-    }
-   },
-   "takt": {
-    "an": true,
-    "hz": 60,
-    "alpha": 0.286,
-    "vsync": 20,
-    "schritte": 510,
-    "verworfen": 1.25,
-    "zwischen": 221
-   },
-   "worker": {
-    "an": true,
-    "laeuft": false,
-    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
-    "fehler": null,
-    "offen": 0,
-    "wichtig": 0,
-    "geliefert": 0,
-    "leer": 0,
-    "verworfen": 0,
-    "sync": 96,
-    "msMittel": 0,
-    "msMax": 0,
-    "blende": false,
-    "felsWorker": false
-   },
-   "rs": 1.6
+   "rs": 1.32
   },
   {
    "nm": "kristall",
-   "fmt": "quer",
-   "q": 0,
-   "file": "shots/technik/post_kristall_q0_quer.png",
+   "fmt": "hoch",
+   "q": 1,
+   "file": "shots/technik/pklein_kristall_q1_hoch.png",
    "depth": 5,
    "post": {
     "an": true,
@@ -136,21 +75,21 @@
     "vign": false,
     "grund": "an",
     "fehler": null,
-    "bilder": 264,
+    "bilder": 160,
     "biome": 2,
     "masse": {
-     "RS": 1.6,
-     "sw": 1464,
-     "sh": 659,
-     "gw": 732,
-     "gh": 330,
-     "bw": 366,
-     "bh": 165,
-     "ow": 1830,
-     "oh": 824,
-     "skala": 0.8,
-     "VW": 915,
-     "VH": 412
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
     },
     "grade": {
      "sat": 1.05,
@@ -161,11 +100,11 @@
    "takt": {
     "an": true,
     "hz": 60,
-    "alpha": 0.32,
+    "alpha": 0.294,
     "vsync": 20,
-    "schritte": 705,
-    "verworfen": 2.22,
-    "zwischen": 129
+    "schritte": 330,
+    "verworfen": 4.03,
+    "zwischen": 125
    },
    "worker": {
     "an": true,
@@ -177,80 +116,19 @@
     "geliefert": 0,
     "leer": 0,
     "verworfen": 0,
-    "sync": 119,
+    "sync": 111,
     "msMittel": 0,
     "msMax": 0,
     "blende": false,
     "felsWorker": false
    },
-   "rs": 1.6
-  },
-  {
-   "nm": "frost",
-   "fmt": "quer",
-   "q": 0,
-   "file": "shots/technik/post_frost_q0_quer.png",
-   "depth": 13,
-   "post": {
-    "an": true,
-    "ruht": false,
-    "vign": false,
-    "grund": "an",
-    "fehler": null,
-    "bilder": 338,
-    "biome": 4,
-    "masse": {
-     "RS": 1.6,
-     "sw": 1464,
-     "sh": 659,
-     "gw": 732,
-     "gh": 330,
-     "bw": 366,
-     "bh": 165,
-     "ow": 1830,
-     "oh": 824,
-     "skala": 0.8,
-     "VW": 915,
-     "VH": 412
-    },
-    "grade": {
-     "sat": 0.97,
-     "bloom": 0.55,
-     "heat": 0
-    }
-   },
-   "takt": {
-    "an": true,
-    "hz": 60,
-    "alpha": 0.29,
-    "vsync": 20,
-    "schritte": 898,
-    "verworfen": 3.47,
-    "zwischen": 115
-   },
-   "worker": {
-    "an": true,
-    "laeuft": false,
-    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
-    "fehler": null,
-    "offen": 0,
-    "wichtig": 0,
-    "geliefert": 0,
-    "leer": 0,
-    "verworfen": 0,
-    "sync": 141,
-    "msMittel": 0,
-    "msMax": 0,
-    "blende": false,
-    "felsWorker": false
-   },
-   "rs": 1.6
+   "rs": 1.32
   },
   {
    "nm": "glut",
-   "fmt": "quer",
-   "q": 0,
-   "file": "shots/technik/post_glut_q0_quer.png",
+   "fmt": "hoch",
+   "q": 1,
+   "file": "shots/technik/pklein_glut_q1_hoch.png",
    "depth": 17,
    "post": {
     "an": true,
@@ -258,87 +136,26 @@
     "vign": false,
     "grund": "an",
     "fehler": null,
-    "bilder": 416,
+    "bilder": 218,
     "biome": 5,
     "masse": {
-     "RS": 1.6,
-     "sw": 1464,
-     "sh": 659,
-     "gw": 732,
-     "gh": 330,
-     "bw": 366,
-     "bh": 165,
-     "ow": 1830,
-     "oh": 824,
-     "skala": 0.8,
-     "VW": 915,
-     "VH": 412
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
     },
     "grade": {
      "sat": 1.06,
      "bloom": 0.7,
-     "heat": 1
-    }
-   },
-   "takt": {
-    "an": true,
-    "hz": 60,
-    "alpha": 0.286,
-    "vsync": 20,
-    "schritte": 1111,
-    "verworfen": 4.45,
-    "zwischen": 116
-   },
-   "worker": {
-    "an": true,
-    "laeuft": false,
-    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
-    "fehler": null,
-    "offen": 0,
-    "wichtig": 0,
-    "geliefert": 0,
-    "leer": 0,
-    "verworfen": 0,
-    "sync": 163,
-    "msMittel": 0,
-    "msMax": 0,
-    "blende": false,
-    "felsWorker": false
-   },
-   "rs": 1.6
-  },
-  {
-   "nm": "boss",
-   "fmt": "quer",
-   "q": 0,
-   "file": "shots/technik/post_boss_q0_quer.png",
-   "depth": 4,
-   "post": {
-    "an": true,
-    "ruht": false,
-    "vign": false,
-    "grund": "an",
-    "fehler": null,
-    "bilder": 564,
-    "biome": 1,
-    "masse": {
-     "RS": 1.6,
-     "sw": 1464,
-     "sh": 659,
-     "gw": 732,
-     "gh": 330,
-     "bw": 366,
-     "bh": 165,
-     "ow": 1830,
-     "oh": 824,
-     "skala": 0.8,
-     "VW": 915,
-     "VH": 412
-    },
-    "grade": {
-     "sat": 1.03,
-     "bloom": 0.5,
-     "heat": 0
+     "heat": 0.998
     }
    },
    "takt": {
@@ -346,9 +163,9 @@
     "hz": 60,
     "alpha": 0.292,
     "vsync": 20,
-    "schritte": 1466,
-    "verworfen": 7,
-    "zwischen": 89
+    "schritte": 459,
+    "verworfen": 6.12,
+    "zwischen": 111
    },
    "worker": {
     "an": true,
@@ -360,13 +177,196 @@
     "geliefert": 0,
     "leer": 0,
     "verworfen": 0,
-    "sync": 189,
+    "sync": 133,
     "msMittel": 0,
     "msMax": 0,
     "blende": false,
     "felsWorker": false
    },
-   "rs": 1.6
+   "rs": 1.32
+  },
+  {
+   "nm": "stadt",
+   "fmt": "hoch",
+   "q": 2,
+   "file": "shots/technik/pklein_stadt_q2_hoch.png",
+   "depth": 0,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 279,
+    "biome": 0,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.351,
+     "heat": 0.002
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.29,
+    "vsync": 0,
+    "schritte": 586,
+    "verworfen": 8.2,
+    "zwischen": 13
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 173,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.12
+  },
+  {
+   "nm": "kristall",
+   "fmt": "hoch",
+   "q": 2,
+   "file": "shots/technik/pklein_kristall_q2_hoch.png",
+   "depth": 5,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 323,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.599,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.288,
+    "vsync": 0,
+    "schritte": 694,
+    "verworfen": 10.85,
+    "zwischen": 45
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 196,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.12
+  },
+  {
+   "nm": "glut",
+   "fmt": "hoch",
+   "q": 2,
+   "file": "shots/technik/pklein_glut_q2_hoch.png",
+   "depth": 17,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 355,
+    "biome": 5,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.06,
+     "bloom": 0.699,
+     "heat": 0.991
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.286,
+    "vsync": 0,
+    "schritte": 788,
+    "verworfen": 13.67,
+    "zwischen": 88
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 218,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   },
+   "rs": 1.12
   }
  ],
  "errors": []

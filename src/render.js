@@ -5,7 +5,7 @@ import { BIOMES, weaponOf, HATS, PLAYER, WALLTRAP, levelName, MYTH_BY_ID, MYTH_F
 import { clamp, TAU, rgba, mixHex, shade, mulberry32 } from "./util.js";
 import * as D from "./deko.js";
 import { DREH, drehIndex, drehMasse, sortiereNachBild } from "./buendel.js";
-import { POST, postMasse, postGroesse } from "./post.js";
+import { POST, postMasse, postGroesse, postAktiv, postRuhe } from "./post.js";
 import { CH, CH_MAX, CHT, CHH, chunkMasse, chunkLeer, backeChunk, backListe, aeltesterUngenutzt, felsRing } from "./chunkbacken.js";
 const DK = D.DK;
 
@@ -38,7 +38,8 @@ export function resize() {
   R.Z0 = U0 / 64; R.Z = R.Z0 * R.cz; R.U = 64 * R.Z;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   // Technik E3: mit Endbild (post.js) rendert die 2D-Szene kleiner (Skala 0,8 … 0,5), das Endbild skaliert hoch + schärft nach
-  const pm = POST.an ? postMasse(VW, VH, window.devicePixelRatio, R.q) : null;
+  const pm = postAktiv(R.q) ? postMasse(VW, VH, window.devicePixelRatio, R.q) : null;
+  if (POST.an && !pm) postRuhe(true);                          // Sparstufe: reines 2D wie v13 (Endbild ruht)
   R.RS = pm ? pm.RS : Math.max(1, dpr * R.qScales[R.q]);
   R.cv.width = Math.round(VW * R.RS); R.cv.height = Math.round(VH * R.RS);
   R.cv.style.width = VW + "px"; R.cv.style.height = VH + "px";
@@ -1202,7 +1203,7 @@ function lighting(G, B, portals) {
   if (DK.on) D.lights(light, G, R, FX.lights, T);             // v13: Fackel-Lichtkegel, Lichtstrahl-Pfützen, glühende Deko, Lichtblitze
   if (G.rise) { const RS = G.rise, kk = RS.ph === "quake" ? RS.u : RS.ph === "burst" ? 1 : RS.ph === "grow" ? 1 - 0.4 * RS.u : 0.6 * (1 - RS.u); light(RS.x, RS.y, (2.4 + 3.2 * kk) * (RS.b.isKing ? 1.4 : 1), RS.col, 0.4 + 0.5 * kk); }
   l.globalAlpha = 1;
-  if (!(POST.an && POST.vign)) {                              // Technik E3: nur mit ?pvign=1 macht der Shader die Vignette (s. post.js)
+  if (!(R.gcv && POST.vign)) {                              // Technik E3: nur mit ?pvign=1 macht der Shader die Vignette (s. post.js)
     l.globalCompositeOperation = "multiply";
     l.drawImage(R.vign, 0, 0);
   }

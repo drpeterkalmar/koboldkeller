@@ -37,7 +37,7 @@ const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith("--" + k
 const ZIELE = arg("ziele", "nachher@8731").split(",").map((s) => { const [name, port] = s.split("@"); return { name, port: +port, q: arg("q-" + name, "") }; });
 const FMTS = arg("fmt", "hoch,quer").split(","), QS = arg("qs", "0,1,2,3").split(",").map(Number);
 const SZENEN = arg("szenen", "stadt,kampf,boss,wechsel").split(","), SECS = +arg("secs", 10), REPS = +arg("reps", 2), TH = +arg("throttle", 4);
-const PROFIL = arg("profil", "sw"), TAG = arg("tag", "messung"), TOL = +arg("tol", 5);
+const PROFIL = arg("profil", "sw"), TAG = arg("tag", "messung"), TOL = +arg("tol", 5), TOLMS = +arg("tolms", 0.5);   // Toleranz: 5 % + 0,5 ms (Rauschen bei kleinen Werten im Profil gpu ±1 ms)
 const DIR = "tests/perf/"; mkdirSync(DIR, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -170,7 +170,7 @@ for (const fmt of FMTS) for (const q of QS) for (const nm of SZENEN) {
 let gate = null;
 if (ZIELE.length >= 2) {
   const [A, B] = ZIELE.map((Z) => Z.name);
-  const verletzt = tab.filter((t) => t[A].n && t[B].n && t[B].p95 > t[A].p95 * (1 + TOL / 100));
+  const verletzt = tab.filter((t) => t[A].n && t[B].n && t[B].p95 > t[A].p95 * (1 + TOL / 100) + TOLMS);
   const ladeOk = lasten[B] && lasten[A] ? lasten[B].bytes < lasten[A].bytes : null;
   gate = { vergleich: A + " → " + B, tol: TOL, ok: verletzt.length === 0 && ladeOk !== false, verletzt: verletzt.map((t) => `${t.fmt} q${t.q} ${t.nm}: ${t[A].p95} → ${t[B].p95} ms`), ladeOk };
 }
@@ -186,7 +186,7 @@ md += "\n| Ladegröße | " + ZIELE.map((Z) => Z.name).join(" | ") + " |\n|---|" 
 for (const art of ["js", "audio", "andere"]) md += `| ${art} (roh / gzip) | ` + ZIELE.map((Z) => { const a = lasten[Z.name] && lasten[Z.name].art[art]; return a ? `${kb(a.bytes)} / ${kb(a.gz)}` : "–"; }).join(" | ") + " |\n";
 md += "| **bis spielbereit** (roh / gzip) | " + ZIELE.map((Z) => lasten[Z.name] ? `**${kb(lasten[Z.name].bytes)} / ${kb(lasten[Z.name].gz)}**` : "–").join(" | ") + " |\n";
 md += "| inkl. später Nachgeladenem (roh / gzip) | " + ZIELE.map((Z) => gesamtLast[Z.name] ? `${kb(gesamtLast[Z.name].bytes)} / ${kb(gesamtLast[Z.name].gz)}` : "–").join(" | ") + " |\n";
-if (gate) md += `\n**Gate ${gate.vergleich}: ${gate.ok ? "bestanden" : "NICHT bestanden"}** (Toleranz ${TOL} %). ${gate.verletzt.length ? "Verletzt: " + gate.verletzt.join("; ") : ""} Ladegröße kleiner: ${gate.ladeOk}\n`;
+if (gate) md += `\n**Gate ${gate.vergleich}: ${gate.ok ? "bestanden" : "NICHT bestanden"}** (Toleranz ${TOL} % + ${TOLMS} ms). ${gate.verletzt.length ? "Verletzt: " + gate.verletzt.join("; ") : ""} Ladegröße kleiner: ${gate.ladeOk}\n`;
 md += `\nFehler im Browser: ${fehler.length}${fehler.length ? " — " + fehler.slice(0, 3).join(" | ") : ""}\n`;
 writeFileSync(`${DIR}perf_${TAG}.md`, md);
 console.log("\n" + md);

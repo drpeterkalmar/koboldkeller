@@ -1,0 +1,2781 @@
+{
+ "tag": "e3_stufen_sw",
+ "profil": "sw",
+ "throttle": 4,
+ "secs": 6,
+ "reps": 2,
+ "dpr": 2,
+ "ziele": [
+  {
+   "name": "vorher",
+   "port": 8732,
+   "q": ""
+  },
+  {
+   "name": "mit",
+   "port": 8731,
+   "q": ""
+  }
+ ],
+ "lasten": {
+  "vorher": {
+   "bytes": 1679996,
+   "gz": 1196622,
+   "n": 23,
+   "ext": 0,
+   "art": {
+    "andere": {
+     "n": 3,
+     "bytes": 94427,
+     "gz": 64761
+    },
+    "js": {
+     "n": 19,
+     "bytes": 661416,
+     "gz": 207708
+    },
+    "audio": {
+     "n": 1,
+     "bytes": 924153,
+     "gz": 924153
+    }
+   }
+  },
+  "mit": {
+   "bytes": 1575738,
+   "gz": 1056649,
+   "n": 28,
+   "ext": 0,
+   "art": {
+    "andere": {
+     "n": 3,
+     "bytes": 94723,
+     "gz": 64821
+    },
+    "js": {
+     "n": 24,
+     "bytes": 720598,
+     "gz": 231411
+    },
+    "audio": {
+     "n": 1,
+     "bytes": 760417,
+     "gz": 760417
+    }
+   }
+  }
+ },
+ "gesamtLast": {
+  "vorher": {
+   "bytes": 1679996,
+   "gz": 1196622,
+   "n": 23,
+   "ext": 0,
+   "art": {
+    "andere": {
+     "n": 3,
+     "bytes": 94427,
+     "gz": 64761
+    },
+    "js": {
+     "n": 19,
+     "bytes": 661416,
+     "gz": 207708
+    },
+    "audio": {
+     "n": 1,
+     "bytes": 924153,
+     "gz": 924153
+    }
+   }
+  },
+  "mit": {
+   "bytes": 1575738,
+   "gz": 1056649,
+   "n": 28,
+   "ext": 0,
+   "art": {
+    "andere": {
+     "n": 3,
+     "bytes": 94723,
+     "gz": 64821
+    },
+    "js": {
+     "n": 24,
+     "bytes": 720598,
+     "gz": 231411
+    },
+    "audio": {
+     "n": 1,
+     "bytes": 760417,
+     "gz": 760417
+    }
+   }
+  }
+ },
+ "tab": [
+  {
+   "fmt": "hoch",
+   "q": 1,
+   "nm": "stadt",
+   "vorher": {
+    "n": 116,
+    "p50": 69.8,
+    "p95": 73.9,
+    "max": 79.2,
+    "js": {
+     "n": 116,
+     "p50": 2.5,
+     "p95": 5.6,
+     "max": 6.5
+    }
+   },
+   "mit": {
+    "n": 155,
+    "p50": 51.1,
+    "p95": 57.6,
+    "max": 60.2,
+    "js": {
+     "n": 155,
+     "p50": 50.3,
+     "p95": 54.1,
+     "max": 57.8
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 1,
+   "nm": "kampf",
+   "vorher": {
+    "n": 128,
+    "p50": 65.3,
+    "p95": 69.6,
+    "max": 79.5,
+    "js": {
+     "n": 128,
+     "p50": 3,
+     "p95": 6.8,
+     "max": 9.2
+    }
+   },
+   "mit": {
+    "n": 179,
+    "p50": 48.4,
+    "p95": 57.4,
+    "max": 58.6,
+    "js": {
+     "n": 179,
+     "p50": 46.5,
+     "p95": 51.9,
+     "max": 58.3
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 1,
+   "nm": "boss",
+   "vorher": {
+    "n": 120,
+    "p50": 68.7,
+    "p95": 72.8,
+    "max": 75.8,
+    "js": {
+     "n": 120,
+     "p50": 3.2,
+     "p95": 42.5,
+     "max": 46.8
+    }
+   },
+   "mit": {
+    "n": 161,
+    "p50": 51.6,
+    "p95": 59,
+    "max": 66.7,
+    "js": {
+     "n": 161,
+     "p50": 49.9,
+     "p95": 55.4,
+     "max": 58.6
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 2,
+   "nm": "stadt",
+   "vorher": {
+    "n": 151,
+    "p50": 41.2,
+    "p95": 45.8,
+    "max": 49.2,
+    "js": {
+     "n": 151,
+     "p50": 2.5,
+     "p95": 3.8,
+     "max": 6.2
+    }
+   },
+   "mit": {
+    "n": 173,
+    "p50": 33.8,
+    "p95": 38.3,
+    "max": 40.7,
+    "js": {
+     "n": 173,
+     "p50": 32.4,
+     "p95": 35.8,
+     "max": 39.6
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 2,
+   "nm": "kampf",
+   "vorher": {
+    "n": 150,
+    "p50": 37.4,
+    "p95": 42.6,
+    "max": 46.3,
+    "js": {
+     "n": 150,
+     "p50": 2.8,
+     "p95": 5.8,
+     "max": 6.6
+    }
+   },
+   "mit": {
+    "n": 181,
+    "p50": 32.8,
+    "p95": 39.4,
+    "max": 45.3,
+    "js": {
+     "n": 181,
+     "p50": 29.9,
+     "p95": 34.9,
+     "max": 38.6
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 2,
+   "nm": "boss",
+   "vorher": {
+    "n": 101,
+    "p50": 43.2,
+    "p95": 46.2,
+    "max": 50.1,
+    "js": {
+     "n": 101,
+     "p50": 3.1,
+     "p95": 6.2,
+     "max": 7.3
+    }
+   },
+   "mit": {
+    "n": 186,
+    "p50": 35.2,
+    "p95": 40.3,
+    "max": 43.9,
+    "js": {
+     "n": 186,
+     "p50": 32.2,
+     "p95": 36.3,
+     "max": 43.2
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 3,
+   "nm": "stadt",
+   "vorher": {
+    "n": 117,
+    "p50": 26.7,
+    "p95": 30.1,
+    "max": 31.9,
+    "js": {
+     "n": 117,
+     "p50": 2.5,
+     "p95": 3.8,
+     "max": 6.2
+    }
+   },
+   "mit": {
+    "n": 256,
+    "p50": 25.2,
+    "p95": 29.1,
+    "max": 32,
+    "js": {
+     "n": 256,
+     "p50": 0.7,
+     "p95": 3.7,
+     "max": 5.5
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 3,
+   "nm": "kampf",
+   "vorher": {
+    "n": 120,
+    "p50": 25.1,
+    "p95": 29.5,
+    "max": 33.3,
+    "js": {
+     "n": 120,
+     "p50": 2.7,
+     "p95": 5.7,
+     "max": 6.3
+    }
+   },
+   "mit": {
+    "n": 252,
+    "p50": 24.3,
+    "p95": 28.8,
+    "max": 34.3,
+    "js": {
+     "n": 252,
+     "p50": 2.6,
+     "p95": 5.6,
+     "max": 7.1
+    }
+   }
+  },
+  {
+   "fmt": "hoch",
+   "q": 3,
+   "nm": "boss",
+   "vorher": {
+    "n": 108,
+    "p50": 27.5,
+    "p95": 31.4,
+    "max": 34.8,
+    "js": {
+     "n": 108,
+     "p50": 2.9,
+     "p95": 5.9,
+     "max": 7
+    }
+   },
+   "mit": {
+    "n": 191,
+    "p50": 26.5,
+    "p95": 30.5,
+    "max": 32.4,
+    "js": {
+     "n": 191,
+     "p50": 2.9,
+     "p95": 5.9,
+     "max": 7.5
+    }
+   }
+  }
+ ],
+ "gate": {
+  "vergleich": "vorher → mit",
+  "tol": 5,
+  "ok": true,
+  "verletzt": [],
+  "ladeOk": true
+ },
+ "res": [
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 1,
+   "nm": "stadt",
+   "work": {
+    "n": 53,
+    "p50": 2.5,
+    "p95": 5.7,
+    "p99": 6.5,
+    "max": 6.5
+   },
+   "haupt": {
+    "n": 53,
+    "p50": 69.7,
+    "p95": 73.9,
+    "p99": 75.4,
+    "max": 75.4
+   },
+   "frame": {
+    "n": 53,
+    "p50": 133.2,
+    "p95": 133.4,
+    "p99": 133.4,
+    "max": 133.4
+   },
+   "fps": 8.7,
+   "kk": {
+    "drawMed": 2.5,
+    "drawP95": 2.5,
+    "jsUpdate": 0.05,
+    "jsDraw": 1.6
+   },
+   "rs": 1.6,
+   "parts": 32,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 1,
+   "nm": "kampf",
+   "work": {
+    "n": 48,
+    "p50": 3.1,
+    "p95": 7.2,
+    "p99": 9.2,
+    "max": 9.2
+   },
+   "haupt": {
+    "n": 48,
+    "p50": 65.7,
+    "p95": 68.9,
+    "p99": 79.5,
+    "max": 79.5
+   },
+   "frame": {
+    "n": 48,
+    "p50": 133.3,
+    "p95": 133.4,
+    "p99": 133.4,
+    "max": 133.4
+   },
+   "fps": 8,
+   "kk": {
+    "drawMed": 3.1,
+    "drawP95": 6.1,
+    "jsUpdate": 0.16,
+    "jsDraw": 3.57
+   },
+   "rs": 1.6,
+   "parts": 49,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 1,
+   "nm": "boss",
+   "work": {
+    "n": 56,
+    "p50": 3.3,
+    "p95": 43.2,
+    "p99": 46.8,
+    "max": 46.8
+   },
+   "haupt": {
+    "n": 56,
+    "p50": 68.9,
+    "p95": 72.8,
+    "p99": 73.3,
+    "max": 73.3
+   },
+   "frame": {
+    "n": 56,
+    "p50": 116.6,
+    "p95": 199.9,
+    "p99": 200,
+    "max": 200
+   },
+   "fps": 9.1,
+   "kk": {
+    "drawMed": 2.8,
+    "drawP95": 39.7,
+    "jsUpdate": 0.42,
+    "jsDraw": 7.09
+   },
+   "rs": 1.6,
+   "parts": 52,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 2,
+   "nm": "stadt",
+   "work": {
+    "n": 61,
+    "p50": 0.9,
+    "p95": 3.8,
+    "p99": 6.2,
+    "max": 6.2
+   },
+   "haupt": {
+    "n": 61,
+    "p50": 42.5,
+    "p95": 45.8,
+    "p99": 46.9,
+    "max": 46.9
+   },
+   "frame": {
+    "n": 61,
+    "p50": 116.6,
+    "p95": 116.7,
+    "p99": 116.8,
+    "max": 116.8
+   },
+   "fps": 10.1,
+   "kk": {
+    "drawMed": 0.7,
+    "drawP95": 3.6,
+    "jsUpdate": 0.07,
+    "jsDraw": 1.4
+   },
+   "rs": 1.3,
+   "parts": 33,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 2,
+   "nm": "kampf",
+   "work": {
+    "n": 62,
+    "p50": 2.8,
+    "p95": 4.1,
+    "p99": 5.8,
+    "max": 5.8
+   },
+   "haupt": {
+    "n": 62,
+    "p50": 38.8,
+    "p95": 42.6,
+    "p99": 46.3,
+    "max": 46.3
+   },
+   "frame": {
+    "n": 62,
+    "p50": 116.6,
+    "p95": 116.7,
+    "p99": 116.8,
+    "max": 116.8
+   },
+   "fps": 10.3,
+   "kk": {
+    "drawMed": 2.6,
+    "drawP95": 3.1,
+    "jsUpdate": 0.37,
+    "jsDraw": 2.1
+   },
+   "rs": 1.3,
+   "parts": 6,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 2,
+   "nm": "boss",
+   "work": {
+    "n": 51,
+    "p50": 3.1,
+    "p95": 6.1,
+    "p99": 7.2,
+    "max": 7.2
+   },
+   "haupt": {
+    "n": 51,
+    "p50": 43.3,
+    "p95": 48.8,
+    "p99": 49.3,
+    "max": 49.3
+   },
+   "frame": {
+    "n": 51,
+    "p50": 116.7,
+    "p95": 116.7,
+    "p99": 116.7,
+    "max": 116.7
+   },
+   "fps": 8.6,
+   "kk": {
+    "drawMed": 2.8,
+    "drawP95": 2.8,
+    "jsUpdate": 0.05,
+    "jsDraw": 1.95
+   },
+   "rs": 1.3,
+   "parts": 55,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 3,
+   "nm": "stadt",
+   "work": {
+    "n": 66,
+    "p50": 2.5,
+    "p95": 3.6,
+    "p99": 6.2,
+    "max": 6.2
+   },
+   "haupt": {
+    "n": 66,
+    "p50": 26.8,
+    "p95": 29.5,
+    "p99": 31.9,
+    "max": 31.9
+   },
+   "frame": {
+    "n": 66,
+    "p50": 100,
+    "p95": 100.1,
+    "p99": 100.1,
+    "max": 100.1
+   },
+   "fps": 11.1,
+   "kk": {
+    "drawMed": 2.4,
+    "drawP95": 2.5,
+    "jsUpdate": 0.05,
+    "jsDraw": 1.92
+   },
+   "rs": 1,
+   "parts": 27,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 3,
+   "nm": "kampf",
+   "work": {
+    "n": 64,
+    "p50": 2.7,
+    "p95": 5.6,
+    "p99": 6,
+    "max": 6
+   },
+   "haupt": {
+    "n": 64,
+    "p50": 25.2,
+    "p95": 29.2,
+    "p99": 31.8,
+    "max": 31.8
+   },
+   "frame": {
+    "n": 64,
+    "p50": 100,
+    "p95": 100.1,
+    "p99": 133.3,
+    "max": 133.3
+   },
+   "fps": 10.7,
+   "kk": {
+    "drawMed": 2.5,
+    "drawP95": 3.7,
+    "jsUpdate": 0.1,
+    "jsDraw": 2.27
+   },
+   "rs": 1,
+   "parts": 59,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 3,
+   "nm": "boss",
+   "work": {
+    "n": 62,
+    "p50": 2.9,
+    "p95": 6,
+    "p99": 7,
+    "max": 7
+   },
+   "haupt": {
+    "n": 62,
+    "p50": 27,
+    "p95": 29.6,
+    "p99": 34.8,
+    "max": 34.8
+   },
+   "frame": {
+    "n": 62,
+    "p50": 100,
+    "p95": 100.1,
+    "p99": 100.1,
+    "max": 100.1
+   },
+   "fps": 10.3,
+   "kk": {
+    "drawMed": 2.8,
+    "drawP95": 5.6,
+    "jsUpdate": 0.14,
+    "jsDraw": 2.29
+   },
+   "rs": 1,
+   "parts": 24,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 1,
+   "nm": "stadt",
+   "work": {
+    "n": 72,
+    "p50": 50.7,
+    "p95": 53.9,
+    "p99": 56.9,
+    "max": 56.9
+   },
+   "haupt": {
+    "n": 72,
+    "p50": 51.6,
+    "p95": 58.3,
+    "p99": 59.9,
+    "max": 59.9
+   },
+   "frame": {
+    "n": 72,
+    "p50": 83.4,
+    "p95": 133.4,
+    "p99": 183.3,
+    "max": 183.3
+   },
+   "fps": 11.9,
+   "kk": {
+    "drawMed": 50.4,
+    "drawP95": 50.8,
+    "workMed": 50.4,
+    "workP95": 50.9,
+    "workMax": 50.9,
+    "jsUpdate": 0.02,
+    "jsDraw": 49.28
+   },
+   "rs": 1.32,
+   "parts": 26,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 194,
+    "biome": 0,
+    "masse": {
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.286,
+    "vsync": 0,
+    "schritte": 566,
+    "verworfen": 8.47,
+    "zwischen": 30
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 88,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 1,
+   "nm": "kampf",
+   "work": {
+    "n": 77,
+    "p50": 47,
+    "p95": 53.5,
+    "p99": 58.3,
+    "max": 58.3
+   },
+   "haupt": {
+    "n": 77,
+    "p50": 50.5,
+    "p95": 58.1,
+    "p99": 58.6,
+    "max": 58.6
+   },
+   "frame": {
+    "n": 77,
+    "p50": 83.3,
+    "p95": 133.3,
+    "p99": 183.4,
+    "max": 183.4
+   },
+   "fps": 12.6,
+   "kk": {
+    "drawMed": 46.8,
+    "drawP95": 51.1,
+    "workMed": 47.1,
+    "workP95": 51.8,
+    "workMax": 51.8,
+    "jsUpdate": 0.23,
+    "jsDraw": 46.04
+   },
+   "rs": 1.32,
+   "parts": 86,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 314,
+    "biome": 3,
+    "masse": {
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.55,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.272,
+    "vsync": 0,
+    "schritte": 905,
+    "verworfen": 12.18,
+    "zwischen": 138
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 112,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 1,
+   "nm": "boss",
+   "work": {
+    "n": 75,
+    "p50": 50.1,
+    "p95": 56.5,
+    "p99": 57.5,
+    "max": 57.5
+   },
+   "haupt": {
+    "n": 75,
+    "p50": 51.8,
+    "p95": 59.3,
+    "p99": 63.8,
+    "max": 63.8
+   },
+   "frame": {
+    "n": 75,
+    "p50": 83.3,
+    "p95": 166.7,
+    "p99": 183.4,
+    "max": 183.4
+   },
+   "fps": 12.5,
+   "kk": {
+    "drawMed": 48.3,
+    "drawP95": 57.1,
+    "workMed": 48.5,
+    "workP95": 57.5,
+    "workMax": 57.5,
+    "jsUpdate": 0.22,
+    "jsDraw": 49.97
+   },
+   "rs": 1.32,
+   "parts": 131,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 508,
+    "biome": 2,
+    "masse": {
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.264,
+    "vsync": 0,
+    "schritte": 1456,
+    "verworfen": 17.9,
+    "zwischen": 178
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 146,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 2,
+   "nm": "stadt",
+   "work": {
+    "n": 76,
+    "p50": 33.5,
+    "p95": 37.1,
+    "p99": 39.6,
+    "max": 39.6
+   },
+   "haupt": {
+    "n": 76,
+    "p50": 35.6,
+    "p95": 38.8,
+    "p99": 40.7,
+    "max": 40.7
+   },
+   "frame": {
+    "n": 76,
+    "p50": 83.3,
+    "p95": 83.4,
+    "p99": 83.5,
+    "max": 83.5
+   },
+   "fps": 12.6,
+   "kk": {
+    "drawMed": 37,
+    "drawP95": 37,
+    "workMed": 37.1,
+    "workP95": 37.1,
+    "workMax": 37.1,
+    "jsUpdate": 0.05,
+    "jsDraw": 34.75
+   },
+   "rs": 1.12,
+   "parts": 17,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 628,
+    "biome": 0,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.28,
+    "vsync": 0,
+    "schritte": 1815,
+    "verworfen": 21.35,
+    "zwischen": 20
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 186,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 2,
+   "nm": "kampf",
+   "work": {
+    "n": 77,
+    "p50": 31.3,
+    "p95": 34.9,
+    "p99": 35.9,
+    "max": 35.9
+   },
+   "haupt": {
+    "n": 77,
+    "p50": 33.3,
+    "p95": 39.9,
+    "p99": 45.3,
+    "max": 45.3
+   },
+   "frame": {
+    "n": 77,
+    "p50": 83.3,
+    "p95": 83.4,
+    "p99": 116.7,
+    "max": 116.7
+   },
+   "fps": 12.8,
+   "kk": {
+    "drawMed": 29.3,
+    "drawP95": 33.8,
+    "workMed": 29.7,
+    "workP95": 34,
+    "workMax": 34,
+    "jsUpdate": 0.5,
+    "jsDraw": 29.59
+   },
+   "rs": 1.12,
+   "parts": 35,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 747,
+    "biome": 3,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.55,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.278,
+    "vsync": 0,
+    "schritte": 2166,
+    "verworfen": 24.87,
+    "zwischen": 87
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 210,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 2,
+   "nm": "boss",
+   "work": {
+    "n": 88,
+    "p50": 32.3,
+    "p95": 36.5,
+    "p99": 43.2,
+    "max": 43.2
+   },
+   "haupt": {
+    "n": 88,
+    "p50": 35.6,
+    "p95": 40.5,
+    "p99": 43.9,
+    "max": 43.9
+   },
+   "frame": {
+    "n": 88,
+    "p50": 66.7,
+    "p95": 149.9,
+    "p99": 166.6,
+    "max": 166.6
+   },
+   "fps": 14.6,
+   "kk": {
+    "drawMed": 33,
+    "drawP95": 36.4,
+    "workMed": 33.3,
+    "workP95": 36.6,
+    "workMax": 36.6,
+    "jsUpdate": 0.13,
+    "jsDraw": 32.86
+   },
+   "rs": 1.12,
+   "parts": 21,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 960,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.268,
+    "vsync": 0,
+    "schritte": 2759,
+    "verworfen": 29.32,
+    "zwischen": 67
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 244,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 3,
+   "nm": "stadt",
+   "work": {
+    "n": 101,
+    "p50": 2.3,
+    "p95": 3.7,
+    "p99": 3.7,
+    "max": 3.7
+   },
+   "haupt": {
+    "n": 101,
+    "p50": 25.9,
+    "p95": 29.2,
+    "p99": 30.9,
+    "max": 32
+   },
+   "frame": {
+    "n": 101,
+    "p50": 66.6,
+    "p95": 66.8,
+    "p99": 99.9,
+    "max": 133.4
+   },
+   "fps": 16.6,
+   "kk": {
+    "drawMed": 0.6,
+    "drawP95": 1.7,
+    "workMed": 0.8,
+    "workP95": 1.7,
+    "workMax": 1.7,
+    "jsUpdate": 0.03,
+    "jsDraw": 0.9
+   },
+   "rs": 1,
+   "parts": 16,
+   "post": {
+    "an": true,
+    "ruht": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 960,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.28,
+    "vsync": 0,
+    "schritte": 3189,
+    "verworfen": 31.53,
+    "zwischen": 20
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 284,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 3,
+   "nm": "kampf",
+   "work": {
+    "n": 96,
+    "p50": 2.7,
+    "p95": 5.8,
+    "p99": 7.1,
+    "max": 7.1
+   },
+   "haupt": {
+    "n": 96,
+    "p50": 25.1,
+    "p95": 29.8,
+    "p99": 34.3,
+    "max": 34.3
+   },
+   "frame": {
+    "n": 96,
+    "p50": 66.7,
+    "p95": 66.8,
+    "p99": 100,
+    "max": 100
+   },
+   "fps": 16,
+   "kk": {
+    "drawMed": 2.4,
+    "drawP95": 5.8,
+    "workMed": 2.8,
+    "workP95": 6,
+    "workMax": 6,
+    "jsUpdate": 0.16,
+    "jsDraw": 2.55
+   },
+   "rs": 1,
+   "parts": 66,
+   "post": {
+    "an": true,
+    "ruht": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 960,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.294,
+    "vsync": 0,
+    "schritte": 3613,
+    "verworfen": 33.82,
+    "zwischen": 119
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 308,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 0,
+   "q": 3,
+   "nm": "boss",
+   "work": {
+    "n": 87,
+    "p50": 2.8,
+    "p95": 6,
+    "p99": 7.5,
+    "max": 7.5
+   },
+   "haupt": {
+    "n": 87,
+    "p50": 26.9,
+    "p95": 31.1,
+    "p99": 32.4,
+    "max": 32.4
+   },
+   "frame": {
+    "n": 87,
+    "p50": 66.7,
+    "p95": 133.3,
+    "p99": 133.4,
+    "max": 133.4
+   },
+   "fps": 14.6,
+   "kk": {
+    "drawMed": 1,
+    "drawP95": 5.9,
+    "workMed": 1.3,
+    "workP95": 6,
+    "workMax": 6,
+    "jsUpdate": 0.14,
+    "jsDraw": 2.06
+   },
+   "rs": 1,
+   "parts": 31,
+   "post": {
+    "an": true,
+    "ruht": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 960,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.256,
+    "vsync": 0,
+    "schritte": 4230,
+    "verworfen": 37.47,
+    "zwischen": 66
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 342,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 1,
+   "nm": "stadt",
+   "work": {
+    "n": 83,
+    "p50": 49.9,
+    "p95": 54.1,
+    "p99": 57.8,
+    "max": 57.8
+   },
+   "haupt": {
+    "n": 83,
+    "p50": 50.8,
+    "p95": 55.5,
+    "p99": 60.2,
+    "max": 60.2
+   },
+   "frame": {
+    "n": 83,
+    "p50": 50,
+    "p95": 166.7,
+    "p99": 183.3,
+    "max": 183.3
+   },
+   "fps": 13.5,
+   "kk": {
+    "drawMed": 50.8,
+    "drawP95": 53.1,
+    "workMed": 50.9,
+    "workP95": 53.1,
+    "workMax": 53.1,
+    "jsUpdate": 0.04,
+    "jsDraw": 50.03
+   },
+   "rs": 1.32,
+   "parts": 24,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 261,
+    "biome": 0,
+    "masse": {
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.282,
+    "vsync": 20,
+    "schritte": 754,
+    "verworfen": 5.45,
+    "zwischen": 26
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 88,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 1,
+   "nm": "kampf",
+   "work": {
+    "n": 102,
+    "p50": 46.1,
+    "p95": 51.7,
+    "p99": 52.5,
+    "max": 53.5
+   },
+   "haupt": {
+    "n": 102,
+    "p50": 47.6,
+    "p95": 54.7,
+    "p99": 57.4,
+    "max": 57.7
+   },
+   "frame": {
+    "n": 102,
+    "p50": 50,
+    "p95": 133.3,
+    "p99": 183.2,
+    "max": 183.4
+   },
+   "fps": 17,
+   "kk": {
+    "drawMed": 46.5,
+    "drawP95": 51.5,
+    "workMed": 46.9,
+    "workP95": 51.7,
+    "workMax": 51.7,
+    "jsUpdate": 0.3,
+    "jsDraw": 46.62
+   },
+   "rs": 1.32,
+   "parts": 88,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 416,
+    "biome": 3,
+    "masse": {
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.55,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.294,
+    "vsync": 20,
+    "schritte": 1175,
+    "verworfen": 7.78,
+    "zwischen": 144
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 112,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 1,
+   "nm": "boss",
+   "work": {
+    "n": 86,
+    "p50": 49.6,
+    "p95": 54.9,
+    "p99": 58.6,
+    "max": 58.6
+   },
+   "haupt": {
+    "n": 86,
+    "p50": 51.3,
+    "p95": 59,
+    "p99": 66.7,
+    "max": 66.7
+   },
+   "frame": {
+    "n": 86,
+    "p50": 50,
+    "p95": 166.6,
+    "p99": 183.4,
+    "max": 183.4
+   },
+   "fps": 14.2,
+   "kk": {
+    "drawMed": 47.8,
+    "drawP95": 47.8,
+    "workMed": 48,
+    "workP95": 48,
+    "workMax": 48,
+    "jsUpdate": 0.15,
+    "jsDraw": 46.1
+   },
+   "rs": 1.32,
+   "parts": 27,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 637,
+    "biome": 2,
+    "masse": {
+     "RS": 1.32,
+     "sw": 544,
+     "sh": 1208,
+     "gw": 272,
+     "gh": 604,
+     "bw": 136,
+     "bh": 302,
+     "ow": 824,
+     "oh": 1830,
+     "skala": 0.66,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.324,
+    "vsync": 20,
+    "schritte": 1803,
+    "verworfen": 10.57,
+    "zwischen": 72
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 146,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 2,
+   "nm": "stadt",
+   "work": {
+    "n": 97,
+    "p50": 31.8,
+    "p95": 35.2,
+    "p99": 36.3,
+    "max": 36.3
+   },
+   "haupt": {
+    "n": 97,
+    "p50": 32.9,
+    "p95": 37.5,
+    "p99": 40.1,
+    "max": 40.1
+   },
+   "frame": {
+    "n": 97,
+    "p50": 50,
+    "p95": 166.6,
+    "p99": 166.7,
+    "max": 166.7
+   },
+   "fps": 16,
+   "kk": {
+    "drawMed": 31.4,
+    "drawP95": 32.7,
+    "workMed": 31.4,
+    "workP95": 32.8,
+    "workMax": 32.8,
+    "jsUpdate": 0.06,
+    "jsDraw": 31.1
+   },
+   "rs": 1.12,
+   "parts": 14,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 799,
+    "biome": 0,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.35,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.3,
+    "vsync": 20,
+    "schritte": 2228,
+    "verworfen": 12.93,
+    "zwischen": 17
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 186,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 2,
+   "nm": "kampf",
+   "work": {
+    "n": 104,
+    "p50": 29.3,
+    "p95": 35.8,
+    "p99": 37.8,
+    "max": 38.6
+   },
+   "haupt": {
+    "n": 104,
+    "p50": 32.1,
+    "p95": 38.5,
+    "p99": 43.3,
+    "max": 43.6
+   },
+   "frame": {
+    "n": 104,
+    "p50": 50,
+    "p95": 116.7,
+    "p99": 150.1,
+    "max": 166.6
+   },
+   "fps": 17.4,
+   "kk": {
+    "drawMed": 29.3,
+    "drawP95": 36,
+    "workMed": 29.7,
+    "workP95": 36.3,
+    "workMax": 36.3,
+    "jsUpdate": 0.16,
+    "jsDraw": 30
+   },
+   "rs": 1.12,
+   "parts": 51,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 967,
+    "biome": 3,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.04,
+     "bloom": 0.55,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.296,
+    "vsync": 30,
+    "schritte": 2623,
+    "verworfen": 15.67,
+    "zwischen": 105
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 210,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 2,
+   "nm": "boss",
+   "work": {
+    "n": 98,
+    "p50": 32.2,
+    "p95": 36,
+    "p99": 38.5,
+    "max": 38.5
+   },
+   "haupt": {
+    "n": 98,
+    "p50": 34.5,
+    "p95": 40.3,
+    "p99": 43.2,
+    "max": 43.2
+   },
+   "frame": {
+    "n": 98,
+    "p50": 33.4,
+    "p95": 150.1,
+    "p99": 166.7,
+    "max": 166.7
+   },
+   "fps": 16,
+   "kk": {
+    "drawMed": 33.2,
+    "drawP95": 36.2,
+    "workMed": 33.5,
+    "workP95": 36.4,
+    "workMax": 36.4,
+    "jsUpdate": 0.37,
+    "jsDraw": 32.37
+   },
+   "rs": 1.12,
+   "parts": 28,
+   "post": {
+    "an": true,
+    "ruht": false,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 1245,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.318,
+    "vsync": 30,
+    "schritte": 3217,
+    "verworfen": 19.52,
+    "zwischen": 72
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 244,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 3,
+   "nm": "stadt",
+   "work": {
+    "n": 155,
+    "p50": 0.7,
+    "p95": 3.7,
+    "p99": 4.2,
+    "max": 5.5
+   },
+   "haupt": {
+    "n": 155,
+    "p50": 24.6,
+    "p95": 28.4,
+    "p99": 29.6,
+    "max": 29.8
+   },
+   "frame": {
+    "n": 155,
+    "p50": 33.3,
+    "p95": 99.9,
+    "p99": 116.7,
+    "max": 133.4
+   },
+   "fps": 26,
+   "kk": {
+    "drawMed": 0.5,
+    "drawP95": 3.4,
+    "workMed": 0.6,
+    "workP95": 3.5,
+    "workMax": 3.6,
+    "jsUpdate": 0.17,
+    "jsDraw": 1.18
+   },
+   "rs": 1,
+   "parts": 20,
+   "post": {
+    "an": true,
+    "ruht": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 1245,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.282,
+    "vsync": 30,
+    "schritte": 3680,
+    "verworfen": 21.18,
+    "zwischen": 23
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 284,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 3,
+   "nm": "kampf",
+   "work": {
+    "n": 156,
+    "p50": 2.6,
+    "p95": 4.1,
+    "p99": 5.9,
+    "max": 7.1
+   },
+   "haupt": {
+    "n": 156,
+    "p50": 23.6,
+    "p95": 28,
+    "p99": 29.9,
+    "max": 30.1
+   },
+   "frame": {
+    "n": 156,
+    "p50": 33.3,
+    "p95": 99.9,
+    "p99": 133.4,
+    "max": 133.4
+   },
+   "fps": 26,
+   "kk": {
+    "drawMed": 3.9,
+    "drawP95": 5.7,
+    "workMed": 4.1,
+    "workP95": 5.8,
+    "workMax": 5.8,
+    "jsUpdate": 0.14,
+    "jsDraw": 3.48
+   },
+   "rs": 1,
+   "parts": 52,
+   "post": {
+    "an": true,
+    "ruht": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 1245,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.296,
+    "vsync": 0,
+    "schritte": 4181,
+    "verworfen": 22.2,
+    "zwischen": 110
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 308,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "mit",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 3,
+   "nm": "boss",
+   "work": {
+    "n": 104,
+    "p50": 2.9,
+    "p95": 5.8,
+    "p99": 6.1,
+    "max": 7.5
+   },
+   "haupt": {
+    "n": 104,
+    "p50": 26,
+    "p95": 29.3,
+    "p99": 30.6,
+    "max": 32
+   },
+   "frame": {
+    "n": 104,
+    "p50": 50,
+    "p95": 100.1,
+    "p99": 133.3,
+    "max": 133.4
+   },
+   "fps": 17.4,
+   "kk": {
+    "drawMed": 2.9,
+    "drawP95": 5.9,
+    "workMed": 3,
+    "workP95": 6.2,
+    "workMax": 6.2,
+    "jsUpdate": 0.39,
+    "jsDraw": 2.94
+   },
+   "rs": 1,
+   "parts": 46,
+   "post": {
+    "an": true,
+    "ruht": true,
+    "vign": false,
+    "grund": "an",
+    "fehler": null,
+    "bilder": 1245,
+    "biome": 2,
+    "masse": {
+     "RS": 1.12,
+     "sw": 461,
+     "sh": 1025,
+     "gw": 231,
+     "gh": 513,
+     "bw": 116,
+     "bh": 257,
+     "ow": 700,
+     "oh": 1556,
+     "skala": 0.6588235294117648,
+     "VW": 412,
+     "VH": 915
+    },
+    "grade": {
+     "sat": 1.05,
+     "bloom": 0.6,
+     "heat": 0
+    }
+   },
+   "takt": {
+    "an": true,
+    "hz": 60,
+    "alpha": 0.272,
+    "vsync": 0,
+    "schritte": 4746,
+    "verworfen": 27.83,
+    "zwischen": 89
+   },
+   "worker": {
+    "an": true,
+    "laeuft": false,
+    "grund": "bereit (startet beim ersten Ebenenwechsel mit Blende)",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 0,
+    "leer": 0,
+    "verworfen": 0,
+    "sync": 342,
+    "msMittel": 0,
+    "msMax": 0,
+    "blende": false,
+    "felsWorker": false
+   }
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 1,
+   "nm": "stadt",
+   "work": {
+    "n": 63,
+    "p50": 2.5,
+    "p95": 5.6,
+    "p99": 6.4,
+    "max": 6.4
+   },
+   "haupt": {
+    "n": 63,
+    "p50": 69.8,
+    "p95": 73.8,
+    "p99": 79.2,
+    "max": 79.2
+   },
+   "frame": {
+    "n": 63,
+    "p50": 83.4,
+    "p95": 166.8,
+    "p99": 200,
+    "max": 200
+   },
+   "fps": 10.4,
+   "kk": {
+    "drawMed": 0.8,
+    "drawP95": 3.3,
+    "jsUpdate": 0,
+    "jsDraw": 1.43
+   },
+   "rs": 1.6,
+   "parts": 25,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 1,
+   "nm": "kampf",
+   "work": {
+    "n": 80,
+    "p50": 3,
+    "p95": 6.8,
+    "p99": 8.8,
+    "max": 8.8
+   },
+   "haupt": {
+    "n": 80,
+    "p50": 65.2,
+    "p95": 71.4,
+    "p99": 73.9,
+    "max": 73.9
+   },
+   "frame": {
+    "n": 80,
+    "p50": 66.7,
+    "p95": 133.3,
+    "p99": 200,
+    "max": 200
+   },
+   "fps": 13.2,
+   "kk": {
+    "drawMed": 2.8,
+    "drawP95": 5.7,
+    "jsUpdate": 0.32,
+    "jsDraw": 2.87
+   },
+   "rs": 1.6,
+   "parts": 8,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 1,
+   "nm": "boss",
+   "work": {
+    "n": 64,
+    "p50": 3.2,
+    "p95": 41.3,
+    "p99": 43.5,
+    "max": 43.5
+   },
+   "haupt": {
+    "n": 64,
+    "p50": 68.6,
+    "p95": 72.5,
+    "p99": 75.8,
+    "max": 75.8
+   },
+   "frame": {
+    "n": 64,
+    "p50": 83.4,
+    "p95": 199.9,
+    "p99": 200,
+    "max": 200
+   },
+   "fps": 10.5,
+   "kk": {
+    "drawMed": 2.9,
+    "drawP95": 4.1,
+    "jsUpdate": 0.03,
+    "jsDraw": 2.73
+   },
+   "rs": 1.6,
+   "parts": 24,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 2,
+   "nm": "stadt",
+   "work": {
+    "n": 90,
+    "p50": 2.5,
+    "p95": 3.8,
+    "p99": 6,
+    "max": 6
+   },
+   "haupt": {
+    "n": 90,
+    "p50": 40.9,
+    "p95": 45.8,
+    "p99": 49.2,
+    "max": 49.2
+   },
+   "frame": {
+    "n": 90,
+    "p50": 83.3,
+    "p95": 133.3,
+    "p99": 150,
+    "max": 150
+   },
+   "fps": 15,
+   "kk": {
+    "drawMed": 2.4,
+    "drawP95": 3.6,
+    "jsUpdate": 0.06,
+    "jsDraw": 1.84
+   },
+   "rs": 1.3,
+   "parts": 30,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 2,
+   "nm": "kampf",
+   "work": {
+    "n": 88,
+    "p50": 2.8,
+    "p95": 5.8,
+    "p99": 6.6,
+    "max": 6.6
+   },
+   "haupt": {
+    "n": 88,
+    "p50": 37.3,
+    "p95": 43,
+    "p99": 45.9,
+    "max": 45.9
+   },
+   "frame": {
+    "n": 88,
+    "p50": 83.2,
+    "p95": 133.4,
+    "p99": 150,
+    "max": 150
+   },
+   "fps": 14.7,
+   "kk": {
+    "drawMed": 2.6,
+    "drawP95": 2.6,
+    "jsUpdate": 0.2,
+    "jsDraw": 5.7
+   },
+   "rs": 1.3,
+   "parts": 13,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 2,
+   "nm": "boss",
+   "work": {
+    "n": 50,
+    "p50": 3.2,
+    "p95": 6.3,
+    "p99": 7.3,
+    "max": 7.3
+   },
+   "haupt": {
+    "n": 50,
+    "p50": 43.1,
+    "p95": 44.3,
+    "p99": 50.1,
+    "max": 50.1
+   },
+   "frame": {
+    "n": 50,
+    "p50": 133.3,
+    "p95": 150,
+    "p99": 150.1,
+    "max": 150.1
+   },
+   "fps": 8.3,
+   "kk": {
+    "drawMed": 2.9,
+    "drawP95": 4.2,
+    "jsUpdate": 0.1,
+    "jsDraw": 2.87
+   },
+   "rs": 1.3,
+   "parts": 45,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 3,
+   "nm": "stadt",
+   "work": {
+    "n": 51,
+    "p50": 0.9,
+    "p95": 3.8,
+    "p99": 5.7,
+    "max": 5.7
+   },
+   "haupt": {
+    "n": 51,
+    "p50": 26.7,
+    "p95": 30.4,
+    "p99": 31.6,
+    "max": 31.6
+   },
+   "frame": {
+    "n": 51,
+    "p50": 133.3,
+    "p95": 150,
+    "p99": 150.1,
+    "max": 150.1
+   },
+   "fps": 8.5,
+   "kk": {
+    "drawMed": 0.7,
+    "drawP95": 2.5,
+    "jsUpdate": 0.04,
+    "jsDraw": 1.08
+   },
+   "rs": 1,
+   "parts": 25,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 3,
+   "nm": "kampf",
+   "work": {
+    "n": 56,
+    "p50": 2.7,
+    "p95": 5.7,
+    "p99": 6.3,
+    "max": 6.3
+   },
+   "haupt": {
+    "n": 56,
+    "p50": 25,
+    "p95": 31.4,
+    "p99": 33.3,
+    "max": 33.3
+   },
+   "frame": {
+    "n": 56,
+    "p50": 133.3,
+    "p95": 133.4,
+    "p99": 133.4,
+    "max": 133.4
+   },
+   "fps": 9.4,
+   "kk": {
+    "drawMed": 0,
+    "drawP95": 0
+   },
+   "rs": 1,
+   "parts": 19,
+   "post": null,
+   "takt": null,
+   "worker": null
+  },
+  {
+   "ziel": "vorher",
+   "fmt": "hoch",
+   "rep": 1,
+   "q": 3,
+   "nm": "boss",
+   "work": {
+    "n": 46,
+    "p50": 2.9,
+    "p95": 5.1,
+    "p99": 6.2,
+    "max": 6.2
+   },
+   "haupt": {
+    "n": 46,
+    "p50": 28.2,
+    "p95": 31.7,
+    "p99": 32.4,
+    "max": 32.4
+   },
+   "frame": {
+    "n": 46,
+    "p50": 133.3,
+    "p95": 133.4,
+    "p99": 133.4,
+    "max": 133.4
+   },
+   "fps": 7.7,
+   "kk": {
+    "drawMed": 2.9,
+    "drawP95": 3.6,
+    "jsUpdate": 0.12,
+    "jsDraw": 2.38
+   },
+   "rs": 1,
+   "parts": 64,
+   "post": null,
+   "takt": null,
+   "worker": null
+  }
+ ],
+ "fehler": []
+}

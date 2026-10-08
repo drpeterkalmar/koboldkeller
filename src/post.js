@@ -24,10 +24,21 @@
     v13 ohne Endbild: Szene 1 / 0,8 / 0,65 / 0,5. */
 export const POST_STUFEN = [
   { szene: 0.8, aus: 1.0 },
-  { szene: 0.72, aus: 1.0 },
-  { szene: 0.65, aus: 0.85 },
-  { szene: 0.5, aus: 0.72 },
+  // Heavy-Job 08.10.: Stufe 1/2 kleiner als im Vorbau (0,72/0,65) — mit 0,65 rechnete Stufe 2 so viele Pixel wie v13, das
+  // Endbild kostete nur zusätzlich. Im Bildvergleich (shots/technik/lupe_*_q1/q2) mit Nachschärfen so scharf wie v13.
+  { szene: 0.66, aus: 1.0 },
+  { szene: 0.56, aus: 0.85 },
+  // Heavy-Job 08.10.: auf der Sparstufe ruht das Endbild (reines 2D wie v13). Gemessen (Software-Raster, CPU ×4): mit Endbild
+  // p95 +5 … 23 % gegen v13 — die Szene ist hier schon bei 1 CSS-px je Pixel, es gibt nichts mehr einzusparen.
+  { szene: 0.5, aus: 0.72, ruht: true },
 ];
+// Abstimm-Regler (nur zum Messen/Vergleichen): ?pszene=0.8,0.68,0.56 setzt die Szenen-Skalen der Stufen 0, 1, 2 …
+{
+  const z = typeof location !== "undefined" ? new URLSearchParams(location.search).get("pszene") : null;
+  if (z) z.split(",").forEach((v, i) => { const f = parseFloat(v); if (POST_STUFEN[i] && f > 0.3 && f <= 1) POST_STUFEN[i].szene = f; });
+}
+/** läuft das Endbild auf dieser Stufe? (an = WebGL2 bereit; ruht = Sparstufe zeigt reines 2D) */
+export function postAktiv(q) { return POST.an && !(POST_STUFEN[Math.max(0, Math.min(POST_STUFEN.length - 1, q))] || {}).ruht; }
 export const SCHAERFE = { hoch: 0.55, nativ: 0.2 };   // CAS-Stärke beim Hochskalieren bzw. ohne Skalierung (TODO Bild)
 
 /** Pixelmaße für Szene (2D), Glow-Ebene, Bloom-Puffer und Endbild. dpr wird wie bisher auf 2 gedeckelt; bei dpr ≈ 1
@@ -258,8 +269,17 @@ export function postAus(grund) {
   if (onAus) onAus(POST.grund);
 }
 
+/** Sparstufe: Endbild ausblenden, 2D-Canvas zeigen (ohne Rückfall — auf besseren Stufen läuft es wieder) */
+export function postRuhe(ruht) {
+  if (!POST.an || !S) return;
+  POST.ruht = !!ruht;
+  S.cv.style.display = ruht ? "none" : "block";
+  if (POST.cv2d) POST.cv2d.style.opacity = ruht ? "" : "0";
+}
+
 /** Größen setzen (aus render.js resize). m = postMasse(…) */
 export function postGroesse(m) {
+  postRuhe(false);
   if (!POST.an || !S) return;
   POST.masse = m;
   const gl = S.gl;
@@ -324,6 +344,6 @@ export function postBild(szene, glowCv, biome, vignCol, VW, VH, dt) {
 }
 
 export function postZustand() {
-  return { an: POST.an, vign: POST.vign, grund: POST.grund, fehler: POST.fehler, bilder: POST.bilder, biome: POST.biome, masse: POST.masse,
+  return { an: POST.an, ruht: !!POST.ruht, vign: POST.vign, grund: POST.grund, fehler: POST.fehler, bilder: POST.bilder, biome: POST.biome, masse: POST.masse,
     grade: { sat: +POST.grade.sat.toFixed(3), bloom: +POST.grade.bloom.toFixed(3), heat: +POST.grade.heat.toFixed(3) } };
 }
