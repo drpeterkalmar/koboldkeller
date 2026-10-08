@@ -1,0 +1,61 @@
+{
+ "engine": "chromium",
+ "res": [
+  {
+   "id": "T2",
+   "name": "gleiches Lauftempo bei 30/60/120 Hz, Logik = 60 Schritte je Spielsekunde (alte Schleife zum Vergleich: 1 Update je Bild)",
+   "ok": true,
+   "wert": [
+    {
+     "q": "takt",
+     "hz": 30,
+     "spielzeitJeS": 0.855,
+     "schritteJeS": 51.3,
+     "bilderJeS": 25.3,
+     "tempo1s": 4.17
+    },
+    {
+     "q": "takt",
+     "hz": 60,
+     "spielzeitJeS": 0.927,
+     "schritteJeS": 55.6,
+     "bilderJeS": 51,
+     "tempo1s": 4.48
+    },
+    {
+     "q": "takt",
+     "hz": 120,
+     "spielzeitJeS": 0.972,
+     "schritteJeS": 58.3,
+     "bilderJeS": 104,
+     "tempo1s": 4.56
+    },
+    {
+     "q": "takt=0",
+     "hz": 30,
+     "spielzeitJeS": 0.877,
+     "schritteJeS": 0,
+     "bilderJeS": 28.3,
+     "tempo1s": 4.28
+    },
+    {
+     "q": "takt=0",
+     "hz": 60,
+     "spielzeitJeS": 0.967,
+     "schritteJeS": 0,
+     "bilderJeS": 51.3,
+     "tempo1s": 4.49
+    },
+    {
+     "q": "takt=0",
+     "hz": 120,
+     "spielzeitJeS": 0.973,
+     "schritteJeS": 0,
+     "bilderJeS": 102,
+     "tempo1s": 4.54
+    }
+   ]
+  }
+ ],
+ "fehler": []
+}

@@ -59,6 +59,9 @@ G.hooks = {
     if (!G.demo && G.depth === 1 && G.deepest <= 1) setTimeout(() => UI.toast("🔎 Finde die Treppe ⬇️ — tipp auf Gegner zum Angreifen!"), 1400);
     perfReset();
     TK.zuruecksetzen(); ZB.vergiss(); AUTO.schonen(2);    // Technik: neue Ebene → nichts überblenden, Ladespitze nicht werten
+    // fester Takt: das erste Bild nach dem Wechsel rechnet evtl. noch keinen Schritt → den Weg-Pfeil der alten Ebene sofort
+    // löschen (die alte Schleife tat das im ersten Bild über die Titelkarte; sonst stünde er ein Bild lang falsch da)
+    if (TAKT) guideInput();
   },
   // Technik E4: hinter der Blende backt der Worker die neue Ebene; die Blende bleibt zu, bis die nächsten Chunks da sind
   fade: (cb) => UI.fade(() => { UI.clearToasts(); R.blende = true; cb(); }, null, () => { const w = chunksBereit(); if (!w) { R.blende = false; return null; } return w.finally(() => { R.blende = false; }); }),

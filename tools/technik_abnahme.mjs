@@ -6,6 +6,7 @@
 //   takt   : ungedrosselter Bildtakt → Logik ≈ 60 Schritte/s; Spielzeit läuft mit echter Zeit
 //   auto   : CPU ×6 im Kampf → Automatik stuft ab; Drosselung weg → nach ≥ 8 s eine Stufe rauf (Profil --sw=1 --frei=1:
 //            Software-Raster, freier Bildtakt → Pixelarbeit bremst wie ein schwaches Handy)
+//   tempo  : nachgebildete 30/60/120 Hz (--frei=1): Spielzeit, Lauftempo und Logik-Schritte je Sekunde, neu gegen ?takt=0
 //   audio  : Stadtmusik (town.m4a 24 kHz) und Rückfall town.mp3 laden und werden zur Schleife
 //   rauf   : starkes Gerät (GPU-Raster, --frei=1): Stufe 2 → 1 → 0, je frühestens nach 8 s Luft
 //   deckel : 30-Hz-Deckel bei wenig Arbeit (Stromsparmodus) → Stufe bleibt 0 (--frei=1, GPU-Raster)
@@ -150,6 +151,41 @@ if (NUR.includes("auto") && ENGINE === "chromium") {
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   // „wieder rauf“ prüft A2 (--nur=rauf): im Software-Raster bleibt die Arbeit auch ohne Drosselung über 55 % des Takts (richtig: keine Luft)
   await ctx.close();
+}
+
+if (NUR.includes("tempo") && ENGINE === "chromium") {
+  // Bildrate 30/60/120 Hz nachbilden (rAF auf festes Raster + 1-px-Taktgeber, --frei=1): Spielzeit je echter Sekunde und
+  // Logik-Schritte je Sekunde — neu (fester Takt) gegen ?takt=0 (alte Schleife: ein Update je Bild)
+  const zeilen = [];
+  for (const q of ["", "takt=0"]) for (const hz of [30, 60, 120]) {
+    const { ctx, page } = await seite("auto=0&" + q);
+    const r = await page.evaluate(async (hz) => {
+      const w = (ms) => new Promise((r) => setTimeout(r, ms)), G = KK.G;
+      KK.goto(1); G.portalCd = 1e9; G.homeHideT = 1e9; await w(1500);
+      const orig = window.requestAnimationFrame.bind(window), P = 1000 / hz;
+      const k = document.createElement("canvas"); k.width = k.height = 1; k.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01";
+      document.body.appendChild(k); const kc = k.getContext("2d"); let z = 0; const halte = () => { kc.fillStyle = (z ^= 1) ? "#000" : "#fff"; kc.fillRect(0, 0, 1, 1); orig(halte); }; orig(halte);
+      window.requestAnimationFrame = (cb) => { const ziel = (Math.floor(performance.now() / P) + 1) * P; const go = (t) => (t >= ziel ? cb(t) : orig(go)); return orig(go); };
+      // Logik-Aufrufe zählen: game.update über die Spielzeit G.t (läuft nur in update) und die Schritt-Zahl des Takts
+      await w(800);
+      const t0 = performance.now(), g0 = G.t, s0 = KK.takt().schritte, f0 = KK.perf().frames;
+      // Kobold läuft geradeaus: Tempo in Kacheln je Sekunde
+      const x0 = G.p.x, y0 = G.p.y; G.p.path = [{ x: G.p.x + 30, y: G.p.y }];
+      await w(1000); const dx = Math.hypot(G.p.x - x0, G.p.y - y0);
+      await w(2000);
+      const dt = (performance.now() - t0) / 1000;
+      return { spielzeitJeS: +((G.t - g0) / dt).toFixed(3), schritteJeS: +((KK.takt().schritte - s0) / dt).toFixed(1), bilderJeS: +((KK.perf().frames - f0) / dt).toFixed(1), tempo1s: +dx.toFixed(2) };
+    }, hz);
+    zeilen.push({ q: q || "takt", hz, ...r });
+    await ctx.close();
+  }
+  const neu = zeilen.filter((z) => z.q === "takt"), t60 = neu.find((z) => z.hz === 60);
+  // Spielzeit je Sekunde liegt in beiden Ständen gleich etwas unter 1 (Titelkarte der Ebene am Messbeginn) → neu gegen alt vergleichen
+  const alt = (hz) => zeilen.find((z) => z.q === "takt=0" && z.hz === hz);
+  R("T2", "gleiches Lauftempo bei 30/60/120 Hz, Logik = 60 Schritte je Spielsekunde (alte Schleife zum Vergleich: 1 Update je Bild)",
+    // (die Nachbildung ruckelt headless selbst — alte Schleife bei „30 Hz“ z. B. nur 23,6 Bilder/s —, darum kein harter
+    // Vergleich neu ↔ alt; die exakte Gleichheit bei 30–144 Hz belegt tests/node/takt.test.mjs)
+    neu.every((z) => Math.abs(z.tempo1s - t60.tempo1s) < 0.35 && Math.abs(z.schritteJeS - 60 * z.spielzeitJeS) < 3) && !!alt(60), zeilen);
 }
 
 if (NUR.includes("audio")) {
