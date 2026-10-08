@@ -9,7 +9,10 @@
        dazugegeben. Scharfe Dinge (Rundumschlag-Sichel, Spezial-Ring, additive Partikel) bleiben in der Szene.
      • Farbkorrektur je Welt (Stadt neutral, Kerker kühl, Glutkeller warm), weich überblendet beim Ebenenwechsel.
      • Wärmeflimmern im Glutkeller (leichtes Wabern der Bildkoordinaten).
-     • Vignette im Shader (ersetzt die 2D-Vignette in der Lightmap, gleiche Form und Weltfarbe wie v13) + Dither gegen Streifen.
+     • Vignette: Standard bleibt die 2D-Vignette in der Lightmap (wie v13). Grund: der Shader sieht nur das fertige Bild —
+       seine Vignette würde auch Schilder/Zahlen, den weißen Treffer-Blitz und die rote Rand-Warnung bei wenig Leben am Rand
+       abdunkeln. ?pvign=1 = Vignette im Shader (gleiche Form/Weltfarbe, mit Dither) zum A/B-Vergleich.
+     • Dither gegen Streifen in Verläufen.
    Rückfall auf reines 2D (wie v13): ?post=0, kein WebGL2, Shader-Fehler, Kontextverlust → POST.an = false, render.js stellt
    Auflösung, Glow und Vignette wie bisher wieder her (main.js ruft dann resize()).
    Reine Teile (Tabellen, Kern, Maße) sind ohne Browser getestet: tests/node/post.test.mjs.
@@ -176,7 +179,9 @@ export const SHADER = { VS, FS_BLUR, FS_END };   // für die statischen Prüfung
 
 // ---------------------------------------------------------------- Zustand + WebGL
 
+const _q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams("");
 export const POST = {
+  vign: _q.get("pvign") === "1",   // Vignette im Shader statt in der Lightmap (A/B)
   an: false, grund: "aus", gl: null, cv: null, masse: null, zeit: 0, bilder: 0, fehler: null,
   grade: kopiereGrade(GRADE[0]), biome: 0,
 };
@@ -313,12 +318,12 @@ export function postBild(szene, glowCv, biome, vignCol, VW, VH, dt) {
   gl.uniform1f(u.scharf, m.skala < 0.98 ? SCHAERFE.hoch : SCHAERFE.nativ);
   gl.uniform3fv(u.lift, g.lift); gl.uniform3fv(u.gam, g.gamma); gl.uniform3fv(u.gain, g.gain);
   gl.uniform1f(u.sat, g.sat); gl.uniform1f(u.kon, g.kon); gl.uniform1f(u.glowK, g.glow); gl.uniform1f(u.bloomK, g.bloom);
-  gl.uniform3fv(u.vMitte, vs.mitte); gl.uniform3fv(u.vRand, vs.rand); gl.uniform1f(u.vignK, g.vign);
+  gl.uniform3fv(u.vMitte, vs.mitte); gl.uniform3fv(u.vRand, vs.rand); gl.uniform1f(u.vignK, POST.vign ? g.vign : 0);
   gl.uniform2f(u.res, VW, VH); gl.uniform1f(u.heat, g.heat); gl.uniform1f(u.zeit, POST.zeit % 1000);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
 export function postZustand() {
-  return { an: POST.an, grund: POST.grund, fehler: POST.fehler, bilder: POST.bilder, biome: POST.biome, masse: POST.masse,
+  return { an: POST.an, vign: POST.vign, grund: POST.grund, fehler: POST.fehler, bilder: POST.bilder, biome: POST.biome, masse: POST.masse,
     grade: { sat: +POST.grade.sat.toFixed(3), bloom: +POST.grade.bloom.toFixed(3), heat: +POST.grade.heat.toFixed(3) } };
 }

@@ -198,6 +198,8 @@ function chunksLeeren() {
   for (const c of R.chunks.values()) if (c && c.cv && c.cv.close) c.cv.close();   // ImageBitmaps sofort freigeben
   R.chunks.clear(); R.chunkOrder.length = 0;
   WK.id++; WK.offen.clear(); WK.wichtig.clear(); WK.felsOffen = false;           // alte Worker-Aufträge verfallen
+  if (WK.an && WK.w) try { WK.w.postMessage({ typ: "stopp" }); } catch (e) { }     // Worker hört sofort auf (Resize, neue Ebene)
+  if (WK.warte) { const r = WK.warte; WK.warte = null; r(); }
 }
 function workerEbene() {
   if (!WK.an || !R.L) return;
@@ -251,6 +253,7 @@ function workerAntwort(m) {
 /** Promise: die nächsten Chunks der neuen Ebene sind da (höchstens maxMs). null = nichts zu warten (kein Worker) */
 export function chunksBereit(maxMs = 1200) {
   if (!WK.an || (!WK.wichtig.size && !WK.felsOffen)) return null;
+  if (WK.warte) { const alt = WK.warte; WK.warte = null; alt(); }   // eine ältere Blende nicht hängen lassen
   return new Promise((res) => {
     WK.warte = res;
     setTimeout(() => { if (WK.warte === res) { WK.warte = null; res(); } }, maxMs);
@@ -1189,14 +1192,15 @@ function lighting(G, B, portals) {
   if (DK.on) D.lights(light, G, R, FX.lights, T);             // v13: Fackel-Lichtkegel, Lichtstrahl-Pfützen, glühende Deko, Lichtblitze
   if (G.rise) { const RS = G.rise, kk = RS.ph === "quake" ? RS.u : RS.ph === "burst" ? 1 : RS.ph === "grow" ? 1 - 0.4 * RS.u : 0.6 * (1 - RS.u); light(RS.x, RS.y, (2.4 + 3.2 * kk) * (RS.b.isKing ? 1.4 : 1), RS.col, 0.4 + 0.5 * kk); }
   l.globalAlpha = 1;
-  if (!POST.an) {                                             // Technik E3: mit Endbild macht der Shader die Vignette
+  if (!(POST.an && POST.vign)) {                              // Technik E3: nur mit ?pvign=1 macht der Shader die Vignette (s. post.js)
     l.globalCompositeOperation = "multiply";
     l.drawImage(R.vign, 0, 0);
   }
   l.globalCompositeOperation = "source-over";
 }
 
-/** sc = Leinwand für scharfe Dinge (Rundumschlag-Sichel, Spezial-Ring): mit Endbild die Szene, sonst dieselbe wie ctx */
+/** sc = Leinwand für scharfe Dinge (Fackel- und Königsflammen, Rundumschlag-Sichel, Spezial-Ring): mit Endbild die Szene,
+    sonst dieselbe wie ctx. Weich in der Glow-Ebene (halbe Auflösung) bleiben Scheine, Auren, Lichtstrahlen, Weg-Pfeil-Glow, Risse */
 function glowPass(ctx, G, B, portals, sc = ctx) {
   const Z = R.Z, L = R.L, p = G.p, T = R.t;
   const glow = A.fx("glow");
@@ -1215,9 +1219,9 @@ function glowPass(ctx, G, B, portals, sc = ctx) {
     const [wx, wy] = toScreen(t.wx + 0.5, t.wy + 0.5);
     const px = wx + (t.face === "L" ? -16 : 16) * Z, py = wy - 38 * Z;
     const fl = 1 + Math.sin(T * 17 + t.x) * 0.12 + Math.sin(T * 29) * 0.06;
-    ctx.globalAlpha = 0.95;
-    ctx.drawImage(A.tinted(flame, B.torch).cv, px - 9 * Z, py - 24 * Z * fl, 18 * Z, 26 * Z * fl);
-    ctx.drawImage(flame.cv, px - 5 * Z, py - 14 * Z * fl, 10 * Z, 15 * Z * fl);
+    sc.globalAlpha = 0.95;                                    // Flammen scharf (mit Endbild in der Szene), Schein weich
+    sc.drawImage(A.tinted(flame, B.torch).cv, px - 9 * Z, py - 24 * Z * fl, 18 * Z, 26 * Z * fl);
+    sc.drawImage(flame.cv, px - 5 * Z, py - 14 * Z * fl, 10 * Z, 15 * Z * fl);
     ctx.globalAlpha = 0.5; const s = A.tinted(glow, B.torch), w = 70 * Z * fl; ctx.drawImage(s.cv, px - w / 2, py - 8 * Z - w / 2, w, w);
     if (embR() < 0.04 * Math.min(3, R.dtF * 60)) G.emberAt = t;   // Technik E2: eigener Zufall, je Sekunde gleich oft (egal ob 60 oder 120 Hz)
   }
@@ -1250,8 +1254,8 @@ function glowPass(ctx, G, B, portals, sc = ctx) {
         const a = k / 10 * TAU + T * 0.8, rx = Math.cos(a) * 1.25 * R.U, ry = Math.sin(a) * 0.62 * R.U;
         const front = Math.sin(a) > 0;
         const h = (1 + 0.35 * Math.sin(T * 9 + k * 1.7)) * (front ? 50 : 72) * R.Z, w = h * 0.62;
-        ctx.globalAlpha = (front ? 0.45 : 0.8) + 0.2 * Math.sin(T * 7 + k);
-        ctx.drawImage((k % 2 ? fl : fr).cv, kx + rx - w / 2, ky + ry - h * 0.92, w, h);
+        sc.globalAlpha = (front ? 0.45 : 0.8) + 0.2 * Math.sin(T * 7 + k);
+        sc.drawImage((k % 2 ? fl : fr).cv, kx + rx - w / 2, ky + ry - h * 0.92, w, h);
       }
     }
     else if (e.isBoss && e.awake) {
@@ -1287,7 +1291,7 @@ function glowPass(ctx, G, B, portals, sc = ctx) {
     sc.restore();
   }
   if (FX.flashA > 0) g(p.x, p.y, 40, 200, "#fff6c0", FX.flashA * 0.4);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1; sc.globalAlpha = 1;
 }
 
 function textPass(ctx, G, portals) {

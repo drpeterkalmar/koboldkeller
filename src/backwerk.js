@@ -7,6 +7,7 @@
      { typ: "ebene", id, K, d: { map:{w,h,solid,v,deco}, ring, edgeFront, B, biome, fels, dk, dkSeed } }   neue Ebene, Warteschlange leeren
      { typ: "chunks", id, liste: [[cx, cy], …] }    in dieser Reihenfolge backen (nächste zuerst)
      { typ: "fels", id }                            Fels-Muster (Masse + Tiefe) backen
+     { typ: "stopp" }                               alles verwerfen (Resize/neue Ebene)
    Antworten: { typ: "chunk", id, key, leer, bild, ox, oy, W, H, K, ms } · { typ: "fels", id, K, mass, deep, ms } · { typ: "fehler", text }
    Eine veraltete Ebene (id) wird nicht weitergebacken; zwischen zwei Chunks kommen neue Nachrichten dran (setTimeout 0).
    Hinweis Cache-Busting: art/deko/chunkbacken werden mit derselben ?v= wie dieses Skript geladen; deren eigene Importe
@@ -47,6 +48,7 @@ export function starteBackwerk(scope, mods, Leinwand) {
   function weiter() { if (q.length && !laeuft) { laeuft = true; setTimeout(pumpe, 0); } }
   scope.onmessage = (e) => {
     const m = e.data;
+    if (m.typ === "stopp") { cur = null; q = []; return; }
     if (m.typ === "ebene") { cur = { id: m.id, K: m.K, d: m.d }; q = []; return; }
     if (!cur || m.id !== cur.id) return;
     if (m.typ === "fels") q.unshift({ typ: "fels", id: m.id });

@@ -133,7 +133,9 @@ function perfStats() {
 }
 // ---------- Game-Loop ----------
 const sammle = (f) => { f(G.p); for (const e of G.ents) f(e); for (const it of G.items) f(it); for (const s of G.shots) f(s); for (const q of FX.parts) f(q); };
-const paused = () => G.screen === "pause" || G.screen === "bag" || G.screen === "edit" || G.dbgFreeze;
+// R.blende (Technik E4): die Blende des Ebenenwechsels wartet auf den Back-Worker → Spielzeit steht (wie früher, als das
+// synchrone Backen den Hauptthread blockierte; sonst liefe z. B. der Schutz nach dem Betreten unsichtbar ab)
+const paused = () => G.screen === "pause" || G.screen === "bag" || G.screen === "edit" || G.dbgFreeze || R.blende;
 /** ein fester Spielschritt der Länge h (s) — Hitstop/Zeitlupe/Pause wie bisher je Bild, jetzt je Schritt */
 function schritt(h) {
   const dt = spielDt(FX, h, paused());

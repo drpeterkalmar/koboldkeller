@@ -122,3 +122,14 @@ test("Fels-Ring: Boden 0, Wand 1, Kante 2, Masse 3", () => {
   const { ring } = CB.felsRing({ w, h, solid });
   assert.equal(ring[3 * w + 3], 0); assert.equal(ring[1 * w + 1], 1); assert.equal(ring[0], 2); assert.equal(ring[3 * w + 1], 1);
 });
+
+test("„stopp“ verwirft alles (Resize während der Blende)", async () => {
+  const d = ebeneDaten(5);
+  const { raus, senden, fertig } = bereich();
+  senden({ typ: "ebene", id: 7, K: 1, d });
+  senden({ typ: "chunks", id: 7, liste: CB.backListe(d.map.w, d.map.h, 10, 10, 15).map(([x, y]) => [x, y]) });
+  senden({ typ: "stopp" });
+  senden({ typ: "chunks", id: 7, liste: [[1, 1]] });         // nach stopp ohne neue Ebene → ignoriert
+  await fertig();
+  assert.equal(raus.length, 0);
+});
