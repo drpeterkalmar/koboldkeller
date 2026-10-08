@@ -17,7 +17,7 @@ import { SFX, playMusic } from "./audio.js";
 import { haptic } from "./platform.js";
 import { writeSave, addHall, initMyths, saveMyths } from "./save.js";
 import { mythFoot } from "./myth.js";
-import { rand, randi, pick, weighted, TAU, shade, clamp } from "./util.js";
+import { rand, randi, pick, weighted, TAU, shade, clamp, mulberry32 } from "./util.js";
 import { initBoss, bossAI, bossHit, bossKilled, wakeBoss, arenaTick, bossFight } from "./boss.js";
 
 export const G = {
@@ -1325,6 +1325,7 @@ function mythGlow(dt) {
 }
 
 // ---------- Ambiente ----------
+const emb = mulberry32(31337);                            // Technik E2: Zufall nur für die Fackel-Glut (Optik)
 function ambient(dt) {
   const p = G.p, b = G.biome, B = G.B;
   const rate = 7 * FX.budget;
@@ -1340,7 +1341,8 @@ function ambient(dt) {
       case 5: P.ember(x, y, pick([B.dust, "#ff7a2a"])); break;
     }
   }
-  if (G.emberAt) { const t = G.emberAt; G.emberAt = null; part({ x: t.x, y: t.y, z: 44, vz: rand(30, 60), vx: rand(-0.2, 0.2), kind: "dot", col: B.torch || "#ffb060", s0: 5, s1: 0, life: rand(0.6, 1), g: 0 }); }
+  // Technik E2: die Fackel-Glut wählt der Zeichner (je Bild) — eigener Zufall, damit die Zufallsfolge des Spiels nicht von der Bildrate abhängt
+  if (G.emberAt) { const t = G.emberAt; G.emberAt = null; part({ x: t.x, y: t.y, z: 44, vz: 30 + emb() * 30, vx: emb() * 0.4 - 0.2, kind: "dot", col: B.torch || "#ffb060", s0: 5, s1: 0, life: 0.6 + emb() * 0.4, g: 0, rot: 0 }); }
   // Brunnen-Glitzer
   if (G.L.fountain && Math.random() < dt * 6) { const f = G.L.fountain; part({ x: f.x + rand(-0.3, 0.3), y: f.y + rand(-0.3, 0.3), z: 110, vz: rand(40, 90), vx: rand(-0.6, 0.6), vy: rand(-0.6, 0.6), g: -260, kind: "dot", col: "#bfefff", s0: 6, s1: 3, life: 0.8, drag: 0.3 }); }
 }

@@ -14,6 +14,7 @@ export const R = {
   lightSpr: new Map(), drawn: 0, focusY: 0.5,
 };
 const CH = 8, CH_MAX = 28;
+const embR = mulberry32(9001);                                // Technik E2: Fackel-Glut ohne Spiel-Zufall (Math.random)
 // v12: Chunk-Rand oben (Design-Px) — Platz für die Felskanten auf Wandkronen-Höhe; CHH = Chunk-Höhe
 const CHT = 40, CHH = CH * 32 + 30 + (CHT - 24);
 // v12: Fels-Hintergrund (A/B: ?fels=0 = bisher, schwarze Fläche)
@@ -333,7 +334,7 @@ export function draw(G, dt) {
   const ctx = R.ctx, L = R.L, p = G.p;
   R.G = G;
   if (!L || !p) return;
-  R.t += dt;
+  R.t += dt; R.dtF = dt;
   const B = R.B;
   // v5: Bosskampf in der großen Arena → Kamera zoomt heraus und schaut zwischen Kobold und Boss (Boss + Warnungen im Bild)
   const bz = bossZoom(G);
@@ -1078,7 +1079,7 @@ function glowPass(ctx, G, B, portals) {
     ctx.drawImage(A.tinted(flame, B.torch).cv, px - 9 * Z, py - 24 * Z * fl, 18 * Z, 26 * Z * fl);
     ctx.drawImage(flame.cv, px - 5 * Z, py - 14 * Z * fl, 10 * Z, 15 * Z * fl);
     ctx.globalAlpha = 0.5; const s = A.tinted(glow, B.torch), w = 70 * Z * fl; ctx.drawImage(s.cv, px - w / 2, py - 8 * Z - w / 2, w, w);
-    if (Math.random() < 0.04) G.emberAt = t;
+    if (embR() < 0.04 * Math.min(3, R.dtF * 60)) G.emberAt = t;   // Technik E2: eigener Zufall, je Sekunde gleich oft (egal ob 60 oder 120 Hz)
   }
   if (L.props) for (const pr of L.props) {
     if (pr.kind === "lantern") { const [sx, sy] = toScreen(pr.x, pr.y); ctx.globalAlpha = 0.55 + Math.sin(T * 5 + pr.x) * 0.08; const s = A.tinted(glow, "#ffd27a"), w = 60 * Z; ctx.drawImage(s.cv, sx - w / 2, sy - 76 * Z - w / 2, w, w); }
