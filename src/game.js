@@ -406,7 +406,7 @@ export function gainXp(n) {
     recalc(p); p.hp = p.maxHp;
     const bub = p.lvl % 3 === 0;
     if (bub) p.projN++;
-    H().toast("⭐ Level " + p.lvl + "! +" + SKILL_PER_LEVEL + " Talentpunkte — tipp auf ⭐" + (bub ? " · 🫧+1 Blase" : ""));
+    H().toast("⭐ Level " + p.lvl + "! +" + SKILL_PER_LEVEL + " Talentpunkte — tipp oben links auf ⭐" + (bub ? " · 🫧+1 Blase" : ""));
     text(p.x, p.y, "⭐ LEVEL " + p.lvl + "!", "#fff38a", 30, 110);
     SFX.levelup(); P.levelUp(p.x, p.y);
     haptic("levelup");

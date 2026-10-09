@@ -422,14 +422,14 @@ const TUT = [
   () => "Klasse! Drück 🫧 — die Seifenblasen fliegen von selbst zum Gegner. Jeder Schuss kostet 1 🫧 — oben links siehst du, wie viele du noch hast!",
   () => "Mit 💨 springst du blitzschnell weg vom Gegner. Probier's aus!",
   () => "Hier, 3 Glitzerpilze von mir! 🍄 Pilze füllen deine Spezial-Leiste. Ist sie voll, leuchtet ✨ — drück drauf!",
-  () => "Perfekt! 💧 Der Brunnen heilt dich. Beim Level-Aufstieg gibt's ⭐ Talentpunkte (🎒). Folge dem 🌿 grünen Weg zum Welttor — das 🌀 Portal 1 bringt dich in den Keller. Viel Glück!",
+  () => "Perfekt! 💧 Der Brunnen heilt dich. Beim Level-Aufstieg gibt's ⭐ Talentpunkte — tipp dann oben links auf dein ⭐ (oder oben rechts auf den 🎒 Rucksack) und verteil sie. Folge dem 🌿 grünen Weg zum Welttor — das 🌀 Portal 1 bringt dich in den Keller. Viel Glück!",
 ];
 const TIPS = [
   "Halte ⚔️ gedrückt — dann schlägst du immer weiter!",
   "Keine 🫧 mehr? Hau Gegner mit ⚔️ — jeder gibt dir neue Blasen!",
   "🍄 Glitzerpilze heilen nicht — sie laden deinen ✨ Spezialangriff!",
   "Rote Kreise und Streifen am Boden? Schnell mit 💨 raus!",
-  "Beim Level-Aufstieg gibt's ⭐ Talentpunkte — verteil sie im 🎒 Rucksack!",
+  "Beim Level-Aufstieg gibt's ⭐ Talentpunkte — tipp oben links auf dein ⭐ oder oben rechts auf 🎒, dann stehen die Talente ganz oben!",
   "Im 🪞 Spiegel vor dem Haus kannst du dein Aussehen ändern.",
   "❤️ Herzen und 🧪 Tränke heilen dich. Mehr als " + CAP.potions + " Tränke passen nicht in den Rucksack.",
   "Truhen gehen auf, wenn du drüberläufst. ✨",
@@ -446,7 +446,7 @@ const TIPS = [
 function omaTip() {
   const p = G.p, S = (G.omaSeen = G.omaSeen || {});
   const now = [
-    ["talent", p.skPts > 0, () => "Du hast " + p.skPts + " ⭐ Talentpunkt" + (p.skPts === 1 ? "" : "e") + " frei! Tipp auf 🎒 und verteil " + (p.skPts === 1 ? "ihn" : "sie") + "."],
+    ["talent", p.skPts > 0, () => "Du hast " + p.skPts + " ⭐ Talentpunkt" + (p.skPts === 1 ? "" : "e") + " frei! Tipp oben links auf dein ⭐ (da, wo das rosa +" + p.skPts + " blinkt) oder oben rechts auf 🎒 — die Talente stehen ganz oben. Tipp ein Talent an, schon ist der Punkt verteilt!"],
     ["heal", p.hp < p.maxHp * 0.6, () => "Du bist ja verletzt! Mein 💧 Brunnen heilt dich."],
     ["potion", p.potions < 3, () => "Nur noch " + p.potions + " 🧪? Mein 💧 Brunnen füllt deine Tränke wieder auf 3 auf."],
     ["ammo", p.ammo < 5, () => "Kaum noch 🫧? Hau Gegner mit ⚔️ — jeder gibt dir neue Blasen!"],
