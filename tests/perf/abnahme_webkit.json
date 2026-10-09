@@ -2,6 +2,133 @@
  "engine": "webkit",
  "res": [
   {
+   "id": "P1",
+   "name": "Endbild an (WebGL2)",
+   "ok": true,
+   "wert": {
+    "grund": "an",
+    "fehler": null,
+    "masse": [
+     659,
+     1464,
+     824,
+     1830
+    ],
+    "rs": 1.6
+   }
+  },
+  {
+   "id": "P2",
+   "name": "Kontextverlust → 2D läuft weiter",
+   "ok": true,
+   "wert": {
+    "ext": true,
+    "an": false,
+    "grund": "Kontextverlust",
+    "rs": 2,
+    "sichtbar2d": "1",
+    "postSichtbar": "none",
+    "bilderWeiter": true
+   }
+  },
+  {
+   "id": "P3",
+   "name": "?post=0 = reines 2D (RS 2, keine Glow-Leinwand, kein #post)",
+   "ok": true,
+   "wert": {
+    "post": {
+     "an": false,
+     "ruht": false,
+     "vign": false,
+     "grund": "?post=0",
+     "fehler": null,
+     "bilder": 0,
+     "biome": 0,
+     "masse": null,
+     "grade": {
+      "sat": 1.04,
+      "bloom": 0.35,
+      "heat": 0
+     }
+    },
+    "rs": 2,
+    "gcv": false,
+    "el": false
+   }
+  },
+  {
+   "id": "P4",
+   "name": "Stufe 3: Endbild ruht (2D sichtbar, RS 1), Stufe 0: läuft wieder",
+   "ok": true,
+   "wert": {
+    "ruht": {
+     "ruht": true,
+     "rs": 1,
+     "cv": "1",
+     "post": "none"
+    },
+    "wieder": {
+     "rs": 1.6,
+     "cv": "0",
+     "post": "block"
+    }
+   }
+  },
+  {
+   "id": "W1",
+   "name": "Back-Worker liefert beim Ebenenwechsel (Chunks + Fels)",
+   "ok": true,
+   "wert": {
+    "an": true,
+    "laeuft": true,
+    "grund": "an",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 97,
+    "leer": 12,
+    "verworfen": 11,
+    "sync": 82,
+    "msMittel": 1.3,
+    "msMax": 4,
+    "blende": false,
+    "felsWorker": true
+   }
+  },
+  {
+   "id": "W2",
+   "name": "Blende-Dauer je Wechsel (ms; v13 ≈ 230 + Backen) / synchron nachgebacken",
+   "ok": true,
+   "wert": {
+    "blendeMs": [
+     343,
+     301,
+     311,
+     296,
+     296
+    ],
+    "sync": [
+     1,
+     4,
+     1,
+     2,
+     3
+    ]
+   }
+  },
+  {
+   "id": "T1",
+   "name": "fester Takt: Schritte je Sekunde ≈ 60 (Bildtakt beliebig)",
+   "ok": true,
+   "wert": {
+    "hz": 60,
+    "vsync": 60,
+    "schritteProS": 60,
+    "bilderProS": 60,
+    "verworfen": 0
+   }
+  },
+  {
    "id": "AU-m4a",
    "name": "Stadtmusik lädt als Schleife (m4a)",
    "ok": true,

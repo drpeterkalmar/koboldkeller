@@ -2,49 +2,159 @@
  "engine": "chromium",
  "res": [
   {
-   "id": "A2",
-   "name": "starkes Gerät: Stufe 2 → 1 → 0, je frühestens nach 8 s",
+   "id": "P1",
+   "name": "Endbild an (WebGL2)",
    "ok": true,
    "wert": {
-    "raufNachS": [
-     10.2,
-     20.8
+    "grund": "an",
+    "fehler": null,
+    "masse": [
+     659,
+     1464,
+     824,
+     1830
     ],
-    "fps": 581.9,
-    "arbeit": 0.41,
-    "log": [
-     {
-      "t": 10.6,
-      "stufe": 1,
-      "richtung": 1,
-      "grund": "rauf",
-      "fps": 603.8,
-      "arbeit": 0.48,
-      "streu": 1.136
-     },
-     {
-      "t": 21.2,
-      "stufe": 0,
-      "richtung": 1,
-      "grund": "rauf",
-      "fps": 581.9,
-      "arbeit": 0.41,
-      "streu": 1.164
+    "rs": 1.6
+   }
+  },
+  {
+   "id": "P2",
+   "name": "Kontextverlust → 2D läuft weiter",
+   "ok": true,
+   "wert": {
+    "ext": true,
+    "an": false,
+    "grund": "Kontextverlust",
+    "rs": 2,
+    "sichtbar2d": "1",
+    "postSichtbar": "none",
+    "bilderWeiter": true
+   }
+  },
+  {
+   "id": "P3",
+   "name": "?post=0 = reines 2D (RS 2, keine Glow-Leinwand, kein #post)",
+   "ok": true,
+   "wert": {
+    "post": {
+     "an": false,
+     "ruht": false,
+     "vign": false,
+     "grund": "?post=0",
+     "fehler": null,
+     "bilder": 0,
+     "biome": 0,
+     "masse": null,
+     "grade": {
+      "sat": 1.04,
+      "bloom": 0.35,
+      "heat": 0
      }
+    },
+    "rs": 2,
+    "gcv": false,
+    "el": false
+   }
+  },
+  {
+   "id": "P4",
+   "name": "Stufe 3: Endbild ruht (2D sichtbar, RS 1), Stufe 0: läuft wieder",
+   "ok": true,
+   "wert": {
+    "ruht": {
+     "ruht": true,
+     "rs": 1,
+     "cv": "1",
+     "post": "none"
+    },
+    "wieder": {
+     "rs": 1.6,
+     "cv": "0",
+     "post": "block"
+    }
+   }
+  },
+  {
+   "id": "W1",
+   "name": "Back-Worker liefert beim Ebenenwechsel (Chunks + Fels)",
+   "ok": true,
+   "wert": {
+    "an": true,
+    "laeuft": true,
+    "grund": "an",
+    "fehler": null,
+    "offen": 0,
+    "wichtig": 0,
+    "geliefert": 99,
+    "leer": 12,
+    "verworfen": 9,
+    "sync": 80,
+    "msMittel": 1.5,
+    "msMax": 4.3,
+    "blende": false,
+    "felsWorker": true
+   }
+  },
+  {
+   "id": "W2",
+   "name": "Blende-Dauer je Wechsel (ms; v13 ≈ 230 + Backen) / synchron nachgebacken",
+   "ok": true,
+   "wert": {
+    "blendeMs": [
+     486,
+     504,
+     446,
+     548,
+     556
+    ],
+    "sync": [
+     1,
+     4,
+     1,
+     0,
+     3
     ]
    }
   },
   {
-   "id": "A3",
-   "name": "30-Hz-Deckel (wenig Arbeit) → Stufe bleibt 0",
+   "id": "X1",
+   "name": "Worker-Bild gespeichert (Vergleich per Python)",
    "ok": true,
    "wert": {
-    "stufe": 0,
-    "fps": 30,
-    "arbeit": 0.6,
-    "streu": 0.004,
-    "gedeckelt": true,
-    "log": []
+    "worker": 20,
+    "sync": 0
+   }
+  },
+  {
+   "id": "T1",
+   "name": "fester Takt: Schritte je Sekunde ≈ 60 (Bildtakt beliebig)",
+   "ok": true,
+   "wert": {
+    "hz": 60,
+    "vsync": 0,
+    "schritteProS": 41.2,
+    "bilderProS": 14.6,
+    "verworfen": 2.18
+   }
+  },
+  {
+   "id": "AU-m4a",
+   "name": "Stadtmusik lädt als Schleife (m4a)",
+   "ok": true,
+   "wert": {
+    "rec": true,
+    "track": "audio/town.m4a",
+    "pre": false
+   }
+  },
+  {
+   "id": "AU-mp3",
+   "name": "Stadtmusik lädt als Schleife (mp3)",
+   "ok": true,
+   "wert": {
+    "rec": true,
+    "track": "audio/town.mp3",
+    "pre": false
    }
   }
  ],

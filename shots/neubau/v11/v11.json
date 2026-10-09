@@ -42,7 +42,7 @@
         "guideBlocked": true
       },
       "fin": {
-        "riseSecs": 2.65,
+        "riseSecs": 2.66,
         "inEnts": true,
         "awake": true,
         "fight": true,
@@ -50,7 +50,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 3748,
+        "frames": 1826,
         "card": true,
         "dist": 8.49,
         "minDist": 1,
@@ -96,7 +96,7 @@
         "blocked": 4,
         "inEnts": false,
         "dur": 2.25,
-        "invul": 2.84,
+        "invul": 2.85,
         "guideBlocked": true
       },
       "fin": {
@@ -108,7 +108,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 2899,
+        "frames": 1607,
         "card": true,
         "dist": 5.02,
         "minDist": 1.05,
@@ -154,11 +154,11 @@
         "blocked": 2,
         "inEnts": false,
         "dur": 2.25,
-        "invul": 2.84,
+        "invul": 2.85,
         "guideBlocked": true
       },
       "fin": {
-        "riseSecs": 2.25,
+        "riseSecs": 2.26,
         "inEnts": true,
         "awake": true,
         "fight": true,
@@ -166,7 +166,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 2623,
+        "frames": 1603,
         "card": true,
         "dist": 6.5,
         "minDist": 1,
@@ -212,11 +212,11 @@
         "blocked": 16,
         "inEnts": false,
         "dur": 3.5,
-        "invul": 4.09,
+        "invul": 4.1,
         "guideBlocked": true
       },
       "fin": {
-        "riseSecs": 3.5,
+        "riseSecs": 3.51,
         "inEnts": true,
         "awake": true,
         "fight": true,
@@ -224,7 +224,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 4395,
+        "frames": 2197,
         "card": true,
         "dist": 10.11,
         "minDist": 1.4,
@@ -270,11 +270,11 @@
         "blocked": 2,
         "inEnts": false,
         "dur": 2.65,
-        "invul": 3.24,
+        "invul": 3.23,
         "guideBlocked": true
       },
       "fin": {
-        "riseSecs": 2.65,
+        "riseSecs": 2.66,
         "inEnts": true,
         "awake": true,
         "fight": true,
@@ -282,7 +282,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 4323,
+        "frames": 1780,
         "card": true,
         "dist": 8.49,
         "minDist": 1,
@@ -328,11 +328,11 @@
         "blocked": 2,
         "inEnts": false,
         "dur": 2.25,
-        "invul": 2.83,
+        "invul": 2.85,
         "guideBlocked": true
       },
       "fin": {
-        "riseSecs": 2.25,
+        "riseSecs": 2.26,
         "inEnts": true,
         "awake": true,
         "fight": true,
@@ -340,7 +340,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 3466,
+        "frames": 1484,
         "card": true,
         "dist": 7.5,
         "minDist": 1.05,
@@ -386,11 +386,11 @@
         "blocked": 16,
         "inEnts": false,
         "dur": 3.5,
-        "invul": 4.09,
+        "invul": 4.1,
         "guideBlocked": true
       },
       "fin": {
-        "riseSecs": 3.5,
+        "riseSecs": 3.51,
         "inEnts": true,
         "awake": true,
         "fight": true,
@@ -398,7 +398,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 4672,
+        "frames": 2121,
         "card": true,
         "dist": 10.11,
         "minDist": 1.4,
@@ -445,7 +445,7 @@
         "blocked": 0,
         "inEnts": false,
         "dur": 2.65,
-        "invul": 3.23,
+        "invul": 3.25,
         "guideBlocked": true
       },
       "leave": {
@@ -462,7 +462,7 @@
         "invulOk": true,
         "hpOk": true,
         "hidden": true,
-        "frames": 1011,
+        "frames": 1218,
         "card": true,
         "dist": 12.35,
         "minDist": 1,
@@ -475,34 +475,34 @@
     {
       "tag": "hoch",
       "throttle": 4,
-      "frames": 1168,
-      "medMs": 3.2,
-      "p95Ms": 6.3,
-      "fpsMed": 312.5,
-      "fpsP95": 158.7,
+      "frames": 1290,
+      "medMs": 2.8,
+      "p95Ms": 6.6,
+      "fpsMed": 357.1,
+      "fpsP95": 151.5,
       "fight": {
-        "frames": 748,
-        "medMs": 4,
-        "p95Ms": 7.2,
-        "fpsMed": 250,
-        "fpsP95": 138.9
+        "frames": 971,
+        "medMs": 2.9,
+        "p95Ms": 6.7,
+        "fpsMed": 344.8,
+        "fpsP95": 149.3
       },
       "q": 0
     },
     {
       "tag": "quer",
       "throttle": 4,
-      "frames": 949,
-      "medMs": 4,
-      "p95Ms": 7,
-      "fpsMed": 250,
-      "fpsP95": 142.9,
+      "frames": 1173,
+      "medMs": 3,
+      "p95Ms": 6.8,
+      "fpsMed": 333.3,
+      "fpsP95": 147.1,
       "fight": {
-        "frames": 600,
-        "medMs": 4.4,
-        "p95Ms": 10.2,
-        "fpsMed": 227.3,
-        "fpsP95": 98
+        "frames": 914,
+        "medMs": 3.3,
+        "p95Ms": 6.9,
+        "fpsMed": 303,
+        "fpsP95": 144.9
       },
       "q": 0
     }

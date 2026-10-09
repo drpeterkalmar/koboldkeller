@@ -68,6 +68,22 @@ if (NUR.includes("post")) {
   const c = await p2.evaluate(() => ({ post: KK.post(), rs: KK.R.RS, gcv: !!KK.R.gcv, el: !!document.getElementById("post") }));
   R("P3", "?post=0 = reines 2D (RS 2, keine Glow-Leinwand, kein #post)", !c.post.an && c.rs === 2 && !c.gcv && !c.el, c);
   await c2.close();
+  // Sparstufe 3: Endbild ruht (reines 2D wie v13), zurück auf Stufe 0 läuft es wieder
+  const { ctx: c3, page: p3 } = await seite("auto=0");
+  const f3 = nf();
+  const d = await p3.evaluate(async () => {
+    const w = (ms) => new Promise((r) => setTimeout(r, ms)), cv = () => getComputedStyle(document.getElementById("cv")).opacity, pd = () => document.getElementById("post").style.display;
+    KK.goto(5); await w(800);
+    KK.quality(3); await w(600); const b0 = KK.post().bilder; await w(600);
+    const ruht = { ...KK.post(), rs: KK.R.RS, cv: cv(), post: pd(), bilderStehen: KK.post().bilder === b0 };
+    KK.quality(0); await w(800);
+    const wieder = { an: KK.post().an, ruht: KK.post().ruht, rs: KK.R.RS, cv: cv(), post: pd(), bilder: KK.post().bilder > b0 };
+    return { ruht, wieder };
+  });
+  R("P4", "Stufe 3: Endbild ruht (2D sichtbar, RS 1), Stufe 0: läuft wieder", d.ruht.ruht && d.ruht.rs === 1 && d.ruht.cv === "1" && d.ruht.post === "none" && d.ruht.bilderStehen &&
+    !d.wieder.ruht && d.wieder.an && d.wieder.rs === 1.6 && d.wieder.cv === "0" && d.wieder.post === "block" && d.wieder.bilder && nf() === f3,
+    { ruht: { ruht: d.ruht.ruht, rs: d.ruht.rs, cv: d.ruht.cv, post: d.ruht.post }, wieder: { rs: d.wieder.rs, cv: d.wieder.cv, post: d.wieder.post } });
+  await c3.close();
 }
 
 if (NUR.includes("worker")) {

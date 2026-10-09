@@ -120,7 +120,8 @@ In ⏸️: „📳 Vibration testen“ mit Hinweis, falls nichts zu spüren ist.
 ## Technik
 Vanilla-JS-ES-Module + Canvas 2D (Begründung: [ARCHITECTURE.md](ARCHITECTURE.md)). Alles Vektorielle wird einmal
 in Offscreen-Caches gezeichnet; Boden in 8×8-Chunks; Licht über eine ¼-Auflösungs-Lightmap (multiply) plus
-additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md).
+additive Glows. Akzeptanzkriterien: [CHECKS.md](CHECKS.md). Technik-Nacht (WebGL-Endbild, fester Takt, Automatik, Back-Worker,
+Messungen vorher/nachher): [TECHNIK_BERICHT.md](TECHNIK_BERICHT.md).
 
 | Datei | Inhalt |
 |---|---|
