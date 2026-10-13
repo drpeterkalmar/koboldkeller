@@ -3,7 +3,8 @@
 // v8: Finger-Arbeit wie ein Kind — Lauf-Tipps nur auf eine SICHTBARE Stelle des Weges (Bildschirm, ohne HUD/Knöpfe),
 // Tipp auf Gegner zählt ebenfalls; gemessen: Tipps + Lauf-Sekunden je Ebene (Näherung für „Finger halten“),
 // Stadt: läuft per Tipp vom Brunnen zum Portal der tiefsten Ebene (kein Teleport) und misst die Zeit.
-// node tools/bot.mjs [port] [bisEbene] [speed] [--secs=1800] [--mega] [--audio] [--out=name]
+// node tools/bot.mjs [port] [bisEbene] [speed] [--secs=1800] [--mega] [--audio] [--out=name] [--q=regler=wert&…]
+// v14: protokolliert Level-Aufstiege mit Keller-Spielzeit (Median-Abstand je Abschnitt) und die Zähler aus G.stats.
 // Ergebnis: Schwierigkeitskurve pro Ebene (Spielzeit, erlittener Schaden, Tode, Tränke, Level) → shots/neubau/bot_<name>.json/.md
 // --audio: Audio entsperren und alle 10 s Stimmen-Zähler protokollieren → Knoten-Leck-Test
 import { loadPlaywright } from "./pw.mjs";
@@ -18,7 +19,8 @@ const flags = [(process.platform === "darwin" ? "--use-angle=metal" : "--use-ang
 const b = await chromium.launch({ channel: "chromium", args: flags });
 const page = await (await b.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true })).newPage();
 const errs = []; page.on("pageerror", e => errs.push((e.stack || e.message).split("\n").slice(0, 4).join(" ← ")));
-await page.goto(`http://localhost:${port}/index.html`);
+const Q = flag("q") ? flag("q").slice(4) : "";                       // v14: Regler, z. B. --q=bedarf=0&xpkurve=alt
+await page.goto(`http://localhost:${port}/index.html${Q ? "?" + Q : ""}`);
 await page.waitForFunction(() => window.KK && KK.G.L);
 if (AUD) { await page.touchscreen.tap(200, 300); await page.waitForFunction(() => KK.audio().pre.done && KK.audio().state === "running", null, { timeout: 30000 }); }
 await page.evaluate(async () => {
@@ -30,7 +32,7 @@ await page.evaluate(async () => {
 await page.evaluate(([sp, mega]) => {
   KK.start({ tut: false, name: "Bot", mega }); KK.speed(sp);
   const G = KK.G;
-  window.__bot = { lv: {}, deaths: 0, cur: 0, stuck: 0, lastPos: null, log: [], specials: 0, dodges: 0, fights: [], fight: null, maxMinions: 0, town: [], taps: 0, tapsEnemy: 0, walk: 0 };
+  window.__bot = { lv: {}, deaths: 0, cur: 0, stuck: 0, lastPos: null, log: [], specials: 0, dodges: 0, fights: [], fight: null, maxMinions: 0, town: [], taps: 0, tapsEnemy: 0, walk: 0, playT: 0, ups: [], lvl0: 1 };
   const B = window.__bot, order = ["leben", "kraft", "leben", "blasen", "kraft", "tempo", "leben", "kraft", "magnet"];
   let oi = 0;
   const L = (d) => B.lv[d] || (B.lv[d] = { d, secs: 0, dmg: 0, deaths: 0, pots: 0, tries: 0, arriveLvl: 0, arriveHp: "", done: false, taps: 0, tapsEnemy: 0, walk: 0 });
@@ -50,7 +52,9 @@ await page.evaluate(([sp, mega]) => {
     B.rev = false;
     if (G.screen === "win") { if (B.cur) L(B.cur).done = true; B.won = true; return; }
     if (G.screen !== "play") return;
-    { const dt = G.t - lastT; lastT = G.t; if (p.moving && dt > 0 && dt < 3) { B.walk += dt; if (G.depth > 0) L(G.depth).walk += dt; } }
+    { const dt = G.t - lastT; lastT = G.t; if (p.moving && dt > 0 && dt < 3) { B.walk += dt; if (G.depth > 0) L(G.depth).walk += dt; } if (G.depth > 0 && dt > 0 && dt < 3) B.playT += dt; }
+    // v14: Level-Aufstiege mit Zeitstempel (Keller-Spielzeit) → Abstand zwischen zwei Level-Ups
+    while (p.lvl > B.lvl0) { B.lvl0++; B.ups.push({ lvl: B.lvl0, t: +B.playT.toFixed(1), d: G.depth }); }
     // Talentpunkte verteilen (wie ein Kind im Rucksack)
     for (let k = 0; k < 9 && p.skPts > 0; k++) { if (KK.skill(order[oi % order.length])) {} oi++; }
     // Buchhaltung pro Ebene (Spielzeit + Schaden)
@@ -133,16 +137,25 @@ while (Date.now() - start < SECS * 1000) {
   if (line !== last) { console.log(((Date.now() - start) / 1000).toFixed(0) + "s " + line); last = line; }
   if (s.bot.won || s.st.screen === "win" || (maxD < 20 && s.st.depth >= maxD)) break;
 }
-const r = await page.evaluate(() => ({ ...window.__bot, st: KK.state(), stats: KK.G.stats }));
+const r = await page.evaluate(() => ({ ...window.__bot, st: KK.state(), stats: JSON.parse(JSON.stringify(KK.G.stats)) }));
 const rows = Object.values(r.lv).sort((a, b) => a.d - b.d);
 const md = ["| Ebene | Versuche | Spielzeit s | Lauf s | Lauf-Tipps | Gegner-Tipps | Schaden | Wandfallen-Treffer | Tode | Tränke | Level bei Ankunft | ❤️ bei Ankunft |", "|---|---|---|---|---|---|---|---|---|---|---|---|",
   ...rows.map(x => `| ${x.d} | ${x.tries} | ${x.secs.toFixed(0)} | ${(x.walk || 0).toFixed(0)} | ${x.taps || 0} | ${x.tapsEnemy || 0} | ${Math.round(x.dmg)} | ${x.wallHits || 0} | ${x.deaths} | ${x.pots} | ${x.arriveLvl} | ${x.arriveHp} |`),
   `| **Σ** | | ${rows.reduce((a, x) => a + x.secs, 0).toFixed(0)} | ${rows.reduce((a, x) => a + (x.walk || 0), 0).toFixed(0)} | ${rows.reduce((a, x) => a + (x.taps || 0), 0)} | ${rows.reduce((a, x) => a + (x.tapsEnemy || 0), 0)} | ${Math.round(rows.reduce((a, x) => a + x.dmg, 0))} | ${rows.reduce((a, x) => a + (x.wallHits || 0), 0)} | ${rows.reduce((a, x) => a + x.deaths, 0)} | | | |`,
   "", "Stadt → Portal (zu Fuß, Spielzeit s / Tipps): " + (r.town.map(t => `E${t.to} ${t.secs} s/${t.taps}`).join(" · ") || "–"),
   "", "| Boss-Ebene | Boss | Art | ❤️ | Kampfdauer s | Schaden | besiegt | max. Handlanger | Handlanger gesamt |", "|---|---|---|---|---|---|---|---|---|",
-  ...r.fights.map(f => `| ${f.d} | ${f.name} | ${f.mini ? "Mini" : "Haupt"} | ${f.hp ?? "–"} | ${f.secs} | ${f.dmg} | ${f.won ? "ja" : "nein"} | ${f.maxMin} | ${f.spawned ?? "–"} |`)].join("\n");
+  ...r.fights.map(f => `| ${f.d} | ${f.name} | ${f.mini ? "Mini" : "Haupt"} | ${f.hp ?? "–"} | ${f.secs} | ${f.dmg} | ${f.won ? "ja" : "nein"} | ${f.maxMin} | ${f.spawned ?? "–"} |`),
+  // v14: Level-Aufstiege (Keller-Spielzeit) und Abstände — Median gesamt und je Abschnitt
+  "", ...upTable(r.ups), "", "Zähler (G.stats): " + JSON.stringify(r.stats)].join("\n");
 mkdirSync("shots/neubau", { recursive: true });
-writeFileSync(`shots/neubau/bot_${OUT}.json`, JSON.stringify({ date: new Date().toISOString(), ver: await page.evaluate(() => window.KK_VER), myth: await page.evaluate(() => KK.myths().wearing), mega: MEGA, speed, won: !!r.won, deaths: r.deaths, specials: r.specials, dodges: r.dodges, final: r.st, rows, fights: r.fights, maxMinions: r.maxMinions, town: r.town, taps: r.taps, tapsEnemy: r.tapsEnemy, walk: r.walk, stuck: r.log, errors: errs }, null, 2));
+function upTable(ups) {
+  const gaps = ups.map((u, i) => ({ ...u, gap: +(u.t - (i ? ups[i - 1].t : 0)).toFixed(1) }));
+  const med = a => { if (!a.length) return "–"; const b = a.slice().sort((x, y) => x - y), h = b.length >> 1; return +(b.length % 2 ? b[h] : (b[h - 1] + b[h]) / 2).toFixed(1); };
+  const seg = (lo, hi) => med(gaps.filter(g => g.lvl >= lo && g.lvl <= hi).map(g => g.gap));
+  return ["Level-Aufstiege (Keller-Spielzeit s, Abstand s, Ebene): " + gaps.map(g => `Lv${g.lvl} ${g.t}/${g.gap}/E${g.d}`).join(" · "),
+    "", `Abstand zwischen Level-Ups, Median: gesamt ${med(gaps.map(g => g.gap))} s · Lv 2–10 ${seg(2, 10)} s · Lv 11–15 ${seg(11, 15)} s · Lv 16+ ${seg(16, 99)} s · längster ${gaps.length ? Math.max(...gaps.map(g => g.gap)) : "–"} s`];
+}
+writeFileSync(`shots/neubau/bot_${OUT}.json`, JSON.stringify({ date: new Date().toISOString(), ver: await page.evaluate(() => window.KK_VER), q: await page.evaluate(() => location.search), ups: r.ups, stats: r.stats, myth: await page.evaluate(() => KK.myths().wearing), mega: MEGA, speed, won: !!r.won, deaths: r.deaths, specials: r.specials, dodges: r.dodges, final: r.st, rows, fights: r.fights, maxMinions: r.maxMinions, town: r.town, taps: r.taps, tapsEnemy: r.tapsEnemy, walk: r.walk, stuck: r.log, errors: errs }, null, 2));
 writeFileSync(`shots/neubau/bot_${OUT}.md`, md + "\n");
 console.log(md);
 console.log(`Ergebnis: ${r.won ? "GEWONNEN" : "nicht gewonnen"} · Tode ${r.deaths} · Spezial ${r.specials}× · Ausweichen ${r.dodges}× · Hänger ${r.log.length} · Fehler: ${errs.length ? errs.join(" | ") : 0}`);
