@@ -146,3 +146,68 @@ test("Messgröße 6: Upgrades aus Beute je Ebene ~ gleich, längste Lücke ≤ 2
 });
 
 if (ZEIGEN) process.on("exit", () => { });
+
+// ---------------------------------------------------------------------
+// E2: XP-Kurve + Aufhol-Bonus
+// ---------------------------------------------------------------------
+import { ENEMIES, biomeOf } from "../../src/config.js";
+const ALT = { ...VORLAGE, xpkurve: "alt", aufhol: 0 }, NEU = { ...VORLAGE, xpkurve: "quad", aufhol: 0.1 };
+/** mittlere Grund-XP eines normalen Gegners auf Ebene d (Gewichte des Gegner-Pools, Elite-Anteil × 2,5) beim Level lvl */
+function mittelXp(d, lvl, V, elite = true) {
+  d = Math.max(1, Math.min(20, d));
+  const pool = d <= 1 ? [["bat", 40], ["slime", 35], ["wichtel", 25]] : POOLS[biomeOf(d)], sum = pool.reduce((a, x) => a + x[1], 0);
+  const xp = pool.reduce((a, [t, w]) => a + w / sum * VL.gegnerXp(ENEMIES[t], d, lvl, V), 0);
+  return xp * (elite ? 1 + diffOf(d).elite * 1.5 : 1);
+}
+export function killsJeLevel(V) {
+  const out = [];
+  for (let L = 1; L <= 25; L++) {
+    const d = L - 1;                                             // „gleich stark“: Ebene = Soll-Ebene für dieses Level (Soll-Level = Ebene + 1)
+    const blatt = 4 + 2 * L;                                     // Datenblatt-Näherung „Gegner-XP ≈ 4 + 2·Lv“ (v13-Formel mit Level-Anteil)
+    const real = VL.xpGewinn(mittelXp(d, L, V), L, Math.max(1, d), V);
+    out.push({ L, bedarf: VL.xpBedarf(L, V), blatt: VL.xpBedarf(L, V) / blatt, real: VL.xpBedarf(L, V) / real });
+  }
+  return out;
+}
+
+test("E2 Kurve: Bedarf(L) = 10 + 5L + 2L² (Lv 5: 85, 10: 260, 15: 535, 20: 910); alt = v13 (65, 391, 2143, 11565)", () => {
+  assert.deepEqual([5, 10, 15, 20].map(L => VL.xpBedarf(L, NEU)), [85, 260, 535, 910]);
+  assert.deepEqual([1, 5, 10, 15, 20].map(L => VL.xpBedarf(L, ALT)), [10, 65, 391, 2143, 11565]);
+  // Level-Aufstieg: alt rechnet wie v13 aus dem bisherigen Bedarf weiter
+  assert.equal(VL.xpNaechster(6, 65, ALT), 95); assert.equal(VL.xpNaechster(6, 65, NEU), VL.xpBedarf(6, NEU));
+});
+
+test("Messgröße 1: Kills je Level (gleich starke Normalgegner) Lv 10: 9–13 · 15: 13–18 · 20: 17–24", () => {
+  const vor = killsJeLevel(ALT), nach = killsJeLevel(NEU);
+  zeig("M1 Kills je Level (Datenblatt-Näherung 4+2·Lv | echte Gegner-Pools inkl. Elite-Anteil, Aufhol-Faktor 1):");
+  for (const L of [1, 5, 10, 14, 15, 16, 20, 25]) { const a = vor[L - 1], b = nach[L - 1]; zeig(`  Lv ${L}: Bedarf ${a.bedarf} → ${b.bedarf} · Näherung ${a.blatt.toFixed(1)} → ${b.blatt.toFixed(1)} · echt ${a.real.toFixed(1)} → ${b.real.toFixed(1)}`); }
+  const r = L => nach[L - 1];
+  assert.ok(r(10).blatt >= 9 && r(10).blatt <= 13 && r(15).blatt >= 13 && r(15).blatt <= 18 && r(20).blatt >= 17 && r(20).blatt <= 24);
+  assert.ok(r(10).real >= 9 && r(10).real <= 13, "echt Lv 10 " + r(10).real);
+  assert.ok(r(15).real >= 13 && r(15).real <= 18, "echt Lv 15 " + r(15).real);
+  assert.ok(r(20).real >= 13 && r(20).real <= 24, "echt Lv 20 " + r(20).real);
+  // kein Wachstum mehr wie vorher (×16 von Lv 10 → 20): höchstens × 2,5
+  assert.ok(r(20).real / r(10).real < 2.5 && vor[19].real / vor[9].real > 10);
+});
+
+test("Aufhol-Bonus: Soll-Level = Ebene + 1, ±10 % je Level, gekappt 0,6 … 1,5; aus = 1 und Level-Anteil zurück", () => {
+  assert.equal(VL.aufholFaktor(11, 10, NEU), 1);
+  assert.ok(Math.abs(VL.aufholFaktor(8, 10, NEU) - 1.3) < 1e-9);
+  assert.equal(VL.aufholFaktor(1, 20, NEU), 1.5);
+  assert.equal(VL.aufholFaktor(30, 5, NEU), 0.6);
+  assert.equal(VL.aufholFaktor(30, 0, NEU), 1);                // Stadt
+  assert.equal(VL.aufholFaktor(1, 20, ALT), 1);
+  assert.equal(VL.gegnerXp(ENEMIES.bat, 10, 15, ALT), 4 + 10 + 15);
+  assert.equal(VL.gegnerXp(ENEMIES.bat, 10, 15, NEU), 4 + 10);
+  assert.equal(VL.xpGewinn(14, 15, 10, NEU), Math.round(14 * 0.6));
+  assert.equal(VL.xpGewinn(0, 1, 5, NEU), 0);
+});
+
+test("Migration: Bedarf neu aus dem Level, Fortschritt anteilig, xp < xpNext; alt = unverändert", () => {
+  assert.deepEqual(VL.xpMigrieren(15, 1000, 2143, NEU), { xp: Math.floor(1000 / 2143 * 535), xpNext: 535 });
+  assert.deepEqual(VL.xpMigrieren(15, 3000, 2143, NEU), { xp: 534, xpNext: 535 });          // kaputter Stand: xp ≥ Bedarf → knapp darunter
+  assert.deepEqual(VL.xpMigrieren(4, 7, 59, NEU), { xp: VL.xpMigrieren(4, 7, 59, NEU).xp, xpNext: 62 });
+  assert.deepEqual(VL.xpMigrieren(15, 200, 535, NEU), { xp: 200, xpNext: 535 });            // schon v4: bleibt gleich
+  assert.deepEqual(VL.xpMigrieren(15, 1000, 2143, ALT), { xp: 1000, xpNext: 2143 });
+});
+

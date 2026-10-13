@@ -6,13 +6,14 @@
    Treppe/Portal per Tipp „scharf“, Wand-Schützen (Wandfallen) mit Vorwarnung.
    v9: Mythos-Kostüme — Sammlung je Gerät (G.myth), Kostüm-Paket beim ersten Boss-Sieg, Glanz-Partikel, Spezial-Welle in Kostümfarbe.
    v10: Oma Pilzhut gibt beim Vorbeigehen Tipps (Sprechblase, omaTick).
-   v14 (VORLAGEN.md): Bedarfs-Beute (Wunsch-Platz, Glühwürmchen-Heiler, nichts Nutzloses), Upgrade-Zähler mit Truhen-Garantie. */
+   v14 (VORLAGEN.md): Bedarfs-Beute (Wunsch-Platz, Glühwürmchen-Heiler, nichts Nutzloses), Upgrade-Zähler mit Truhen-Garantie,
+   XP-Kurve als Polynom + Aufhol-Bonus. */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET, OMA,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
   ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE,
 } from "./config.js";
-import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher } from "./vorlage.js";
+import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster } from "./vorlage.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
@@ -285,7 +286,7 @@ export function makeEnt(type, x, y) {
   const mega = G.mega && type !== "dummy";
   const hp = Math.round((def.hp[0] + def.hp[1] * d + def.hp[2] * Lv) * (D ? D.hp : 1));
   const e = {
-    type, x, y, z: 0, r: def.r, hp, maxHp: hp, xp: Math.round(def.xp[0] + def.xp[1] * d + def.xp[2] * Lv),
+    type, x, y, z: 0, r: def.r, hp, maxHp: hp, xp: gegnerXp(def, d, Lv),     // v14: ohne Level-Anteil, wenn der Aufhol-Bonus an ist
     speed: def.speed * (D ? D.spd : 1) * (mega ? MEGA.speed : 1), fly: !!def.fly, ranged: !!def.ranged,
     dmg: (D ? D.dmg : 1) + Math.floor(Lv / 10), cdMul: D ? D.cd : 1,
     face: 1, t: Math.random() * 10, sq: 0, sqv: 0, flashT: 0, hurtT: 0, kx: 0, ky: 0,
@@ -391,7 +392,7 @@ export function killEnt(e) {
       G.ents.push(m);
     }
   }
-  gainXp(e.xp);
+  gainXp(xpGewinn(e.xp, p.lvl, G.depth));                 // v14: Aufhol-Bonus (Soll-Level = Ebene + 1)
   if (e.isBoss) bossKilled(e);
 }
 
@@ -403,7 +404,7 @@ export function gainXp(n) {
   p.xp += n;
   while (p.xp >= p.xpNext) {
     p.xp -= p.xpNext;
-    p.lvl++; p.xpNext = Math.floor(p.xpNext * 1.4) + 4;
+    p.lvl++; p.xpNext = xpNaechster(p.lvl, p.xpNext);      // v14: Polynom-Kurve (?xpkurve=alt = ×1,4 + 4)
     p.hpBase = Math.min(CAP.hp, p.hpBase + 1); p.skPts += SKILL_PER_LEVEL;
     recalc(p); p.hp = p.maxHp;
     const bub = p.lvl % 3 === 0;

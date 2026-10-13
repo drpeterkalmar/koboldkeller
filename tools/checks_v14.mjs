@@ -2,6 +2,7 @@
 // V40 (E1): Bedarfs-Beute — bei ❤️ ≤ 25 % Heil-Beute ≥ 25 % je Kill + Glühwürmchen-Heiler fliegt zum Kobold und heilt +50 %;
 //           🫧 leer → Blasen-Nachschub; volle Sachen fallen nicht (0 „voll → Gold“); Upgrade-Zähler ≥ 60 → Truhe mit Upgrade;
 //           Zähler steht im Spielstand; ?bedarf=0&beutetakt=0 = v13 (kein Heiler, Herz 10 %, nutzlose Drops fallen)
+// V41 (E2): alter Spielstand (Datei v3, Lv 15) → Weiterspielen: Lv 15, Talente gleich, Fortschritt anteilig, XP ohne Level-Anteil × Aufhol-Faktor
 // Einzeln: node tools/checks_v14.mjs [--port=8731] [--only=V40]
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -111,6 +112,43 @@ export async function runV14({ browser, BASE, R, errors, only = null }) {
       `🫧 leer: Nachschub ${((leerA.cnt.ammo || 0) / leerA.n * 100).toFixed(1)} % · 🧪 5/5 + ✨ voll: Trank/Pilz fallen ${(vollA.cnt.potion || 0) + (vollA.cnt.mushroom || 0)}× (aus: ${(vollB.cnt.potion || 0) + (vollB.cnt.mushroom || 0)}×), „voll → Gold“ beim Aufheben ${pkA.nutzlos} (aus: ${pkB.nutzlos}) · ` +
       `Heiler: Abstand ${ff.d0.toFixed(2)} → ${frames.map(f => f && f.d).join(" → ")}, schwebt z ${frames.map(f => f && f.z).join("/")}, ❤️ ${ff.hp0} → ${Math.round(ffEnd.hp)}/${ff.maxHp} · ` +
       `Truhe bei Zähler 60: ${tr.kinds.filter(k => k !== "coin").join(",")} → Zähler ${tr.upAfter}, Spielstand upM ${tr.saved} (Datei v${tr.v})`);
+  }
+  // ===================================================================
+  // V41 — E2 XP-Kurve + Aufhol-Bonus + Spielstand-Migration (Datei v3 → v4) über „💾 Weiterspielen“
+  // ===================================================================
+  if (want("V41")) {
+    const V13 = { v: 3, name: "Glitzerkeks", species: "drache", look: { species: "drache", skin: "#6fd8c4", outfit: "#ffb35e", eye: "#1f3b5e", hair: "#3aa893", style: "ohne", earsV: 0, acc: "stern" },
+      lvl: 15, xp: 1234, xpNext: 2143, maxHp: 20, hp: 33, atk: 11, projN: 5, magic: 4, gold: 1830, potions: 4, ammo: 31, spec: 0.67,
+      sk: { kraft: 6, leben: 8, tempo: 4, blasen: 6, magnet: 4 }, skPts: 0, hats: ["pilz", "diadem", "schleife"], hat: "diadem",
+      deepest: 16, depth: 14, mega: false, tut: true, runSecs: 1234, won: false, seed: 123456, migrated: false, kills: 512, bossDone: [2, 4, 6, 8, 10, 12, 14, 16], capNote: 0, giftNote: 0 };
+    const init = `try { if (!sessionStorage.getItem("kk14")) { sessionStorage.setItem("kk14", "1"); localStorage.setItem("koboldkeller2_save", ${JSON.stringify(JSON.stringify(V13))}); } } catch (e) { }`;
+    const run = async (q) => {
+      const P = await page0(browser, BASE, errors, q, { init });
+      const info = await P.page.evaluate(() => document.getElementById("contInfo").textContent);
+      await P.page.evaluate(() => document.getElementById("btnCont").click());
+      await P.page.waitForFunction(() => KK.state().screen === "play" && !KK.state().demo, null, { timeout: 8000 });
+      await sleep(900);
+      const s = await P.page.evaluate(() => { const p = KK.G.p; return { lvl: p.lvl, xp: p.xp, xpNext: p.xpNext, sk: { ...p.sk }, gold: KK.G.gold, depth: KK.G.depth, fill: document.getElementById("xpFill").style.width || getComputedStyle(document.getElementById("xpFill")).width }; });
+      if (!q) await shot(P.page, "v41_weiterspielen_lv15");
+      // Kill auf Ebene 14 (Soll-Level 15 = Level → Faktor 1) und auf Ebene 19 (Soll 20 → × 1,5)
+      const k = await P.page.evaluate(() => {
+        const G = KK.G, p = G.p, r = {};
+        for (const d of [14, 19]) { KK.goto(d); for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1); const lv0 = p.lvl, xp0 = p.xp; KK.spawn("bat", 2, 0); const e = G.ents[G.ents.length - 1], ex = e.xp; KK.kill("all"); r[d] = { ex, gain: p.lvl === lv0 ? +(p.xp - xp0).toFixed(1) : null }; }
+        KK.save(); const raw = JSON.parse(localStorage.getItem("koboldkeller2_save"));
+        return { ...r, raw: { v: raw.v, lvl: raw.lvl, xp: raw.xp, xpNext: raw.xpNext } };
+      });
+      await P.ctx.close();
+      return { info, s, k };
+    };
+    const neu = await run(""), alt = await run("xpkurve=alt&aufhol=0");
+    out.V41 = { neu, alt };
+    const ok = neu.s.lvl === 15 && neu.s.xpNext === 535 && neu.s.xp < 535 && Math.abs(neu.s.xp / 535 - 1234 / 2143) < 0.01 && JSON.stringify(neu.s.sk) === JSON.stringify(V13.sk) && neu.s.gold === 1830 && neu.s.depth === 14 &&
+      neu.k[14].ex === 4 + 14 && neu.k[14].gain === 18 && neu.k[19].gain === Math.round((4 + 19) * 1.5) && neu.k.raw.v === 4 && neu.k.raw.lvl === 15 && neu.k.raw.xpNext === 535 &&
+      alt.s.lvl === 15 && alt.s.xpNext === 2143 && alt.s.xp === 1234 && alt.k[14].ex === 4 + 14 + 15 && alt.k[14].gain === 33 && alt.k[19].gain === 4 + 19 + 15;
+    R("V41", "E2 XP-Kurve + Aufhol-Bonus: alter Spielstand (Datei v3, Lv 15) lädt über „💾 Weiterspielen“ mit Lv 15, Talente/Gold/Ebene gleich, Fortschritt im Level anteilig, xp < xpNext; Fledermaus-XP ohne Level-Anteil, × 1,5 fünf Ebenen zu tief; ?xpkurve=alt&aufhol=0 = v13", ok,
+      `neu: Lv ${neu.s.lvl}, XP ${neu.s.xp}/${neu.s.xpNext} (vorher 1234/2143 = ${(1234 / 2143 * 100).toFixed(1)} %, jetzt ${(neu.s.xp / neu.s.xpNext * 100).toFixed(1)} %), Talente ${JSON.stringify(neu.s.sk)}, 🪙 ${neu.s.gold}, Ebene ${neu.s.depth}; ` +
+      `Fledermaus E14: ${neu.k[14].ex} XP → +${neu.k[14].gain}, E19: +${neu.k[19].gain}; gespeichert v${neu.k.raw.v} Lv ${neu.k.raw.lvl} ${neu.k.raw.xp}/${neu.k.raw.xpNext} · ` +
+      `alt: ${alt.s.xp}/${alt.s.xpNext}, Fledermaus E14 +${alt.k[14].gain}, E19 +${alt.k[19].gain}`);
   }
   return out;
 }

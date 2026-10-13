@@ -229,6 +229,11 @@ export const VORLAGE = {
   // Garantie sonst für viele Ebenen ab). Zufalls-Upgrade je normalem Kill 7 % → 5 %.
   beutetakt: _qn("beutetakt", 1) > 0,
   taktEbene: 30, taktFund: 50, taktSicher: 60, taktMin: 0, upKill: 0.05,
+  // E2 XP-Kurve als Polynom (Vorlage D): Bedarf(L) = a + b·L + c·L² (?xpkurve=alt = v13: Start 10, dann ×1,4 + 4)
+  xpkurve: _q.get("xpkurve") === "alt" ? "alt" : "quad", xpA: 10, xpB: 5, xpC: 2,
+  // E2 Aufhol-Bonus (Vorlage A): XP × (1 + (Soll-Level − Level) · aufhol), Soll-Level = Ebene + 1, gekappt 0,6 … 1,5.
+  // Dafür fällt der Spieler-Level-Anteil der Gegner-XP (ENEMIES.xp[2]) weg. ?aufhol=0 = v13 (mit Level-Anteil, ohne Faktor)
+  aufhol: _qn("aufhol", 0.1), aufholMin: 0.6, aufholMax: 1.5,
 };
 // v13: „Bewegung reduzieren“ des Geräts → weniger Wackeln, weniger Partikelregen
 export const CALM = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;

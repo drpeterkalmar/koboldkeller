@@ -64,3 +64,31 @@ export const taktEbene = (m, V = VORLAGE) => V.beutetakt ? m + V.taktEbene : m;
 export const taktFund = (m, n = 1, V = VORLAGE) => V.beutetakt ? Math.max(V.taktMin, m - V.taktFund * n) : m;
 /** ist die nächste Truhe ein sicheres Upgrade? */
 export const taktSicher = (m, V = VORLAGE) => V.beutetakt && m >= V.taktSicher;
+
+// =====================================================================
+// E2: XP-Kurve und Aufhol-Bonus
+// =====================================================================
+/** v13-Kurve: Start 10, dann ×1,4 + 4 (exponentiell) */
+export function xpAlt(L) { let n = 10; for (let i = 1; i < L; i++) n = Math.floor(n * 1.4) + 4; return n; }
+/** XP-Bedarf von Level L zu L+1 */
+export const xpBedarf = (L, V = VORLAGE) => V.xpkurve === "alt" ? xpAlt(L) : Math.round(V.xpA + V.xpB * L + V.xpC * L * L);
+/** nächster Bedarf nach einem Level-Aufstieg (alt: wie v13 aus dem bisherigen Bedarf) */
+export const xpNaechster = (lvlNeu, xpNextAlt, V = VORLAGE) => V.xpkurve === "alt" ? Math.floor(xpNextAlt * 1.4) + 4 : xpBedarf(lvlNeu, V);
+/** Aufhol-Faktor: Soll-Level = Ebene + 1; wer drunter liegt, bekommt mehr, wer drüber liegt, weniger (nie unter 60 %) */
+export function aufholFaktor(lvl, ebene, V = VORLAGE) {
+  if (!V.aufhol || ebene <= 0) return 1;
+  return Math.min(V.aufholMax, Math.max(V.aufholMin, 1 + (ebene + 1 - lvl) * V.aufhol));
+}
+/** Grund-XP eines Gegners (ohne Elite/Faktor): a + b·Tiefe (+ c·Level nur ohne Aufhol-Bonus, wie v13) */
+export const gegnerXp = (def, d, lvl, V = VORLAGE) => Math.round(def.xp[0] + def.xp[1] * d + (V.aufhol ? 0 : def.xp[2] * lvl));
+/** XP, die ein Sieg wirklich bringt */
+export const xpGewinn = (xp, lvl, ebene, V = VORLAGE) => xp > 0 ? Math.max(1, Math.round(xp * aufholFaktor(lvl, ebene, V))) : 0;
+/** Spielstand: Bedarf aus dem Level neu rechnen, Fortschritt im Level anteilig übernehmen (Level bleibt, nichts geht verloren) */
+export function xpMigrieren(lvl, xp, xpNextAlt, V = VORLAGE) {
+  if (V.xpkurve === "alt") return { xp, xpNext: xpNextAlt };
+  const n = xpBedarf(lvl, V);
+  if (xpNextAlt === n) return { xp: Math.min(xp, n - 1), xpNext: n };
+  const f = Math.min(1, Math.max(0, xp / Math.max(1, xpNextAlt)));
+  return { xp: Math.min(n - 1, Math.floor(f * n)), xpNext: n };
+}
+

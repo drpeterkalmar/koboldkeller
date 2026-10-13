@@ -446,6 +446,7 @@ const TIPS = [
 const TIPS_V14 = [
   ...(VORLAGE.bedarf ? ["Hast du ganz wenig ❤️, lassen Gegner öfter Herzen fallen — und manchmal kommt ein ✨ Glühwürmchen-Heiler zu dir geflogen!"] : []),
   ...(VORLAGE.beutetakt ? ["Hast du lange kein ⚔️, 🪄 oder 💎 gefunden? Dann steckt in der nächsten Truhe bestimmt eins!"] : []),
+  ...(VORLAGE.aufhol ? ["Gehst du tiefer in den Keller, als dein ⭐ Level ist, bekommst du dort extra viel Erfahrung — so holst du schnell auf!"] : []),
 ];
 TIPS.unshift(...TIPS_V14);
 // v10: Was sagt Oma? Zuerst, was gerade wirklich hilft (je Anlass höchstens alle 90 s), sonst der nächste allgemeine Tipp.

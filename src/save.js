@@ -1,4 +1,5 @@
 /* save.js — Spielstand, v20-Migration, Ehrenhall, Einstellungen (MIT) */
+import { xpMigrieren } from "./vorlage.js";
 import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf, MYTH_KEY, MYTH_BY_ID, MYTH_START, MYTHS, mythOfBoss } from "./config.js";
 
 const num = (v, d, lo = -Infinity, hi = Infinity) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
@@ -51,9 +52,11 @@ export function sanitize(s) {
   }
   bossDone = [...new Set(bossDone)].sort((a, b) => a - b);
   const ammoMax = Math.min(CAP.ammoMax, CAP.ammoBase + sk.blasen * 4);
+  // v14 (Datei v4): XP-Bedarf aus dem Level neu (Polynom-Kurve), Fortschritt im Level anteilig — Level und Talente bleiben
+  const xm = xpMigrieren(lvl, num(s.xp, 0, 0, 1e9), num(s.xpNext, 10, 1, 1e9));
   return {
     v: SAVE_V, name: str(s.name, "Kobold"), species, look: lookSave(lk), lvl,
-    xp: num(s.xp, 0, 0, 1e9), xpNext: num(s.xpNext, 10, 1, 1e9),
+    xp: xm.xp, xpNext: xm.xpNext,
     maxHp, hp: Math.round(num(s.hp, maxHp, 1, CAP.hp)),
     atk: num(s.atk, 4, 1, 500), projN: Math.round(num(s.projN, 1, 1, 12)), magic: num(s.magic, 1, 0.5, 500),
     gold, potions, ammo: Math.round(num(s.ammo, AMMO.start, 0, ammoMax)), spec, sk, skPts,
