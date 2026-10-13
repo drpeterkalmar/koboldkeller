@@ -185,7 +185,7 @@ export function buildLevel(depth) {
   G.depth = depth; G.biome = biomeOf(depth); G.B = levelBiome(depth);
   const seed = G.prof.seed;
   const bk = bossKindOf(depth);
-  const L = depth === 0 ? buildTown(seed) : buildDungeon(seed, depth, G.biome, diffOf(depth).room, bk ? ARENA[depth] : null);
+  const L = depth === 0 ? buildTown(seed) : buildDungeon(seed, depth, G.biome, diffOf(depth).room, bk ? ARENA[depth] : null, VORLAGE);   // v14: Schleifen/Truhen
   G.L = L;
   G.ents = []; G.items = []; G.shots = []; G.teles = []; G.spawns = []; G.boss = null; G.later = []; G.specFx = null; G.camFocus = null; G.rise = null;
   if (L.stairs) {

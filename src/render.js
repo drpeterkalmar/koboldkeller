@@ -297,6 +297,17 @@ function chunk(cx, cy) {
   einsortieren(key, c);
   return c;
 }
+/** v14: Chunks, die beim jetzigen Kamerastand im Bild liegen (Rand = Anteil der Bildgröße) — gleiche Rechnung wie draw() */
+function sichtbareChunks(m, rand = 0) {
+  const out = new Set(), Z = R.Z, camDX = (R.camX - R.camY) * 32, camDY = (R.camX + R.camY) * 16 - 44, mx = R.VW * rand, my = R.VH * rand;
+  for (let cy = 0; cy * CH < m.h; cy++) for (let cx = 0; cx * CH < m.w; cx++) {
+    const ox = (cx * CH - cy * CH - CH) * 32 - 4, oy = (cx * CH + cy * CH) * 16 - CHT;
+    const sx = (ox - camDX) * Z + R.VW / 2, sy = (oy - camDY) * Z + R.VH * R.focusY;
+    if (sx > R.VW + mx || sy > R.VH + my || sx + (CH * 64 + 8) * Z < -mx || sy + CHH * Z < -my) continue;
+    out.add(cy * 64 + cx);
+  }
+  return out;
+}
 /** alle Chunks vorab bauen (beim Levelwechsel, versteckt hinter Blende) */
 export function prewarm(G) {
   const m = R.L.map;
@@ -305,7 +316,10 @@ export function prewarm(G) {
   // KK.goto) braucht das nächste Bild die Chunks sofort → synchron wie v13, sonst würde doppelt gebacken
   const nutz = WK.an && R.blende;
   if (nutz) {
-    for (const [i, [cx, cy]] of list.entries()) { const key = cy * 64 + cx; if (R.chunks.has(key)) continue; WK.offen.add(key); if (i < 12) WK.wichtig.add(key); }
+    // v14: die Blende wartet auf die nächsten 12 UND auf alle, die am Eingang im Bild liegen (sonst backt das erste offene Bild
+    // je nach Lage des Eingangs zum Chunk-Raster ein paar synchron nach — gemessen 0–5 je Ebenenwechsel, alte wie neue Karten)
+    const sicht = sichtbareChunks(m, 0.15);
+    for (const [i, [cx, cy]] of list.entries()) { const key = cy * 64 + cx; if (R.chunks.has(key)) continue; WK.offen.add(key); if (i < 12 || sicht.has(key)) WK.wichtig.add(key); }
     try { WK.w.postMessage({ typ: "chunks", id: WK.id, liste: list.map(([cx, cy]) => [cx, cy]) }); } catch (e) { workerAus("Senden: " + (e && e.message || e)); }
   }
   if (!nutz) for (const [cx, cy] of list) chunk(cx, cy);

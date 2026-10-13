@@ -4,6 +4,7 @@
 //           Zähler steht im Spielstand; ?bedarf=0&beutetakt=0 = v13 (kein Heiler, Herz 10 %, nutzlose Drops fallen)
 // V41 (E2): alter Spielstand (Datei v3, Lv 15) → Weiterspielen: Lv 15, Talente gleich, Fortschritt anteilig, XP ohne Level-Anteil × Aufhol-Faktor
 // V42 (E3): Zucken im Warnmoment, Schreck-Flucht mit Bildfolge, Ziel-Kegel (Joystick-Würfe)
+// V43 (E4): Schleifen + Truhen abseits über 20 Ebenen, Karten-Bild; mit --ref=8732 (v13-Server): ?schleifen=0&truhen=zufall = gleiche Karten
 // Einzeln: node tools/checks_v14.mjs [--port=8731] [--only=V40,V42] [--ref=8732]
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -232,6 +233,55 @@ export async function runV14({ browser, BASE, R, errors, only = null, ref = null
       `Kegel: ${ga.vorn}/${ga.n} Würfe zum Gegner vorn (v13: ${gb.vorn}/${gb.n})`);
   }
 
+  // ===================================================================
+  // V43 — E4 Dungeon: Schleifen + Truhen abseits im Spiel; ?schleifen=0&truhen=zufall = Karte wie v13 (Vergleich mit --ref-Server)
+  // ===================================================================
+  if (want("V43")) {
+    const karten = async (page) => page.evaluate(() => {
+      KK.start({ name: "Karte", seed: 4711 }); KK.god(true);
+      const out = [];
+      for (let d = 1; d <= 20; d++) {
+        KK.goto(d); const L = KK.G.L, m = L.map;
+        let h = 0; for (let i = 0; i < m.block.length; i++) h = (h * 31 + m.block[i] * 7 + (i & 3)) >>> 0;
+        out.push({ d, h, schleifen: (L.schleifen || []).map(s => s.spart), truhen: L.props.filter(p => p.kind === "chest").map(c => m.room[Math.floor(c.y) * m.w + Math.floor(c.x)]), weg: L.weg ? L.weg.raeume : null });
+      }
+      return out;
+    });
+    const A = await page0(browser, BASE, errors, "", { seed: false }), B = await page0(browser, BASE, errors, "schleifen=0&truhen=zufall", { seed: false });
+    const ka = await karten(A.page), kb = await karten(B.page);
+    let kref = null;
+    if (REF) { const C = await page0(browser, REF, errors, "", { seed: false }); kref = await karten(C.page); await C.ctx.close(); }
+    // Karten-Bild einer Ebene: Räume, Weg Eingang → Treppe (gelb), Schleifen (türkis = neu gegrabene Kacheln), Truhen (gold)
+    await A.page.evaluate(async () => {
+      KK.goto(7); const L = KK.G.L, m = L.map, S = 9, c = document.createElement("canvas");
+      c.width = m.w * S; c.height = m.h * S; c.id = "karte"; const g = c.getContext("2d");
+      const W = await import("./src/world.js"), C = await import("./src/config.js");
+      g.fillStyle = "#1a1424"; g.fillRect(0, 0, c.width, c.height);
+      const weg = new Set(L.weg.pfad);
+      for (let i = 0; i < m.block.length; i++) {
+        if (m.solid[i]) continue;
+        const x = i % m.w, y = (i / m.w) | 0;
+        g.fillStyle = weg.has(i) ? "#ffd75e" : m.room[i] >= 0 ? "#7a8ac0" : "#4a5a80";
+        g.fillRect(x * S, y * S, S - 1, S - 1);
+      }
+      // neue Abkürzungen (türkis) = offen in dieser Karte, aber Fels im reinen Baum (gleicher Seed, ohne Schleifen)
+      const baum = W.buildDungeon(KK.G.prof.seed, 7, C.biomeOf(7), C.diffOf(7).room, null, { ...C.VORLAGE, schleifen: 999, schleifenNot: 0, truhen: "zufall" });
+      for (let i = 0; i < m.block.length; i++) if (!m.solid[i] && baum.map.solid[i]) { const x = i % m.w, y = (i / m.w) | 0; g.fillStyle = "#4fe0d0"; g.fillRect(x * S, y * S, S - 1, S - 1); }
+      for (const p of L.props.filter(p => p.kind === "chest")) { g.fillStyle = "#ffb000"; g.beginPath(); g.arc(p.x * S, p.y * S, S * 0.9, 0, 7); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 2; g.stroke(); }
+      g.fillStyle = "#8fff8a"; g.fillRect(L.entry.x * S - S, L.entry.y * S - S, S * 2, S * 2);
+      g.fillStyle = "#ff6fae"; g.fillRect(L.stairs.x * S - S, L.stairs.y * S - S, S * 2, S * 2);
+      g.font = "bold 14px system-ui"; g.fillStyle = "#fff"; g.fillText("Ebene 7 · gelb = Weg Eingang→Treppe · türkis = Abkürzung · gold = Truhe", 6, 16);
+      Object.assign(c.style, { position: "fixed", left: "0", top: "0", zIndex: 99999, width: "412px" }); document.body.appendChild(c);
+    });
+    await sleep(100); await A.page.locator("#karte").screenshot({ path: DIR + "v43_karte_ebene7.png" });
+    await A.ctx.close(); await B.ctx.close();
+    out.V43 = { ka, kb, kref };
+    const mitS = ka.filter(k => k.schleifen.some(s => s >= 20)).length, trAb = ka.reduce((a, k) => a + k.truhen.filter(r => !k.weg.includes(r)).length, 0), trN = ka.reduce((a, k) => a + k.truhen.length, 0);
+    const gleichRef = kref ? kb.every((k, i) => k.h === kref[i].h) : null;
+    const ok = mitS >= 18 && trAb / trN >= 0.6 && kb.every(k => !k.schleifen.length) && (gleichRef !== false);
+    R("V43", "E4 Dungeon im Spiel (Seed 4711, Ebene 1–20): Schleifen ≥ 20 Kacheln Ersparnis, Truhen abseits; ?schleifen=0&truhen=zufall = Karte wie v13" + (REF ? " (Vergleich mit Server " + REF + ")" : ""), ok,
+      `Ebenen mit Schleife ≥ 20: ${mitS}/20 (Ersparnis ${ka.map(k => k.schleifen.join("+") || "–").join(" ")}) · Truhen abseits ${trAb}/${trN} · Regler aus: ${kb.filter(k => k.schleifen.length).length} Schleifen` + (kref ? ` · Karten wie v13: ${kb.filter((k, i) => k.h === kref[i].h).length}/20` : " · (kein --ref-Server)"));
+  }
   return out;
 }
 

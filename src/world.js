@@ -231,8 +231,10 @@ export function buildTown(seed) {
 export const TOWN_WORLD_COL = [null, "#8fff8a", "#8fe9ff", "#ff9ae0", "#dff6ff", "#ffae5a"];
 
 // ================= DUNGEON =================
-/** ad = Arena-Eintrag aus config.ARENA (nur Boss-Ebenen: Hauptboss 4/8/…, Mini-Boss 2/6/…) */
-export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
+/** ad = Arena-Eintrag aus config.ARENA (nur Boss-Ebenen: Hauptboss 4/8/…, Mini-Boss 2/6/…).
+    v14 opt (aus config.VORLAGE): schleifen = Mindest-Ersparnis in Kacheln für Abkürzungs-Schleifen (0 = v13: 2 Zufalls-Gänge),
+    schleifenMax, schleifenWeg (Weg Eingang→Treppe bleibt ≥ so viel vom Baum-Weg), truhen = "abseits" | "zufall" (v13) */
+export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null, opt = {}) {
   const rnd = mulberry32((seed | 0) + depth * 7717);
   const isBoss = !!ad;
   const aw = isBoss ? ad.size : 0;
@@ -257,7 +259,7 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
     r.cx = r.x + r.w / 2; r.cy = r.y + r.h / 2;
     for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) { carve(m, x, y); m.room[y * S + x] = i; }
   });
-  // Verbindungen: Prim-MST + 2 Extra-Schleifen
+  // Verbindungen: Prim-MST + 2 Extra-Schleifen (v14: Schleifen nur, wo sie den Weg deutlich abkürzen)
   const conn = [], inT = [0];
   const d2 = (a, b) => (a.cx - b.cx) ** 2 + (a.cy - b.cy) ** 2;
   while (inT.length < rooms.length) {
@@ -268,12 +270,13 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
     }
     conn.push(best); inT.push(best[1]);
   }
-  for (let k = 0; k < 2; k++) {
+  const loops = !!opt.schleifen;
+  if (!loops) for (let k = 0; k < 2; k++) {
     const i = (rnd() * rooms.length) | 0, j = (rnd() * rooms.length) | 0;
     if (i !== j) conn.push([i, j]);
   }
   for (const [i, j] of conn) corridor(m, rooms[i], rooms[j], rnd);
-  // Eingangsraum = am weitesten von Arena / Raum 0; Treppenraum = am weitesten vom Eingang
+  // Eingangsraum = am weitesten von Arena / Raum 0; Treppenraum = am weitesten vom Eingang (v14: auf dem Baum, vor den Schleifen)
   let entryRoom, stairRoom;
   if (isBoss) {
     stairRoom = 0;
@@ -284,6 +287,15 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
     entryRoom = farthest(rooms, df0, S, -1);
     const df1 = distField(m, rooms[entryRoom].cx, rooms[entryRoom].cy);
     stairRoom = farthest(rooms, df1, S, entryRoom);
+  }
+  // v14 (Vorlage E): Abkürzungs-Schleifen — der Weg Eingang → Treppe bleibt dabei ≥ schleifenWeg × Baum-Weg (Hauptweg nicht zu kurz)
+  let schleifen = [];
+  if (loops) {
+    const ea = rooms[entryRoom], sa = rooms[stairRoom], wegLen = () => distField(m, ea.cx, ea.cy)[Math.floor(sa.cy) * S + Math.floor(sa.cx)];
+    const baum = wegLen();
+    const guard = () => wegLen() >= baum * (opt.schleifenWeg || 0.75);
+    schleifen = addLoops(m, rooms, isBoss, rnd, opt, guard);
+    if (!schleifen.length && opt.schleifenNot) schleifen = addLoops(m, rooms, isBoss, rnd, { ...opt, schleifen: opt.schleifenNot, schleifenMax: 1 }, guard);
   }
   const er = rooms[entryRoom], sr = rooms[stairRoom];
   er.entry = true; sr.stairs = true;
@@ -340,7 +352,22 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
   });
   // Truhe(n)
   const chestRooms = rooms.map((r, i) => i).filter(i => i !== entryRoom && i !== stairRoom);
-  for (let k = 0; k < Math.min(2, chestRooms.length); k++) {
+  let weg = null;
+  if (opt.truhen === "abseits") {
+    // v14 (Vorlage E): Truhen bevorzugt abseits des Wegs Eingang → Treppe — Gewicht 5 + 10 je Raumwechsel vom Weg aus, ≥ 1 abseits
+    weg = wegInfo(m, rooms, entry, stairs);
+    const cand = chestRooms.map(i => ({ i, w: 5 + 10 * weg.raumWechsel[i] }));
+    const pickW = (list) => { let t = list.reduce((a, c) => a + c.w, 0) * rnd(); for (const c of list) { t -= c.w; if (t <= 0) return c; } return list[list.length - 1]; };
+    const used = [];
+    for (let k = 0; k < Math.min(2, cand.length); k++) {
+      let list = cand.filter(c => !used.includes(c.i));
+      if (!k && list.some(c => weg.raumWechsel[c.i] > 0)) list = list.filter(c => weg.raumWechsel[c.i] > 0);
+      if (!list.length) list = cand;
+      const c = pickW(list); used.push(c.i);
+      const p = freeIn(rooms[c.i], 1);
+      if (p) props.push({ kind: "chest", x: p.x, y: p.y, open: false, room: c.i });
+    }
+  } else for (let k = 0; k < Math.min(2, chestRooms.length); k++) {
     const r = rooms[chestRooms[(rnd() * chestRooms.length) | 0]];
     const p = freeIn(r, 1);
     if (p) props.push({ kind: "chest", x: p.x, y: p.y, open: false });
@@ -355,7 +382,96 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null) {
   const spots = [];
   rooms.forEach((r, i) => { if (i !== entryRoom) for (let t = 0; t < 12; t++) { const p = freeIn(r, 0); if (p) spots.push({ ...p, room: i }); } });
   for (let i = spots.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
-  return { kind: "dungeon", map: m, rooms, entry, stairs, homePortal, torches, lights, props, spots, isBoss, arena, rnd };
+  return { kind: "dungeon", map: m, rooms, entry, stairs, homePortal, torches, lights, props, spots, isBoss, arena, rnd, schleifen, weg };
+}
+
+// ================= v14: ABKÜRZUNGS-SCHLEIFEN + WEG-INFO (Vorlage E) =================
+/** Gang-Kacheln eines L-Gangs (2 breit) — v = 0: erst waagrecht, dann senkrecht; v = 1: umgekehrt (wie corridor) */
+function gangKacheln(a, b, v) {
+  const x1 = Math.floor(a.cx), y1 = Math.floor(a.cy), x2 = Math.floor(b.cx), y2 = Math.floor(b.cy), out = [];
+  const h = (xa, xb, y) => { for (let x = Math.min(xa, xb); x <= Math.max(xa, xb); x++) out.push([x, y], [x, y + 1]); };
+  const vv = (ya, yb, x) => { for (let y = Math.min(ya, yb); y <= Math.max(ya, yb) + 1; y++) out.push([x, y], [x + 1, y]); };
+  if (v === 0) { h(x1, x2, y1); vv(y1, y2, x2); } else { vv(y1, y2, x1); h(x1, x2, y2); }
+  return out;
+}
+/** Schleifen gierig nach größter Ersparnis (Vorlage E: Durchgang nur, wo der Laufweg sonst lang ist). Zwei Arten Kandidaten:
+    (1) gerader, 2 Kacheln breiter Durchbruch zwischen zwei Räumen, die nebeneinander liegen (≤ 12 Kacheln Fels dazwischen),
+    (2) L-Gang zwischen zwei Raum-Mitten (wie die Baum-Gänge). Ersparnis = Laufweg heute − Länge des neuen Wegs ≥ opt.schleifen.
+    Nie in die Boss-Arena (auch nicht an ihre Wand), höchstens opt.schleifenMax, guard() prüft den Hauptweg. */
+function addLoops(m, rooms, isBoss, rnd, opt, guard) {
+  const S = m.w, A = isBoss ? rooms[0] : null, out = [], max = opt.schleifenMax || 3, DURCH = 12;
+  const nahArena = ([x, y]) => A && x >= A.x - 2 && y >= A.y - 2 && x <= A.x + A.w + 1 && y <= A.y + A.h + 1;
+  for (let n = 0; n < max; n++) {
+    const df = rooms.map(r => distField(m, r.cx, r.cy)), cand = [];
+    for (let i = 0; i < rooms.length; i++) for (let j = 0; j < rooms.length; j++) {
+      if (i === j || (A && (i === 0 || j === 0))) continue;
+      const a = rooms[i], b = rooms[j];
+      // (1) Durchbruch: b liegt rechts von a (waagrecht) bzw. unter a (senkrecht), Überlappung ≥ 2 Kacheln für 2 Kacheln Breite
+      for (const ax of [0, 1]) {
+        const lo = ax ? Math.max(a.x, b.x) : Math.max(a.y, b.y), hi = (ax ? Math.min(a.x + a.w, b.x + b.w) : Math.min(a.y + a.h, b.y + b.h)) - 2;
+        const von = ax ? a.y + a.h : a.x + a.w, bis = ax ? b.y : b.x, len = bis - von;
+        if (hi < lo || len < 1 || len > DURCH) continue;
+        const q = (lo + hi) >> 1, tiles = [];
+        for (let t = von; t < bis; t++) for (const o of [0, 1]) tiles.push(ax ? [q + o, t] : [t, q + o]);
+        if (tiles.some(nahArena)) continue;
+        const s0 = ax ? [q, von - 1] : [von - 1, q], s1 = ax ? [q, bis] : [bis, q];
+        const d0 = df[i][s0[1] * S + s0[0]], heute = distField(m, s0[0] + 0.5, s0[1] + 0.5)[s1[1] * S + s1[0]];
+        if (d0 < 0 || heute < 0 || heute - (len + 1) < opt.schleifen) continue;
+        cand.push({ i, j, spart: heute - (len + 1), tiles: [tiles], art: "durch" });
+      }
+      // (2) L-Gang zwischen den Raum-Mitten
+      if (j < i) continue;
+      const len = Math.abs(Math.floor(a.cx) - Math.floor(b.cx)) + Math.abs(Math.floor(a.cy) - Math.floor(b.cy));
+      const heute = df[i][Math.floor(b.cy) * S + Math.floor(b.cx)];
+      if (heute < 0 || heute - len < opt.schleifen) continue;
+      const ok = [0, 1].map(v => gangKacheln(a, b, v)).filter(t => !t.some(nahArena));
+      if (ok.length) cand.push({ i, j, spart: heute - len, tiles: ok, art: "gang" });
+    }
+    if (!cand.length) break;
+    cand.sort((p, q) => q.spart - p.spart || p.i - q.i || p.j - q.j);
+    let gebaut = null;
+    for (const c of cand) {
+      const t = c.tiles.length === 2 ? c.tiles[rnd() < 0.5 ? 0 : 1] : c.tiles[0];
+      const solid = m.solid.slice(), block = m.block.slice();
+      for (const [x, y] of t) carve(m, x, y);
+      if (guard && !guard()) { m.solid.set(solid); m.block.set(block); continue; }
+      gebaut = { a: c.i, b: c.j, spart: c.spart, art: c.art }; break;
+    }
+    if (!gebaut) break;
+    out.push(gebaut);
+  }
+  return out;
+}
+/** Weg Eingang → Treppe (kürzester, Kacheln), Räume darauf und je Raum die Zahl der Raumwechsel vom Weg aus (0 = auf dem Weg) */
+export function wegInfo(m, rooms, entry, stairs) {
+  const { w, h, block } = m, n = w * h, par = new Int32Array(n).fill(-2), q = new Int32Array(n);
+  const s = Math.floor(entry.y) * w + Math.floor(entry.x), t = Math.floor(stairs.y) * w + Math.floor(stairs.x);
+  let qh = 0, qt = 0; par[s] = -1; q[qt++] = s;
+  while (qh < qt) {
+    const c = q[qh++]; if (c === t) break;
+    const cx = c % w, cy = (c / w) | 0;
+    for (let k = 0; k < 4; k++) { const nx = cx + DX[k], ny = cy + DY[k], ni = ny * w + nx; if (nx < 0 || ny < 0 || nx >= w || ny >= h || par[ni] !== -2 || (block[ni] && ni !== t)) continue; par[ni] = c; q[qt++] = ni; }
+  }
+  const pfad = [];
+  if (par[t] !== -2) for (let c = t; c !== -1; c = par[c]) pfad.push(c);
+  const raeume = new Set(pfad.map(c => m.room[c]).filter(r => r >= 0));
+  // 0-1-Suche: Kosten +1, sobald man einen neuen Raum betritt (Gänge kosten nichts)
+  const cost = new Int32Array(n).fill(1e9), last = new Int16Array(n).fill(-1), dq = new Int32Array(n * 4);
+  let lo = n * 2, hi = n * 2;
+  for (const c of pfad) { cost[c] = 0; last[c] = m.room[c]; dq[hi++] = c; }
+  while (lo < hi) {
+    const c = dq[lo++], cx = c % w, cy = (c / w) | 0;
+    for (let k = 0; k < 4; k++) {
+      const nx = cx + DX[k], ny = cy + DY[k], ni = ny * w + nx;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h || block[ni]) continue;
+      const r = m.room[ni], neu = r >= 0 && r !== last[c], nc = cost[c] + (neu ? 1 : 0);
+      if (nc >= cost[ni]) continue;
+      cost[ni] = nc; last[ni] = r >= 0 ? r : last[c];
+      if (neu) dq[hi++] = ni; else dq[--lo] = ni;
+    }
+  }
+  const raumWechsel = rooms.map(r => { const c = cost[Math.floor(r.cy) * w + Math.floor(r.cx)]; return c >= 1e9 ? -1 : c; });
+  return { laenge: pfad.length - 1, pfad, raeume: [...raeume], raumWechsel };
 }
 
 // ================= WAND-SCHÜTZEN (v8) =================
@@ -460,9 +576,5 @@ function farthest(rooms, df, S, skip) {
   return best;
 }
 function corridor(m, a, b, rnd) {
-  const x1 = Math.floor(a.cx), y1 = Math.floor(a.cy), x2 = Math.floor(b.cx), y2 = Math.floor(b.cy);
-  const hline = (xa, xb, y) => { for (let x = Math.min(xa, xb); x <= Math.max(xa, xb); x++) { carve(m, x, y); carve(m, x, y + 1); } };
-  const vline = (ya, yb, x) => { for (let y = Math.min(ya, yb); y <= Math.max(ya, yb) + 1; y++) { carve(m, x, y); carve(m, x + 1, y); } };
-  if (rnd() < 0.5) { hline(x1, x2, y1); vline(y1, y2, x2); }
-  else { vline(y1, y2, x1); hline(x1, x2, y2); }
+  for (const [x, y] of gangKacheln(a, b, rnd() < 0.5 ? 0 : 1)) carve(m, x, y);
 }

@@ -450,6 +450,7 @@ const TIPS_V14 = [
   ...(VORLAGE.zucken ? ["Hau zu, wenn ein Gegner gerade ausholt — dann zuckt er zusammen 💫 und muss neu Schwung holen!"] : []),
   ...(VORLAGE.schreck ? ["Wichtel, Schleime und Fledermäuse sind kleine Angsthasen: Macht einer „Puff“, laufen die anderen kurz weg — 😳 Huch!"] : []),
   ...(VORLAGE.kegel ? ["Deine 🫧 fliegen zu dem Gegner, zu dem du gerade läufst. Lauf in seine Richtung und drück 🫧!"] : []),
+  ...(VORLAGE.truhen === "abseits" ? ["Truhen verstecken sich gern in Räumen abseits vom Weg zur Treppe — Herumschauen lohnt sich!"] : []),
 ];
 TIPS.unshift(...TIPS_V14);
 // v10: Was sagt Oma? Zuerst, was gerade wirklich hilft (je Anlass höchstens alle 90 s), sonst der nächste allgemeine Tipp.

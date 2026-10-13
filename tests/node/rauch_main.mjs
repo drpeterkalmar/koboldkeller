@@ -82,7 +82,7 @@ async function bilder(n, hz) {
   }
 }
 await bilder(30, 60);
-KK.start({ name: "Rauch" }); KK.god(true);
+KK.start({ name: "Rauch", seed: +(process.env.RAUCH_SEED || 777) }); KK.god(true);   // v14: RAUCH_SEED für Messreihen
 await bilder(120, 60);
 KK.goto(2);
 await bilder(60, 120);

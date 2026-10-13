@@ -243,6 +243,13 @@ export const VORLAGE = {
   // E3 Ziel-Kegel für Blasen (Vorlage B): nächster Gegner im ±60°-Kegel der Lauf-/Joystick-Richtung (≤ 6,5 Kacheln), sonst der
   // nächste insgesamt; ein angetippter Gegner bleibt Ziel bis 6,5 × 1,5 Kacheln. ?kegel=0 = v13 (nächster, egal wo)
   kegel: _qn("kegel", 60), kegelR: 6.5, kegelLeine: 1.5,
+  // E4 Abkürzungs-Schleifen (Vorlage E): statt 2 Zufalls-Gängen ein Gang nur dort, wo er den Laufweg zwischen zwei Räumen um
+  // ≥ 20 Kacheln kürzt; höchstens 3 je Ebene, nie in/an die Boss-Arena, Weg Eingang → Treppe bleibt ≥ 75 % des Baum-Wegs
+  // (gemessen: im Mittel +5 % zu v13, Median gleich). Gibt die Raumlage keine 20 her: eine Schleife ab 10 Kacheln. ?schleifen=0 = v13
+  schleifen: _qn("schleifen", 20), schleifenMax: 3, schleifenWeg: 0.75, schleifenNot: 10,
+  // E4 Beute hinter Umwegen (Vorlage E): Truhen bevorzugt abseits des Wegs Eingang → Treppe (Gewicht 5 + 10 je Raumwechsel),
+  // mindestens eine abseits. ?truhen=zufall = v13
+  truhen: _q.get("truhen") === "zufall" ? "zufall" : "abseits",
 };
 // v13: „Bewegung reduzieren“ des Geräts → weniger Wackeln, weniger Partikelregen
 export const CALM = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
