@@ -1,6 +1,6 @@
 /* vorlage.js — v14: reine Regeln der Vorlagen-Mechaniken (VORLAGEN.md), ohne Grafik/DOM, in Node getestet (MIT).
    Werte kommen aus der Parametergruppe VORLAGE (config.js); jede Funktion nimmt sie als letzten Parameter (Tests). */
-import { VORLAGE, CAP } from "./config.js";
+import { VORLAGE, CAP, GLANZ } from "./config.js";
 
 const ri = (rnd, a, b) => Math.floor(a + rnd() * (b - a + 1));
 
@@ -145,4 +145,14 @@ export function albumSauber(o, arten) {
   const k = {};
   for (const a of arten) { const n = o && o.k && o.k[a]; k[a] = typeof n === "number" && isFinite(n) && n > 0 ? Math.min(1e6, Math.floor(n)) : 0; }
   return { v: 1, k };
+}
+
+// =====================================================================
+// E5b: Glanz-Eigenschaften (nur Gutes, genau eine)
+// =====================================================================
+/** neue Waffenstufe erreicht → Glanz-Wurf. null = alles bleibt, sonst die neue Eigenschaft (ersetzt die alte) */
+export function glanzWurf(neueStufe, ausBoss, rnd, V = VORLAGE) {
+  if (!V.glanz || !neueStufe) return null;
+  if (rnd() >= (ausBoss ? V.glanzBoss : V.glanz)) return null;
+  return GLANZ[Math.min(GLANZ.length - 1, Math.floor(rnd() * GLANZ.length))].id;
 }

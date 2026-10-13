@@ -253,7 +253,17 @@ export const VORLAGE = {
   // E5 Gegner-Sammelalbum (Vorlage A): im 🎒 je Gegnerart Silhouette → Bild nach 1 Sieg, Oma-Satz nach 10, goldener Rahmen +
   // Lebenswert nach 30. Gehört dem Gerät (wie die Kostüme, ein neues Spiel behält es). ?album=0 = aus
   album: _qn("album", 1) > 0, albumStufen: [1, 10, 30],
+  // E5b Glanz-Eigenschaften (Vorlage A, nur Gutes): eine neue Waffenstufe glänzt zu 25 % (Schwert aus Boss-Beute: immer) mit genau
+  // einer Eigenschaft (GLANZ). Keine Flüche, nie zwei zugleich; ein neuer Glanz ersetzt den alten, sonst bleibt er. ?glanz=0 = v13
+  glanz: _qn("glanz", 0.25), glanzBoss: 1, funken: 0.1, funkenSchaden: 0.5,
 };
+export const GLANZ = [
+  { id: "flink", icon: "👟", name: "flink", what: "+10 % schneller laufen" },
+  { id: "magnet", icon: "🧲", name: "anziehend", what: "Münzen & Sachen fliegen 1 Kachel weiter her" },
+  { id: "blase", icon: "🫧", name: "blubbernd", what: "+1 Seifenblase je Schuss" },
+  { id: "funken", icon: "✨", name: "funkelnd", what: "jeder 10. Treffer sprüht Funken (+50 % Schaden)" },
+];
+export const GLANZ_BY_ID = Object.fromEntries(GLANZ.map(g => [g.id, g]));
 export const ALBUM_KEY = "koboldkeller2_album";
 // v14 E5: Album-Seiten (eigene Sätze von Oma Pilzhut; col = Farbe des Bildes wie in der ersten Welt, in der die Art vorkommt)
 export const ALBUM = [

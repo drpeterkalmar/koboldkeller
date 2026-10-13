@@ -1,6 +1,6 @@
 /* ui.js — Menüs, Charakter-Editor, HUD, Toasts, Rucksack (Talente), Ehrenhall, Tutorial, Boss-Karte (MIT) */
 import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE, lookForSave } from "./game.js";
-import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA, VORLAGE, ALBUM, ENEMIES, POOLS, diffOf, biomeOf, MAX_DEPTH } from "./config.js";
+import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA, VORLAGE, ALBUM, ENEMIES, POOLS, diffOf, biomeOf, MAX_DEPTH, GLANZ_BY_ID } from "./config.js";
 import { portrait, previewRig, enemySprite } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
 import { esc, pick, mulberry32 } from "./util.js";
@@ -348,7 +348,7 @@ function renderBag() {
   let h = '<div class="bagGrid">' +
     '<div class="stat">⭐ Level<b>' + p.lvl + '</b></div>' +
     '<div class="stat">❤️ Herzen<b>' + Math.ceil(p.hp) + " / " + p.maxHp + (p.maxHp >= CAP.hp ? " <small>voll</small>" : "") + '</b></div>' +
-    '<div class="stat">⚔️ ' + esc(w.name) + '<b>Schaden ' + f1(p.atk) + '</b></div>' +
+    '<div class="stat">⚔️ ' + esc(w.name) + (GLANZ_BY_ID[p.glanz] ? " ✨" : "") + '<b>Schaden ' + f1(p.atk) + (GLANZ_BY_ID[p.glanz] ? " · " + GLANZ_BY_ID[p.glanz].icon + " " + esc(GLANZ_BY_ID[p.glanz].name) : "") + '</b></div>' +
     '<div class="stat">🫧 Seifenblasen<b>' + p.projN + "× · Kraft " + f1((1 + p.magic + p.atk * 0.25) * p.bubMul) + '</b></div>' +
     '<div class="stat">🫧 Munition<b>' + p.ammo + " / " + p.ammoMax + (p.ammo >= p.ammoMax ? " <small>voll</small>" : "") + '</b></div>' +
     '<div class="stat">🧪 Tränke<b>' + p.potions + " / " + CAP.potions + (p.potions >= CAP.potions ? " <small>voll</small>" : "") + '</b></div>' +
@@ -508,6 +508,7 @@ const TIPS_V14 = [
   ...(VORLAGE.kegel ? ["Deine 🫧 fliegen zu dem Gegner, zu dem du gerade läufst. Lauf in seine Richtung und drück 🫧!"] : []),
   ...(VORLAGE.truhen === "abseits" ? ["Truhen verstecken sich gern in Räumen abseits vom Weg zur Treppe — Herumschauen lohnt sich!"] : []),
   ...(VORLAGE.album ? ["Im 🎒 Rucksack ist jetzt ein 📖 Sammelalbum: Jeder Gegner, den du besiegst, kommt hinein — und ich erzähle dir etwas über ihn!"] : []),
+  ...(VORLAGE.glanz ? ["Manche neue Waffe glänzt ✨ — dann kann sie etwas Besonderes, zum Beispiel schneller laufen oder Funken sprühen. Schau im 🎒 nach!"] : []),
 ];
 TIPS.unshift(...TIPS_V14);
 // v10: Was sagt Oma? Zuerst, was gerade wirklich hilft (je Anlass höchstens alle 90 s), sonst der nächste allgemeine Tipp.

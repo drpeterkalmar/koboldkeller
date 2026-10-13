@@ -1,6 +1,6 @@
 /* save.js — Spielstand, v20-Migration, Ehrenhall, Einstellungen (MIT) */
 import { xpMigrieren, albumSauber } from "./vorlage.js";
-import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf, MYTH_KEY, MYTH_BY_ID, MYTH_START, MYTHS, mythOfBoss, ALBUM, ALBUM_KEY } from "./config.js";
+import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf, MYTH_KEY, MYTH_BY_ID, MYTH_START, MYTHS, mythOfBoss, ALBUM, ALBUM_KEY, GLANZ_BY_ID } from "./config.js";
 
 const num = (v, d, lo = -Infinity, hi = Infinity) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
 const str = (v, d, max = 14) => typeof v === "string" && v.trim() ? v.trim().slice(0, max) : d;
@@ -66,6 +66,7 @@ export function sanitize(s) {
     seed: Math.round(num(s.seed, (Math.random() * 1e9) | 0, 0, 2 ** 31)), migrated: !!s.migrated,
     kills: Math.round(num(s.kills, 0, 0, 1e9)),
     upM: Math.round(num(s.upM, 0, -1e4, 1e4)),            // v14 (Datei v4): Upgrade-Zähler (Beute-Takt); ältere Stände starten bei 0
+    glanz: GLANZ_BY_ID[s.glanz] ? s.glanz : "",            // v14 E5b: Glanz-Eigenschaft der Waffe ("" = keine)
     // einmalige Hinweise nach dem Umzug (werden beim ersten Spielstart als Toast gezeigt und dann gelöscht)
     capNote: Math.round(num(s.capNote, 0, 0, 1e9)) + capGold, giftNote: Math.round(num(s.giftNote, 0, 0, 999)) + gift,
   };

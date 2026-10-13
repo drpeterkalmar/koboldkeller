@@ -276,3 +276,19 @@ test("Sammelalbum: Stufen 1 / 10 / 30 Siege, neue Stufe genau einmal, Speicher w
   assert.deepEqual(VL.albumSauber({ k: { bat: 3.7, slime: -2, geist: "x", fremd: 9 } }, ["bat", "slime", "geist"]), { v: 1, k: { bat: 3, slime: 0, geist: 0 } });
   assert.deepEqual(VL.albumSauber(null, ["bat"]), { v: 1, k: { bat: 0 } });
 });
+
+// ---------------------------------------------------------------------
+// E5b: Glanz-Eigenschaften
+// ---------------------------------------------------------------------
+import { GLANZ } from "../../src/config.js";
+test("Glanz: neue Waffenstufe glänzt zu 25 % (Boss-Schwert immer), genau eine von 4 guten Eigenschaften; ohne neue Stufe / ?glanz=0 nie", () => {
+  const rnd = mulberry32(5); let n = 0; const art = {};
+  for (let i = 0; i < 20000; i++) { const g = VL.glanzWurf(true, false, rnd); if (g) { n++; art[g] = (art[g] || 0) + 1; } }
+  assert.ok(Math.abs(n / 20000 - 0.25) < 0.012, "Anteil " + n / 20000);
+  assert.deepEqual(Object.keys(art).sort(), GLANZ.map(g => g.id).sort());
+  for (const k in art) assert.ok(Math.abs(art[k] / n - 0.25) < 0.03, k + " " + art[k] / n);
+  let b = 0; for (let i = 0; i < 500; i++) if (VL.glanzWurf(true, true, rnd)) b++;
+  assert.equal(b, 500);
+  assert.equal(VL.glanzWurf(false, true, rnd), null);
+  assert.equal(VL.glanzWurf(true, true, rnd, { ...VORLAGE, glanz: 0 }), null);
+});

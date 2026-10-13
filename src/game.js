@@ -8,13 +8,13 @@
    v10: Oma Pilzhut gibt beim Vorbeigehen Tipps (Sprechblase, omaTick).
    v14 (VORLAGEN.md): Bedarfs-Beute (Wunsch-Platz, Glühwürmchen-Heiler, nichts Nutzloses), Upgrade-Zähler mit Truhen-Garantie,
    XP-Kurve als Polynom + Aufhol-Bonus, Treffer bricht Ausholen ab (Zucken), Schreck-Flucht („Huch!“), Ziel-Kegel für Blasen,
-   Gegner-Sammelalbum (G.album, gehört dem Gerät). */
+   Gegner-Sammelalbum (G.album, gehört dem Gerät), Glanz-Eigenschaft auf neuen Waffenstufen (p.glanz). */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET, OMA,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
-  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE,
+  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE, GLANZ_BY_ID,
 } from "./config.js";
-import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster, zuckt, schreckOpfer, kegelZiel, albumNeu } from "./vorlage.js";
+import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster, zuckt, schreckOpfer, kegelZiel, albumNeu, glanzWurf } from "./vorlage.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
@@ -77,7 +77,7 @@ export function makePlayer(prof) {
     hats: prof.hats.slice(), hat: prof.hat, name: prof.name, species: look.species, look,
     atkCd: 0, bubCd: 0, dashCd: 0, spinT: 0, dashT: 0, dashDx: 0, dashDy: 0, hurtT: 0, flashT: 0, invulT: 0, castT: 0, specT: 0,
     path: null, foe: null, lastMx: 1, lastMy: 0, stepT: 0, trailT: 0, pendingSwing: -1, stuckT: 0,
-    spdMul: 1, bubMul: 1, magBonus: 0, rig: null,
+    spdMul: 1, bubMul: 1, magBonus: 0, rig: null, glanz: GLANZ_BY_ID[prof.glanz] ? prof.glanz : "",
   };
   for (const s of SKILLS) p.sk[s.id] = p.sk[s.id] | 0;
   recalc(p);
@@ -93,10 +93,10 @@ export function recalc(p) {
   const sk = p.sk;
   p.maxHp = Math.min(CAP.hp, p.hpBase + sk.leben * 2);
   p.atk = p.atkBase + sk.kraft * 0.5;
-  p.spdMul = 1 + sk.tempo * 0.05;
+  p.spdMul = (1 + sk.tempo * 0.05) * (p.glanz === "flink" ? 1.1 : 1);   // v14 E5b: Glanz „flink“
   p.ammoMax = Math.min(CAP.ammoMax, CAP.ammoBase + sk.blasen * 4);
   p.bubMul = 1 + sk.blasen * 0.1;
-  p.magBonus = sk.magnet * 0.35;
+  p.magBonus = sk.magnet * 0.35 + (p.glanz === "magnet" ? 1 : 0);         // v14 E5b: Glanz „anziehend“
   p.hp = Math.min(p.hp, p.maxHp); p.ammo = Math.min(p.ammo, p.ammoMax);
 }
 /** neues Aussehen (Editor) übernehmen */
@@ -112,7 +112,7 @@ export function profileFromGame() {
     name: p.name, species: p.species, look: lookForSave(p.look), lvl: p.lvl, xp: p.xp, xpNext: p.xpNext, maxHp: p.hpBase, hp: Math.max(1, Math.ceil(p.hp)),
     atk: p.atkBase, projN: p.projN, magic: p.magic, gold: G.gold, potions: p.potions, ammo: p.ammo, spec: p.spec, sk: { ...p.sk }, skPts: p.skPts,
     hats: p.hats.slice(), hat: p.hat, deepest: G.deepest, depth: G.depth, mega: G.mega, runSecs: G.runSecs,
-    kills: G.stats.kills, bossDone: G.bossDone.slice(), upM: G.upM,
+    kills: G.stats.kills, bossDone: G.bossDone.slice(), upM: G.upM, glanz: p.glanz,
   });
   return pr;
 }
@@ -383,14 +383,14 @@ export function killEnt(e) {
     for (let k = 0; k < 8; k++) G.items.push(flyItem("coin", e.x, e.y));
     G.items.push(flyItem("mushroom", e.x, e.y)); G.items.push(flyItem("heart", e.x, e.y));
     if (Math.random() < 0.5) G.items.push(flyItem("potion", e.x, e.y));
-    if (Math.random() < 0.5) { G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y)); upFound(); }
+    if (Math.random() < 0.5) { const it = flyItem(pick(["sword", "wand", "gem"]), e.x, e.y); it.boss = true; G.items.push(it); upFound(); }
   } else if (e.isBoss) {
     // Münz-Explosion
     const nC = e.isKing ? 40 : 16;
     for (let k = 0; k < nC; k++) G.items.push(flyItem("coin", e.x, e.y));
     G.items.push(flyItem("potion", e.x, e.y));
     G.items.push(flyItem("mushroom", e.x, e.y)); G.items.push(flyItem("mushroom", e.x, e.y));
-    G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y)); upFound();
+    { const it = flyItem(pick(["sword", "wand", "gem"]), e.x, e.y); it.boss = true; G.items.push(it); upFound(); }   // v14 E5b: Boss-Schwert glänzt immer
   } else dropAll(beuteKill(!!e.elite, zust(), Math.random), e.x, e.y);   // v14: normale Gegner + Elite (Bedarfs-Beute, vorlage.js)
   if (e.isBoss && !e.isMini) {
     const h = BOSS_HAT[G.biome];
@@ -521,8 +521,11 @@ function pickup(it) {
     case "sword": {
       const before = weaponOf(p.atk).name;
       p.atkBase += 1; recalc(p); SFX.pickup(); haptic("pickup"); P.sparkle(it.x, it.y, "#ffd75e", 14, 40);
-      const w = weaponOf(p.atk);
-      H().toast(w.name !== before ? "⚔️ NEUE WAFFE: " + w.name + "! (Schaden " + fmt(p.atk) + ")" : "⚔️ Schärfer! Schaden +1 (jetzt " + fmt(p.atk) + ")");
+      const w = weaponOf(p.atk), neu = w.name !== before;
+      const gl = glanzWurf(neu, !!it.boss, Math.random);     // v14 E5b: neue Waffenstufe glänzt manchmal (Boss-Schwert immer)
+      if (gl) { p.glanz = gl; recalc(p); P.sparkle(p.x, p.y, "#fff38a", 18, 60); G.stats.glanz = (G.stats.glanz || 0) + 1; }
+      const GL = GLANZ_BY_ID[gl];
+      H().toast(neu ? "⚔️ NEUE WAFFE: " + w.name + "! (Schaden " + fmt(p.atk) + ")" + (GL ? " ✨ Sie glänzt: " + GL.icon + " " + GL.what + "!" : "") : "⚔️ Schärfer! Schaden +1 (jetzt " + fmt(p.atk) + ")");
       save(); return true;
     }
     case "wand": p.projN++; SFX.pickup(); haptic("pickup"); P.sparkle(it.x, it.y, "#9be1ff", 14, 40); H().toast("🪄 Zauberstab! " + p.projN + " Seifenblasen pro Schuss (kostet trotzdem nur 1 🫧)!"); save(); return true;
@@ -573,6 +576,11 @@ function doSwing() {
       const before = G.ents.length;
       hurtEnt(e, p.atk * (crit ? 2 : 1), dx, dy, crit);
       hits++; if (G.ents.length < before) kills++; if (crit) crits++; if (p.atk * (crit ? 2 : 1) >= 6) heavy = true;
+      // v14 E5b: Glanz „funkelnd“ — manchmal sprühen Funken (+50 % Schaden auf denselben Gegner)
+      if (p.glanz === "funken" && e.hp > 0 && G.ents.includes(e) && Math.random() < VORLAGE.funken) {
+        P.sparkle(e.x, e.y, "#fff38a", 10, 50); burst(e.x, e.y, 8, { kind: "star", col: "#ffe36e", s0: 10, s1: 0, sp0: 1.5, sp1: 4, z: 40, vz0: 60, vz1: 180, g: -300, l0: 0.3, l1: 0.6 });
+        hurtEnt(e, p.atk * VORLAGE.funkenSchaden, dx * 0.3, dy * 0.3, false, "sword"); G.stats.funken = (G.stats.funken || 0) + 1;
+      }
     }
   }
   for (const pr of G.L.props) if (pr.kind === "pot" && !pr.broken && Math.hypot(pr.x - p.x, pr.y - p.y) < R) breakPot(pr);
@@ -603,7 +611,7 @@ export function bubbles() {
   let ang;
   if (best) ang = Math.atan2(best.y - p.y, best.x - p.x);
   else { const lm = Math.hypot(p.lastMx, p.lastMy) || 1; ang = Math.atan2(p.lastMy / lm, p.lastMx / lm); }
-  const N = p.projN;
+  const N = p.projN + (p.glanz === "blase" ? 1 : 0);      // v14 E5b: Glanz „blubbernd“
   const tier = Math.min(3, Math.floor((p.magic - 1) / 2));
   const share = 1 / (1 + 0.25 * (N - 1));                 // mehr Blasen = breiter + insgesamt stärker, aber jede einzelne etwas schwächer
   for (let k = 0; k < N; k++) {
@@ -839,6 +847,7 @@ export function update(dt, realDt) {
   // Ambient-Partikel
   ambient(dt);
   if (G.screen === "play") mythGlow(dt);
+  if (G.screen === "play" && p.glanz && Math.random() < dt * 2.2) P.sparkle(p.x + rand(-0.35, 0.35), p.y + rand(-0.35, 0.35), "#fff6b0", 1, 46);   // v14 E5b: Waffe glitzert
   // Rig-Daten
   const rg = p.rig;
   rg.face = p.face; rg.t = p.t; rg.sq = p.sq; rg.moving = p.moving; rg.walkPh = p.walkPh;

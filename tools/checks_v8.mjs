@@ -194,8 +194,8 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     await shot(page, "stadt_zucker_tor_hoch");
     const tapPo = async (d) => page.evaluate(async (d) => { const r = await import("./src/render.js"); const po = KK.G.L.portals.find(p => p.depth === d); return r.toScreen(po.x, po.y); }, d);
     // Spielstand-Format: dieselben Felder wie v7 (Datei v3) — Liste aus save.js/v7 (V21), keine neuen Felder
-    // v14: + upM (Upgrade-Zähler, Datei v4)
-    const save0 = "bossDone,capNote,depth,giftNote,gold,hat,hats,hp,kills,look,lvl,magic,maxHp,mega,name,potions,projN,runSecs,seed,sk,skPts,spec,species,tut,v,won,xp,xpNext,ammo,atk,deepest,migrated,upM".split(",").sort().join(",");
+    // v14: + upM (Upgrade-Zähler, Datei v4), + glanz (Glanz-Eigenschaft der Waffe)
+    const save0 = "bossDone,capNote,depth,giftNote,gold,hat,hats,hp,kills,look,lvl,magic,maxHp,mega,name,potions,projN,runSecs,seed,sk,skPts,spec,species,tut,v,won,xp,xpNext,ammo,atk,deepest,migrated,upM,glanz".split(",").sort().join(",");
     let pt = await tapPo(9); const t9 = await page.evaluate(() => KK.G.t);
     await page.touchscreen.tap(pt[0], pt[1]);
     await page.waitForFunction(() => KK.state().depth === 9, null, { timeout: 6000 }).catch(() => { });

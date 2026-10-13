@@ -6,6 +6,7 @@
 // V42 (E3): Zucken im Warnmoment, Schreck-Flucht mit Bildfolge, Ziel-Kegel (Joystick-Würfe)
 // V43 (E4): Schleifen + Truhen abseits über 20 Ebenen, Karten-Bild; mit --ref=8732 (v13-Server): ?schleifen=0&truhen=zufall = gleiche Karten
 // V44 (E5): Sammelalbum im 🎒 (Stufen 1/10/30, gehört dem Gerät), Bilder hoch + quer
+// V45 (E5b): Glanz-Eigenschaften (Boss-Schwert immer, Wirkung je Eigenschaft, Spielstand)
 // Einzeln: node tools/checks_v14.mjs [--port=8731] [--only=V40,V42] [--ref=8732]
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -325,6 +326,47 @@ export async function runV14({ browser, BASE, R, errors, only = null, ref = null
       quer.sec && quer.sec.length === 8 && !aus.sec && !aus.album && !aus.saved;
     R("V44", "E5 Sammelalbum im 🎒: 1 Sieg → Bild, 10 → Oma-Satz, 30 → goldener Rahmen + Lebenswert, Hinweise beim Erreichen, gehört dem Gerät (neues Spiel behält es), hoch + quer; ?album=0 = kein Album", ok,
       `Zähler ${JSON.stringify(k)} · Seiten ${hoch.sec ? hoch.sec.join(", ") : "–"} · Infos: ${hoch.info.map(t => t.slice(0, 60)).join(" / ")} · nach neuem Spiel Flämmchen ${hoch.nach && hoch.nach.flamme} · quer ${quer.sec ? quer.sec.length : 0} Seiten · aus: Album ${aus.sec ? "da" : "weg"}, Speicher ${aus.saved ? "da" : "leer"}`);
+  }
+  // ===================================================================
+  // V45 — E5b Glanz-Eigenschaften: Boss-Schwert mit neuer Waffenstufe glänzt immer, je Eigenschaft die Wirkung, Spielstand, ?glanz=0
+  // ===================================================================
+  if (want("V45")) {
+    const glanz = async (page) => page.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), G = KK.G, GM = await import("./src/game.js"), C = await import("./src/config.js"), r = {};
+      const toasts = []; const box = document.getElementById("toasts"); new MutationObserver(() => toasts.push(box.textContent)).observe(box, { childList: true, subtree: true });
+      KK.start({ name: "Glanz" }); KK.god(true); KK.goto(3); for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1);
+      const p = G.p; p.atkBase = 5; GM.recalc(p);
+      // Boss-Schwert über die Stufengrenze 6 (Holzschwert)
+      KK.item("sword", 0.3, 0); G.items[G.items.length - 1].boss = true; await w(500);
+      r.boss = { glanz: p.glanz, atk: p.atk, toast: toasts.join(" ").includes("glänzt") };
+      // normales Schwert ohne neue Stufe: Glanz bleibt
+      const g0 = p.glanz; KK.item("sword", 0.3, 0); await w(500); r.bleibt = p.glanz === g0;
+      // Wirkung je Eigenschaft
+      const eff = {};
+      for (const id of ["", "flink", "magnet", "blase", "funken"]) {
+        p.glanz = id; GM.recalc(p);
+        G.shots.length = 0; p.bubCd = 0; p.ammo = 10; KK.spawn("slime", 2.5, 0); G.ents[G.ents.length - 1].hp = G.ents[G.ents.length - 1].maxHp = 1e6; KK.bubbles();
+        eff[id || "ohne"] = { spd: +p.spdMul.toFixed(3), mag: +KK.magnet("coin").toFixed(2), blasen: G.shots.filter(s => s.kind === "bubble").length };
+        G.ents.length = 0; G.shots.length = 0;
+      }
+      p.glanz = "funken"; GM.recalc(p); C.VORLAGE.funken = 1; G.stats.funken = 0;
+      KK.spawn("slime", 1.2, 0); G.ents[0].hp = G.ents[0].maxHp = 1e6; G.ents[0].state = "idle"; p.atkCd = 0; KK.attack(); await w(300);
+      r.funken = G.stats.funken; C.VORLAGE.funken = 0.1; G.ents.length = 0;
+      KK.save(); r.saved = JSON.parse(localStorage.getItem("koboldkeller2_save")).glanz;
+      r.eff = eff; return r;
+    });
+    const A = await page0(browser, BASE, errors, ""), B = await page0(browser, BASE, errors, "glanz=0");
+    const ga = await glanz(A.page);
+    await A.page.evaluate(() => { KK.G.p.glanz = "funken"; document.getElementById("btnBag").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
+    await sleep(400); await shot(A.page, "v45_glanz_rucksack");
+    const gb = await glanz(B.page);
+    await A.ctx.close(); await B.ctx.close();
+    out.V45 = { ga, gb };
+    const e = ga.eff;
+    const ok = !!ga.boss.glanz && ga.boss.toast && ga.bleibt && !gb.boss.glanz &&
+      Math.abs(e.flink.spd / e.ohne.spd - 1.1) < 0.001 && Math.abs(e.magnet.mag - e.ohne.mag - 1) < 0.001 && e.blase.blasen === e.ohne.blasen + 1 && ga.funken >= 1 && ga.saved === "funken";
+    R("V45", "E5b Glanz: Boss-Schwert mit neuer Waffenstufe glänzt immer (Hinweis), ohne neue Stufe bleibt der Glanz; 👟 +10 % Tempo, 🧲 +1 Kachel, 🫧 +1 Blase, ✨ Funken; im Spielstand; ?glanz=0 = nie", ok,
+      `Boss-Schwert: ${ga.boss.glanz || "–"} (Hinweis ${ga.boss.toast}), bleibt ${ga.bleibt} · Tempo ×${(e.flink.spd / e.ohne.spd).toFixed(2)}, Magnet ${e.ohne.mag} → ${e.magnet.mag}, Blasen ${e.ohne.blasen} → ${e.blase.blasen}, Funken ${ga.funken}× · Spielstand „${ga.saved}“ · aus: ${gb.boss.glanz || "kein Glanz"}`);
   }
   return out;
 }
