@@ -61,7 +61,7 @@ await page.evaluate(([sp, mega]) => {
     if (G.depth !== B.cur) {
       if (B.cur && G.depth === B.cur + 1) L(B.cur).done = true;
       B.cur = G.depth; B.t = G.t; B.dmg0 = G.stats.dmgTaken; B.pot0 = G.stats.potionsUsed; B.wh0 = G.stats.wallHits || 0;
-      if (G.depth > 0) { const r = L(G.depth); r.tries++; if (!r.arriveLvl) { r.arriveLvl = p.lvl; r.arriveHp = Math.ceil(p.hp) + "/" + p.maxHp; } }
+      if (G.depth > 0) { const r = L(G.depth); r.tries++; if (!r.arriveLvl) { r.arriveLvl = p.lvl; r.arriveHp = Math.ceil(p.hp) + "/" + p.maxHp; r.arriveAtk = p.atk; } }
     }
     if (G.depth > 0) { const r = L(G.depth); r.secs += G.t - B.t; r.dmg += G.stats.dmgTaken - B.dmg0; r.pots += G.stats.potionsUsed - B.pot0; r.wallHits = (r.wallHits || 0) + (G.stats.wallHits || 0) - B.wh0; B.t = G.t; B.dmg0 = G.stats.dmgTaken; B.pot0 = G.stats.potionsUsed; B.wh0 = G.stats.wallHits || 0; }
     // Bosskampf-Protokoll (v5): Dauer (Spielzeit ab Erwachen) + erlittener Schaden je Boss, Handlanger-Höchststand
@@ -146,7 +146,9 @@ const md = ["| Ebene | Versuche | Spielzeit s | Lauf s | Lauf-Tipps | Gegner-Tip
   "", "| Boss-Ebene | Boss | Art | ❤️ | Kampfdauer s | Schaden | besiegt | max. Handlanger | Handlanger gesamt |", "|---|---|---|---|---|---|---|---|---|",
   ...r.fights.map(f => `| ${f.d} | ${f.name} | ${f.mini ? "Mini" : "Haupt"} | ${f.hp ?? "–"} | ${f.secs} | ${f.dmg} | ${f.won ? "ja" : "nein"} | ${f.maxMin} | ${f.spawned ?? "–"} |`),
   // v14: Level-Aufstiege (Keller-Spielzeit) und Abstände — Median gesamt und je Abschnitt
-  "", ...upTable(r.ups), "", "Zähler (G.stats): " + JSON.stringify(r.stats)].join("\n");
+  "", ...upTable(r.ups), "", "⚔️ Schaden bei Ankunft je Ebene: " + rows.map(x => `E${x.d} ${x.arriveAtk ?? "–"}`).join(" · "),
+  ...(r.stats.windHit !== undefined ? ["", `Ausholen getroffen (überlebt) ${r.stats.windHit} · davon abgebrochen (Zucken) ${r.stats.windAbort} = ${r.stats.windHit ? Math.round(r.stats.windAbort / r.stats.windHit * 100) : 0} % · im Ausholen besiegt ${r.stats.windKill} · Schreck-Fluchten ${r.stats.schreck}`] : []),
+  "", "Zähler (G.stats): " + JSON.stringify(r.stats)].join("\n");
 mkdirSync("shots/neubau", { recursive: true });
 function upTable(ups) {
   const gaps = ups.map((u, i) => ({ ...u, gap: +(u.t - (i ? ups[i - 1].t : 0)).toFixed(1) }));

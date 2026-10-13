@@ -3,7 +3,8 @@
 //           🫧 leer → Blasen-Nachschub; volle Sachen fallen nicht (0 „voll → Gold“); Upgrade-Zähler ≥ 60 → Truhe mit Upgrade;
 //           Zähler steht im Spielstand; ?bedarf=0&beutetakt=0 = v13 (kein Heiler, Herz 10 %, nutzlose Drops fallen)
 // V41 (E2): alter Spielstand (Datei v3, Lv 15) → Weiterspielen: Lv 15, Talente gleich, Fortschritt anteilig, XP ohne Level-Anteil × Aufhol-Faktor
-// Einzeln: node tools/checks_v14.mjs [--port=8731] [--only=V40]
+// V42 (E3): Zucken im Warnmoment, Schreck-Flucht mit Bildfolge, Ziel-Kegel (Joystick-Würfe)
+// Einzeln: node tools/checks_v14.mjs [--port=8731] [--only=V40,V42] [--ref=8732]
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -42,7 +43,9 @@ const LOOT = async ({ d, st, n }) => {
   return { cnt, items, n, heil: ((cnt.heart || 0) + (cnt.firefly || 0)) / n };
 };
 
-export async function runV14({ browser, BASE, R, errors, only = null }) {
+let REF = null;
+export async function runV14({ browser, BASE, R, errors, only = null, ref = null }) {
+  REF = ref;
   mkdirSync(DIR, { recursive: true });
   const want = id => !only || only.split(",").includes(id);
   const out = {};
@@ -150,6 +153,85 @@ export async function runV14({ browser, BASE, R, errors, only = null }) {
       `Fledermaus E14: ${neu.k[14].ex} XP → +${neu.k[14].gain}, E19: +${neu.k[19].gain}; gespeichert v${neu.k.raw.v} Lv ${neu.k.raw.lvl} ${neu.k.raw.xp}/${neu.k.raw.xpNext} · ` +
       `alt: ${alt.s.xp}/${alt.s.xpNext}, Fledermaus E14 +${alt.k[14].gain}, E19 +${alt.k[19].gain}`);
   }
+  // ===================================================================
+  // V42 — E3 Kampf-Takt: Zucken (Abbruch im Warnmoment), Schreck-Flucht („Huch!“), Ziel-Kegel für Blasen
+  // ===================================================================
+  if (want("V42")) {
+    const kampf = async (page) => page.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), G = KK.G, r = {};
+      KK.start({ name: "Kampf" }); KK.god(true);
+      // (a) Zucken: Gegner der Ebene holt aus → ⚔️-Schlag im Warnmoment. Je Tiefe 12 Versuche, Waffenwert wie beim Bot bei Ankunft.
+      // Das Ausholen wird für den Test auf 1,5 s gestreckt (sonst entscheidet die Bildrate des Prüf-Browsers, ob der Schlag noch hineinfällt).
+      const GM = await import("./src/game.js");
+      r.zuck = [];
+      for (const [d, atk, typ] of [[3, 4.5, "wichtel"], [9, 10.5, "pilzling"], [15, 16.5, "kaefer"]]) {
+        KK.goto(d); for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1);
+        G.p.atkBase = atk; G.p.sk.kraft = 0; GM.recalc(G.p); G.stats.windHit = G.stats.windAbort = G.stats.windKill = 0;
+        let tries = 0, abort = 0, imWarn = 0;
+        for (let k = 0; k < 12; k++) {
+          KK.spawn(typ, 1.0, 0.3); const e = G.ents[G.ents.length - 1]; e.state = "chase"; e.atkCd = 9;
+          GM.windup(e, 1.5, "lunge");
+          const a0 = G.stats.windAbort; tries++; G.p.atkCd = 0; KK.attack(); await w(400);
+          if (G.stats.windAbort > a0) abort++; if (e.hp <= 0) imWarn++;
+          if (G.ents.includes(e)) G.ents.splice(G.ents.indexOf(e), 1);
+          await w(50);
+        }
+        r.zuck.push({ d, atk: G.p.atk, typ, tries, abort, kill: imWarn, windHit: G.stats.windHit, windAbort: G.stats.windAbort });
+      }
+      // (b) Schreck: 4 Wichtel um einen fünften, der fällt → die anderen laufen weg
+      KK.goto(5); for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1); KK.god(true);
+      const R0 = G.L.rooms.filter(q => !q.arena).sort((a, b) => b.w * b.h - a.w * a.h)[0];          // größter Raum (Wichtel nicht in die Wand setzen)
+      KK.teleport(Math.floor(R0.cx) + 0.5 - 2.4, Math.floor(R0.cy) + 0.5 - 0.4);
+      const p = G.p, cx = p.x + 2.4, cy = p.y + 0.4;
+      KK.spawn("wichtel", 2.4, 0.4); const opfer = G.ents[G.ents.length - 1];
+      for (const [dx, dy] of [[1.3, 0], [-1.2, 0.4], [0.3, 1.4], [0.2, -1.3]]) { KK.spawn("wichtel", 2.4 + dx, 0.4 + dy); }
+      const andere = G.ents.filter(e => e !== opfer);
+      for (const e of G.ents) { e.state = "chase"; e.atkCd = 5; }
+      await w(100);
+      const d0 = andere.map(e => Math.hypot(e.x - cx, e.y - cy));
+      opfer.hp = 0; G.stats.schreck = 0; const before = G.ents.length; (await import("./src/game.js")).killEnt(opfer);
+      r.schreck = { n: G.stats.schreck, flee: andere.filter(e => e.state === "flee").length, d0 };
+      return r;
+    });
+    const A = await page0(browser, BASE, errors, "", { seed: false }), B = await page0(browser, BASE, errors, "zucken=0&schreck=0&kegel=0", { seed: false });
+    const ka = await kampf(A.page);
+    // Schreck-Bildfolge (A): 0,15 s / 0,6 s / 1,1 s nach dem Puff, danach wieder jagen
+    const seq = [];
+    for (const t of [150, 450, 500]) { await sleep(t); seq.push(await A.page.evaluate((cx) => KK.G.ents.map(e => ({ s: e.state, d: +Math.hypot(e.x - KK.G.p.x - 2.4, e.y - KK.G.p.y - 0.4).toFixed(2) })), 0)); await shot(A.page, "v42_huch_" + seq.length); }
+    await sleep(900);
+    const nach = await A.page.evaluate(() => KK.G.ents.map(e => e.state));
+    const kb = await kampf(B.page);
+    // (c) Ziel-Kegel: zwei Gegner — einer vorn (in Joystick-Richtung), einer hinten näher; 24 Würfe mit Richtungs-Streuung
+    const kegel = async (page) => page.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms)), G = KK.G;
+      KK.goto(3); KK.god(true); for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1);
+      let vorn = 0, n = 0;
+      for (let k = 0; k < 24; k++) {
+        const a = k / 24 * Math.PI * 2, jit = ((k * 7) % 9 - 4) / 4 * 0.7;     // ± 40° Streuung des Daumens
+        const p = G.p; G.ents.length = 0; G.shots.length = 0;
+        KK.spawn("slime", Math.cos(a) * 4, Math.sin(a) * 4); const f = G.ents[0];
+        KK.spawn("slime", -Math.cos(a) * 2.2, -Math.sin(a) * 2.2);
+        for (const e of G.ents) { e.state = "idle"; e.speed = 0; }
+        G.joy.x = Math.cos(a + jit); G.joy.y = Math.sin(a + jit); G.joy.m = 1; p.bubCd = 0; p.ammo = 20; p.foe = null;
+        if (KK.bubbles()) { n++; if (G.shots[G.shots.length - 1].lock === f) vorn++; }
+        G.joy.m = 0; G.joy.x = G.joy.y = 0; p.x -= 0; await w(20);
+      }
+      G.ents.length = 0; G.shots.length = 0;
+      return { vorn, n };
+    });
+    const ga = await kegel(A.page), gb = await kegel(B.page);
+    await A.ctx.close(); await B.ctx.close();
+    out.V42 = { ka, kb, seq, nach, ga, gb };
+    const zA = ka.zuck.reduce((a, z) => a + z.abort, 0), tA = ka.zuck.reduce((a, z) => a + z.tries - z.kill, 0), zB = kb.zuck.reduce((a, z) => a + z.abort, 0);
+    const wegLauf = seq[2].length === 4 && seq[2].every((e, i) => e.d > ka.schreck.d0[i] + 1.2) && seq[0].every(e => e.s === "flee");
+    const ok = zA > 0 && zB === 0 && ka.schreck.n === 4 && ka.schreck.flee === 4 && kb.schreck.n === 0 && kb.schreck.flee === 0 && wegLauf && nach.every(s => s !== "flee") &&
+      ga.vorn / ga.n >= 0.9 && gb.vorn === 0;
+    R("V42", "E3 Kampf-Takt: Schlag im Warnmoment lässt Gegner zucken (💫, Angriff abgebrochen); fällt ein Wichtel, laufen die anderen 1,2 s weg („😳 Huch!“) und jagen danach weiter; Blasen fliegen zum Gegner in Joystick-Richtung (≥ 90 %); ?zucken=0&schreck=0&kegel=0 = v13", ok,
+      `Zucken (Abbruch/überlebende Ausholer): ` + ka.zuck.map(z => `E${z.d} ${z.typ} ⚔️${z.atk} ${z.abort}/${z.tries - z.kill}` + (z.kill ? ` (+${z.kill} besiegt)` : "")).join(" · ") + ` = ${tA ? Math.round(zA / tA * 100) : 0} % · aus: ${zB} · ` +
+      `Schreck: ${ka.schreck.flee}/4 fliehen, Abstand ${ka.schreck.d0.map(d => d.toFixed(1)).join("/")} → ${seq[2].map(e => e.d).join("/")} Kacheln, danach ${[...new Set(nach)].join(",")} · aus: ${kb.schreck.flee} · ` +
+      `Kegel: ${ga.vorn}/${ga.n} Würfe zum Gegner vorn (v13: ${gb.vorn}/${gb.n})`);
+  }
+
   return out;
 }
 
@@ -161,7 +243,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const browser = await chromium.launch({ channel: "chromium", args: GPU });
   const errors = [], rows = [];
   const R = (id, what, ok, info) => { rows.push({ id, what, ok, info }); console.log((ok ? "✅ " : "❌ ") + id + " " + what + "\n   " + info); };
-  const out = await runV14({ browser, BASE, R, errors, only: arg("only", null) });
+  const out = await runV14({ browser, BASE, R, errors, only: arg("only", null), ref: arg("ref", null) ? `http://localhost:${arg("ref")}/` : null });
   await browser.close();
   mkdirSync(DIR, { recursive: true });
   writeFileSync(DIR + "checks_v14" + (arg("only", "") ? "_" + arg("only", "").replace(/,/g, "_") : "") + ".json", JSON.stringify({ date: new Date().toISOString(), rows, errors, out }, null, 2));

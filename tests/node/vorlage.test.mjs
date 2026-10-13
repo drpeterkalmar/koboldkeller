@@ -211,3 +211,58 @@ test("Migration: Bedarf neu aus dem Level, Fortschritt anteilig, xp < xpNext; al
   assert.deepEqual(VL.xpMigrieren(15, 1000, 2143, ALT), { xp: 1000, xpNext: 2143 });
 });
 
+// ---------------------------------------------------------------------
+// E3: Zucken, Schreck-Flucht, Ziel-Kegel
+// ---------------------------------------------------------------------
+test("Zucken: nur im Warnmoment, Schaden ≥ 25 % (Elite 40 %) der Max-❤️ oder Krit, nie Bosse; ?zucken=0 = nie", () => {
+  const AUSZ = { ...VORLAGE, zucken: 0 };
+  const e = (o) => ({ state: "windup", hp: 10, maxHp: 20, ...o });
+  assert.equal(VL.zuckt(e(), 5, false), true);
+  assert.equal(VL.zuckt(e(), 4.9, false), false);
+  assert.equal(VL.zuckt(e(), 1, true), true);
+  assert.equal(VL.zuckt(e({ elite: true }), 7, false), false);
+  assert.equal(VL.zuckt(e({ elite: true }), 8, false), true);
+  assert.equal(VL.zuckt(e({ isBoss: true }), 99, true), false);
+  assert.equal(VL.zuckt(e({ state: "chase" }), 99, true), false);
+  assert.equal(VL.zuckt(e({ hp: 0 }), 99, true), false);       // besiegt: kein Zucken mehr
+  assert.equal(VL.zuckt(e(), 99, true, AUSZ), false);
+});
+
+test("Schreck-Flucht: nur gleiche Art im Umkreis 4, nicht Elite/Handlanger/Boss, Richtung weg vom Puff; ?schreck=0 = niemand", () => {
+  const puff = { type: "wichtel", x: 10, y: 10 };
+  const ents = [
+    { type: "wichtel", x: 12, y: 10, hp: 3 }, { type: "wichtel", x: 10, y: 13.9, hp: 3 }, { type: "wichtel", x: 15, y: 10, hp: 3 },
+    { type: "slime", x: 11, y: 10, hp: 3 }, { type: "wichtel", x: 9, y: 10, hp: 3, elite: true }, { type: "wichtel", x: 9, y: 9, hp: 3, minion: true },
+  ];
+  const r = VL.schreckOpfer(puff, ents);
+  assert.equal(r.length, 2);
+  assert.deepEqual([r[0].dx, r[0].dy], [1, 0]); assert.ok(Math.abs(r[1].dy - 1) < 1e-9);
+  assert.equal(VL.schreckOpfer({ ...puff, elite: true }, ents).length, 0);
+  assert.equal(VL.schreckOpfer({ ...puff, type: "geist" }, [{ type: "geist", x: 11, y: 10, hp: 3 }]).length, 0);   // nur kleine Arten
+  assert.equal(VL.schreckOpfer(puff, ents, { ...VORLAGE, schreck: false }).length, 0);
+});
+
+test("Messgröße 11: Ziel-Kegel — Gegner vorn wird getroffen, auch wenn einer hinten näher ist (≥ 90 % der Würfe)", () => {
+  const rnd = mulberry32(77); let treffer = 0, alt = 0; const N = 2000;
+  for (let i = 0; i < N; i++) {
+    const a = rnd() * Math.PI * 2, jit = (rnd() - 0.5) * (Math.PI / 3) * 1.6;     // Joystick-Richtung ± 48° um die Richtung zum vorderen Gegner
+    const dv = 2.5 + rnd() * 3.5, dh = 1.2 + rnd() * (dv - 1.4);                   // vorn 2,5–6 Kacheln, hinten näher
+    const ah = a + Math.PI + (rnd() - 0.5);
+    const vorn = { x: Math.cos(a) * dv, y: Math.sin(a) * dv }, hinten = { x: Math.cos(ah) * dh, y: Math.sin(ah) * dh };
+    const jx = Math.cos(a + jit), jy = Math.sin(a + jit);
+    if (VL.kegelZiel(0, 0, jx, jy, [vorn, hinten], null) === vorn) treffer++;
+    if (VL.kegelZiel(0, 0, jx, jy, [vorn, hinten], null, { ...VORLAGE, kegel: 0 }) === vorn) alt++;
+  }
+  zeig(`M11 Ziel-Kegel: Wurf trifft den Gegner in Laufrichtung ${(treffer / N * 100).toFixed(1)} % (v13: ${(alt / N * 100).toFixed(1)} %)`);
+  assert.ok(treffer / N >= 0.9); assert.equal(alt, 0);
+});
+
+test("Ziel-Kegel: angetippter Gegner bleibt Ziel bis 6,5 × 1,5 Kacheln; ohne Richtung / leerer Kegel → nächster", () => {
+  const a = { x: 9, y: 0 }, b = { x: 0, y: 2 }, c = { x: -3, y: 0 };
+  assert.equal(VL.kegelZiel(0, 0, 0, 1, [a, b, c], a), a);                         // 9 Kacheln, angetippt
+  assert.equal(VL.kegelZiel(0, 0, 0, 1, [{ x: 10, y: 0 }, b], { x: 10, y: 0 }), b); // zu weit (> 9,75)
+  assert.equal(VL.kegelZiel(0, 0, 0, 0, [b, c], null), b);                         // keine Richtung → nächster
+  assert.equal(VL.kegelZiel(0, 0, 0, -1, [b, c], null), b);                         // nichts im Kegel → nächster
+  assert.equal(VL.kegelZiel(0, 0, -1, 0, [b, c], null), c);                         // c liegt im Kegel, b nicht
+  assert.equal(VL.kegelZiel(0, 0, 1, 0, [{ x: 7, y: 0 }], null), null);             // außer Reichweite
+});

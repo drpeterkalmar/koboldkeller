@@ -7,13 +7,13 @@
    v9: Mythos-Kostüme — Sammlung je Gerät (G.myth), Kostüm-Paket beim ersten Boss-Sieg, Glanz-Partikel, Spezial-Welle in Kostümfarbe.
    v10: Oma Pilzhut gibt beim Vorbeigehen Tipps (Sprechblase, omaTick).
    v14 (VORLAGEN.md): Bedarfs-Beute (Wunsch-Platz, Glühwürmchen-Heiler, nichts Nutzloses), Upgrade-Zähler mit Truhen-Garantie,
-   XP-Kurve als Polynom + Aufhol-Bonus. */
+   XP-Kurve als Polynom + Aufhol-Bonus, Treffer bricht Ausholen ab (Zucken), Schreck-Flucht („Huch!“), Ziel-Kegel für Blasen. */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET, OMA,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
   ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE,
 } from "./config.js";
-import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster } from "./vorlage.js";
+import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster, zuckt, schreckOpfer, kegelZiel } from "./vorlage.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
@@ -31,7 +31,7 @@ export const G = {
   flow: null, flowT: 0, seenT: 0, saveT: 0, portalCd: 0, lockToastT: 0, tutStep: -1, tutFlags: {},
   homeHideT: 0, emptyT: 0, emptyToastT: 0, specToastT: 0, capToastT: 0, camFocus: null, later: [], specFx: null, mirrorArmed: true,
   hooks: { toast() { }, banner() { }, hud() { }, boss() { }, bossIntro() { }, win() { }, dead() { }, level() { }, tut() { }, fade(cb) { cb(); }, editor() { } },
-  stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0, wallHits: 0, beute: {}, nutzlos: 0, ups: 0, upSicher: 0 },
+  stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0, wallHits: 0, beute: {}, nutzlos: 0, ups: 0, upSicher: 0, windHit: 0, windAbort: 0, windKill: 0, schreck: 0 },
   upM: 0,                                                   // v14: Upgrade-Zähler (Beute-Takt), wird gespeichert
 };
 export const H = () => G.hooks;
@@ -330,6 +330,14 @@ export function hurtEnt(e, dmg, kx = 0, ky = 0, crit = false, src = "sword") {
   text(e.x, e.y, (crit ? "💥" : "") + fmt(dmg), crit ? "#ffe36e" : "#ffffff", crit ? 26 : 19, 60 * (e.scale || 1) + (e.fly ? 30 : 0));
   SFX.hit({ x: e.x, y: e.y, dmg, crit, boss: e.isBoss, src });
   if (e.isBoss) { if (!e.awake) wakeBoss(e); if (e.hp > 0) bossHit(e, crit); }
+  // v14: Treffer im Warnmoment (Ausholen) — harter Treffer oder Krit bricht ab: kurz zucken (💫), Angriffspause neu
+  if (e.state === "windup" && !e.isBoss && !e.windHit) { e.windHit = true; if (e.hp > 0) G.stats.windHit++; else G.stats.windKill++; }
+  if (zuckt(e, dmg, crit)) {
+    e.state = "recover"; e.st = VORLAGE.zuckT; e.tele = 0; e.second = false; e.sq = -0.3;
+    e.atkCd = (e.tame ? 1.6 : 1.1) * e.cdMul;
+    text(e.x, e.y, "💫", "#fff38a", 22, 78 * (e.scale || 1) + (e.fly ? 30 : 0));
+    G.stats.windAbort++;
+  }
   if (e.state === "idle") { e.state = "chase"; e.st = 0; }
   if (e.hp <= 0) killEnt(e);
 }
@@ -380,6 +388,13 @@ export function killEnt(e) {
     const drops = [mythOfBoss(G.depth)];
     if (e.isKing && G.mega) drops.push(MYTH_BY_ID.sternendrache);
     for (const M of drops) if (M && !mythReal(M.id) && !G.items.some(it => it.kind === "myth" && it.v === M.id)) { const it = flyItem("myth", e.x, e.y, M.id); it.vz = 320; it.flyT = 0.9; G.items.push(it); }
+  }
+  // v14: Schreck-Flucht — gleichartige kleine Gegner in der Nähe erschrecken („Huch!“) und laufen kurz weg
+  for (const f of schreckOpfer(e, G.ents)) {
+    const o = f.e;
+    o.state = "flee"; o.st = VORLAGE.schreckT; o.fdx = f.dx; o.fdy = f.dy; o.tele = 0; o.sq = 0.3; o.second = false;
+    text(o.x, o.y, "😳 Huch!", "#ffffff", 15, 64 * (o.scale || 1) + (o.fly ? 30 : 0));
+    G.stats.schreck++;
   }
   // Schleime teilen sich ab Tiefe 6 in zwei kleine
   const D = G.depth > 0 ? diffOf(G.depth) : null;
@@ -569,8 +584,9 @@ export function bubbles() {
   p.bubCd = PLAYER.bubbleCd; p.castT = 0.25; p.sq = -0.1;
   SFX.bubble();
   G.tutFlags.bubble = true;
-  let best = null, bd = 6.5;
-  for (const e of G.ents) { const d = Math.hypot(e.x - p.x, e.y - p.y); if (d < bd && (e.type !== "dummy" || G.depth === 0)) { bd = d; best = e; } }
+  // v14: Ziel-Kegel — nächster Gegner in Lauf-/Joystick-Richtung (±60°), angetippter Gegner bleibt Ziel (?kegel=0 = nächster, egal wo)
+  const j = G.joy, jm = j.m > 0.12;
+  const best = kegelZiel(p.x, p.y, jm ? j.x : p.lastMx, jm ? j.y : p.lastMy, G.depth === 0 ? G.ents : G.ents.filter(e => e.type !== "dummy"), p.foe);
   let ang;
   if (best) ang = Math.atan2(best.y - p.y, best.x - p.x);
   else { const lm = Math.hypot(p.lastMx, p.lastMy) || 1; ang = Math.atan2(p.lastMy / lm, p.lastMx / lm); }
@@ -1192,6 +1208,12 @@ function updateEnts(dt) {
         if (e.st <= 0) e.state = "chase";
         break;
       }
+      case "flee": {                                     // v14: „Huch!“ — kurz weglaufen (an Wänden entlang rutschen), dann wieder jagen
+        e.st -= dt;
+        walk(e, e.fdx, e.fdy, VORLAGE.schreckWeg / VORLAGE.schreckT, dt);
+        if (e.st <= 0) { e.state = "chase"; e.atkCd = Math.max(e.atkCd, 0.3); }
+        break;
+      }
     }
     if (e.state !== "windup") e.tele = Math.max(0, e.tele - dt * 4);
   }
@@ -1226,7 +1248,7 @@ function blinkBehind(e) {
 }
 export function windup(e, t, act) {
   if (G.mega) t *= 0.75;
-  e.state = "windup"; e.st = e.stMax = t; e.act = act; e.sq = 0.15;
+  e.state = "windup"; e.st = e.stMax = t; e.act = act; e.sq = 0.15; e.windHit = false;
 }
 function recover(e) { e.state = "recover"; e.st = 0.35; e.atkCd = (e.tame ? 1.6 : 1.1) * e.cdMul; }
 function strike(e) {

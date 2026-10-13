@@ -234,6 +234,15 @@ export const VORLAGE = {
   // E2 Aufhol-Bonus (Vorlage A): XP × (1 + (Soll-Level − Level) · aufhol), Soll-Level = Ebene + 1, gekappt 0,6 … 1,5.
   // Dafür fällt der Spieler-Level-Anteil der Gegner-XP (ENEMIES.xp[2]) weg. ?aufhol=0 = v13 (mit Level-Anteil, ohne Faktor)
   aufhol: _qn("aufhol", 0.1), aufholMin: 0.6, aufholMax: 1.5,
+  // E3 Treffer bricht Ausholen ab (Vorlage A): Schaden ≥ 25 % der Max-❤️ (Elite 40 %) oder Krit → 0,25 s Zucken (💫),
+  // Angriffspause startet neu. Bosse nie (die haben Phasen). ?zucken=0 = v13
+  zucken: _qn("zucken", 0.25), zuckenElite: 0.4, zuckT: 0.25,
+  // E3 Schreck-Flucht (Vorlage A, niedlich): geht ein Wichtel/Schleim/eine Fledermaus „Puff“, laufen gleichartige im Umkreis
+  // 4 Kacheln 1,2 s lang ≈ 2,5 Kacheln weg („😳 Huch!“). Nicht Elite, Handlanger, Bosse. ?schreck=0 = v13
+  schreck: _qn("schreck", 1) > 0, schreckR: 4, schreckT: 1.2, schreckWeg: 2.5, schreckArten: ["wichtel", "slime", "bat"],
+  // E3 Ziel-Kegel für Blasen (Vorlage B): nächster Gegner im ±60°-Kegel der Lauf-/Joystick-Richtung (≤ 6,5 Kacheln), sonst der
+  // nächste insgesamt; ein angetippter Gegner bleibt Ziel bis 6,5 × 1,5 Kacheln. ?kegel=0 = v13 (nächster, egal wo)
+  kegel: _qn("kegel", 60), kegelR: 6.5, kegelLeine: 1.5,
 };
 // v13: „Bewegung reduzieren“ des Geräts → weniger Wackeln, weniger Partikelregen
 export const CALM = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;

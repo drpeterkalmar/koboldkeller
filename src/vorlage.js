@@ -92,3 +92,43 @@ export function xpMigrieren(lvl, xp, xpNextAlt, V = VORLAGE) {
   return { xp: Math.min(n - 1, Math.floor(f * n)), xpNext: n };
 }
 
+// =====================================================================
+// E3: Kampf-Takt — Zucken, Schreck-Flucht, Ziel-Kegel
+// =====================================================================
+/** bricht dieser Treffer das Ausholen ab? (nur im Warnmoment, nie bei Bossen) */
+export function zuckt(e, dmg, crit, V = VORLAGE) {
+  if (!V.zucken || e.isBoss || e.state !== "windup" || e.hp <= 0) return false;
+  return crit || dmg >= (e.elite ? V.zuckenElite : V.zucken) * e.maxHp;
+}
+/** wer erschrickt, wenn e „Puff“ macht? → [{ e, dx, dy }] (Richtung weg vom Puff) */
+export function schreckOpfer(e, ents, V = VORLAGE) {
+  if (!V.schreck || e.elite || e.minion || e.isBoss || !V.schreckArten.includes(e.type)) return [];
+  const out = [];
+  for (const o of ents) {
+    if (o === e || o.type !== e.type || o.elite || o.minion || o.isBoss || o.hp <= 0 || o.state === "flee") continue;
+    const dx = o.x - e.x, dy = o.y - e.y, d = Math.hypot(dx, dy);
+    if (d > V.schreckR) continue;
+    out.push(d > 0.05 ? { e: o, dx: dx / d, dy: dy / d } : { e: o, dx: 1, dy: 0 });
+  }
+  return out;
+}
+/** Blasen-Ziel: px/py Kobold, (dx, dy) Lauf-/Joystick-Richtung (0,0 = keine), foe = angetippter Gegner.
+    ents = mögliche Ziele. Ohne Kegel (v13): nächster Gegner ≤ 6,5 Kacheln. */
+export function kegelZiel(px, py, dx, dy, ents, foe, V = VORLAGE) {
+  const R = V.kegelR;
+  let near = null, nd = R;
+  for (const e of ents) { const d = Math.hypot(e.x - px, e.y - py); if (d < nd) { nd = d; near = e; } }
+  if (!V.kegel) return near;
+  if (foe && ents.includes(foe) && Math.hypot(foe.x - px, foe.y - py) <= R * V.kegelLeine) return foe;
+  const l = Math.hypot(dx, dy);
+  if (l < 1e-3) return near;
+  const cos = Math.cos(V.kegel * Math.PI / 180);
+  let best = null, bd = R;
+  for (const e of ents) {
+    const ex = e.x - px, ey = e.y - py, d = Math.hypot(ex, ey);
+    if (d >= bd) continue;
+    if (d > 1e-3 && (ex * dx + ey * dy) / (d * l) < cos) continue;
+    bd = d; best = e;
+  }
+  return best || near;
+}
