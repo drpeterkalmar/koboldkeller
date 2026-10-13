@@ -192,7 +192,7 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
       if (cs.name === "bossDone 2,4,6") await page.screenshot({ path: V9 + "migration_hinweis_hoch.png" });
       await ctx.close();
       const extra = r.have.filter(id => !["drache", "einhorn", "zauberer"].includes(id));
-      out.push({ name: cs.name, extra, ok: extra.slice().sort().join() === cs.want.slice().sort().join() && diff.length === 0 && raw.v === 3 && toast.includes("Du hast " + cs.want.length) && !toast2.includes("Kostüm"), diff, toast: toast.includes("Du hast " + cs.want.length), toast2: toast2.includes("Kostüm") });
+      out.push({ name: cs.name, extra, ok: extra.slice().sort().join() === cs.want.slice().sort().join() && diff.length === 0 && raw.v === 4 && toast.includes("Du hast " + cs.want.length) && !toast2.includes("Kostüm"), diff, toast: toast.includes("Du hast " + cs.want.length), toast2: toast2.includes("Kostüm") });
     }
     R("V28", "Migration echter v3-Spielstände: bossDone [2,4,6] → genau Waldfee, Waldhüter, Greif · won → Phönix · MEGA-Sieg (Spielstand oder 🔥 Ehrenhall) → Sternendrache; einmal „Du hast N Kostüme verdient!“, alle anderen Felder gleich (Datei v3)",
       out.every(o => o.ok), out.map(o => `${o.name}: +${o.extra.join(",") || "–"}, Hinweis ${o.toast ? "ja" : "NEIN"}, 2. Laden ${o.toast2 ? "NOCHMAL" : "kein Hinweis"}, Felder ${o.diff.length ? "ANDERS " + o.diff.join(",") : "gleich"}`).join(" · "));

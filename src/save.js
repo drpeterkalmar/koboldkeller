@@ -62,6 +62,7 @@ export function sanitize(s) {
     mega: !!s.mega, tut: !!s.tut, runSecs: num(s.runSecs, 0, 0, 1e7), won,
     seed: Math.round(num(s.seed, (Math.random() * 1e9) | 0, 0, 2 ** 31)), migrated: !!s.migrated,
     kills: Math.round(num(s.kills, 0, 0, 1e9)),
+    upM: Math.round(num(s.upM, 0, -1e4, 1e4)),            // v14 (Datei v4): Upgrade-Zähler (Beute-Takt); ältere Stände starten bei 0
     // einmalige Hinweise nach dem Umzug (werden beim ersten Spielstart als Toast gezeigt und dann gelöscht)
     capNote: Math.round(num(s.capNote, 0, 0, 1e9)) + capGold, giftNote: Math.round(num(s.giftNote, 0, 0, 999)) + gift,
   };

@@ -691,7 +691,7 @@ mkdirSync(V4, { recursive: true });
   const raw = await p9.evaluate(() => JSON.parse(localStorage.getItem("koboldkeller2_save")));
   await shot(p9, "v4/migration_v3");
   R("V9", "Save-Migration v3 → v4 (→ v5): nichts verloren (Level, Gold, Tiefe, Hut), Überzähliges → Gold + Hinweis, Pilze → Spezial, Talentpunkte geschenkt, Datei v3 gespeichert",
-    s9.name === "Mia3" && s9.lvl === 12 && s9.depth === 6 && s9.hat === "pilz" && s9.gold >= 310 && s9.potions === 5 && s9.maxHp === 60 && s9.spec === 1 && s9.skPts === 11 && s9.look.style === "wuschel" && /Rucksack war zu voll/.test(s9.toasts) && raw.v === 3 && raw.capNote === 0,
+    s9.name === "Mia3" && s9.lvl === 12 && s9.depth === 6 && s9.hat === "pilz" && s9.gold >= 310 && s9.potions === 5 && s9.maxHp === 60 && s9.spec === 1 && s9.skPts === 11 && s9.look.style === "wuschel" && /Rucksack war zu voll/.test(s9.toasts) && raw.v === 4 && raw.capNote === 0,
     `${inf} → Gold ${s9.gold} (+${s9.gold - 100}), 🧪 ${s9.potions}, Max-❤️ ${s9.maxHp}, Spezial ${s9.spec}, Punkte ${s9.skPts}, Frisur ${s9.look.style}, Datei v${raw.v}`);
   await c9.close();
 }
@@ -910,7 +910,7 @@ mkdirSync(V5, { recursive: true });
   await shot(p14, "v5/migration_v4");
   const e4 = await p14.evaluate(() => { KK.goto(8); const a = KK.G.L.stairs.sealed; KK.goto(10); const b = KK.G.L.stairs.sealed; return { e8: a, e10: b }; });
   R("V17", "Save-Migration v4 → v5: nichts verloren (Level, Gold, Talente, Punkte, Spezial, Munition, Hüte, Aussehen, Tiefe), keine doppelten Geschenke, schon passierte Boss-Ebenen offen (bossDone), tiefere versiegelt, Datei v3",
-    s.name === "Vier4" && s.lvl === 9 && s.gold === 777 && s.skPts === 3 && s.sk.kraft === 2 && s.sk.leben === 3 && s.spec === 0.67 && s.ammo === 18 && s.hat === "diadem" && s.look.style === "zoepfe" && s.depth === 6 && s.bossDone.join() === "2,4,6,8" && !s.stairsSealed && !e4.e8 && e4.e10 && s.raw.v === 3 && s.raw.bossDone.join() === "2,4,6,8" && !/Willkommen in v4|zu voll/.test(s.toasts),
+    s.name === "Vier4" && s.lvl === 9 && s.gold === 777 && s.skPts === 3 && s.sk.kraft === 2 && s.sk.leben === 3 && s.spec === 0.67 && s.ammo === 18 && s.hat === "diadem" && s.look.style === "zoepfe" && s.depth === 6 && s.bossDone.join() === "2,4,6,8" && !s.stairsSealed && !e4.e8 && e4.e10 && s.raw.v === 4 && s.raw.bossDone.join() === "2,4,6,8" && !/Willkommen in v4|zu voll/.test(s.toasts),
     `${inf} → Lv ${s.lvl}, 🪙 ${s.gold}, Punkte ${s.skPts}, Talente ${JSON.stringify(s.sk)}, Spezial ${s.spec}, 🫧 ${s.ammo}, Hut ${s.hat}, Frisur ${s.look.style}, Ebene ${s.depth} (Treppe ${s.stairsSealed ? "zu" : "offen"}), bossDone ${s.bossDone.join(",")}, E8 ${e4.e8 ? "zu" : "offen"}, E10 ${e4.e10 ? "zu" : "offen"}, Datei v${s.raw.v}`);
   await c14.close();
 }

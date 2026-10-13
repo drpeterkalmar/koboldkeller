@@ -194,7 +194,8 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     await shot(page, "stadt_zucker_tor_hoch");
     const tapPo = async (d) => page.evaluate(async (d) => { const r = await import("./src/render.js"); const po = KK.G.L.portals.find(p => p.depth === d); return r.toScreen(po.x, po.y); }, d);
     // Spielstand-Format: dieselben Felder wie v7 (Datei v3) — Liste aus save.js/v7 (V21), keine neuen Felder
-    const save0 = "bossDone,capNote,depth,giftNote,gold,hat,hats,hp,kills,look,lvl,magic,maxHp,mega,name,potions,projN,runSecs,seed,sk,skPts,spec,species,tut,v,won,xp,xpNext,ammo,atk,deepest,migrated".split(",").sort().join(",");
+    // v14: + upM (Upgrade-Zähler, Datei v4)
+    const save0 = "bossDone,capNote,depth,giftNote,gold,hat,hats,hp,kills,look,lvl,magic,maxHp,mega,name,potions,projN,runSecs,seed,sk,skPts,spec,species,tut,v,won,xp,xpNext,ammo,atk,deepest,migrated,upM".split(",").sort().join(",");
     let pt = await tapPo(9); const t9 = await page.evaluate(() => KK.G.t);
     await page.touchscreen.tap(pt[0], pt[1]);
     await page.waitForFunction(() => KK.state().depth === 9, null, { timeout: 6000 }).catch(() => { });
@@ -248,7 +249,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
     }
     const gatesOk = lay.gates.length === 5 && lay.gates.every(g => g.posts === 2 && g.ports.length >= 4);
     const ok = lay.n === 20 && lay.depths === Array.from({ length: 20 }, (_, i) => i + 1).join(",") && lay.minD >= 2 && lay.secsF <= 6 && lay.secsE <= 6 && lay.open === "1,2,3,4,5,6,7,8,9" &&
-      lay.iconOk && gatesOk && gd.kind === "portal" && gd.depth === 9 && in9.depth === 9 && in9.runFrom === 9 && save1.keys.split(",").every(k => save0.split(",").includes(k)) && save1.v === 3 &&
+      lay.iconOk && gatesOk && gd.kind === "portal" && gd.depth === 9 && in9.depth === 9 && in9.runFrom === 9 && save1.keys.split(",").every(k => save0.split(",").includes(k)) && save1.v === 4 &&
       lockRes.depth === 0 && lockRes.toast && pass.passed.depth === 0 && pass.passed.minD < 0.3 && pass.dwellDepth === 5 && tut.depth === 1 && tut.flag && tut.step === -1 && tut.prof;
     R("V24", "Ebenen-Wahl: 5 Welt-Wege mit Welttor, 20 Portale (je Ebene eins, Name + 👑/⚡/🔒), offen bis „tiefste“, gesperrte zeigen Hinweis, Abstand ≥ 2, Brunnen → jedes Portal ≤ 6 s, Vorbeilaufen löst nichts aus, Pfeil/Tutorial/Ehrenhall/Spielstand unverändert",
       ok, `${lay.n} Portale (Karte ${lay.map.join("×")}), Tore ${lay.gates.map(g => g.w + ":" + g.posts + "P").join(" ")}, min. Abstand ${lay.minD} · Brunnen → weitestes Portal (E${lay.worstFd}) ${lay.worstF} Kacheln = ${lay.secsF} s, Eingang → weitestes ${lay.secsE} s · offen ${lay.open} / gesperrt ${lay.locked.split(",").length} · Symbole+Namen ${lay.iconOk} · Pfeil → ${gd.kind} ${gd.depth} · Tipp auf 9: Ebene ${in9.depth} nach ${in9.secs} s, from ${in9.runFrom} · gesperrt 12: bleibt ${lockRes.depth}, Hinweis ${lockRes.toast} · drüberlaufen (${pass.passed.minD} Kacheln nah): Ebene ${pass.passed.depth}, stehen: Ebene ${pass.dwellDepth} nach ${pass.dwellSecs} s · Tutorial: ${JSON.stringify(tut)} · Spielstand v${save1.v}, Felder ${save1.keys.split(",").every(k => save0.split(",").includes(k)) ? "wie v7 (" + save1.keys.split(",").length + ")" : "NEU: " + save1.keys.split(",").filter(k => !save0.split(",").includes(k)).join(",")}`);

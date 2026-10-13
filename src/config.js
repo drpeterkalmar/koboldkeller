@@ -10,7 +10,7 @@ export const SETTINGS_KEY = "koboldkeller2_settings";
 
 export const MAX_DEPTH = 20;
 export const MEGA = { speed: 2, dmg: 10 };
-export const SAVE_V = 3;                 // v1 = Koboldkeller 2 bis v3, v2 = v4 (Munition, Talente, Spezial, Aussehen), v3 = v5 (besiegte Bosse)
+export const SAVE_V = 4;                 // v1 = Koboldkeller 2 bis v3, v2 = v4 (Munition, Talente, Spezial, Aussehen), v3 = v5 (besiegte Bosse), v4 = v14 (Upgrade-Zähler, XP-Kurve)
 
 // ---------- v4: Obergrenzen, Munition, Magnet, Heim-Portal ----------
 // hp = höchstens so viele Lebenspunkte (Max-❤️), potions = Tränke, ammo = Grund-Munitionsplatz (+ Talent 🫧)
@@ -214,6 +214,22 @@ export const ARROW = {
 export const URLQ = _q;
 // v13: Deko (Boden-/Wand-Details, Licht, Partikel, Rückmeldung) — A/B: ?deko=0 = Aussehen wie v12
 export const DEKO = _q.get("deko") !== "0";
+// ---------- v14: Vorlagen (VORLAGEN.md) — EINE Parametergruppe für alle neuen Mechaniken. Jeder Regler mit 0 bzw. „alt“
+// stellt genau das v13-Verhalten her. Die reinen Regeln dazu stehen in src/vorlage.js (in Node getestet). ----------
+export const VORLAGE = {
+  // E1 Bedarfs-Beute (?bedarf=0 = aus): ein Teil der Kills hat einen Wunsch-Platz — es fällt, was gerade fehlt
+  bedarf: _qn("bedarf", 1) > 0,
+  wunsch: 0.06, wunschElite: 0.2,          // Anteil der Kills mit Wunsch-Platz (normal / Elite)
+  heilerAb: 0.25, herzAb: 0.5,             // ❤️-Anteil: bis 25 % Glühwürmchen-Heiler, bis 50 % Herz
+  blasenUnter: 6, blasenPlus: 4,           // weniger als 6 🫧 → Blasen-Nachschub +4
+  herzX2Ab: 0.25, herzX2: 2,               // bei ❤️ ≤ 25 % fallen Herzen doppelt so oft
+  heiler: 0.5, heilerTempo: 2.6,           // Glühwürmchen-Heiler: +50 % Max-❤️, schwebt mit 2,6 Kacheln/s zum Kobold
+  // E1 Upgrade-Zähler (?beutetakt=0 = aus): +30 je betretene Ebene, −50 je Upgrade aus Beute (Gegner, Truhen, Bosse),
+  // ab 60 enthält die nächste Truhe sicher ein Upgrade. Zähler fällt nicht unter 0 (eine Glückssträhne schaltet die
+  // Garantie sonst für viele Ebenen ab). Zufalls-Upgrade je normalem Kill 7 % → 5 %.
+  beutetakt: _qn("beutetakt", 1) > 0,
+  taktEbene: 30, taktFund: 50, taktSicher: 60, taktMin: 0, upKill: 0.05,
+};
 // v13: „Bewegung reduzieren“ des Geräts → weniger Wackeln, weniger Partikelregen
 export const CALM = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 

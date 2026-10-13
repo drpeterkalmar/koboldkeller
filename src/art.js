@@ -805,6 +805,26 @@ export function itemSprite(kind, v = "") {
     case "hat": return spr(key, 50, 42, 25, 38, (c) => {
       c.scale(0.55, 0.55); c.drawImage(hat(v).cv, 0, 0, 90, 70);
     });
+    case "firefly": return spr(key, 40, 40, 20, 34, (c) => {   // v14: Glühwürmchen-Heiler (leuchtender Bauch mit Herz, Flügelchen)
+      const glow = c.createRadialGradient(20, 25, 1, 20, 25, 17); glow.addColorStop(0, "rgba(240,255,150,.95)"); glow.addColorStop(1, "rgba(200,255,120,0)");
+      c.fillStyle = glow; c.fillRect(0, 6, 40, 34);
+      for (const sx of [-1, 1]) ol(c, ell(20 + sx * 8, 12, 7, 4.5), "rgba(220,240,255,.85)", "#6a7ab0", 1.6);
+      ol(c, ell(20, 25, 8, 8.5), "#fff38a", "#8a7a20", 2.2);
+      c.beginPath(); heartPath(c, 20, 26, 4.2); c.fillStyle = "#ff6f91"; c.fill();
+      ol(c, ell(20, 15, 6.5, 5.5), "#7a5ab8", "#3a2468", 2);
+      c.fillStyle = "#fff"; for (const sx of [-1, 1]) { c.beginPath(); c.arc(20 + sx * 2.4, 14.5, 1.7, 0, TAU); c.fill(); }
+      c.fillStyle = "#1a1030"; for (const sx of [-1, 1]) { c.beginPath(); c.arc(20 + sx * 2.4, 14.8, 0.9, 0, TAU); c.fill(); }
+      c.strokeStyle = "#3a2468"; c.lineWidth = 1.4; for (const sx of [-1, 1]) { c.beginPath(); c.moveTo(20 + sx * 2, 10.5); c.quadraticCurveTo(20 + sx * 4, 5, 20 + sx * 6, 5.5); c.stroke(); }
+      star4(c, 33, 22, 3.5, "#ffffff");
+    });
+    case "ammo": return spr(key, 40, 40, 20, 36, (c) => {      // v14: Blasen-Nachschub (+4 🫧): drei Seifenblasen
+      for (const [x, y, r] of [[13, 26, 8], [27, 25, 7.5], [20, 14, 8.5]]) {
+        const g = c.createRadialGradient(x - r * 0.3, y - r * 0.3, 1, x, y, r); g.addColorStop(0, "rgba(255,255,255,.9)"); g.addColorStop(0.6, "rgba(190,240,255,.55)"); g.addColorStop(1, "rgba(150,200,255,.75)");
+        ol(c, ell(x, y, r, r), g, "#4a8ac0", 2);
+        c.fillStyle = "rgba(255,255,255,.9)"; c.beginPath(); c.ellipse(x - r * 0.35, y - r * 0.4, r * 0.28, r * 0.18, -0.6, 0, TAU); c.fill();
+      }
+      c.font = "bold 12px system-ui, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.lineWidth = 3; c.strokeStyle = "#1f4a7a"; c.strokeText("+4", 31, 35); c.fillStyle = "#fff"; c.fillText("+4", 31, 35);
+    });
   }
   return null;
 }

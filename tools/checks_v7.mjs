@@ -374,17 +374,19 @@ export async function runV7({ browser, BASE, R, errors, only = null, secs = 60 }
       const S = await import("./src/save.js");
       return { sv: S.loadSave(), set: S.loadSettings(), info: document.getElementById("contInfo").textContent };
     });
-    const diff = Object.keys(V6SAVE).filter(k => JSON.stringify(r.sv[k]) !== JSON.stringify(V6SAVE[k]));
+    // v14: Datei v4 — Version und (mit neuer XP-Kurve) xp/xpNext ändern sich bewusst; Level und Fortschritt-Anteil bleiben (Node-Test save)
+    const V14X = ["v", "xp", "xpNext"];
+    const diff = Object.keys(V6SAVE).filter(k => !V14X.includes(k) && JSON.stringify(r.sv[k]) !== JSON.stringify(V6SAVE[k]));
     await tapEl(page, "#btnCont");
     await page.waitForFunction(() => KK.state().screen === "play" && !KK.state().demo, null, { timeout: 8000 });
     await sleep(600);
     const s = await page.evaluate(() => ({ ...KK.state(), arrowOn: KK.guide().on, vib: KK.hap().vibrate }));
     await page.evaluate(() => KK.save());
     const raw = await page.evaluate(() => JSON.parse(localStorage.getItem("koboldkeller2_save")));
-    const rawDiff = Object.keys(V6SAVE).filter(k => !["runSecs", "hp"].includes(k) && JSON.stringify(raw[k]) !== JSON.stringify(V6SAVE[k]));
+    const rawDiff = Object.keys(V6SAVE).filter(k => !["runSecs", "hp", ...V14X].includes(k) && JSON.stringify(raw[k]) !== JSON.stringify(V6SAVE[k]));
     await ctx.close();
     R("V21", "Save-Migration v6 → v7: Spielstand unverändert übernommen (alle Felder, Datei v3), Einstellungen bleiben (📳 aus, 🕹️ aus, 🔔 aus) + 🧭 Weg-Pfeil neu an; Weiterspielen stellt alles her",
-      diff.length === 0 && rawDiff.length === 0 && raw.v === 3 && r.set.arrow === true && r.set.vibrate === false && r.set.joystick === false && r.set.sfx === false && s.lvl === 7 && s.gold === 4321 && s.depth === 3 && s.name === "Sechsi" && s.look.style === "zoepfe" && s.sk.kraft === 2 && s.bossDone.join() === "2,4" && s.arrowOn === true && s.vib === false,
+      diff.length === 0 && rawDiff.length === 0 && raw.v === 4 && r.set.arrow === true && r.set.vibrate === false && r.set.joystick === false && r.set.sfx === false && s.lvl === 7 && s.gold === 4321 && s.depth === 3 && s.name === "Sechsi" && s.look.style === "zoepfe" && s.sk.kraft === 2 && s.bossDone.join() === "2,4" && s.arrowOn === true && s.vib === false,
       `geladen: ${diff.length ? "Abweichung " + diff.join(",") : "alle " + Object.keys(V6SAVE).length + " Felder gleich"}; gespeichert: ${rawDiff.length ? "Abweichung " + rawDiff.join(",") : "gleich"}, Datei v${raw.v}; Einstellungen ${JSON.stringify(r.set)}; im Spiel Lv ${s.lvl}, 🪙 ${s.gold}, Ebene ${s.depth}, ${s.name}, bossDone ${s.bossDone.join(",")}`);
   }
 }

@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-13T08:20:38.351Z",
+  "rows": [
+    {
+      "id": "V40",
+      "what": "E1 Bedarfs-Beute: ❤️ ≤ 25 % → Heil-Beute ≥ 25 %/Kill, Glühwürmchen-Heiler schwebt zum Kobold (+50 % ❤️), 🫧 leer → Nachschub, volle Sachen fallen nicht; Upgrade-Zähler ≥ 60 → Truhe mit Upgrade, Zähler im Spielstand; ?bedarf=0&beutetakt=0 = v13",
+      "ok": true,
+      "info": "❤️ 20 %: Heil-Beute 24.2 % je Kill (Glühwürmchen 5.1 %) · Regler aus 9.2 % (Glühwürmchen 0.0 %) · 🫧 leer: Nachschub 6.7 % · 🧪 5/5 + ✨ voll: Trank/Pilz fallen 0× (aus: 39×), „voll → Gold“ beim Aufheben 0 (aus: 7) · Heiler: Abstand 4.62 → 4.36 → 3.32 → 2.62, schwebt z 31.2/34.4/29.2, ❤️ 1 → 4/6 · Truhe bei Zähler 60: wand → Zähler 10, Spielstand upM 10 (Datei v4)"
+    }
+  ],
+  "errors": [],
+  "out": {
+    "V40": {
+      "wenigA": {
+        "cnt": {
+          "coin": 4061,
+          "heart": 383,
+          "wand": 37,
+          "firefly": 101,
+          "potion": 176,
+          "mushroom": 133,
+          "gem": 28,
+          "sword": 40
+        },
+        "items": 898,
+        "n": 2000,
+        "heil": 0.242
+      },
+      "wenigB": {
+        "cnt": {
+          "coin": 3983,
+          "potion": 163,
+          "heart": 183,
+          "sword": 42,
+          "mushroom": 109,
+          "gem": 48,
+          "wand": 32
+        },
+        "items": 577,
+        "n": 2000,
+        "heil": 0.0915
+      },
+      "leerA": {
+        "cnt": {
+          "coin": 4176,
+          "wand": 30,
+          "ammo": 134,
+          "potion": 134,
+          "gem": 31,
+          "mushroom": 119,
+          "sword": 39
+        },
+        "items": 487,
+        "n": 2000,
+        "heil": 0
+      },
+      "vollA": {
+        "cnt": {
+          "coin": 704,
+          "gem": 7,
+          "sword": 4,
+          "wand": 1
+        },
+        "items": 12,
+        "n": 300,
+        "heil": 0
+      },
+      "vollB": {
+        "cnt": {
+          "coin": 602,
+          "mushroom": 16,
+          "gem": 10,
+          "heart": 33,
+          "sword": 3,
+          "potion": 23,
+          "wand": 3
+        },
+        "items": 88,
+        "n": 300,
+        "heil": 0.11
+      },
+      "pkA": {
+        "nutzlos": 0,
+        "left": 23
+      },
+      "pkB": {
+        "nutzlos": 7,
+        "left": 23
+      },
+      "ff": {
+        "hp0": 1,
+        "maxHp": 6,
+        "d0": 4.617358552246078
+      },
+      "frames": [
+        {
+          "d": 4.36,
+          "z": 31.2
+        },
+        {
+          "d": 3.32,
+          "z": 34.4
+        },
+        {
+          "d": 2.62,
+          "z": 29.2
+        }
+      ],
+      "ffEnd": {
+        "hp": 4,
+        "left": 0
+      },
+      "tr": {
+        "m0": 30,
+        "chests": 2,
+        "opened": true,
+        "kinds": [
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "coin",
+          "wand"
+        ],
+        "upAfter": 10,
+        "saved": 10,
+        "v": 4,
+        "upSicher": 1
+      }
+    }
+  }
+}

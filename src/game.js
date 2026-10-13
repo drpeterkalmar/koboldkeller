@@ -5,19 +5,21 @@
    v8: schneller laufen (Animation/Wegpunkte/Teilschritte), 20 Stadt-Portale (je Ebene eins, Welttore) mit Ziel-/Verweil-Regel,
    Treppe/Portal per Tipp „scharf“, Wand-Schützen (Wandfallen) mit Vorwarnung.
    v9: Mythos-Kostüme — Sammlung je Gerät (G.myth), Kostüm-Paket beim ersten Boss-Sieg, Glanz-Partikel, Spezial-Welle in Kostümfarbe.
-   v10: Oma Pilzhut gibt beim Vorbeigehen Tipps (Sprechblase, omaTick). */
+   v10: Oma Pilzhut gibt beim Vorbeigehen Tipps (Sprechblase, omaTick).
+   v14 (VORLAGEN.md): Bedarfs-Beute (Wunsch-Platz, Glühwürmchen-Heiler, nichts Nutzloses), Upgrade-Zähler mit Truhen-Garantie. */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET, OMA,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
-  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ,
+  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE,
 } from "./config.js";
+import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher } from "./vorlage.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
 import { haptic } from "./platform.js";
 import { writeSave, addHall, initMyths, saveMyths } from "./save.js";
 import { mythFoot } from "./myth.js";
-import { rand, randi, pick, weighted, TAU, shade, clamp, mulberry32 } from "./util.js";
+import { rand, pick, weighted, TAU, shade, clamp, mulberry32 } from "./util.js";
 import { initBoss, bossAI, bossHit, bossKilled, wakeBoss, arenaTick, bossFight } from "./boss.js";
 
 export const G = {
@@ -28,7 +30,8 @@ export const G = {
   flow: null, flowT: 0, seenT: 0, saveT: 0, portalCd: 0, lockToastT: 0, tutStep: -1, tutFlags: {},
   homeHideT: 0, emptyT: 0, emptyToastT: 0, specToastT: 0, capToastT: 0, camFocus: null, later: [], specFx: null, mirrorArmed: true,
   hooks: { toast() { }, banner() { }, hud() { }, boss() { }, bossIntro() { }, win() { }, dead() { }, level() { }, tut() { }, fade(cb) { cb(); }, editor() { } },
-  stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0, wallHits: 0 },
+  stats: { kills: 0, dmgTaken: 0, potionsUsed: 0, specials: 0, wallHits: 0, beute: {}, nutzlos: 0, ups: 0, upSicher: 0 },
+  upM: 0,                                                   // v14: Upgrade-Zähler (Beute-Takt), wird gespeichert
 };
 export const H = () => G.hooks;
 // ---------- v9: Kostüm-Sammlung ----------
@@ -97,7 +100,7 @@ export function profileFromGame() {
     name: p.name, species: p.species, look: lookForSave(p.look), lvl: p.lvl, xp: p.xp, xpNext: p.xpNext, maxHp: p.hpBase, hp: Math.max(1, Math.ceil(p.hp)),
     atk: p.atkBase, projN: p.projN, magic: p.magic, gold: G.gold, potions: p.potions, ammo: p.ammo, spec: p.spec, sk: { ...p.sk }, skPts: p.skPts,
     hats: p.hats.slice(), hat: p.hat, deepest: G.deepest, depth: G.depth, mega: G.mega, runSecs: G.runSecs,
-    kills: G.stats.kills, bossDone: G.bossDone.slice(),
+    kills: G.stats.kills, bossDone: G.bossDone.slice(), upM: G.upM,
   });
   return pr;
 }
@@ -148,6 +151,7 @@ export function startGame(prof) {
   G.gold = prof.gold; G.mega = prof.mega; G.deepest = prof.deepest; G.runSecs = prof.runSecs || 0;
   G.bossDone = Array.isArray(prof.bossDone) ? prof.bossDone.slice() : [];
   G.stats.kills = prof.kills || 0;
+  G.upM = prof.upM || 0;
   G.winQueued = false;
   G.tutStep = prof.tut ? -1 : 0; G.tutFlags = {};
   G.omaSay = null; G.omaNear = false; G.omaTipT = -1e9; G.omaSeen = {};   // v10: Oma-Tipps je Spiel frisch
@@ -210,6 +214,7 @@ export function buildLevel(depth) {
   } else {
     Object.assign(L.homePortal, { col: "#7fffd4", small: true, label: "🏠 Stadt", home: true, hidden: true, appearT: 0 });
     G.homeHideT = HOME_PORTAL_HIDE_S;          // nach jedem Betreten 20 s komplett weg (kein Versehen-Zurücklaufen)
+    G.upM = taktEbene(G.upM);                  // v14: Upgrade-Zähler +30 je betretene Ebene
     populate(L, depth);
     playMusic("dungeon", G.biome);
   }
@@ -356,18 +361,15 @@ export function killEnt(e) {
     for (let k = 0; k < 8; k++) G.items.push(flyItem("coin", e.x, e.y));
     G.items.push(flyItem("mushroom", e.x, e.y)); G.items.push(flyItem("heart", e.x, e.y));
     if (Math.random() < 0.5) G.items.push(flyItem("potion", e.x, e.y));
-    if (Math.random() < 0.5) G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y));
-  } else {
-  // Münz-Explosion
-  const nC = e.isKing ? 40 : e.isBoss ? 16 : e.elite ? randi(4, 7) : randi(1, 3);
-  for (let k = 0; k < nC; k++) G.items.push(flyItem("coin", e.x, e.y));
-  if (e.isBoss || Math.random() < (e.elite ? 0.35 : 0.08)) G.items.push(flyItem("potion", e.x, e.y));
-  if (!e.isBoss && Math.random() < (e.elite ? 0.4 : 0.1)) G.items.push(flyItem("heart", e.x, e.y));
-  if (e.isBoss) { G.items.push(flyItem("mushroom", e.x, e.y)); G.items.push(flyItem("mushroom", e.x, e.y)); }
-  else if (Math.random() < (e.elite ? 0.3 : 0.06)) G.items.push(flyItem("mushroom", e.x, e.y));
-  const up = e.isBoss ? 1 : e.elite ? 0.25 : 0.07;
-  if (Math.random() < up) G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y));
-  }
+    if (Math.random() < 0.5) { G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y)); upFound(); }
+  } else if (e.isBoss) {
+    // Münz-Explosion
+    const nC = e.isKing ? 40 : 16;
+    for (let k = 0; k < nC; k++) G.items.push(flyItem("coin", e.x, e.y));
+    G.items.push(flyItem("potion", e.x, e.y));
+    G.items.push(flyItem("mushroom", e.x, e.y)); G.items.push(flyItem("mushroom", e.x, e.y));
+    G.items.push(flyItem(pick(["sword", "wand", "gem"]), e.x, e.y)); upFound();
+  } else dropAll(beuteKill(!!e.elite, zust(), Math.random), e.x, e.y);   // v14: normale Gegner + Elite (Bedarfs-Beute, vorlage.js)
   if (e.isBoss && !e.isMini) {
     const h = BOSS_HAT[G.biome];
     if (h && !p.hats.includes(h)) G.items.push(flyItem("hat", e.x, e.y, h));
@@ -412,6 +414,23 @@ export function gainXp(n) {
     haptic("levelup");
   }
 }
+// ---------- v14: Beute nach Bedarf (vorlage.js) ----------
+/** Zustand für den Wunsch-Platz */
+export const zust = () => { const p = G.p; return { hp: p.hp, maxHp: p.maxHp, ammo: p.ammo, potions: p.potions, spec: p.spec }; };
+/** Upgrade aus Beute gefunden → Upgrade-Zähler −50 */
+function upFound() { G.upM = taktFund(G.upM); G.stats.ups++; }
+/** Liste aus vorlage.js als fliegende Beute ausschütten ("up" = ⚔️/🪄/💎) */
+function dropAll(list, x, y) {
+  const B = G.stats.beute;
+  for (const k of list) {
+    const kind = k === "up" ? pick(["sword", "wand", "gem"]) : k;
+    if (k === "up") upFound();
+    B[k] = (B[k] || 0) + 1;
+    const it = flyItem(kind, x, y);
+    if (kind === "firefly") { it.vz = 200; it.flyT = 0.5; }
+    G.items.push(it);
+  }
+}
 export function gainAmmo(n, x, y) {
   const p = G.p;
   if (!p || !n) return;
@@ -439,7 +458,7 @@ export function rainItem(kind, x, y) {
   return it;
 }
 function capGold(n, x, y, msg) {
-  G.gold += n; SFX.coin(); P.coinPick(x, y);
+  G.gold += n; SFX.coin(); P.coinPick(x, y); G.stats.nutzlos++;
   text(x, y, msg + " → +" + n + " 🪙", "#ffe36e", 16, 95);
 }
 function pickup(it) {
@@ -453,6 +472,15 @@ function pickup(it) {
       if (p.hp >= p.maxHp) { capGold(CAP_GOLD.heart, it.x, it.y, "❤️ voll"); return true; }
       { const h = Math.max(2, Math.ceil(p.maxHp * 0.12)); p.hp = Math.min(p.maxHp, p.hp + h); P.heal(p.x, p.y); SFX.heal(); text(p.x, p.y, "+" + h + " ❤️", "#ff8fb8", 20, 90); }
       return true;
+    case "firefly": {                                      // v14: Glühwürmchen-Heiler (Wunsch-Platz bei ❤️ ≤ 25 %)
+      const h = Math.max(3, Math.ceil(p.maxHp * VORLAGE.heiler));
+      p.hp = Math.min(p.maxHp, p.hp + h); P.heal(p.x, p.y); SFX.heal(); haptic("pickup");
+      P.sparkle(p.x, p.y, "#e8ff8a", 12, 60); text(p.x, p.y, "+" + h + " ❤️ 🪲✨", "#e8ff8a", 22, 105);
+      if (!G.fireflyToast) { G.fireflyToast = true; H().toast("✨ Ein Glühwürmchen-Heiler! Wenn du ganz wenig ❤️ hast, kommt manchmal eins geflogen."); }
+      return true;
+    }
+    case "ammo":                                           // v14: Blasen-Nachschub (Wunsch-Platz bei weniger als 6 🫧)
+      SFX.pickup(); P.sparkle(it.x, it.y, "#bfefff", 8, 40); gainAmmo(VORLAGE.blasenPlus, p.x, p.y); return true;
     case "mushroom":                                       // Glitzerpilze heilen NICHT — sie laden den Spezialangriff
       if (p.spec >= 1) { capGold(CAP_GOLD.shroom, it.x, it.y, "🍄 voll"); return true; }
       p.spec = Math.min(1, p.spec + SPECIAL.perShroom);
@@ -530,10 +558,7 @@ function breakPot(pr) {
   const i = G.L.props.indexOf(pr); if (i >= 0) G.L.props.splice(i, 1);
   P.poof(pr.x, pr.y, "#e8c090"); SFX.pot({ x: pr.x, y: pr.y });
   burst(pr.x, pr.y, 8, { kind: "dot", col: "#c98a5a", add: false, s0: 7, s1: 3, sp0: 1, sp1: 3, z: 14, vz0: 80, vz1: 200, g: -500, l0: 0.4, l1: 0.7, bounce: 0.3 });
-  const n = Math.random() < 0.6 ? randi(1, 3) : 0;
-  for (let k = 0; k < n; k++) G.items.push(flyItem("coin", pr.x, pr.y));
-  if (Math.random() < 0.1) G.items.push(flyItem("mushroom", pr.x, pr.y));
-  else if (Math.random() < 0.12) G.items.push(flyItem("heart", pr.x, pr.y));
+  for (const k of beuteTopf(zust(), Math.random)) G.items.push(flyItem(k, pr.x, pr.y));   // v14: Herz öfter bei wenig ❤️, nichts Nutzloses
 }
 export function bubbles() {
   const p = G.p;
@@ -933,12 +958,10 @@ function openChest(pr) {
   pr.open = true;
   SFX.chest({ x: pr.x, y: pr.y }); shake(0.2); haptic("chest");
   P.sparkle(pr.x, pr.y, "#ffe36e", 14, 30); part({ x: pr.x, y: pr.y, z: 20, kind: "glow", col: "#ffd75e", s0: 120, s1: 30, life: 0.5 });
-  const n = randi(8, 14);
-  for (let k = 0; k < n; k++) G.items.push(flyItem("coin", pr.x, pr.y));
-  if (Math.random() < 0.45) G.items.push(flyItem("potion", pr.x, pr.y));
-  if (Math.random() < 0.4) G.items.push(flyItem("heart", pr.x, pr.y));
-  if (Math.random() < 0.35) G.items.push(flyItem(pick(["sword", "wand", "gem"]), pr.x, pr.y));
-  if (Math.random() < 0.5) G.items.push(flyItem("mushroom", pr.x, pr.y));
+  // v14: Upgrade-Zähler ≥ 60 → sicher ein Upgrade; Herz öfter bei wenig ❤️; nichts Nutzloses (vorlage.js)
+  const sicher = taktSicher(G.upM), list = beuteTruhe(zust(), Math.random, sicher);
+  if (sicher && list.includes("up")) G.stats.upSicher++;
+  dropAll(list, pr.x, pr.y);
 }
 
 /** Magnet: Münzen ~3,5, sonstige Sachen ~2,5 Kacheln (+ Talent 🧲), weich am Rand, flott in der Nähe */
@@ -947,6 +970,14 @@ function updateItems(dt) {
   const p = G.p, m = G.L.map;
   for (let i = G.items.length - 1; i >= 0; i--) {
     const it = G.items[i];
+    if (it.kind === "firefly" && it.flyT <= 0.3) {         // v14: Glühwürmchen-Heiler schwebt (nicht am Boden) zum Kobold
+      it.flyT -= dt; it.z += ((30 + Math.sin(G.t * 5 + it.seed) * 6) - it.z) * Math.min(1, dt * 6);
+      const d = Math.hypot(p.x - it.x, p.y - it.y);
+      if (d > 0.01) { const s = Math.min(d, VORLAGE.heilerTempo * dt); it.x += (p.x - it.x) / d * s; it.y += (p.y - it.y) / d * s; }
+      it.pulled = true;
+      if (d < 0.5 && G.screen === "play") { pickup(it); G.items.splice(i, 1); }
+      continue;
+    }
     if (it.flyT > 0 || it.z > 0) {
       it.flyT -= dt;
       it.vz -= 900 * dt; it.z += it.vz * dt;

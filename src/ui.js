@@ -1,6 +1,6 @@
 /* ui.js — Menüs, Charakter-Editor, HUD, Toasts, Rucksack (Talente), Ehrenhall, Tutorial, Boss-Karte (MIT) */
 import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE, lookForSave } from "./game.js";
-import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA } from "./config.js";
+import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA, VORLAGE } from "./config.js";
 import { portrait, previewRig } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
 import { esc, pick, mulberry32 } from "./util.js";
@@ -442,6 +442,12 @@ const TIPS = [
   "Jede zweite Ebene hat einen Boss! Die Treppe dort ist versiegelt 🔒, bis du ihn besiegt hast.",
   "In der Boss-Arena kommen Handlanger — lila Kreise am Boden zeigen, wo gleich einer auftaucht.",
 ];
+// v14 (VORLAGEN.md): je neue Mechanik ein Satz von Oma — nur, wenn ihr Regler an ist; kommen zuerst dran (Neues zuerst erzählen)
+const TIPS_V14 = [
+  ...(VORLAGE.bedarf ? ["Hast du ganz wenig ❤️, lassen Gegner öfter Herzen fallen — und manchmal kommt ein ✨ Glühwürmchen-Heiler zu dir geflogen!"] : []),
+  ...(VORLAGE.beutetakt ? ["Hast du lange kein ⚔️, 🪄 oder 💎 gefunden? Dann steckt in der nächsten Truhe bestimmt eins!"] : []),
+];
+TIPS.unshift(...TIPS_V14);
 // v10: Was sagt Oma? Zuerst, was gerade wirklich hilft (je Anlass höchstens alle 90 s), sonst der nächste allgemeine Tipp.
 function omaTip() {
   const p = G.p, S = (G.omaSeen = G.omaSeen || {});

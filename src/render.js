@@ -323,7 +323,7 @@ export function prewarm(G) {
     for (const m of ["open", "hurt"]) A.flashOf(A.enemySprite(e.type, e.tint, m));
     if (e.type === "bat") A.flashOf(A.enemySprite("wing", e.tint));
   }
-  for (const k of ["coin", "potion", "mushroom", "sword", "wand", "gem"]) A.itemSprite(k);
+  for (const k of ["coin", "potion", "mushroom", "sword", "wand", "gem", "firefly", "ammo"]) A.itemSprite(k);
   for (const k of ["glow", "dot", "star", "star5", "puff", "heart", "ring", "slash", "shadow", "flame", "conf"]) A.fx(k);
   A.hat("krone", false);
   const lk = G.p.rig.look;
@@ -1289,7 +1289,8 @@ function glowPass(ctx, G, B, portals, sc = ctx) {
   for (const it of G.items) {
     const z = it.z + 5 + Math.sin((R.t + it.seed) * 3) * 3;
     if (it.kind === "coin") g(it.x, it.y, z, 22, "#ffd75e", 0.3);
-    else g(it.x, it.y, z + 12, 54, it.kind === "potion" || it.kind === "heart" ? "#ff8fb8" : it.kind === "mushroom" ? "#ff9ae0" : "#fff3a0", 0.45 + Math.sin(T * 4 + it.seed) * 0.12);
+    else if (it.kind === "firefly") g(it.x, it.y, it.z + 10, 70, "#e8ff8a", 0.6 + Math.sin(T * 9 + it.seed) * 0.2);   // v14: Glühwürmchen-Heiler blinkt
+    else g(it.x, it.y, z + 12, 54, it.kind === "potion" || it.kind === "heart" ? "#ff8fb8" : it.kind === "mushroom" ? "#ff9ae0" : it.kind === "ammo" ? "#bfefff" : "#fff3a0", 0.45 + Math.sin(T * 4 + it.seed) * 0.12);
   }
   // Rundumschlag-Sichel
   if (p.spinT > 0) {
