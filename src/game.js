@@ -7,18 +7,19 @@
    v9: Mythos-Kostüme — Sammlung je Gerät (G.myth), Kostüm-Paket beim ersten Boss-Sieg, Glanz-Partikel, Spezial-Welle in Kostümfarbe.
    v10: Oma Pilzhut gibt beim Vorbeigehen Tipps (Sprechblase, omaTick).
    v14 (VORLAGEN.md): Bedarfs-Beute (Wunsch-Platz, Glühwürmchen-Heiler, nichts Nutzloses), Upgrade-Zähler mit Truhen-Garantie,
-   XP-Kurve als Polynom + Aufhol-Bonus, Treffer bricht Ausholen ab (Zucken), Schreck-Flucht („Huch!“), Ziel-Kegel für Blasen. */
+   XP-Kurve als Polynom + Aufhol-Bonus, Treffer bricht Ausholen ab (Zucken), Schreck-Flucht („Huch!“), Ziel-Kegel für Blasen,
+   Gegner-Sammelalbum (G.album, gehört dem Gerät). */
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET, OMA,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
   ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE,
 } from "./config.js";
-import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster, zuckt, schreckOpfer, kegelZiel } from "./vorlage.js";
+import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster, zuckt, schreckOpfer, kegelZiel, albumNeu } from "./vorlage.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
 import { FX, P, part, burst, ring, text, shake, hitstop, slowmo, flash, resetFx } from "./fx.js";
 import { SFX, playMusic } from "./audio.js";
 import { haptic } from "./platform.js";
-import { writeSave, addHall, initMyths, saveMyths } from "./save.js";
+import { writeSave, addHall, initMyths, saveMyths, loadAlbum, saveAlbum } from "./save.js";
 import { mythFoot } from "./myth.js";
 import { rand, pick, weighted, TAU, shade, clamp, mulberry32 } from "./util.js";
 import { initBoss, bossAI, bossHit, bossKilled, wakeBoss, arenaTick, bossFight } from "./boss.js";
@@ -38,6 +39,16 @@ export const H = () => G.hooks;
 // ---------- v9: Kostüm-Sammlung ----------
 // ?kostueme=alle: nur zum Anschauen alle frei — nichts wird gespeichert (weder Sammlung noch getragenes Kostüm)
 G.myth = (() => { const m = initMyths(), view = URLQ.get("kostueme") === "alle"; return { have: view ? MYTHS.map(x => x.id) : m.have, real: m.have, note: m.note, view }; })();
+// v14 E5: Gegner-Sammelalbum — Siege je Gegnerart (gehört dem Gerät, wie die Kostüme)
+G.album = VORLAGE.album ? loadAlbum() : null;
+function albumZaehlen(type) {
+  const A = G.album; if (!A || G.demo || !(type in A.k)) return;
+  const n0 = A.k[type]; A.k[type] = n0 + 1;
+  const st = albumNeu(n0, n0 + 1);
+  if (st < 0) return;
+  saveAlbum(A);
+  H().album && H().album(type, st);
+}
 export const mythHave = id => G.myth.have.includes(id);
 export const mythReal = id => G.myth.real.includes(id);
 /** Kostüm freischalten (Sammlung des Geräts) — true, wenn es neu war */
@@ -108,6 +119,7 @@ export function profileFromGame() {
 export function save() {
   if (!G.p || !G.prof || G.demo) return;
   writeSave(profileFromGame());
+  if (G.album) saveAlbum(G.album);                          // v14 E5: Album mitspeichern (Zähler zwischen den Stufen)
   H().saved && H().saved();
 }
 
@@ -356,6 +368,7 @@ export function killEnt(e) {
     return;
   }
   G.stats.kills++;
+  if (!e.isBoss) albumZaehlen(e.type);                     // v14 E5: Sammelalbum
   P.poof(e.x, e.y, e.tint || "#ffd0e8", e.isBoss || e.elite);
   SFX.poof({ x: e.x, y: e.y, boss: e.isBoss });
   hitstop(e.isBoss ? 200 : e.elite ? 90 : 55);

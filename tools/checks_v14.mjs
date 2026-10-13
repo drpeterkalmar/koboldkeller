@@ -5,6 +5,7 @@
 // V41 (E2): alter Spielstand (Datei v3, Lv 15) → Weiterspielen: Lv 15, Talente gleich, Fortschritt anteilig, XP ohne Level-Anteil × Aufhol-Faktor
 // V42 (E3): Zucken im Warnmoment, Schreck-Flucht mit Bildfolge, Ziel-Kegel (Joystick-Würfe)
 // V43 (E4): Schleifen + Truhen abseits über 20 Ebenen, Karten-Bild; mit --ref=8732 (v13-Server): ?schleifen=0&truhen=zufall = gleiche Karten
+// V44 (E5): Sammelalbum im 🎒 (Stufen 1/10/30, gehört dem Gerät), Bilder hoch + quer
 // Einzeln: node tools/checks_v14.mjs [--port=8731] [--only=V40,V42] [--ref=8732]
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -281,6 +282,49 @@ export async function runV14({ browser, BASE, R, errors, only = null, ref = null
     const ok = mitS >= 18 && trAb / trN >= 0.6 && kb.every(k => !k.schleifen.length) && (gleichRef !== false);
     R("V43", "E4 Dungeon im Spiel (Seed 4711, Ebene 1–20): Schleifen ≥ 20 Kacheln Ersparnis, Truhen abseits; ?schleifen=0&truhen=zufall = Karte wie v13" + (REF ? " (Vergleich mit Server " + REF + ")" : ""), ok,
       `Ebenen mit Schleife ≥ 20: ${mitS}/20 (Ersparnis ${ka.map(k => k.schleifen.join("+") || "–").join(" ")}) · Truhen abseits ${trAb}/${trN} · Regler aus: ${kb.filter(k => k.schleifen.length).length} Schleifen` + (kref ? ` · Karten wie v13: ${kb.filter((k, i) => k.h === kref[i].h).length}/20` : " · (kein --ref-Server)"));
+  }
+  // ===================================================================
+  // V44 — E5 Gegner-Sammelalbum im 🎒: Silhouette → Bild (1) → Oma-Satz (10) → goldener Rahmen + Lebenswert (30), gehört dem Gerät
+  // ===================================================================
+  if (want("V44")) {
+    const run = async (q, w, h, name) => {
+      const P = await page0(browser, BASE, errors, q, { w, h });
+      const r = await P.page.evaluate(async () => {
+        const G = KK.G; KK.start({ name: "Album" }); KK.god(true); KK.goto(5);
+        for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1);
+        // Hinweise am Haken zählen (die Toast-Leiste zeigt nur die letzten drei); der letzte Text bleibt sichtbar
+        const toasts = [], orig = G.hooks.album; G.hooks.album = (t, st) => { toasts.push(t + ":" + st); orig(t, st); };
+        const kill = (t, n) => { for (let i = 0; i < n; i++) { KK.spawn(t, 2, 0); KK.kill("all"); G.items.length = 0; } };
+        kill("wichtel", 1); kill("geist", 10); kill("flamme", 30);
+        await new Promise(r => setTimeout(r, 300));
+        const album = G.album ? { ...G.album.k } : null, saved = localStorage.getItem("koboldkeller2_album");
+        // neues Spiel: Album bleibt (gehört dem Gerät)
+        KK.start({ name: "Neu" }); const nach = G.album ? { ...G.album.k } : null;
+        KK.goto(5); for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1);
+        return { album, saved: saved && JSON.parse(saved), nach, toasts: toasts.join(" | "), letzter: document.getElementById("toasts").textContent };
+      });
+      await P.page.evaluate(() => { KK.G.screen = "play"; document.getElementById("btnBag").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
+      await sleep(400);
+      const sec = await P.page.evaluate(() => { const a = document.querySelector(".album"); if (a) a.scrollIntoView({ block: "center" }); return a ? [...a.querySelectorAll(".alb")].map(b => b.className.replace("alb ", "") + ":" + b.querySelector(".an").textContent.replace(/\u00ad/g, "")) : null; });
+      let info = [];
+      if (sec) {
+        for (const id of ["flamme", "geist", "wichtel", "bat"]) { await P.page.click('.alb[data-a="' + id + '"]'); await sleep(120); info.push(await P.page.evaluate(() => document.getElementById("albInfo").textContent)); }
+        await P.page.click('.alb[data-a="flamme"]'); await sleep(150);
+        await shot(P.page, "v44_album_" + name);
+      }
+      await P.ctx.close();
+      return { ...r, sec, info };
+    };
+    const hoch = await run("", 412, 915, "hoch"), quer = await run("", 915, 412, "quer"), aus = await run("album=0", 412, 915, "aus");
+    out.V44 = { hoch, quer, aus };
+    const k = hoch.album;
+    const ok = k && k.wichtel === 1 && k.geist === 10 && k.flamme === 30 && k.bat === 0 && hoch.saved && hoch.saved.k.flamme === 30 && hoch.nach.flamme === 30 &&
+      hoch.sec && hoch.sec.length === 8 && hoch.sec.some(x => x.startsWith("s3") && x.includes("Flämmchen")) && hoch.sec.some(x => x.startsWith("s0") && x.includes("???")) &&
+      /Lebenswert/.test(hoch.info[0]) && /Oma|„/.test(hoch.info[1]) && /Noch 9/.test(hoch.info[2]) && /noch nicht besiegt/.test(hoch.info[3]) &&
+      hoch.toasts === "wichtel:1 | geist:1 | geist:2 | flamme:1 | flamme:2 | flamme:3" && /Goldener Rahmen im Album: Flämmchen/.test(hoch.letzter) &&
+      quer.sec && quer.sec.length === 8 && !aus.sec && !aus.album && !aus.saved;
+    R("V44", "E5 Sammelalbum im 🎒: 1 Sieg → Bild, 10 → Oma-Satz, 30 → goldener Rahmen + Lebenswert, Hinweise beim Erreichen, gehört dem Gerät (neues Spiel behält es), hoch + quer; ?album=0 = kein Album", ok,
+      `Zähler ${JSON.stringify(k)} · Seiten ${hoch.sec ? hoch.sec.join(", ") : "–"} · Infos: ${hoch.info.map(t => t.slice(0, 60)).join(" / ")} · nach neuem Spiel Flämmchen ${hoch.nach && hoch.nach.flamme} · quer ${quer.sec ? quer.sec.length : 0} Seiten · aus: Album ${aus.sec ? "da" : "weg"}, Speicher ${aus.saved ? "da" : "leer"}`);
   }
   return out;
 }

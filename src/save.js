@@ -1,6 +1,6 @@
 /* save.js — Spielstand, v20-Migration, Ehrenhall, Einstellungen (MIT) */
-import { xpMigrieren } from "./vorlage.js";
-import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf, MYTH_KEY, MYTH_BY_ID, MYTH_START, MYTHS, mythOfBoss } from "./config.js";
+import { xpMigrieren, albumSauber } from "./vorlage.js";
+import { SAVE_KEY, OLD_SAVE_KEY, HALL_KEY, SETTINGS_KEY, SPECIES, OLD_SPECIES_MAP, MAX_DEPTH, HATS, SAVE_V, CAP, CAP_GOLD, AMMO, SKILLS, SKILL_MAX, SPECIAL, makeLook, lookSave, bossKindOf, MYTH_KEY, MYTH_BY_ID, MYTH_START, MYTHS, mythOfBoss, ALBUM, ALBUM_KEY } from "./config.js";
 
 const num = (v, d, lo = -Infinity, hi = Infinity) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
 const str = (v, d, max = 14) => typeof v === "string" && v.trim() ? v.trim().slice(0, max) : d;
@@ -149,3 +149,7 @@ export function initMyths() {
   return { have: rec.have, note: rec.note, fresh: true };
 }
 export function saveMyths(have, note = 0) { return writeJson(MYTH_KEY, { v: 1, have: have.filter(id => MYTH_BY_ID[id]), note }); }
+
+// ---------- v14 E5: Gegner-Sammelalbum (gehört dem Gerät, eigener Key — ein neues Spiel verliert nichts) ----------
+export function loadAlbum() { return albumSauber(readJson(ALBUM_KEY), ALBUM.map(a => a.id)); }
+export function saveAlbum(a) { return writeJson(ALBUM_KEY, albumSauber(a, ALBUM.map(x => x.id))); }

@@ -324,3 +324,16 @@ body.noHap .kkHapSw { display: none; }
 .lookDice { min-height: 44px; padding: 8px 10px; font-size: 16px; margin: 8px 0 0; }
 .hapTest { min-height: 46px; padding: 9px 10px; font-size: 16px; }
 .hapHint { font-size: 13px; opacity: .85; margin: 2px 4px 8px; }
+
+/* v14 E5: Gegner-Sammelalbum im Rucksack (4 Spalten, hoch und quer) */
+.album { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 6px 0; }
+.alb { display: flex; flex-direction: column; align-items: center; padding: 5px 2px 4px; border-radius: 12px; background: rgba(255,255,255,.08); border: 2.5px solid rgba(255,255,255,.18); font-weight: 800; min-width: 0; }
+.alb canvas { width: 56px; height: 46px; }
+.alb .an { display: block; width: 100%; font-size: 11px; line-height: 1.1; min-height: 2.2em; overflow: hidden; hyphens: manual; text-align: center; }
+.alb .ak { font-size: 11px; opacity: .8; }
+.alb.s0 .an { opacity: .55; }
+.alb.s3 { border-color: var(--gold); background: rgba(255,215,94,.18); box-shadow: 0 0 10px rgba(255,215,94,.45) inset; }
+.alb.on { outline: 3px solid #fff; outline-offset: 1px; }
+.albN { font-size: 14px; opacity: .75; }
+.albInfo { font-size: 14px; min-height: 2.6em; margin: 4px 2px 8px; text-align: left; }
+.albInfo small { display: block; opacity: .8; margin-top: 2px; }

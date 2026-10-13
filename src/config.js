@@ -250,7 +250,22 @@ export const VORLAGE = {
   // E4 Beute hinter Umwegen (Vorlage E): Truhen bevorzugt abseits des Wegs Eingang → Treppe (Gewicht 5 + 10 je Raumwechsel),
   // mindestens eine abseits. ?truhen=zufall = v13
   truhen: _q.get("truhen") === "zufall" ? "zufall" : "abseits",
+  // E5 Gegner-Sammelalbum (Vorlage A): im 🎒 je Gegnerart Silhouette → Bild nach 1 Sieg, Oma-Satz nach 10, goldener Rahmen +
+  // Lebenswert nach 30. Gehört dem Gerät (wie die Kostüme, ein neues Spiel behält es). ?album=0 = aus
+  album: _qn("album", 1) > 0, albumStufen: [1, 10, 30],
 };
+export const ALBUM_KEY = "koboldkeller2_album";
+// v14 E5: Album-Seiten (eigene Sätze von Oma Pilzhut; col = Farbe des Bildes wie in der ersten Welt, in der die Art vorkommt)
+export const ALBUM = [
+  { id: "bat", col: "#8a5cd6", oma: "Fledermäuse schlafen kopfüber — darum ist ihnen beim Losfliegen immer ein bisschen schwindelig!" },
+  { id: "slime", col: "#7be07a", oma: "Schleime essen am liebsten Moos-Pudding. Wenn sie sich teilen, sind beide Hälften doppelt so kitzelig!" },
+  { id: "wichtel", col: "#e8434f", oma: "Wichtel sammeln verlorene Socken. Fehlt dir eine? Dann hat sie bestimmt ein Wichtel!" },
+  { id: "wisp", col: "#8fe9ff", oma: "Irrlichter verlaufen sich ständig. Deshalb leuchten sie — damit sie sich selbst wiederfinden!" },
+  { id: "kaefer", col: "#7fd8ff", oma: "Kristallkäfer polieren jeden Morgen ihren Panzer, bis er glitzert wie ein Bonbon." },
+  { id: "pilzling", col: "#b48cff", oma: "Pilzlinge niesen Glitzerstaub, wenn sie sich erschrecken. Gesundheit!" },
+  { id: "geist", col: null, oma: "Gespenstchen spielen am liebsten Verstecken — leider kichern sie dabei immer viel zu laut." },
+  { id: "flamme", col: null, oma: "Flämmchen frieren nie. Nur in die Badewanne dürfen sie leider nicht!" },
+];
 // v13: „Bewegung reduzieren“ des Geräts → weniger Wackeln, weniger Partikelregen
 export const CALM = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 

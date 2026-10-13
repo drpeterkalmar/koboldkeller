@@ -132,3 +132,17 @@ export function kegelZiel(px, py, dx, dy, ents, foe, V = VORLAGE) {
   }
   return best || near;
 }
+
+// =====================================================================
+// E5: Gegner-Sammelalbum
+// =====================================================================
+/** Album-Stufe: 0 = Silhouette, 1 = Bild, 2 = Oma-Satz, 3 = goldener Rahmen + Lebenswert */
+export const albumStufe = (n, V = VORLAGE) => V.albumStufen.filter(k => n >= k).length;
+/** neue Stufe erreicht? (−1 = nein) */
+export const albumNeu = (nAlt, nNeu, V = VORLAGE) => albumStufe(nNeu, V) > albumStufe(nAlt, V) ? albumStufe(nNeu, V) : -1;
+/** Album-Speicher säubern: { v: 1, k: { art: Siege } } */
+export function albumSauber(o, arten) {
+  const k = {};
+  for (const a of arten) { const n = o && o.k && o.k[a]; k[a] = typeof n === "number" && isFinite(n) && n > 0 ? Math.min(1e6, Math.floor(n)) : 0; }
+  return { v: 1, k };
+}

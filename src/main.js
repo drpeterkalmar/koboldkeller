@@ -71,6 +71,7 @@ G.hooks = {
   tut: (s) => UI.showTut(s),
   saved: () => UI.flashSaved(),
   mythFound: (id, auto) => { if (!G.demo) UI.mythFound(id, auto); },
+  album: (type, st) => { if (!G.demo) UI.albumToast(type, st); },      // v14 E5: neue Album-Stufe
 };
 
 // ---------- Erste Geste: Audio + Wake-Lock ----------

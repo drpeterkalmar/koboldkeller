@@ -1,7 +1,7 @@
 /* ui.js — Menüs, Charakter-Editor, HUD, Toasts, Rucksack (Talente), Ehrenhall, Tutorial, Boss-Karte (MIT) */
 import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE, lookForSave } from "./game.js";
-import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA, VORLAGE } from "./config.js";
-import { portrait, previewRig } from "./art.js";
+import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA, VORLAGE, ALBUM, ENEMIES, POOLS, diffOf, biomeOf, MAX_DEPTH } from "./config.js";
+import { portrait, previewRig, enemySprite } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
 import { esc, pick, mulberry32 } from "./util.js";
 import { SFX, setMusic, setSfx } from "./audio.js";
@@ -377,11 +377,67 @@ function renderBag() {
     h += "</div>";
   }
   h += "<p style='font-size:13px;opacity:.7'>🍄 Glitzerpilze laden den ✨ Spezialangriff (" + f1(specialDmg(p)) + " Schaden rundherum) · Besiegte Gegner: " + G.stats.kills + "</p>";
+  if (G.album) h += albumHtml();
   $("bagBody").innerHTML = h;
+  if (G.album) albumWire();
   $("bagBody").querySelectorAll(".skPlus").forEach(b => b.addEventListener("click", () => { if (skillUp(b.dataset.s)) { renderBag(); } else SFX.click(); }));
   const rs = $("btnRespec"); if (rs) rs.addEventListener("click", () => { const n = skillReset(); SFX.pickup(); toast("↩️ " + n + " Punkte zurück — verteil sie neu!"); renderBag(); });
   const mi = $("btnMirror"); if (mi) mi.addEventListener("click", () => { SFX.click(); G.screen = "play"; openMirror(); });
   $("bagBody").querySelectorAll(".hatBtn").forEach(b => b.addEventListener("click", () => { wearHat(b.dataset.h || null); SFX.click(); renderBag(); }));
+}
+
+// ---------- v14 E5: Gegner-Sammelalbum (im 🎒) ----------
+const ALB_NAME = a => ENEMIES[a].name;
+// Namen im Album mit weichem Trennstrich (schmale Kacheln, zweizeilig)
+const ALB_KURZ = { bat: "Fleder\u00admaus", geist: "Gespenst\u00adchen", kaefer: "Kristall\u00adkäfer", flamme: "Flämm\u00adchen" };
+/** erste und tiefste (bis zur tiefsten erreichten) Ebene, auf der die Art vorkommt */
+function albumEbenen(id) {
+  const ds = [];
+  for (let d = 1; d <= MAX_DEPTH; d++) { const pool = d <= 1 ? [["bat"], ["slime"], ["wichtel"]] : POOLS[biomeOf(d)]; if (pool.some(x => x[0] === id)) ds.push(d); }
+  return { erste: ds[0], hier: ds.filter(d => d <= Math.max(1, G.deepest)).pop() || ds[0] };
+}
+function albumHtml() {
+  const A = G.album, st = id => VORLAGE.albumStufen.filter(k => A.k[id] >= k).length;
+  const seen = ALBUM.filter(a => A.k[a.id] > 0).length;
+  let h = "<h2 class='sub'>📖 Sammelalbum <span class='albN'>" + seen + " / " + ALBUM.length + "</span></h2><div class='album'>";
+  for (const a of ALBUM) {
+    const s = st(a.id), n = A.k[a.id];
+    h += '<button class="alb s' + s + '" data-a="' + a.id + '"><canvas width="112" height="92"></canvas><span class="an">' + (s ? esc(ALB_KURZ[a.id] || ALB_NAME(a.id)) : "???") + '</span>' +
+      '<span class="ak">' + (n ? "×" + n : "–") + (s >= 2 ? " 💬" : "") + (s >= 3 ? " 🌟" : "") + "</span></button>";
+  }
+  return h + "</div><p class='albInfo' id='albInfo'>" + (seen ? "Tipp ein Bild an!" : "Besiege Gegner im Keller — dann kleben sie hier in deinem Album!") + "</p>";
+}
+function albumWire() {
+  const A = G.album, [n1, n10, n30] = VORLAGE.albumStufen;
+  $("bagBody").querySelectorAll(".alb").forEach(b => {
+    const a = ALBUM.find(x => x.id === b.dataset.a), n = A.k[a.id], cv = b.querySelector("canvas"), c = cv.getContext("2d");
+    const sp = enemySprite(a.id, a.col, "open");
+    if (sp) {
+      const k = Math.min(cv.width / sp.cv.width, cv.height / sp.cv.height) * 0.92;
+      c.drawImage(sp.cv, (cv.width - sp.cv.width * k) / 2, (cv.height - sp.cv.height * k) / 2, sp.cv.width * k, sp.cv.height * k);
+      if (n < n1) { c.globalCompositeOperation = "source-in"; c.fillStyle = "#2a2142"; c.fillRect(0, 0, cv.width, cv.height); c.globalCompositeOperation = "source-over"; }
+    }
+    b.addEventListener("click", () => {
+      SFX.click();
+      $("bagBody").querySelectorAll(".alb").forEach(x => x.classList.toggle("on", x === b));
+      const E = albumEbenen(a.id), nm = ALB_NAME(a.id);
+      let t;
+      if (n < n1) t = "??? — noch nicht besiegt. Wohnt ab Ebene " + E.erste + " im Keller.";
+      else if (n < n10) t = "<b>" + esc(nm) + "</b> · " + n + "× besiegt. Noch " + (n10 - n) + ", dann erzählt dir Oma etwas!";
+      else {
+        t = "<b>" + esc(nm) + "</b> · 👵 „" + esc(a.oma) + "“";
+        if (n < n30) t += " <small>Noch " + (n30 - n) + " bis zum 🌟 goldenen Rahmen.</small>";
+        else { const def = ENEMIES[a.id], d = E.hier, hp = Math.round((def.hp[0] + def.hp[1] * d + def.hp[2] * G.p.lvl) * diffOf(d).hp); t += " <small>🌟 Lebenswert auf Ebene " + d + ": ❤️ " + hp + "</small>"; }
+      }
+      $("albInfo").innerHTML = t;
+      $("albInfo").scrollIntoView({ block: "center" });          // nicht hinter dem „Fertig“-Knopf
+    });
+  });
+}
+/** neue Album-Stufe: kleiner Hinweis (1 = neues Bild, 2 = Oma weiß etwas, 3 = goldener Rahmen) */
+export function albumToast(type, st) {
+  const nm = ALB_NAME(type);
+  toast(st === 1 ? "📖 Neu im Sammelalbum: " + nm + "! Schau in den 🎒 Rucksack." : st === 2 ? "📖 Oma weiß etwas über: " + nm + " — schau ins Album im 🎒!" : "🌟 Goldener Rahmen im Album: " + nm + "!");
 }
 
 // ---------- Ehrenhall ----------
@@ -451,6 +507,7 @@ const TIPS_V14 = [
   ...(VORLAGE.schreck ? ["Wichtel, Schleime und Fledermäuse sind kleine Angsthasen: Macht einer „Puff“, laufen die anderen kurz weg — 😳 Huch!"] : []),
   ...(VORLAGE.kegel ? ["Deine 🫧 fliegen zu dem Gegner, zu dem du gerade läufst. Lauf in seine Richtung und drück 🫧!"] : []),
   ...(VORLAGE.truhen === "abseits" ? ["Truhen verstecken sich gern in Räumen abseits vom Weg zur Treppe — Herumschauen lohnt sich!"] : []),
+  ...(VORLAGE.album ? ["Im 🎒 Rucksack ist jetzt ein 📖 Sammelalbum: Jeder Gegner, den du besiegst, kommt hinein — und ich erzähle dir etwas über ihn!"] : []),
 ];
 TIPS.unshift(...TIPS_V14);
 // v10: Was sagt Oma? Zuerst, was gerade wirklich hilft (je Anlass höchstens alle 90 s), sonst der nächste allgemeine Tipp.

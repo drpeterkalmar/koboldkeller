@@ -266,3 +266,13 @@ test("Ziel-Kegel: angetippter Gegner bleibt Ziel bis 6,5 × 1,5 Kacheln; ohne Ri
   assert.equal(VL.kegelZiel(0, 0, -1, 0, [b, c], null), c);                         // c liegt im Kegel, b nicht
   assert.equal(VL.kegelZiel(0, 0, 1, 0, [{ x: 7, y: 0 }], null), null);             // außer Reichweite
 });
+
+// ---------------------------------------------------------------------
+// E5: Gegner-Sammelalbum
+// ---------------------------------------------------------------------
+test("Sammelalbum: Stufen 1 / 10 / 30 Siege, neue Stufe genau einmal, Speicher wird gesäubert", () => {
+  assert.deepEqual([0, 1, 9, 10, 29, 30, 500].map(n => VL.albumStufe(n)), [0, 1, 1, 2, 2, 3, 3]);
+  assert.equal(VL.albumNeu(0, 1), 1); assert.equal(VL.albumNeu(1, 2), -1); assert.equal(VL.albumNeu(9, 10), 2); assert.equal(VL.albumNeu(29, 30), 3); assert.equal(VL.albumNeu(30, 31), -1);
+  assert.deepEqual(VL.albumSauber({ k: { bat: 3.7, slime: -2, geist: "x", fremd: 9 } }, ["bat", "slime", "geist"]), { v: 1, k: { bat: 3, slime: 0, geist: 0 } });
+  assert.deepEqual(VL.albumSauber(null, ["bat"]), { v: 1, k: { bat: 0 } });
+});
