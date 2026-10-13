@@ -1,6 +1,6 @@
 /* ui.js — Menüs, Charakter-Editor, HUD, Toasts, Rucksack (Talente), Ehrenhall, Tutorial, Boss-Karte (MIT) */
 import { G, startGame, attack, bubbles, dodge, potion, special, wearHat, goTown, reviveInTown, finishTut, save, setLook, skillUp, skillReset, skillFull, specialDmg, SPECIAL_STYLE, lookForSave } from "./game.js";
-import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA, VORLAGE, ALBUM, ENEMIES, POOLS, diffOf, biomeOf, MAX_DEPTH, GLANZ_BY_ID } from "./config.js";
+import { SPECIES, NAMES, randomName, rollLook, lookKey, URLQ, HATS, weaponOf, VERSION, PLAYER, CAP, SKILLS, SKILL_MAX, HAIR_STYLES, ACCESSORIES, PAL, SAVE_V, makeLook, lookSave, levelName, BIOMES, MAGNET, AMMO, MYTHS, MYTH_BY_ID, MYTH_TIERS, mythHint, OMA, VORLAGE, ALBUM, ENEMIES, POOLS, diffOf, biomeOf, MAX_DEPTH, GLANZ_BY_ID, GEHEIM } from "./config.js";
 import { portrait, previewRig, enemySprite } from "./art.js";
 import { loadSave, loadHall, loadSettings, saveSettings, sanitize } from "./save.js";
 import { esc, pick, mulberry32 } from "./util.js";
@@ -509,6 +509,7 @@ const TIPS_V14 = [
   ...(VORLAGE.truhen === "abseits" ? ["Truhen verstecken sich gern in Räumen abseits vom Weg zur Treppe — Herumschauen lohnt sich!"] : []),
   ...(VORLAGE.album ? ["Im 🎒 Rucksack ist jetzt ein 📖 Sammelalbum: Jeder Gegner, den du besiegst, kommt hinein — und ich erzähle dir etwas über ihn!"] : []),
   ...(VORLAGE.glanz ? ["Manche neue Waffe glänzt ✨ — dann kann sie etwas Besonderes, zum Beispiel schneller laufen oder Funken sprühen. Schau im 🎒 nach!"] : []),
+  ...(GEHEIM.an ? ["Siehst du im Keller eine Wand mit Riss und Glitzer? Hau zweimal mit ⚔️ drauf — dahinter wartet ein Geheimraum mit Schatztruhe!"] : []),
 ];
 TIPS.unshift(...TIPS_V14);
 // v10: Was sagt Oma? Zuerst, was gerade wirklich hilft (je Anlass höchstens alle 90 s), sonst der nächste allgemeine Tipp.

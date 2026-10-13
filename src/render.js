@@ -998,6 +998,14 @@ function drawProp(ctx, pr, sx, sy, G) {
       ctx.globalAlpha = pr.a; blit(ctx, A.pillarSprite(pr.bi, pr.var), sx, sy); ctx.globalAlpha = 1;
       break;
     }
+    case "wackel": {   // v14 E5c: Wackelwand — Wandblock mit Riss + Glitzer, wackelt bei Treffern; dahinter ein Geheimraum
+      const sh = pr.shakeT > 0 ? Math.sin(R.t * 70) * 2.5 * Z * Math.min(1, pr.shakeT * 4) : 0;
+      blit(ctx, A.wallSprite(R.B, R.biome, pr.v), sx + sh, sy);
+      ctx.globalAlpha = 0.75 + 0.25 * Math.sin(R.t * 3 + pr.x);
+      blit(ctx, A.crackSprite(pr.hits > 0 ? 1 : 0), sx + sh, sy);
+      ctx.globalAlpha = 1;
+      break;
+    }
     case "gate": {   // Arena-Tor: wächst hoch, wenn es sich schließt; sinkt nach dem Sieg wieder ein
       if (pr.k < 0.02) break;
       const sp = A.gateSprite(pr.bi);
@@ -1254,6 +1262,7 @@ function glowPass(ctx, G, B, portals, sc = ctx) {
     if (pr.kind === "lantern") { const [sx, sy] = toScreen(pr.x, pr.y); ctx.globalAlpha = 0.55 + Math.sin(T * 5 + pr.x) * 0.08; const s = A.tinted(glow, "#ffd27a"), w = 60 * Z; ctx.drawImage(s.cv, sx - w / 2, sy - 76 * Z - w / 2, w, w); }
     else if (pr.kind === "house") { const [sx, sy] = toScreen(pr.x, pr.y); ctx.globalAlpha = 0.35; const s = A.tinted(glow, "#ffc56e"); for (const [dx, dy] of [[-72, -32], [30, -10], [64, -28]]) { const w = 46 * Z; ctx.drawImage(s.cv, sx + dx * Z - w / 2, sy + dy * Z - w / 2, w, w); } }
     else if (pr.kind === "chest" && !pr.open) g(pr.x, pr.y, 20, 50, "#ffd75e", 0.25 + Math.sin(T * 3) * 0.1);
+    else if (pr.kind === "wackel") g(pr.x, pr.y, 34, 70, "#ffe9a0", 0.3 + Math.sin(T * 2.4 + pr.x) * 0.14);   // v14 E5c: Wackelwand schimmert
   }
   for (const po of portals) if (!po.locked) g(po.x, po.y, 52 * (po.small ? 0.7 : 1), po.small ? 90 : po.world ? 96 : 130, po.col, (po.world ? 0.3 : 0.4) + Math.sin(T * 3) * 0.08);
   if (L.wallTraps) for (const w of L.wallTraps) if (w.st === 1) { const k = Math.min(1, w.t / WALLTRAP.warn); g(w.x0, w.y0, 18, 40 + 50 * k, w.look.glow, 0.35 + 0.35 * k + 0.1 * Math.sin(T * 26)); }

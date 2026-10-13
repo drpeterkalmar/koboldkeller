@@ -848,6 +848,22 @@ export function chestSprite(open) {
     for (const x of [14, 46]) ol(c, (c) => c.rect(x - 2.5, open ? 26 : 12, 5, open ? 26 : 40), "#ffd75e", "#8a6212", 2);
   });
 }
+/** v14 E5c: Riss + Glitzer über einer Wandkachel (gleiche Maße/Anker wie wallSprite) — „Wackelwand“ vor einem Geheimraum.
+    stufe 0 = ganz, 1 = nach dem ersten Schlag (mehr Risse) */
+export function crackSprite(stufe = 0) {
+  const H = WALL_H;
+  return spr("crack:" + stufe, 64, 32 + H + 14, 32, 16 + H + 14, (c) => {
+    c.translate(0, 14);
+    // dunkler Riss mit goldenem Leuchtkern (gut sichtbar auf jeder Weltfarbe)
+    const riss = (pts, w) => { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (const [x, y] of pts.slice(1)) c.lineTo(x, y); c.lineWidth = w + 2.4; c.strokeStyle = "rgba(255,215,94,.35)"; c.stroke(); c.lineWidth = w; c.strokeStyle = "rgba(40,18,50,.92)"; c.stroke(); c.lineWidth = w * 0.45; c.strokeStyle = "#ffe36e"; c.stroke(); };
+    // linke Seite (0,16)…(32,32+H), rechte Seite (32,32)…(64,16+H)
+    riss([[8, 21], [14, 30], [10, 37], [17, 45], [14, 54]], 3.2);
+    riss([[44, 27], [49, 35], [45, 42], [52, 50], [49, 56]], 3.2);
+    riss([[58, 22], [55, 30], [60, 37], [57, 44]], 2.6); riss([[22, 28], [25, 36], [21, 43]], 2.6);
+    if (stufe) { riss([[20, 26], [24, 34], [21, 42], [26, 50], [24, 58]], 2.6); riss([[54, 24], [52, 32], [57, 40], [54, 47], [58, 54]], 2.6); riss([[4, 34], [9, 38], [6, 45]], 2); }
+    for (const [x, y, r] of [[13, 33, 5], [48, 38, 4.6], [27, 22, 3.6], [57, 28, 3.4], [22, 48, 3], [40, 48, 3.4], [53, 55, 2.8]]) star4(c, x, y, r, "#fff6c0");
+  });
+}
 export function potSprite(col) {
   return spr("pot:" + col, 40, 46, 20, 42, (c) => {
     const b = (c) => { c.moveTo(12, 8); c.lineTo(28, 8); c.lineTo(26, 13); c.bezierCurveTo(40, 18, 38, 40, 20, 42); c.bezierCurveTo(2, 40, 0, 18, 14, 13); c.closePath(); };

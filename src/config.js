@@ -257,6 +257,11 @@ export const VORLAGE = {
   // einer Eigenschaft (GLANZ). Keine Flüche, nie zwei zugleich; ein neuer Glanz ersetzt den alten, sonst bleibt er. ?glanz=0 = v13
   glanz: _qn("glanz", 0.25), glanzBoss: 1, funken: 0.1, funkenSchaden: 0.5,
 };
+// ---------- v14 E5c: Geheimräume (Vorlage E, kindgerecht): ab Ebene 5 sitzt mit wachsender Chance (bis 50 % auf Ebene 20) eine
+// „Wackelwand“ mit sichtbarem Riss + Glitzer an einem Raum; 2 Schläge öffnen sie, dahinter steht IMMER eine Schatztruhe (mit Upgrade).
+// ?geheim=0 = v13 ----------
+export const GEHEIM = { an: _qn("geheim", 1) > 0, ab: 5, max: 0.5, groesse: [4, 5], schlaege: 2 };
+export const geheimChance = d => d < GEHEIM.ab ? 0 : GEHEIM.max * (d - GEHEIM.ab + 1) / (20 - GEHEIM.ab + 1);
 export const GLANZ = [
   { id: "flink", icon: "👟", name: "flink", what: "+10 % schneller laufen" },
   { id: "magnet", icon: "🧲", name: "anziehend", what: "Münzen & Sachen fliegen 1 Kachel weiter her" },

@@ -12,7 +12,7 @@
 import {
   PLAYER, ENEMIES, POOLS, BIOMES, BOSS_HAT, HATS, MEGA, MAX_DEPTH, biomeOf, weaponOf, CAP, AMMO, CAP_GOLD, MAGNET, OMA,
   HOME_PORTAL_HIDE_S, SPECIAL, SKILLS, SKILL_MAX, SKILL_PER_LEVEL, makeLook, lookSave, levelBiome, levelName, diffOf,
-  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE, GLANZ_BY_ID,
+  ARENA, MINIS, BOSSES, bossKindOf, WALLTRAP, WALLTRAP_LOOK, MYTHS, MYTH_BY_ID, MYTH_FX, mythOfBoss, URLQ, VORLAGE, GLANZ_BY_ID, GEHEIM, geheimChance,
 } from "./config.js";
 import { beuteKill, beuteTruhe, beuteTopf, taktEbene, taktFund, taktSicher, gegnerXp, xpGewinn, xpNaechster, zuckt, schreckOpfer, kegelZiel, albumNeu, glanzWurf } from "./vorlage.js";
 import { buildTown, buildDungeon, findPath, moveEnt, canStand, nearestFree, lineFree, isBlocked, placeWallTraps, TOWN_WORLD_COL } from "./world.js";
@@ -197,7 +197,7 @@ export function buildLevel(depth) {
   G.depth = depth; G.biome = biomeOf(depth); G.B = levelBiome(depth);
   const seed = G.prof.seed;
   const bk = bossKindOf(depth);
-  const L = depth === 0 ? buildTown(seed) : buildDungeon(seed, depth, G.biome, diffOf(depth).room, bk ? ARENA[depth] : null, VORLAGE);   // v14: Schleifen/Truhen
+  const L = depth === 0 ? buildTown(seed) : buildDungeon(seed, depth, G.biome, diffOf(depth).room, bk ? ARENA[depth] : null, { ...VORLAGE, geheim: GEHEIM.an ? geheimChance(depth) : 0, geheimGroesse: GEHEIM.groesse });   // v14: Schleifen/Truhen/Geheimraum
   G.L = L;
   G.ents = []; G.items = []; G.shots = []; G.teles = []; G.spawns = []; G.boss = null; G.later = []; G.specFx = null; G.camFocus = null; G.rise = null;
   if (L.stairs) {
@@ -584,6 +584,7 @@ function doSwing() {
     }
   }
   for (const pr of G.L.props) if (pr.kind === "pot" && !pr.broken && Math.hypot(pr.x - p.x, pr.y - p.y) < R) breakPot(pr);
+  { const w = G.L.props.find(pr => pr.kind === "wackel"); if (w && Math.hypot(w.x - p.x, w.y - p.y) < R + 0.3) hitWackel(w, 1); }   // v14 E5c
   if (hits) {
     hitstop(kills ? 70 : 45); shake(0.14 + Math.min(0.2, hits * 0.04));
     haptic(crits ? "crit" : kills ? "kill" : heavy ? "heavy" : "hit");
@@ -714,6 +715,24 @@ function doSpecial() {
   // feindliche Geschosse in der Nähe lösen sich in Glitzer auf
   for (let i = G.shots.length - 1; i >= 0; i--) { const s = G.shots[i]; if (s.kind !== "bubble" && Math.hypot(s.x - p.x, s.y - p.y) < R) { P.sparkle(s.x, s.y, S.c2, 3, s.z); G.shots.splice(i, 1); } }
   for (const pr of G.L.props.slice()) if (pr.kind === "pot" && Math.hypot(pr.x - p.x, pr.y - p.y) < R) breakPot(pr);
+  { const w = G.L.props.find(pr => pr.kind === "wackel"); if (w && Math.hypot(w.x - p.x, w.y - p.y) < R + 0.3) hitWackel(w, GEHEIM.schlaege); }   // v14 E5c: Spezial öffnet sofort
+}
+/** v14 E5c: Wackelwand treffen — nach GEHEIM.schlaege Schlägen bröckelt sie weg und gibt den Geheimraum frei */
+function hitWackel(w, n) {
+  w.hits += n; w.shakeT = 0.35;
+  const L = G.L, col = (G.B && G.B.top) || "#a08a70";
+  burst(w.x, w.y, 6, { kind: "dot", col, add: false, s0: 7, s1: 3, sp0: 0.6, sp1: 2, z: 30, vz0: 60, vz1: 160, g: -500, l0: 0.3, l1: 0.6, bounce: 0.3 });
+  shake(0.18); SFX.pot({ x: w.x, y: w.y });
+  if (w.hits < GEHEIM.schlaege) { text(w.x, w.y, "Wackel!", "#fff6c0", 17, 80); return; }
+  const i = L.props.indexOf(w); if (i >= 0) L.props.splice(i, 1);
+  L.map.block[w.ty * L.map.w + w.tx] = 0;
+  if (L.geheim) L.geheim.offen = true;
+  P.poof(w.x, w.y, col, true); P.sparkle(w.x, w.y, "#ffe36e", 18, 40);
+  burst(w.x, w.y, 16, { kind: "dot", col, add: false, s0: 10, s1: 4, sp0: 1, sp1: 3.5, z: 30, vz0: 80, vz1: 240, g: -600, l0: 0.4, l1: 0.8, bounce: 0.3 });
+  part({ x: w.x, y: w.y, z: 30, kind: "glow", col: "#ffe9a0", s0: 160, s1: 40, life: 0.6 });
+  text(w.x, w.y, "✨ Geheimraum!", "#ffe36e", 22, 100); hitstop(80); shake(0.4); haptic("chest"); SFX.reveal({ x: w.x, y: w.y });
+  G.stats.geheim = (G.stats.geheim || 0) + 1;
+  if (!G.geheimToast) { G.geheimToast = true; H().toast("✨ Ein Geheimraum! Dahinter wartet eine Schatztruhe."); }
 }
 export function wearHat(h) { const p = G.p; if (!p) return; p.hat = p.hats.includes(h) ? h : null; save(); }
 
@@ -847,6 +866,16 @@ export function update(dt, realDt) {
   // Ambient-Partikel
   ambient(dt);
   if (G.screen === "play") mythGlow(dt);
+  // v14 E5c: Wackelwand glitzert (öfter, wenn man näher kommt) + einmaliger Hinweis beim ersten Mal in der Nähe
+  if (G.screen === "play" && L.geheim && !L.geheim.offen) {
+    const w = L.props.find(pr => pr.kind === "wackel");
+    if (w) {
+      w.shakeT = Math.max(0, w.shakeT - dt);
+      const d = Math.hypot(w.x - p.x, w.y - p.y);
+      if (d < 10 && Math.random() < dt * (d < 5 ? 3 : 1.2)) P.sparkle(w.x + rand(-0.35, 0.35), w.y + rand(-0.35, 0.35), "#fff6c0", 1, rand(20, 60));
+      if (d < 4.5 && !G.wackelToast) { G.wackelToast = true; H().toast("🧱✨ Diese Wand hat einen Riss und glitzert … hau zweimal mit ⚔️ drauf!"); }
+    }
+  }
   if (G.screen === "play" && p.glanz && Math.random() < dt * 2.2) P.sparkle(p.x + rand(-0.35, 0.35), p.y + rand(-0.35, 0.35), "#fff6b0", 1, 46);   // v14 E5b: Waffe glitzert
   // Rig-Daten
   const rg = p.rig;
@@ -998,7 +1027,7 @@ function openChest(pr) {
   SFX.chest({ x: pr.x, y: pr.y }); shake(0.2); haptic("chest");
   P.sparkle(pr.x, pr.y, "#ffe36e", 14, 30); part({ x: pr.x, y: pr.y, z: 20, kind: "glow", col: "#ffd75e", s0: 120, s1: 30, life: 0.5 });
   // v14: Upgrade-Zähler ≥ 60 → sicher ein Upgrade; Herz öfter bei wenig ❤️; nichts Nutzloses (vorlage.js)
-  const sicher = taktSicher(G.upM), list = beuteTruhe(zust(), Math.random, sicher);
+  const sicher = taktSicher(G.upM) || !!pr.geheim, list = beuteTruhe(zust(), Math.random, sicher || !!pr.geheim);   // v14 E5c: Schatztruhe im Geheimraum hat immer ein Upgrade
   if (sicher && list.includes("up")) G.stats.upSicher++;
   dropAll(list, pr.x, pr.y);
 }

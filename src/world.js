@@ -233,7 +233,8 @@ export const TOWN_WORLD_COL = [null, "#8fff8a", "#8fe9ff", "#ff9ae0", "#dff6ff",
 // ================= DUNGEON =================
 /** ad = Arena-Eintrag aus config.ARENA (nur Boss-Ebenen: Hauptboss 4/8/…, Mini-Boss 2/6/…).
     v14 opt (aus config.VORLAGE): schleifen = Mindest-Ersparnis in Kacheln für Abkürzungs-Schleifen (0 = v13: 2 Zufalls-Gänge),
-    schleifenMax, schleifenWeg (Weg Eingang→Treppe bleibt ≥ so viel vom Baum-Weg), truhen = "abseits" | "zufall" (v13) */
+    schleifenMax, schleifenWeg (Weg Eingang→Treppe bleibt ≥ so viel vom Baum-Weg), truhen = "abseits" | "zufall" (v13),
+    geheim = Chance auf einen Geheimraum hinter einer Wackelwand (0 = keiner, Zufall wird dann nicht angefasst) */
 export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null, opt = {}) {
   const rnd = mulberry32((seed | 0) + depth * 7717);
   const isBoss = !!ad;
@@ -372,6 +373,18 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null, opt 
     const p = freeIn(r, 1);
     if (p) props.push({ kind: "chest", x: p.x, y: p.y, open: false });
   }
+  // v14 E5c: Geheimraum hinter einer Wackelwand (Riss + Glitzer, 2 Schläge) — immer mit Schatztruhe, nie am Eingang/an der Treppe/Arena
+  let geheim = null;
+  if (opt.geheim && rnd() < opt.geheim) {
+    geheim = placeSecret(m, rooms, [entryRoom, stairRoom, isBoss ? 0 : -1], rnd, opt.geheimGroesse || [4, 5]);
+    if (geheim) {
+      const g = geheim;
+      props.push({ kind: "wackel", x: g.door.x + 0.5, y: g.door.y + 0.5, tx: g.door.x, ty: g.door.y, hits: 0, v: m.v[g.door.y * S + g.door.x], shakeT: 0 });
+      props.push({ kind: "chest", x: Math.floor(g.rect.x + g.rect.w / 2) + 0.5, y: Math.floor(g.rect.y + g.rect.h / 2) + 0.5, open: false, geheim: true });
+      lights.push({ x: g.door.x + 0.5, y: g.door.y + 0.5, r: 1.8, c: "#ffe9a0", a: 0.35, flick: 0.1 });
+      for (let k = 0; k < 4; k++) { const x = g.rect.x + ((rnd() * g.rect.w) | 0), y = g.rect.y + ((rnd() * g.rect.h) | 0); m.deco[y * S + x] = 2 + ((rnd() * 3) | 0); }
+    }
+  }
   // Leuchtende Biom-Kristalle/Lava als Lichter
   for (let i = 0; i < m.deco.length; i++) {
     if (m.deco[i] === 4 && (biome === 2 || biome === 5 || biome === 3) && rnd() < 0.5) {
@@ -382,7 +395,35 @@ export function buildDungeon(seed, depth, biome, room = [5, 10], ad = null, opt 
   const spots = [];
   rooms.forEach((r, i) => { if (i !== entryRoom) for (let t = 0; t < 12; t++) { const p = freeIn(r, 0); if (p) spots.push({ ...p, room: i }); } });
   for (let i = spots.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
-  return { kind: "dungeon", map: m, rooms, entry, stairs, homePortal, torches, lights, props, spots, isBoss, arena, rnd, schleifen, weg };
+  return { kind: "dungeon", map: m, rooms, entry, stairs, homePortal, torches, lights, props, spots, isBoss, arena, rnd, schleifen, weg, geheim };
+}
+
+// ================= v14 E5c: GEHEIMRAUM (Vorlage E) =================
+/** kleiner Raum im Fels neben einem Raum, nur durch eine Kachel (Wackelwand) von ihm getrennt; ringsum 1 Kachel Fels zu allem anderen.
+    Die Tür-Kachel wird Boden, bleibt aber blockiert (Wackelwand-Requisite). m.room = −2 (kein Raum, nie Spawn/Truhe/Fallen). */
+function placeSecret(m, rooms, skip, rnd, groesse) {
+  const S = m.w, A = rooms.find(r => r.arena), cand = [];
+  const fels = (x0, y0, x1, y1) => { if (x0 < 2 || y0 < 2 || x1 > S - 3 || y1 > m.h - 3) return false; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (!m.solid[y * S + x]) return false; return true; };
+  const nahArena = (x0, y0, x1, y1) => A && x1 >= A.x - 3 && y1 >= A.y - 3 && x0 <= A.x + A.w + 2 && y0 <= A.y + A.h + 2;
+  const n = groesse[0] + ((rnd() * (groesse[1] - groesse[0] + 1)) | 0);
+  rooms.forEach((r, i) => {
+    if (skip.includes(i) || r.arena) return;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      // Tür mittig an der Seite (wo der Raum ≥ 3 Kacheln breit ist), Geheimraum dahinter mittig ausgerichtet
+      const door = dx ? { x: dx > 0 ? r.x + r.w : r.x - 1, y: r.y + (r.h >> 1) } : { x: r.x + (r.w >> 1), y: dy > 0 ? r.y + r.h : r.y - 1 };
+      const g = dx ? { x: dx > 0 ? door.x + 1 : door.x - n, y: door.y - (n >> 1), w: n, h: n } : { x: door.x - (n >> 1), y: dy > 0 ? door.y + 1 : door.y - n, w: n, h: n };
+      if (!m.solid[door.y * S + door.x]) continue;
+      // Tür-Nachbarn quer zur Richtung müssen Fels sein (sonst läge die Tür an einem Gang)
+      if (!m.solid[(door.y + dx) * S + door.x + dy] || !m.solid[(door.y - dx) * S + door.x - dy]) continue;
+      if (!fels(g.x - 1, g.y - 1, g.x + g.w, g.y + g.h) || nahArena(g.x, g.y, g.x + g.w, g.y + g.h)) continue;
+      cand.push({ room: i, door, rect: g });
+    }
+  });
+  if (!cand.length) return null;
+  const c = cand[(rnd() * cand.length) | 0];
+  for (let y = c.rect.y; y < c.rect.y + c.rect.h; y++) for (let x = c.rect.x; x < c.rect.x + c.rect.w; x++) { carve(m, x, y); m.room[y * S + x] = -2; }
+  carve(m, c.door.x, c.door.y); m.block[c.door.y * S + c.door.x] = 1; m.room[c.door.y * S + c.door.x] = -2;
+  return c;
 }
 
 // ================= v14: ABKÜRZUNGS-SCHLEIFEN + WEG-INFO (Vorlage E) =================
@@ -494,7 +535,7 @@ export function placeWallTraps(L, n, C) {
       let len = 0, tx = x + dx, ty = y + dy, ok = true, hug = 0;
       while (tx < S && ty < m.h && !m.block[ty * S + tx]) {
         const r = m.room[ty * S + tx];
-        if (r === entryRoom || (arenaRoom >= 0 && r === arenaRoom) || inArena(tx, ty)) { ok = false; break; }
+        if (r === entryRoom || (arenaRoom >= 0 && r === arenaRoom) || inArena(tx, ty) || r === -2) { ok = false; break; }   // v14: nie im Geheimraum
         if (m.solid[(ty + dx) * S + tx + dy]) hug++;                                     // Wand direkt davor (Bildschirm) verdeckt die Bahn
         len++; tx += dx; ty += dy;
       }

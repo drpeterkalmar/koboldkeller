@@ -7,6 +7,7 @@
 // V43 (E4): Schleifen + Truhen abseits über 20 Ebenen, Karten-Bild; mit --ref=8732 (v13-Server): ?schleifen=0&truhen=zufall = gleiche Karten
 // V44 (E5): Sammelalbum im 🎒 (Stufen 1/10/30, gehört dem Gerät), Bilder hoch + quer
 // V45 (E5b): Glanz-Eigenschaften (Boss-Schwert immer, Wirkung je Eigenschaft, Spielstand)
+// V46 (E5c): Geheimraum hinter der Wackelwand (Bildfolge Riss → Schlag → offen → Schatztruhe)
 // Einzeln: node tools/checks_v14.mjs [--port=8731] [--only=V40,V42] [--ref=8732]
 import { loadPlaywright } from "./pw.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -249,7 +250,7 @@ export async function runV14({ browser, BASE, R, errors, only = null, ref = null
       }
       return out;
     });
-    const A = await page0(browser, BASE, errors, "", { seed: false }), B = await page0(browser, BASE, errors, "schleifen=0&truhen=zufall", { seed: false });
+    const A = await page0(browser, BASE, errors, "", { seed: false }), B = await page0(browser, BASE, errors, "schleifen=0&truhen=zufall&geheim=0", { seed: false });
     const ka = await karten(A.page), kb = await karten(B.page);
     let kref = null;
     if (REF) { const C = await page0(browser, REF, errors, "", { seed: false }); kref = await karten(C.page); await C.ctx.close(); }
@@ -367,6 +368,49 @@ export async function runV14({ browser, BASE, R, errors, only = null, ref = null
       Math.abs(e.flink.spd / e.ohne.spd - 1.1) < 0.001 && Math.abs(e.magnet.mag - e.ohne.mag - 1) < 0.001 && e.blase.blasen === e.ohne.blasen + 1 && ga.funken >= 1 && ga.saved === "funken";
     R("V45", "E5b Glanz: Boss-Schwert mit neuer Waffenstufe glänzt immer (Hinweis), ohne neue Stufe bleibt der Glanz; 👟 +10 % Tempo, 🧲 +1 Kachel, 🫧 +1 Blase, ✨ Funken; im Spielstand; ?glanz=0 = nie", ok,
       `Boss-Schwert: ${ga.boss.glanz || "–"} (Hinweis ${ga.boss.toast}), bleibt ${ga.bleibt} · Tempo ×${(e.flink.spd / e.ohne.spd).toFixed(2)}, Magnet ${e.ohne.mag} → ${e.magnet.mag}, Blasen ${e.ohne.blasen} → ${e.blase.blasen}, Funken ${ga.funken}× · Spielstand „${ga.saved}“ · aus: ${gb.boss.glanz || "kein Glanz"}`);
+  }
+  // ===================================================================
+  // V46 — E5c Geheimraum: Wackelwand mit Riss + Glitzer, 2 Schläge öffnen, Schatztruhe mit Upgrade; ?geheim=0 = keine
+  // ===================================================================
+  if (want("V46")) {
+    const suche = async (page) => page.evaluate(async () => {
+      const G = KK.G; KK.start({ name: "Geheim", seed: 4711 }); KK.god(true);
+      const hat = [];
+      for (let k = 1; k <= 20; k++) { KK.goto(k); if (G.L.props.some(p => p.kind === "wackel")) hat.push(k); }
+      return hat;
+    });
+    const A = await page0(browser, BASE, errors, "", { seed: false }), B = await page0(browser, BASE, errors, "geheim=0", { seed: false });
+    const hatA = await suche(A.page), hatB = await suche(B.page);
+    let r = { d: 0 };
+    if (hatA.length) {
+      r = await A.page.evaluate(async (d) => {
+        const w = ms => new Promise(r => setTimeout(r, ms)), G = KK.G;
+        KK.goto(d); await w(400); for (const e of G.ents.slice()) G.ents.splice(G.ents.indexOf(e), 1);
+        const g = G.L.geheim, R0 = G.L.rooms[g.room], m = G.L.map;
+        const dx = g.door.x >= R0.x + R0.w ? 1 : g.door.x < R0.x ? -1 : 0, dy = g.door.y >= R0.y + R0.h ? 1 : g.door.y < R0.y ? -1 : 0;
+        KK.teleport(g.door.x + 0.5 - dx * 1.7, g.door.y + 0.5 - dy * 1.7); G.portalCd = 0;
+        const toasts = []; const box = document.getElementById("toasts"); new MutationObserver(() => toasts.push(box.textContent)).observe(box, { childList: true, subtree: true });
+        await w(700);
+        return { d, door: g.door, dir: [dx, dy], block0: m.block[g.door.y * m.w + g.door.x], hinweis: toasts.join(" ").includes("Riss") };
+      }, hatA[0]);
+      await shot(A.page, "v46_wackelwand");
+      const hit = async () => A.page.evaluate(async () => { const G = KK.G; G.p.atkCd = 0; KK.attack(); await new Promise(r => setTimeout(r, 350)); const w = G.L.props.find(p => p.kind === "wackel"); return { hits: w ? w.hits : "offen", block: G.L.map.block[G.L.geheim.door.y * G.L.map.w + G.L.geheim.door.x], offen: !!G.L.geheim.offen }; });
+      r.h1 = await hit(); await shot(A.page, "v46_wackel_1_schlag");
+      r.h2 = await hit(); await sleep(250); await shot(A.page, "v46_geheim_offen");
+      r.truhe = await A.page.evaluate(async () => {
+        const G = KK.G, ch = G.L.props.find(p => p.kind === "chest" && p.geheim); G.items.length = 0;
+        const path = KK.path(ch.x, ch.y);
+        KK.teleport(ch.x, ch.y); G.portalCd = 0; await new Promise(r => setTimeout(r, 300));
+        return { weg: !!(path && path.length), offen: ch.open, beute: G.items.map(i => i.kind).filter(k => k !== "coin") };
+      });
+      await sleep(200); await shot(A.page, "v46_schatztruhe");
+    }
+    await A.ctx.close(); await B.ctx.close();
+    out.V46 = { hatA, hatB, r };
+    const ok = hatA.length > 0 && hatA.every(d => d >= 5) && hatB.length === 0 && r.block0 === 1 && r.h1.hits === 1 && r.h1.block === 1 && r.h2.offen && r.h2.block === 0 &&
+      r.truhe.weg && r.truhe.offen && r.truhe.beute.some(k => ["sword", "wand", "gem"].includes(k));
+    R("V46", "E5c Geheimraum: Wackelwand (Riss + Glitzer) ab Ebene 5, 1. Schlag wackelt, 2. Schlag öffnet (Weg frei), Schatztruhe mit Upgrade; ?geheim=0 = keine", ok,
+      `Seed 4711: Geheimräume auf Ebene ${hatA.join(", ") || "–"} · E${r.d}: Tür blockiert ${r.block0}, nach Schlag 1: ${r.h1 && r.h1.hits} Treffer/blockiert ${r.h1 && r.h1.block}, nach Schlag 2: offen ${r.h2 && r.h2.offen} · Truhe: Weg ${r.truhe && r.truhe.weg}, Beute ${r.truhe && r.truhe.beute.join(",")} · aus: ${hatB.length} Geheimräume`);
   }
   return out;
 }

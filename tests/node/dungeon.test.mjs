@@ -82,3 +82,35 @@ test("Weg-Info: Raumwechsel 0 auf dem Weg, > 0 abseits", () => {
   assert.ok(L.weg.raumWechsel.some(k => k > 0));
   assert.ok(L.weg.laenge > 10);
 });
+
+// ---------------------------------------------------------------------
+// E5c: Geheimräume hinter einer Wackelwand
+// ---------------------------------------------------------------------
+import { GEHEIM, geheimChance } from "../../src/config.js";
+test("Geheimraum: Chance wächst ab Ebene 5 bis 50 % (Ebene 20), immer mit Truhe, erst nach dem Öffnen erreichbar, nie an Eingang/Treppe/Arena", () => {
+  assert.equal(geheimChance(4), 0); assert.ok(geheimChance(5) > 0); assert.equal(geheimChance(20), GEHEIM.max);
+  let n = 0, mit = 0, erwartet = 0;
+  for (let s = 0; s < 150; s++) for (let d = 1; d <= 20; d++) {
+    const opt = { ...NEU, geheim: geheimChance(d), geheimGroesse: GEHEIM.groesse };
+    const L = bau(5000 + s * 37, d, opt);
+    n++; erwartet += geheimChance(d);
+    if (!L.geheim) { assert.ok(!L.props.some(p => p.kind === "wackel")); continue; }
+    mit++;
+    const g = L.geheim, m = L.map, S = m.w, w = L.props.find(p => p.kind === "wackel"), ch = L.props.find(p => p.kind === "chest" && p.geheim);
+    assert.ok(d >= GEHEIM.ab && w && ch);
+    assert.equal(m.block[g.door.y * S + g.door.x], 1);
+    const r = L.rooms[g.room];
+    assert.ok(!r.entry && !r.stairs && !r.arena);
+    const vor = erreichbar(m, L.entry);
+    assert.equal(vor[Math.floor(ch.y) * S + Math.floor(ch.x)], -1, "vor dem Öffnen unerreichbar");
+    m.block[g.door.y * S + g.door.x] = 0;
+    const nach = erreichbar(m, L.entry);
+    assert.ok(nach[Math.floor(ch.y) * S + Math.floor(ch.x)] > 0, "nach dem Öffnen erreichbar");
+    assert.ok(nach[Math.floor(L.stairs.y) * S + Math.floor(L.stairs.x)] >= 0 || L.isBoss);
+  }
+  if (ZEIGEN) console.log(`E5c Geheimräume: ${mit}/${n} Ebenen (${(mit / n * 100).toFixed(1)} %, erwartet ${(erwartet / n * 100).toFixed(1)} %)`);
+  assert.ok(Math.abs(mit - erwartet) / erwartet < 0.15);
+  // ohne Geheimraum-Chance: Karte genau wie vorher (Zufall wird nicht angefasst)
+  const a = bau(4711, 12, { ...NEU, geheim: 0 }), b = bau(4711, 12, NEU);
+  assert.deepEqual([...a.map.block], [...b.map.block]); assert.equal(a.props.length, b.props.length);
+});
