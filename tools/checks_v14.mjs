@@ -149,8 +149,8 @@ export async function runV14({ browser, BASE, R, errors, only = null, ref = null
     };
     const neu = await run(""), alt = await run("xpkurve=alt&aufhol=0");
     out.V41 = { neu, alt };
-    const ok = neu.s.lvl === 15 && neu.s.xpNext === 535 && neu.s.xp < 535 && Math.abs(neu.s.xp / 535 - 1234 / 2143) < 0.01 && JSON.stringify(neu.s.sk) === JSON.stringify(V13.sk) && neu.s.gold === 1830 && neu.s.depth === 14 &&
-      neu.k[14].ex === 4 + 14 && neu.k[14].gain === 18 && neu.k[19].gain === Math.round((4 + 19) * 1.5) && neu.k.raw.v === 4 && neu.k.raw.lvl === 15 && neu.k.raw.xpNext === 535 &&
+    const ok = neu.s.lvl === 15 && neu.s.xpNext === 490 && neu.s.xp < 490 && Math.abs(neu.s.xp / 490 - 1234 / 2143) < 0.01 && JSON.stringify(neu.s.sk) === JSON.stringify(V13.sk) && neu.s.gold === 1830 && neu.s.depth === 14 &&
+      neu.k[14].ex === 4 + 14 && neu.k[14].gain === 18 && neu.k[19].gain === Math.round((4 + 19) * 1.5) && neu.k.raw.v === 4 && neu.k.raw.lvl === 15 && neu.k.raw.xpNext === 490 &&
       alt.s.lvl === 15 && alt.s.xpNext === 2143 && alt.s.xp === 1234 && alt.k[14].ex === 4 + 14 + 15 && alt.k[14].gain === 33 && alt.k[19].gain === 4 + 19 + 15;
     R("V41", "E2 XP-Kurve + Aufhol-Bonus: alter Spielstand (Datei v3, Lv 15) lädt über „💾 Weiterspielen“ mit Lv 15, Talente/Gold/Ebene gleich, Fortschritt im Level anteilig, xp < xpNext; Fledermaus-XP ohne Level-Anteil, × 1,5 fünf Ebenen zu tief; ?xpkurve=alt&aufhol=0 = v13", ok,
       `neu: Lv ${neu.s.lvl}, XP ${neu.s.xp}/${neu.s.xpNext} (vorher 1234/2143 = ${(1234 / 2143 * 100).toFixed(1)} %, jetzt ${(neu.s.xp / neu.s.xpNext * 100).toFixed(1)} %), Talente ${JSON.stringify(neu.s.sk)}, 🪙 ${neu.s.gold}, Ebene ${neu.s.depth}; ` +

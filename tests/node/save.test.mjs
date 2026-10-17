@@ -21,7 +21,7 @@ test("Datei v3 → v4: Level, Talente, Ausrüstung, Fortschritt bleiben; xp < xp
   for (const k of ["name", "species", "atk", "projN", "magic", "gold", "potions", "ammo", "spec", "hat", "deepest", "depth", "mega", "tut", "seed", "kills", "maxHp", "hp"])
     assert.deepEqual(s[k], V13[k], k);
   assert.deepEqual(s.hats, V13.hats); assert.deepEqual(s.bossDone, V13.bossDone); assert.deepEqual(s.look, V13.look);
-  assert.equal(s.xpNext, 535);
+  assert.equal(s.xpNext, 490);                               // c = 1,8 (Datenblatt-Start c = 2: 535)
   assert.ok(s.xp < s.xpNext && s.xp >= 0);
   assert.ok(Math.abs(s.xp / s.xpNext - V13.xp / V13.xpNext) < 0.01, "Fortschritt im Level anteilig: " + s.xp + "/" + s.xpNext);
   assert.equal(s.upM, 0);
@@ -32,7 +32,7 @@ test("Datei v3 → v4: Level, Talente, Ausrüstung, Fortschritt bleiben; xp < xp
 
 test("ganz alter Stand (v1) und neuer Spieler: Bedarf aus der neuen Kurve", () => {
   const n = sanitize({ v: 4, name: "Neu", lvl: 1, xp: 0, xpNext: 10 });
-  assert.equal(n.xpNext, 17); assert.equal(n.xp, 0);
+  assert.equal(n.xpNext, 17); assert.equal(n.xp, 0);          // 10 + 5 + 1,8 = 16,8 → 17
   const o = sanitize({ v: 1, name: "Alt", lvl: 7, xp: 30, xpNext: 60 });
-  assert.equal(o.lvl, 7); assert.equal(o.xpNext, 10 + 35 + 98); assert.ok(o.xp < o.xpNext);
+  assert.equal(o.lvl, 7); assert.equal(o.xpNext, Math.round(10 + 35 + 1.8 * 49)); assert.ok(o.xp < o.xpNext);
 });

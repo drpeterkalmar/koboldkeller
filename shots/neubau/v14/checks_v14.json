@@ -1,11 +1,47 @@
 {
-  "date": "2026-10-13T08:20:38.351Z",
+  "date": "2026-10-13T10:29:59.664Z",
   "rows": [
     {
       "id": "V40",
       "what": "E1 Bedarfs-Beute: ❤️ ≤ 25 % → Heil-Beute ≥ 25 %/Kill, Glühwürmchen-Heiler schwebt zum Kobold (+50 % ❤️), 🫧 leer → Nachschub, volle Sachen fallen nicht; Upgrade-Zähler ≥ 60 → Truhe mit Upgrade, Zähler im Spielstand; ?bedarf=0&beutetakt=0 = v13",
       "ok": true,
-      "info": "❤️ 20 %: Heil-Beute 24.2 % je Kill (Glühwürmchen 5.1 %) · Regler aus 9.2 % (Glühwürmchen 0.0 %) · 🫧 leer: Nachschub 6.7 % · 🧪 5/5 + ✨ voll: Trank/Pilz fallen 0× (aus: 39×), „voll → Gold“ beim Aufheben 0 (aus: 7) · Heiler: Abstand 4.62 → 4.36 → 3.32 → 2.62, schwebt z 31.2/34.4/29.2, ❤️ 1 → 4/6 · Truhe bei Zähler 60: wand → Zähler 10, Spielstand upM 10 (Datei v4)"
+      "info": "❤️ 20 %: Heil-Beute 25.8 % je Kill (Glühwürmchen 5.3 %) · Regler aus 9.8 % (Glühwürmchen 0.0 %) · 🫧 leer: Nachschub 6.0 % · 🧪 5/5 + ✨ voll: Trank/Pilz fallen 0× (aus: 54×), „voll → Gold“ beim Aufheben 0 (aus: 19) · Heiler: Abstand 4.62 → 4.23 → 3.36 → 2.36, schwebt z 29.1/25.1/31.6, ❤️ 1 → 4/6 · Truhe bei Zähler 60: gem,mushroom → Zähler 10, Spielstand upM 10 (Datei v4)"
+    },
+    {
+      "id": "V41",
+      "what": "E2 XP-Kurve + Aufhol-Bonus: alter Spielstand (Datei v3, Lv 15) lädt über „💾 Weiterspielen“ mit Lv 15, Talente/Gold/Ebene gleich, Fortschritt im Level anteilig, xp < xpNext; Fledermaus-XP ohne Level-Anteil, × 1,5 fünf Ebenen zu tief; ?xpkurve=alt&aufhol=0 = v13",
+      "ok": true,
+      "info": "neu: Lv 15, XP 282/490 (vorher 1234/2143 = 57.6 %, jetzt 57.6 %), Talente {\"kraft\":6,\"leben\":8,\"tempo\":4,\"blasen\":6,\"magnet\":4}, 🪙 1830, Ebene 14; Fledermaus E14: 18 XP → +18, E19: +35; gespeichert v4 Lv 15 335/490 · alt: 1234/2143, Fledermaus E14 +33, E19 +38"
+    },
+    {
+      "id": "V42",
+      "what": "E3 Kampf-Takt: Schlag im Warnmoment lässt Gegner zucken (💫, Angriff abgebrochen); fällt ein Wichtel, laufen die anderen 1,2 s weg („😳 Huch!“) und jagen danach weiter; Blasen fliegen zum Gegner in Joystick-Richtung (≥ 90 %); ?zucken=0&schreck=0&kegel=0 = v13",
+      "ok": true,
+      "info": "Zucken (Abbruch/überlebende Ausholer): E3 wichtel ⚔️4.5 12/12 · E9 pilzling ⚔️10.5 12/12 · E15 kaefer ⚔️16.5 12/12 = 100 % · aus: 0 · Schreck: 4/4 fliehen, Abstand 1.2/1.3/1.4/1.3 → 2.69/3.37/3.39/3.33 Kacheln, danach chase · aus: 0 · Kegel: 24/24 Würfe zum Gegner vorn (v13: 0/24)"
+    },
+    {
+      "id": "V43",
+      "what": "E4 Dungeon im Spiel (Seed 4711, Ebene 1–20): Schleifen ≥ 20 Kacheln Ersparnis, Truhen abseits; ?schleifen=0&truhen=zufall = Karte wie v13 (Vergleich mit Server http://localhost:8732/)",
+      "ok": true,
+      "info": "Ebenen mit Schleife ≥ 20: 19/20 (Ersparnis 28 30+24 32+24 30+28 20 38+24+22 54+24+24 20 60+50+26 24+22 20+20 18 32+20 60+26 64+30 62+32 56+20+20 24 36 52+32+22) · Truhen abseits 39/47 · Regler aus: 0 Schleifen · Karten wie v13: 20/20"
+    },
+    {
+      "id": "V44",
+      "what": "E5 Sammelalbum im 🎒: 1 Sieg → Bild, 10 → Oma-Satz, 30 → goldener Rahmen + Lebenswert, Hinweise beim Erreichen, gehört dem Gerät (neues Spiel behält es), hoch + quer; ?album=0 = kein Album",
+      "ok": true,
+      "info": "Zähler {\"bat\":0,\"slime\":0,\"wichtel\":1,\"wisp\":0,\"kaefer\":0,\"pilzling\":0,\"geist\":10,\"flamme\":30} · Seiten s0:???, s0:???, s1:Wichtel, s0:???, s0:???, s0:???, s2:Gespenstchen, s3:Flämmchen · Infos: Flämmchen · 👵 „Flämmchen frieren nie. Nur in die Badewanne  / Gespenstchen · 👵 „Gespenstchen spielen am liebsten Versteck / Wichtel · 1× besiegt. Noch 9, dann erzählt dir Oma etwas! / ??? — noch nicht besiegt. Wohnt ab Ebene 1 im Keller. · nach neuem Spiel Flämmchen 30 · quer 8 Seiten · aus: Album weg, Speicher leer"
+    },
+    {
+      "id": "V45",
+      "what": "E5b Glanz: Boss-Schwert mit neuer Waffenstufe glänzt immer (Hinweis), ohne neue Stufe bleibt der Glanz; 👟 +10 % Tempo, 🧲 +1 Kachel, 🫧 +1 Blase, ✨ Funken; im Spielstand; ?glanz=0 = nie",
+      "ok": true,
+      "info": "Boss-Schwert: blase (Hinweis true), bleibt true · Tempo ×1.10, Magnet 3.5 → 4.5, Blasen 1 → 2, Funken 1× · Spielstand „funken“ · aus: kein Glanz"
+    },
+    {
+      "id": "V46",
+      "what": "E5c Geheimraum: Wackelwand (Riss + Glitzer) ab Ebene 5, 1. Schlag wackelt, 2. Schlag öffnet (Weg frei), Schatztruhe mit Upgrade; ?geheim=0 = keine",
+      "ok": true,
+      "info": "Seed 4711: Geheimräume auf Ebene 9, 12, 14, 15, 16, 19, 20 · E9: Tür blockiert 1, nach Schlag 1: 1 Treffer/blockiert 1, nach Schlag 2: offen true · Truhe: Weg true, Beute sword,mushroom · aus: 0 Geheimräume"
     }
   ],
   "errors": [],
@@ -13,79 +49,79 @@
     "V40": {
       "wenigA": {
         "cnt": {
-          "coin": 4061,
-          "heart": 383,
-          "wand": 37,
-          "firefly": 101,
-          "potion": 176,
-          "mushroom": 133,
-          "gem": 28,
-          "sword": 40
+          "coin": 3977,
+          "potion": 180,
+          "mushroom": 130,
+          "heart": 410,
+          "firefly": 105,
+          "wand": 49,
+          "gem": 49,
+          "sword": 42
         },
-        "items": 898,
+        "items": 965,
         "n": 2000,
-        "heil": 0.242
+        "heil": 0.2575
       },
       "wenigB": {
         "cnt": {
-          "coin": 3983,
-          "potion": 163,
-          "heart": 183,
-          "sword": 42,
-          "mushroom": 109,
-          "gem": 48,
-          "wand": 32
+          "coin": 4021,
+          "potion": 169,
+          "heart": 195,
+          "mushroom": 101,
+          "wand": 41,
+          "gem": 42,
+          "sword": 55
         },
-        "items": 577,
+        "items": 603,
         "n": 2000,
-        "heil": 0.0915
+        "heil": 0.0975
       },
       "leerA": {
         "cnt": {
-          "coin": 4176,
-          "wand": 30,
-          "ammo": 134,
-          "potion": 134,
-          "gem": 31,
-          "mushroom": 119,
-          "sword": 39
+          "coin": 4198,
+          "mushroom": 135,
+          "sword": 39,
+          "potion": 148,
+          "gem": 39,
+          "ammo": 120,
+          "wand": 52
         },
-        "items": 487,
+        "items": 533,
         "n": 2000,
         "heil": 0
       },
       "vollA": {
         "cnt": {
-          "coin": 704,
-          "gem": 7,
-          "sword": 4,
-          "wand": 1
+          "coin": 683,
+          "sword": 8,
+          "gem": 10,
+          "wand": 7
         },
-        "items": 12,
+        "items": 25,
         "n": 300,
         "heil": 0
       },
       "vollB": {
         "cnt": {
-          "coin": 602,
-          "mushroom": 16,
-          "gem": 10,
-          "heart": 33,
-          "sword": 3,
-          "potion": 23,
-          "wand": 3
+          "coin": 632,
+          "heart": 27,
+          "wand": 6,
+          "sword": 7,
+          "gem": 5,
+          "potion": 36,
+          "mushroom": 18
         },
-        "items": 88,
+        "items": 99,
         "n": 300,
-        "heil": 0.11
+        "heil": 0.09
       },
       "pkA": {
         "nutzlos": 0,
-        "left": 23
+        "left": 24
       },
       "pkB": {
-        "nutzlos": 7,
-        "left": 23
+        "nutzlos": 19,
+        "left": 24
       },
       "ff": {
         "hp0": 1,
@@ -94,16 +130,16 @@
       },
       "frames": [
         {
-          "d": 4.36,
-          "z": 31.2
+          "d": 4.23,
+          "z": 29.1
         },
         {
-          "d": 3.32,
-          "z": 34.4
+          "d": 3.36,
+          "z": 25.1
         },
         {
-          "d": 2.62,
-          "z": 29.2
+          "d": 2.36,
+          "z": 31.6
         }
       ],
       "ffEnd": {
@@ -125,14 +161,1291 @@
           "coin",
           "coin",
           "coin",
-          "coin",
-          "coin",
-          "wand"
+          "gem",
+          "mushroom"
         ],
         "upAfter": 10,
         "saved": 10,
         "v": 4,
         "upSicher": 1
+      }
+    },
+    "V41": {
+      "neu": {
+        "info": "Glitzerkeks · ⭐ 15 · 🪙 1830 · Ebene 14",
+        "s": {
+          "lvl": 15,
+          "xp": 282,
+          "xpNext": 490,
+          "sk": {
+            "kraft": 6,
+            "leben": 8,
+            "tempo": 4,
+            "blasen": 6,
+            "magnet": 4
+          },
+          "gold": 1830,
+          "depth": 14,
+          "fill": "57.6%"
+        },
+        "k": {
+          "14": {
+            "ex": 18,
+            "gain": 18
+          },
+          "19": {
+            "ex": 23,
+            "gain": 35
+          },
+          "raw": {
+            "v": 4,
+            "lvl": 15,
+            "xp": 335,
+            "xpNext": 490
+          }
+        }
+      },
+      "alt": {
+        "info": "Glitzerkeks · ⭐ 15 · 🪙 1830 · Ebene 14",
+        "s": {
+          "lvl": 15,
+          "xp": 1234,
+          "xpNext": 2143,
+          "sk": {
+            "kraft": 6,
+            "leben": 8,
+            "tempo": 4,
+            "blasen": 6,
+            "magnet": 4
+          },
+          "gold": 1830,
+          "depth": 14,
+          "fill": "57.6%"
+        },
+        "k": {
+          "14": {
+            "ex": 33,
+            "gain": 33
+          },
+          "19": {
+            "ex": 38,
+            "gain": 38
+          },
+          "raw": {
+            "v": 4,
+            "lvl": 15,
+            "xp": 1305,
+            "xpNext": 2143
+          }
+        }
+      }
+    },
+    "V42": {
+      "ka": {
+        "zuck": [
+          {
+            "d": 3,
+            "atk": 4.5,
+            "typ": "wichtel",
+            "tries": 12,
+            "abort": 12,
+            "kill": 0,
+            "windHit": 12,
+            "windAbort": 12
+          },
+          {
+            "d": 9,
+            "atk": 10.5,
+            "typ": "pilzling",
+            "tries": 12,
+            "abort": 12,
+            "kill": 0,
+            "windHit": 12,
+            "windAbort": 12
+          },
+          {
+            "d": 15,
+            "atk": 16.5,
+            "typ": "kaefer",
+            "tries": 12,
+            "abort": 12,
+            "kill": 0,
+            "windHit": 12,
+            "windAbort": 12
+          }
+        ],
+        "schreck": {
+          "n": 4,
+          "flee": 4,
+          "d0": [
+            1.2217355153677523,
+            1.3147292328717952,
+            1.3764359021853763,
+            1.2804134540184864
+          ]
+        }
+      },
+      "kb": {
+        "zuck": [
+          {
+            "d": 3,
+            "atk": 4.5,
+            "typ": "wichtel",
+            "tries": 12,
+            "abort": 0,
+            "kill": 0,
+            "windHit": 12,
+            "windAbort": 0
+          },
+          {
+            "d": 9,
+            "atk": 10.5,
+            "typ": "pilzling",
+            "tries": 12,
+            "abort": 0,
+            "kill": 0,
+            "windHit": 12,
+            "windAbort": 0
+          },
+          {
+            "d": 15,
+            "atk": 16.5,
+            "typ": "kaefer",
+            "tries": 12,
+            "abort": 0,
+            "kill": 0,
+            "windHit": 12,
+            "windAbort": 0
+          }
+        ],
+        "schreck": {
+          "n": 0,
+          "flee": 0,
+          "d0": [
+            1.195661522344237,
+            1.331956026935654,
+            1.35850063443728,
+            1.2696591672474167
+          ]
+        }
+      },
+      "seq": [
+        [
+          {
+            "s": "flee",
+            "d": 1.29
+          },
+          {
+            "s": "flee",
+            "d": 1.38
+          },
+          {
+            "s": "flee",
+            "d": 1.45
+          },
+          {
+            "s": "flee",
+            "d": 1.35
+          }
+        ],
+        [
+          {
+            "s": "flee",
+            "d": 2.78
+          },
+          {
+            "s": "flee",
+            "d": 2.88
+          },
+          {
+            "s": "flee",
+            "d": 2.94
+          },
+          {
+            "s": "flee",
+            "d": 2.84
+          }
+        ],
+        [
+          {
+            "s": "chase",
+            "d": 2.69
+          },
+          {
+            "s": "chase",
+            "d": 3.37
+          },
+          {
+            "s": "chase",
+            "d": 3.39
+          },
+          {
+            "s": "chase",
+            "d": 3.33
+          }
+        ]
+      ],
+      "nach": [
+        "chase",
+        "chase",
+        "chase",
+        "chase"
+      ],
+      "ga": {
+        "vorn": 24,
+        "n": 24
+      },
+      "gb": {
+        "vorn": 0,
+        "n": 24
+      }
+    },
+    "V43": {
+      "ka": [
+        {
+          "d": 1,
+          "h": 980837060,
+          "schleifen": [
+            28
+          ],
+          "truhen": [
+            4,
+            0
+          ],
+          "weg": [
+            6,
+            0,
+            3,
+            1,
+            2,
+            7
+          ]
+        },
+        {
+          "d": 2,
+          "h": 289592995,
+          "schleifen": [
+            30,
+            24
+          ],
+          "truhen": [
+            1,
+            5
+          ],
+          "weg": [
+            0,
+            3,
+            2,
+            4
+          ]
+        },
+        {
+          "d": 3,
+          "h": 2083905973,
+          "schleifen": [
+            32,
+            24
+          ],
+          "truhen": [
+            3,
+            4
+          ],
+          "weg": [
+            6,
+            1,
+            8,
+            4,
+            7
+          ]
+        },
+        {
+          "d": 4,
+          "h": 2216926899,
+          "schleifen": [
+            30,
+            28
+          ],
+          "truhen": [
+            8,
+            5
+          ],
+          "weg": [
+            0,
+            3,
+            6,
+            2,
+            4
+          ]
+        },
+        {
+          "d": 5,
+          "h": 4216415308,
+          "schleifen": [
+            20
+          ],
+          "truhen": [
+            6,
+            3
+          ],
+          "weg": [
+            4,
+            7,
+            0,
+            5,
+            8,
+            2
+          ]
+        },
+        {
+          "d": 6,
+          "h": 3681499545,
+          "schleifen": [
+            38,
+            24,
+            22
+          ],
+          "truhen": [
+            3,
+            5
+          ],
+          "weg": [
+            0,
+            8,
+            2,
+            7,
+            1,
+            6
+          ]
+        },
+        {
+          "d": 7,
+          "h": 2409828037,
+          "schleifen": [
+            54,
+            24,
+            24
+          ],
+          "truhen": [
+            8,
+            7
+          ],
+          "weg": [
+            1,
+            7,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "d": 8,
+          "h": 1029139400,
+          "schleifen": [
+            20
+          ],
+          "truhen": [
+            3,
+            9
+          ],
+          "weg": [
+            0,
+            7,
+            8,
+            2,
+            6
+          ]
+        },
+        {
+          "d": 9,
+          "h": 3956132249,
+          "schleifen": [
+            60,
+            50,
+            26
+          ],
+          "truhen": [
+            6,
+            2,
+            -2
+          ],
+          "weg": [
+            1,
+            10,
+            3,
+            9,
+            4
+          ]
+        },
+        {
+          "d": 10,
+          "h": 2682147459,
+          "schleifen": [
+            24,
+            22
+          ],
+          "truhen": [
+            7,
+            5
+          ],
+          "weg": [
+            0,
+            9,
+            6,
+            3
+          ]
+        },
+        {
+          "d": 11,
+          "h": 541665826,
+          "schleifen": [
+            20,
+            20
+          ],
+          "truhen": [
+            1,
+            6
+          ],
+          "weg": [
+            4,
+            0,
+            8,
+            3,
+            10,
+            9
+          ]
+        },
+        {
+          "d": 12,
+          "h": 4149791902,
+          "schleifen": [
+            18
+          ],
+          "truhen": [
+            8,
+            11,
+            -2
+          ],
+          "weg": [
+            0,
+            7,
+            9,
+            2,
+            4,
+            11,
+            1,
+            3
+          ]
+        },
+        {
+          "d": 13,
+          "h": 4119410832,
+          "schleifen": [
+            32,
+            20
+          ],
+          "truhen": [
+            5,
+            9
+          ],
+          "weg": [
+            7,
+            10,
+            9,
+            3,
+            8,
+            4
+          ]
+        },
+        {
+          "d": 14,
+          "h": 2524266302,
+          "schleifen": [
+            60,
+            26
+          ],
+          "truhen": [
+            1,
+            5,
+            -2
+          ],
+          "weg": [
+            0,
+            5,
+            11,
+            2
+          ]
+        },
+        {
+          "d": 15,
+          "h": 1741641527,
+          "schleifen": [
+            64,
+            30
+          ],
+          "truhen": [
+            2,
+            10,
+            -2
+          ],
+          "weg": [
+            8,
+            3,
+            0,
+            7,
+            4,
+            11,
+            10,
+            5
+          ]
+        },
+        {
+          "d": 16,
+          "h": 2231167372,
+          "schleifen": [
+            62,
+            32
+          ],
+          "truhen": [
+            3,
+            1,
+            -2
+          ],
+          "weg": [
+            0,
+            11,
+            6,
+            4,
+            10
+          ]
+        },
+        {
+          "d": 17,
+          "h": 1826383057,
+          "schleifen": [
+            56,
+            20,
+            20
+          ],
+          "truhen": [
+            2,
+            0
+          ],
+          "weg": [
+            1,
+            3,
+            4,
+            6,
+            10
+          ]
+        },
+        {
+          "d": 18,
+          "h": 551349716,
+          "schleifen": [
+            24
+          ],
+          "truhen": [
+            10,
+            3
+          ],
+          "weg": [
+            0,
+            6,
+            4,
+            5,
+            11,
+            7,
+            2,
+            3,
+            8
+          ]
+        },
+        {
+          "d": 19,
+          "h": 3489921064,
+          "schleifen": [
+            36
+          ],
+          "truhen": [
+            5,
+            1,
+            -2
+          ],
+          "weg": [
+            9,
+            0,
+            7,
+            10,
+            8,
+            3,
+            4,
+            2
+          ]
+        },
+        {
+          "d": 20,
+          "h": 1893299676,
+          "schleifen": [
+            52,
+            32,
+            22
+          ],
+          "truhen": [
+            5,
+            11,
+            -2
+          ],
+          "weg": [
+            0,
+            10,
+            9,
+            1,
+            4,
+            7,
+            8
+          ]
+        }
+      ],
+      "kb": [
+        {
+          "d": 1,
+          "h": 2510475121,
+          "schleifen": [],
+          "truhen": [
+            1,
+            0
+          ],
+          "weg": null
+        },
+        {
+          "d": 2,
+          "h": 3736575776,
+          "schleifen": [],
+          "truhen": [
+            3,
+            3
+          ],
+          "weg": null
+        },
+        {
+          "d": 3,
+          "h": 3903983804,
+          "schleifen": [],
+          "truhen": [
+            6,
+            5
+          ],
+          "weg": null
+        },
+        {
+          "d": 4,
+          "h": 380124805,
+          "schleifen": [],
+          "truhen": [
+            6,
+            5
+          ],
+          "weg": null
+        },
+        {
+          "d": 5,
+          "h": 1640528211,
+          "schleifen": [],
+          "truhen": [
+            4,
+            4
+          ],
+          "weg": null
+        },
+        {
+          "d": 6,
+          "h": 1245069468,
+          "schleifen": [],
+          "truhen": [
+            4,
+            8
+          ],
+          "weg": null
+        },
+        {
+          "d": 7,
+          "h": 123538380,
+          "schleifen": [],
+          "truhen": [
+            4,
+            2
+          ],
+          "weg": null
+        },
+        {
+          "d": 8,
+          "h": 1121363065,
+          "schleifen": [],
+          "truhen": [
+            3,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 9,
+          "h": 1690241495,
+          "schleifen": [],
+          "truhen": [
+            1,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 10,
+          "h": 2198399196,
+          "schleifen": [],
+          "truhen": [
+            6,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 11,
+          "h": 460400620,
+          "schleifen": [],
+          "truhen": [
+            2,
+            2
+          ],
+          "weg": null
+        },
+        {
+          "d": 12,
+          "h": 1307454853,
+          "schleifen": [],
+          "truhen": [
+            10,
+            10
+          ],
+          "weg": null
+        },
+        {
+          "d": 13,
+          "h": 4007245488,
+          "schleifen": [],
+          "truhen": [
+            4,
+            8
+          ],
+          "weg": null
+        },
+        {
+          "d": 14,
+          "h": 3315031486,
+          "schleifen": [],
+          "truhen": [
+            9,
+            3
+          ],
+          "weg": null
+        },
+        {
+          "d": 15,
+          "h": 3400074345,
+          "schleifen": [],
+          "truhen": [
+            3,
+            10
+          ],
+          "weg": null
+        },
+        {
+          "d": 16,
+          "h": 2443713680,
+          "schleifen": [],
+          "truhen": [
+            9,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 17,
+          "h": 1387778563,
+          "schleifen": [],
+          "truhen": [
+            6,
+            4
+          ],
+          "weg": null
+        },
+        {
+          "d": 18,
+          "h": 2849182580,
+          "schleifen": [],
+          "truhen": [
+            11,
+            4
+          ],
+          "weg": null
+        },
+        {
+          "d": 19,
+          "h": 3921434827,
+          "schleifen": [],
+          "truhen": [
+            6,
+            1
+          ],
+          "weg": null
+        },
+        {
+          "d": 20,
+          "h": 4198107395,
+          "schleifen": [],
+          "truhen": [
+            7,
+            11
+          ],
+          "weg": null
+        }
+      ],
+      "kref": [
+        {
+          "d": 1,
+          "h": 2510475121,
+          "schleifen": [],
+          "truhen": [
+            1,
+            0
+          ],
+          "weg": null
+        },
+        {
+          "d": 2,
+          "h": 3736575776,
+          "schleifen": [],
+          "truhen": [
+            3,
+            3
+          ],
+          "weg": null
+        },
+        {
+          "d": 3,
+          "h": 3903983804,
+          "schleifen": [],
+          "truhen": [
+            6,
+            5
+          ],
+          "weg": null
+        },
+        {
+          "d": 4,
+          "h": 380124805,
+          "schleifen": [],
+          "truhen": [
+            6,
+            5
+          ],
+          "weg": null
+        },
+        {
+          "d": 5,
+          "h": 1640528211,
+          "schleifen": [],
+          "truhen": [
+            4,
+            4
+          ],
+          "weg": null
+        },
+        {
+          "d": 6,
+          "h": 1245069468,
+          "schleifen": [],
+          "truhen": [
+            4,
+            8
+          ],
+          "weg": null
+        },
+        {
+          "d": 7,
+          "h": 123538380,
+          "schleifen": [],
+          "truhen": [
+            4,
+            2
+          ],
+          "weg": null
+        },
+        {
+          "d": 8,
+          "h": 1121363065,
+          "schleifen": [],
+          "truhen": [
+            3,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 9,
+          "h": 1690241495,
+          "schleifen": [],
+          "truhen": [
+            1,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 10,
+          "h": 2198399196,
+          "schleifen": [],
+          "truhen": [
+            6,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 11,
+          "h": 460400620,
+          "schleifen": [],
+          "truhen": [
+            2,
+            2
+          ],
+          "weg": null
+        },
+        {
+          "d": 12,
+          "h": 1307454853,
+          "schleifen": [],
+          "truhen": [
+            10,
+            10
+          ],
+          "weg": null
+        },
+        {
+          "d": 13,
+          "h": 4007245488,
+          "schleifen": [],
+          "truhen": [
+            4,
+            8
+          ],
+          "weg": null
+        },
+        {
+          "d": 14,
+          "h": 3315031486,
+          "schleifen": [],
+          "truhen": [
+            9,
+            3
+          ],
+          "weg": null
+        },
+        {
+          "d": 15,
+          "h": 3400074345,
+          "schleifen": [],
+          "truhen": [
+            3,
+            10
+          ],
+          "weg": null
+        },
+        {
+          "d": 16,
+          "h": 2443713680,
+          "schleifen": [],
+          "truhen": [
+            9,
+            9
+          ],
+          "weg": null
+        },
+        {
+          "d": 17,
+          "h": 1387778563,
+          "schleifen": [],
+          "truhen": [
+            6,
+            4
+          ],
+          "weg": null
+        },
+        {
+          "d": 18,
+          "h": 2849182580,
+          "schleifen": [],
+          "truhen": [
+            11,
+            4
+          ],
+          "weg": null
+        },
+        {
+          "d": 19,
+          "h": 3921434827,
+          "schleifen": [],
+          "truhen": [
+            6,
+            1
+          ],
+          "weg": null
+        },
+        {
+          "d": 20,
+          "h": 4198107395,
+          "schleifen": [],
+          "truhen": [
+            7,
+            11
+          ],
+          "weg": null
+        }
+      ]
+    },
+    "V44": {
+      "hoch": {
+        "album": {
+          "bat": 0,
+          "slime": 0,
+          "wichtel": 1,
+          "wisp": 0,
+          "kaefer": 0,
+          "pilzling": 0,
+          "geist": 10,
+          "flamme": 30
+        },
+        "saved": {
+          "v": 1,
+          "k": {
+            "bat": 0,
+            "slime": 0,
+            "wichtel": 1,
+            "wisp": 0,
+            "kaefer": 0,
+            "pilzling": 0,
+            "geist": 10,
+            "flamme": 30
+          }
+        },
+        "nach": {
+          "bat": 0,
+          "slime": 0,
+          "wichtel": 1,
+          "wisp": 0,
+          "kaefer": 0,
+          "pilzling": 0,
+          "geist": 10,
+          "flamme": 30
+        },
+        "toasts": "wichtel:1 | geist:1 | geist:2 | flamme:1 | flamme:2 | flamme:3",
+        "letzter": "⭐ Level 8! +2 Talentpunkte — tipp oben links auf ⭐⭐ Level 9! +2 Talentpunkte — tipp oben links auf ⭐ · 🫧+1 Blase🌟 Goldener Rahmen im Album: Flämmchen!",
+        "sec": [
+          "s0:???",
+          "s0:???",
+          "s1:Wichtel",
+          "s0:???",
+          "s0:???",
+          "s0:???",
+          "s2:Gespenstchen",
+          "s3:Flämmchen"
+        ],
+        "info": [
+          "Flämmchen · 👵 „Flämmchen frieren nie. Nur in die Badewanne dürfen sie leider nicht!“ 🌟 Lebenswert auf Ebene 17: ❤️ 58",
+          "Gespenstchen · 👵 „Gespenstchen spielen am liebsten Verstecken — leider kichern sie dabei immer viel zu laut.“ Noch 20 bis zum 🌟 goldenen Rahmen.",
+          "Wichtel · 1× besiegt. Noch 9, dann erzählt dir Oma etwas!",
+          "??? — noch nicht besiegt. Wohnt ab Ebene 1 im Keller."
+        ]
+      },
+      "quer": {
+        "album": {
+          "bat": 0,
+          "slime": 0,
+          "wichtel": 1,
+          "wisp": 0,
+          "kaefer": 0,
+          "pilzling": 0,
+          "geist": 10,
+          "flamme": 30
+        },
+        "saved": {
+          "v": 1,
+          "k": {
+            "bat": 0,
+            "slime": 0,
+            "wichtel": 1,
+            "wisp": 0,
+            "kaefer": 0,
+            "pilzling": 0,
+            "geist": 10,
+            "flamme": 30
+          }
+        },
+        "nach": {
+          "bat": 0,
+          "slime": 0,
+          "wichtel": 1,
+          "wisp": 0,
+          "kaefer": 0,
+          "pilzling": 0,
+          "geist": 10,
+          "flamme": 30
+        },
+        "toasts": "wichtel:1 | geist:1 | geist:2 | flamme:1 | flamme:2 | flamme:3",
+        "letzter": "⭐ Level 8! +2 Talentpunkte — tipp oben links auf ⭐⭐ Level 9! +2 Talentpunkte — tipp oben links auf ⭐ · 🫧+1 Blase🌟 Goldener Rahmen im Album: Flämmchen!",
+        "sec": [
+          "s0:???",
+          "s0:???",
+          "s1:Wichtel",
+          "s0:???",
+          "s0:???",
+          "s0:???",
+          "s2:Gespenstchen",
+          "s3:Flämmchen"
+        ],
+        "info": [
+          "Flämmchen · 👵 „Flämmchen frieren nie. Nur in die Badewanne dürfen sie leider nicht!“ 🌟 Lebenswert auf Ebene 17: ❤️ 58",
+          "Gespenstchen · 👵 „Gespenstchen spielen am liebsten Verstecken — leider kichern sie dabei immer viel zu laut.“ Noch 20 bis zum 🌟 goldenen Rahmen.",
+          "Wichtel · 1× besiegt. Noch 9, dann erzählt dir Oma etwas!",
+          "??? — noch nicht besiegt. Wohnt ab Ebene 1 im Keller."
+        ]
+      },
+      "aus": {
+        "album": null,
+        "saved": null,
+        "nach": null,
+        "toasts": "",
+        "letzter": "⭐ Level 7! +2 Talentpunkte — tipp oben links auf ⭐⭐ Level 8! +2 Talentpunkte — tipp oben links auf ⭐⭐ Level 9! +2 Talentpunkte — tipp oben links auf ⭐ · 🫧+1 Blase",
+        "sec": null,
+        "info": []
+      }
+    },
+    "V45": {
+      "ga": {
+        "boss": {
+          "glanz": "blase",
+          "atk": 6,
+          "toast": true
+        },
+        "bleibt": true,
+        "funken": 1,
+        "saved": "funken",
+        "eff": {
+          "ohne": {
+            "spd": 1,
+            "mag": 3.5,
+            "blasen": 1
+          },
+          "flink": {
+            "spd": 1.1,
+            "mag": 3.5,
+            "blasen": 1
+          },
+          "magnet": {
+            "spd": 1,
+            "mag": 4.5,
+            "blasen": 1
+          },
+          "blase": {
+            "spd": 1,
+            "mag": 3.5,
+            "blasen": 2
+          },
+          "funken": {
+            "spd": 1,
+            "mag": 3.5,
+            "blasen": 1
+          }
+        }
+      },
+      "gb": {
+        "boss": {
+          "glanz": "",
+          "atk": 6,
+          "toast": false
+        },
+        "bleibt": true,
+        "funken": 1,
+        "saved": "funken",
+        "eff": {
+          "ohne": {
+            "spd": 1,
+            "mag": 3.5,
+            "blasen": 1
+          },
+          "flink": {
+            "spd": 1.1,
+            "mag": 3.5,
+            "blasen": 1
+          },
+          "magnet": {
+            "spd": 1,
+            "mag": 4.5,
+            "blasen": 1
+          },
+          "blase": {
+            "spd": 1,
+            "mag": 3.5,
+            "blasen": 2
+          },
+          "funken": {
+            "spd": 1,
+            "mag": 3.5,
+            "blasen": 1
+          }
+        }
+      }
+    },
+    "V46": {
+      "hatA": [
+        9,
+        12,
+        14,
+        15,
+        16,
+        19,
+        20
+      ],
+      "hatB": [],
+      "r": {
+        "d": 9,
+        "door": {
+          "x": 10,
+          "y": 39
+        },
+        "dir": [
+          -1,
+          0
+        ],
+        "block0": 1,
+        "hinweis": true,
+        "h1": {
+          "hits": 1,
+          "block": 1,
+          "offen": false
+        },
+        "h2": {
+          "hits": "offen",
+          "block": 0,
+          "offen": true
+        },
+        "truhe": {
+          "weg": true,
+          "offen": true,
+          "beute": [
+            "sword",
+            "mushroom"
+          ]
+        }
       }
     }
   }

@@ -44,7 +44,9 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
         for (let d = 1; d <= 12; d++) {
           KK.goto(d); const m = G.L.map;
           for (let y = 2; y < m.h - 2; y++) for (let x = 2; x < m.w - 14; x++) {
-            let ok = true; for (let k = 0; k <= 12 && ok; k++) ok = W.canStand(m, x + 0.5 + k, y + 0.5, 0.4) && !G.L.traps.some(t => Math.abs(t.y - y - 0.5) < 1 && t.x > x && t.x < x + 13);
+            // v14: Strecke (und der Finger-Punkt 3 Kacheln voraus) nicht neben Treppe/Heim-Portal — dort rastet ein Tipp ein, statt zu halten
+            const nahZiel = (px, py) => [G.L.stairs, G.L.homePortal].some(t => t && Math.hypot(t.x - px, t.y - py) < 2.6);
+            let ok = true; for (let k = 0; k <= 15 && ok; k++) ok = (k > 12 || W.canStand(m, x + 0.5 + k, y + 0.5, 0.4)) && !nahZiel(x + 0.5 + k, y + 0.5) && !G.L.traps.some(t => Math.abs(t.y - y - 0.5) < 1 && t.x > x && t.x < x + 13);
             if (ok) return { d, x: x + 0.5, y: y + 0.5 };
           }
         }
@@ -303,7 +305,7 @@ export async function runV8({ browser, BASE, R, errors, only = null, REF = null 
         while (fireT === null) { await fr(); onLane(); p.invulT = 0; if (w.st === 1 && warnT === null) warnT = G.t; if (w.st === 2) fireT = G.t; }
         const hapFire = Object.keys(P.PF.hapStats.calls).filter(k => (P.PF.hapStats.calls[k] || 0) !== (hap0[k] || 0));
         const t0 = G.t;
-        while (G.t - t0 < 1.2) { await fr(); p.vx = p.vy = 0; p.path = null; if (dodge) { const s = G.shots.find(s => s.kind === "wall"); if (s && Math.hypot(s.x - p.x, s.y - p.y) < 1.3 && p.dashT <= 0 && !dodge.done) { p.dashCd = 0; dodge.done = true; g.dodge(); } } }
+        while (G.t - t0 < 1.2) { await fr(); p.vx = p.vy = 0; p.path = null; if (dodge) { const s = G.shots.find(s => s.kind === "wall"); if (s && Math.hypot(s.x - p.x, s.y - p.y) < 1.3 && p.dashT <= 0 && !dodge.done) { p.dashCd = 0; dodge.done = true; const m = G.L.map, frei = (x, y) => !m.block[Math.floor(y) * m.w + Math.floor(x)], sg = frei(p.x + w.dy * 1.2, p.y + w.dx * 1.2) ? 1 : -1; p.lastMx = w.dy * sg; p.lastMy = w.dx * sg; g.dodge(); } } }   // v14: seitlich aus der Bahn (vorher hing die Richtung an der Kartenlage: entlang der Bahn holt die Kugel einen nach dem Schutz ein)
         return { warn: +(fireT - warnT).toFixed(2), dmg: +(hp0 - p.hp).toFixed(1), hapAtFire: hapFire, hapAfter: Object.keys(P.PF.hapStats.calls).filter(k => (P.PF.hapStats.calls[k] || 0) !== (hap0[k] || 0)) };
       };
       const hit = await cycle(null);

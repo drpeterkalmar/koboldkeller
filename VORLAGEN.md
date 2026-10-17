@@ -35,14 +35,16 @@ Die Vorlagen heißen hier nur nach ihrer Art:
 ## 2) Was v14 übernimmt (Arbeitsliste)
 
 Jede Mechanik hat einen URL-Regler; **0 bzw. `alt` stellt genau das v13-Verhalten her**. Alle Werte stehen in einer
-Parametergruppe: `VORLAGE` in `src/config.js`; die reinen Regeln (ohne Grafik) stehen in `src/vorlage.js`.
+Parametergruppe: `VORLAGE` in `src/config.js` (Geheimräume: `GEHEIM`, gleich daneben); die reinen Regeln (ohne Grafik)
+stehen in `src/vorlage.js`, Dungeon-Regeln in `src/world.js`. Zeilen 13 und 14 waren im Datenblatt als „Phase 2“ markiert und
+sind als Zusatz-Etappen E5b/E5c mit umgesetzt.
 
 | # | Mechanik (Vorlage) | Koboldkeller-Fassung | Startwert | Regler | Etappe |
 |---|---|---|---|---|---|
-| 1 | XP-Kurve als Polynom (D) | Bedarf(L) = 10 + 5·L + 2·L² → Lv 5: 85, 10: 260, 15: 535, 20: 910 | a 10, b 5, c 2 | `?xpkurve=quad` (Std.) / `alt` | E2 |
-| 2 | XP nach Level-Abstand (A) | Aufhol-Bonus: XP × (1 + (Soll-Level − Lv) / 10), Soll-Level = Ebene + 1, gekappt 0,6 … 1,5; dafür fällt der Spieler-Level-Anteil der Gegner-XP weg | 0,1 je Level | `?aufhol=0.1` (0 = aus) | E2 |
+| 1 | XP-Kurve als Polynom (D) | Bedarf(L) = 10 + 5·L + c·L² → mit c = 2: Lv 5: 85, 10: 260, 15: 535, 20: 910; **nach Bot-Messung c = 1,8**: Lv 10: 240, 15: 490, 20: 830 | a 10, b 5, c 2 → 1,8 | `?xpkurve=quad` (Std.) / `alt` | E2/E6 |
+| 2 | XP nach Level-Abstand (A) | Aufhol-Bonus: XP × (1 + (Soll-Level − Lv) / 10), Soll-Level = Ebene + 1, gekappt 0,6 … 1,5; dafür fällt der Spieler-Level-Anteil der Gegner-XP weg. Der Gegner-Schaden-Zuschlag „+1 je 10 Spieler-Level“ bleibt dabei bei höchstens +1 (E6) | 0,1 je Level | `?aufhol=0.1` (0 = aus) | E2/E6 |
 | 3 | Bedarfs-Beute (B + C) | 6 % jedes normalen Kills (Elite 20 %) sind ein **Wunsch-Platz**: ❤️ ≤ 25 % → **Glühwürmchen-Heiler** (+50 % ❤️, schwebt zum Kobold) · ❤️ ≤ 50 % → Herz · 🫧 < 6 → +4 Blasen · 🧪 leer → Trank · sonst Münze. Herz-Chance × 2 bei ❤️ ≤ 25 %. Was voll ist, fällt nicht mehr (wird gleich zur Münze) | 6 % / 20 %, × 2 | `?bedarf=1` (0 = aus) | E1 |
-| 4 | Gemessene Beute mit Garantie (E) | Upgrade-Zähler +30 je Ebene, −50 je Upgrade aus Beute; ab 60 enthält die nächste Truhe sicher ein Upgrade. Zufalls-Upgrade je Kill 7 % → 5 % | 60 / +30 / −50 | `?beutetakt=1` (0 = aus) | E1 |
+| 4 | Gemessene Beute mit Garantie (E) | Upgrade-Zähler +30 je Ebene, −50 je Upgrade aus Beute (nicht unter 0); ab 60 enthält die nächste Truhe sicher ein Upgrade. Zufalls-Upgrade je Kill: Startwert 7 % → 5 %, **nach Bot-Messung wieder 7 %** (Truhen stehen jetzt abseits) | 60 / +30 / −50 | `?beutetakt=1` (0 = aus) | E1/E6 |
 | 5 | Treffer bricht Ausholen ab (A) | Schaden ≥ 25 % der Max-❤️ des Gegners **oder** Krit → Ausholen bricht ab, 0,25 s Zucken (Sternchen), Angriffspause startet neu. Elite ab 40 %, Bosse nie | 0,25 / 0,4 | `?zucken=0.25` (0 = aus) | E3 |
 | 6 | Schreck-Flucht kleiner Gegner (A) | geht ein Wichtel/Schleim/eine Fledermaus „Puff“, laufen gleichartige im Umkreis 4 Kacheln 1,2 s lang 2–3 Kacheln weg („Huch!“ 😳). Nicht bei Elite, Handlangern, Bossen | r 4, 1,2 s | `?schreck=1` (0 = aus) | E3 |
 | 8 | Ziel-Kegel für Blasen (B) | Ziel = nächster Gegner im ±60°-Kegel der Lauf-/Joystick-Richtung, sonst der nächste insgesamt; ein angetippter Gegner bleibt Ziel bis 6,5 × 1,5 ≈ 9,8 Kacheln | 60° / 6,5 / × 1,5 | `?kegel=60` (0 = alt) | E3 |
@@ -51,8 +53,8 @@ Parametergruppe: `VORLAGE` in `src/config.js`; die reinen Regeln (ohne Grafik) s
 | 11 | Abkürzungs-Schleifen (E) | statt 2 Zufalls-Gängen: Gang nur dort, wo er den Laufweg zwischen zwei Räumen um ≥ 20 Kacheln kürzt, höchstens 3 je Ebene, nie in die Boss-Arena | 20 / 3 | `?schleifen=20` (0 = alt) | E4 |
 | 12 | Beute hinter Umwegen (E) | Truhen bevorzugt in Räumen abseits des Wegs Eingang → Treppe (Gewicht 5 + 10 je Raumwechsel), mindestens eine abseits | 2 Truhen, ≥ 1 abseits | `?truhen=abseits` / `zufall` | E4 |
 | 15 | Gegner-Sammelalbum (A) | im 🎒 je Gegnerart: Silhouette → Bild nach 1 Sieg, Oma-Satz nach 10, goldener Rahmen + Lebenswert nach 30; gehört dem Gerät | 1 / 10 / 30 | `?album=1` (0 = aus) | E5 |
-| 13 | Geheimräume (E) | Phase 2 (Folgejob laut Datenblatt) | – | – | – |
-| 14 | Glanz-Eigenschaften auf Waffen (A) | Phase 2 (Folgejob laut Datenblatt) | – | – | – |
+| 14 | Glanz-Eigenschaften auf Waffen (A) | eine neue Waffenstufe glänzt zu 25 % (Schwert aus Boss-Beute: immer) mit genau **einer** guten Eigenschaft: 👟 +10 % Tempo, 🧲 +1 Kachel Magnet, 🫧 +1 Blase je Schuss, ✨ 10 % Funkenschlag (+50 % Schaden). Keine Flüche, nie zwei zugleich; ein neuer Glanz ersetzt den alten | 25 % | `?glanz=0.25` (0 = aus) | E5b |
+| 13 | Geheimräume (E) | ab Ebene 5 mit wachsender Chance (bis 50 % auf Ebene 20) eine **Wackelwand** mit goldenem Riss + Glitzer an einem Raum; 2 Schläge (oder ✨ Spezial) öffnen sie, dahinter **immer** eine Schatztruhe mit Upgrade. Nie am Eingang, an der Treppe oder an der Arena | 0 … 50 % | `?geheim=0` = aus | E5c |
 | 7, 16 | Sammel-Ruf, Magie-Chance nach Gegner-Level, Gold-Plan, Aufladen | **weggelassen** (macht Räume hektischer bzw. zu viel Regelwerk für 7–11) | – | – | – |
 
 Kindgerecht heißt hier: nur positive Eigenschaften, keine Strafe unter 60 % XP für leichte Ebenen, Flucht als „Huch!“

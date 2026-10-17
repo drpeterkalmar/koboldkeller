@@ -183,7 +183,8 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
       const toast = await page.evaluate(() => window.__t.join(" | "));
       await page.evaluate(() => KK.save());
       const raw = await page.evaluate(() => JSON.parse(localStorage.getItem("koboldkeller2_save")));
-      const diff = Object.keys(cs.save).filter(k => !["runSecs", "hp"].includes(k) && JSON.stringify(raw[k]) !== JSON.stringify(cs.save[k]));
+      // v14: Datei v4 — Version und xp/xpNext (neue XP-Kurve, Fortschritt anteilig) ändern sich bewusst; Level bleibt (tests/node/save.test.mjs)
+      const diff = Object.keys(cs.save).filter(k => !["runSecs", "hp", "v", "xp", "xpNext"].includes(k) && JSON.stringify(raw[k]) !== JSON.stringify(cs.save[k]));
       // zweites Laden: kein erneuter Hinweis
       await page.reload(); await page.waitForFunction(() => window.KK && KK.G && KK.G.L, null, { timeout: 30000 });
       await page.evaluate(() => { window.__t = []; new MutationObserver(() => window.__t.push(document.getElementById("toasts").textContent)).observe(document.getElementById("toasts"), { childList: true, subtree: true }); });
@@ -194,7 +195,7 @@ export async function runV9({ browser, BASE, R, errors, only = null }) {
       const extra = r.have.filter(id => !["drache", "einhorn", "zauberer"].includes(id));
       out.push({ name: cs.name, extra, ok: extra.slice().sort().join() === cs.want.slice().sort().join() && diff.length === 0 && raw.v === 4 && toast.includes("Du hast " + cs.want.length) && !toast2.includes("Kostüm"), diff, toast: toast.includes("Du hast " + cs.want.length), toast2: toast2.includes("Kostüm") });
     }
-    R("V28", "Migration echter v3-Spielstände: bossDone [2,4,6] → genau Waldfee, Waldhüter, Greif · won → Phönix · MEGA-Sieg (Spielstand oder 🔥 Ehrenhall) → Sternendrache; einmal „Du hast N Kostüme verdient!“, alle anderen Felder gleich (Datei v3)",
+    R("V28", "Migration echter v3-Spielstände: bossDone [2,4,6] → genau Waldfee, Waldhüter, Greif · won → Phönix · MEGA-Sieg (Spielstand oder 🔥 Ehrenhall) → Sternendrache; einmal „Du hast N Kostüme verdient!“, alle anderen Felder gleich (Datei v4: Version + XP-Kurve umgerechnet)",
       out.every(o => o.ok), out.map(o => `${o.name}: +${o.extra.join(",") || "–"}, Hinweis ${o.toast ? "ja" : "NEIN"}, 2. Laden ${o.toast2 ? "NOCHMAL" : "kein Hinweis"}, Felder ${o.diff.length ? "ANDERS " + o.diff.join(",") : "gleich"}`).join(" · "));
   }
 

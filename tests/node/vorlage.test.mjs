@@ -98,7 +98,7 @@ test("Upgrade-Zähler: +30 je Ebene, −50 je Fund (nicht unter 0), ab 60 sicher
   for (let i = 0; i < 2000; i++) if (VL.beuteTruhe(Z.voll, rnd, true, AN).includes("up")) up++;
   assert.equal(up, 2000, "sichere Truhe hat immer ein Upgrade");
   const r = mc(Z.voll, AN, 40000);
-  assert.ok(Math.abs((r.cnt.up || 0) / 40000 - 0.05) < 0.005, "Zufalls-Upgrade je Kill 5 %");
+  assert.ok(Math.abs((r.cnt.up || 0) / 40000 - VORLAGE.upKill) < 0.005, "Zufalls-Upgrade je Kill " + VORLAGE.upKill);
 });
 
 /** Ebene für Ebene: Kills (normal, Elite, geteilte Schleime), Boss, 2 Truhen in zufälliger Reihenfolge → Upgrades aus Beute */
@@ -170,8 +170,9 @@ export function killsJeLevel(V) {
   return out;
 }
 
-test("E2 Kurve: Bedarf(L) = 10 + 5L + 2L² (Lv 5: 85, 10: 260, 15: 535, 20: 910); alt = v13 (65, 391, 2143, 11565)", () => {
-  assert.deepEqual([5, 10, 15, 20].map(L => VL.xpBedarf(L, NEU)), [85, 260, 535, 910]);
+test("E2 Kurve: Bedarf(L) = a + bL + cL² (Datenblatt c = 2: Lv 5: 85, 10: 260, 15: 535, 20: 910; gemessen c = 1,8); alt = v13 (65, 391, 2143, 11565)", () => {
+  assert.deepEqual([5, 10, 15, 20].map(L => VL.xpBedarf(L, { ...NEU, xpC: 2 })), [85, 260, 535, 910]);
+  assert.deepEqual([5, 10, 15, 20].map(L => VL.xpBedarf(L, NEU)), [80, 240, 490, 830]);
   assert.deepEqual([1, 5, 10, 15, 20].map(L => VL.xpBedarf(L, ALT)), [10, 65, 391, 2143, 11565]);
   // Level-Aufstieg: alt rechnet wie v13 aus dem bisherigen Bedarf weiter
   assert.equal(VL.xpNaechster(6, 65, ALT), 95); assert.equal(VL.xpNaechster(6, 65, NEU), VL.xpBedarf(6, NEU));
@@ -204,10 +205,12 @@ test("Aufhol-Bonus: Soll-Level = Ebene + 1, ±10 % je Level, gekappt 0,6 … 1,5
 });
 
 test("Migration: Bedarf neu aus dem Level, Fortschritt anteilig, xp < xpNext; alt = unverändert", () => {
-  assert.deepEqual(VL.xpMigrieren(15, 1000, 2143, NEU), { xp: Math.floor(1000 / 2143 * 535), xpNext: 535 });
-  assert.deepEqual(VL.xpMigrieren(15, 3000, 2143, NEU), { xp: 534, xpNext: 535 });          // kaputter Stand: xp ≥ Bedarf → knapp darunter
-  assert.deepEqual(VL.xpMigrieren(4, 7, 59, NEU), { xp: VL.xpMigrieren(4, 7, 59, NEU).xp, xpNext: 62 });
-  assert.deepEqual(VL.xpMigrieren(15, 200, 535, NEU), { xp: 200, xpNext: 535 });            // schon v4: bleibt gleich
+  const n15 = VL.xpBedarf(15, NEU);
+  assert.deepEqual(VL.xpMigrieren(15, 1000, 2143, NEU), { xp: Math.floor(1000 / 2143 * n15), xpNext: n15 });
+  assert.deepEqual(VL.xpMigrieren(15, 3000, 2143, NEU), { xp: n15 - 1, xpNext: n15 });     // kaputter Stand: xp ≥ Bedarf → knapp darunter
+  assert.equal(VL.xpMigrieren(4, 7, 59, NEU).xpNext, VL.xpBedarf(4, NEU));
+  assert.deepEqual(VL.xpMigrieren(15, 200, n15, NEU), { xp: 200, xpNext: n15 });            // schon v4: bleibt gleich
+  assert.deepEqual(VL.xpMigrieren(15, 200, 535, NEU), { xp: Math.floor(200 / 535 * n15), xpNext: n15 });   // v4-Stand mit c = 2 → anteilig
   assert.deepEqual(VL.xpMigrieren(15, 1000, 2143, ALT), { xp: 1000, xpNext: 2143 });
 });
 

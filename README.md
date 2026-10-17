@@ -106,6 +106,30 @@ während einer Titelkarte. Abschaltbar in ⏸️ „🧭 Weg-Pfeil“. Zeiten pe
 - **MEGASCHWER** (🔥): Gegner 2× schnell, 10× Schaden. Speichern pro Gerät, „💾 Weiterspielen" (Respawn am Ebenen-Eingang).
   Alte v20-Spielstände werden übernommen (Name, Look, Level, Gold, Waffen + 🎖️ Ehrenmütze), die Ehrenhall ebenso.
 
+## Vorlagen (v14, [V14_VORLAGEN_BERICHT.md](V14_VORLAGEN_BERICHT.md), Datenblatt [VORLAGEN.md](VORLAGEN.md))
+Bewährte Mechaniken aus klassischen Action-RPGs, Abenteuern und Roguelikes — in eigenen Worten und mit eigenen Werten nachgebaut
+(Beute- und Kampftakt inspiriert von klassischen Action-RPGs und Roguelikes). Jede lässt sich per URL-Regler abschalten.
+- **Beute nach Bedarf** (`?bedarf=0` = aus): Bei ganz wenig ❤️ fallen Herzen doppelt so oft, und manchmal schwebt ein
+  ✨ **Glühwürmchen-Heiler** zum Kobold (+50 % ❤️). Fehlen 🫧, kommt Blasen-Nachschub (+4), fehlen 🧪, ein Trank. Was voll ist
+  (🧪 5/5, volles ❤️, volle ✨-Leiste), fällt nicht mehr — dafür eine Münze.
+- **Upgrade-Garantie** (`?beutetakt=0`): Wer zwei Ebenen lang kein ⚔️/🪄/💎 aus Beute bekommt, findet es sicher in der nächsten Truhe.
+- **Neue Erfahrungskurve** (`?xpkurve=alt`) + **Aufhol-Bonus** (`?aufhol=0`): Level-Aufstiege kommen bis Ebene 20 regelmäßig
+  (Bot: Level 20 statt 16 am Ende, kein Stillstand mehr). Wer tiefer geht als sein Level, bekommt dort bis zu 50 % mehr Erfahrung.
+- **Zucken** (`?zucken=0`): Wer einen Gegner trifft, während er ausholt (Warnung), lässt ihn zusammenzucken 💫 — der Angriff fällt aus.
+- **„Huch!“** (`?schreck=0`): Macht ein Wichtel, Schleim oder eine Fledermaus „Puff“, laufen die gleichen in der Nähe kurz weg 😳.
+- **Ziel-Kegel** (`?kegel=0`): 🫧 fliegen zum Gegner in Lauf-/Joystick-Richtung, ein angetippter Gegner bleibt Ziel.
+- **Abkürzungen im Keller** (`?schleifen=0`) und **Truhen abseits** (`?truhen=zufall`): kurze Durchgänge zwischen Räumen, die
+  sonst nur über Umwege verbunden wären; Truhen stehen lieber in Räumen neben dem Weg zur Treppe — Erkunden lohnt sich.
+- **📖 Sammelalbum** (`?album=0`): im 🎒 eine Seite je Gegnerart — Silhouette, nach dem 1. Sieg das Bild, nach 10 erzählt Oma etwas,
+  nach 30 goldener Rahmen + Lebenswert. Gehört dem Gerät (wie die Kostüme).
+- **✨ Glanz** (`?glanz=0`): Manche neue Waffe glänzt mit einer guten Eigenschaft (👟 schneller, 🧲 weiter, 🫧 +1 Blase, ✨ Funken).
+- **Geheimräume** (`?geheim=0`): ab Ebene 5 manchmal eine Wand mit goldenem Riss und Glitzer — zweimal mit ⚔️ draufhauen, dahinter
+  wartet eine Schatztruhe mit Upgrade.
+- Oma Pilzhut erklärt jede Neuheit in einem Satz (ihre Tipps beginnen mit den Neuheiten). Alle Regler zusammen:
+  `?bedarf=0&beutetakt=0&xpkurve=alt&aufhol=0&zucken=0&schreck=0&kegel=0&schleifen=0&truhen=zufall&album=0&glanz=0&geheim=0` = Regeln wie v13.
+- Spielstände werden beim ersten Laden übernommen (Datei v3 → v4): Level, Talente, Ausrüstung bleiben, der Fortschritt im
+  aktuellen Level wird anteilig auf die neue Kurve umgerechnet.
+
 ## Handy / PWA
 Hoch- und Querformat, `100dvh` + Safe-Area, kein Doppeltipp-Zoom, kein Long-Press-Menü, Vibration (dezent, abschaltbar, v7 siehe unten),
 Wake-Lock beim Spielen, Pause + Stummschalten beim App-Wechsel, Vollbild-Knopf, Manifest + Icons
@@ -154,6 +178,9 @@ Das Startmenü zeigt „🍄 Koboldkeller 2 · vN".
 `KK.arena()` (Größe, Tore, Handlanger, Deckel, Treppen-Siegel), `KK.wave(n)` (Handlanger-Welle erzwingen),
 v7: `KK.guide()` (Weg-Pfeil: Deckkraft, Stillstand, Richtung, Wegpunkt, Ziel), `KK.guideAim()`, `KK.path(x,y)`, `KK.hap()` (Haptik-Zähler je Ereignis-Art),
 `KK.editor()` (Editor-Look, Name, Würfe). Technik: `KK.post()` (Endbild an/aus + Grund, Maße; `KK.post(false)` = zur Laufzeit 2D), `KK.takt()`, `KK.auto()` (Automatik: Stufe, fps, Arbeit, gedeckelt, Verlauf), `KK.worker()` (Back-Worker: geliefert/synchron), `KK.perf()` zusätzlich `workMed/workP95/workMax`. v13: `KK.deko()` (Deko-Zustand), `KK.deko(false)` (Effekte pro Frame aus, für Messungen). v11: `KK.rise()` (Boss-Auftritt: Abschnitt, Fortschritt), `KK.freeze(on)` (Spielzeit anhalten für Fotos). v12: `KK.rock()` (Fels-Muster: Bauzeit, Speicher, Chunks), `KK.perf()` liefert zusätzlich `drawMed`/`drawP95` (reine draw()-Zeit). v9: `KK.myths()` (Sammlung, getragen, Sprite-Zahl), `KK.unlock(id|'all')`, `KK.wear(id)`. v8: `KK.G.L.portals` / `KK.G.L.gates` (Stadt), `KK.G.L.wallTraps` (Wand-Schützen: Linie, Takt, Zustand).
+v14: `KK.G.stats` (zusätzlich `beute` je Art, `nutzlos`, `ups`, `upSicher`, `windHit`/`windAbort`/`windKill`, `schreck`, `glanz`, `funken`, `geheim`),
+`KK.G.upM` (Upgrade-Zähler), `KK.G.album` (Siege je Gegnerart), `KK.G.p.glanz`, `KK.G.L.schleifen` (gebaute Abkürzungen mit Ersparnis), `KK.G.L.weg`
+(kürzester Weg Eingang → Treppe, Räume darauf, Raumwechsel je Raum), `KK.G.L.geheim` (Geheimraum: Tür, Rechteck, offen).
 
 ### Testen
 ```bash
@@ -180,9 +207,19 @@ node tools/audiotest.mjs http://localhost:8731/   # Handy-Regeln (ohne Autoplay-
 node tools/audiorender.mjs --port=8731            # Effekte + Musikzustände → shots/audio/*.wav + Messtabelle
 node tools/bot.mjs 8731 20 6 [--mega] [--out=v8]  # Autoplay 1→20 (Tipps nur auf Sichtbares, Stadt zu Fuß) → shots/neubau/bot_<name>.md
 node tools/bot.mjs 8731 20 4 --secs=120 --audio   # 2 min Kampf-Bot + Knoten-Leck-Test
+node tools/bot.mjs 8731 20 6 --out=v14 [--q=xpkurve=alt&aufhol=0]   # v14: Level-Zeitstempel, Waffenwert je Ebene, Abbruch-Quote, Fluchten
+node tools/checks_v14.mjs --port=8731 [--only=V40,V46] [--ref=8732]  # v14: V40 Beute · V41 XP/Spielstand · V42 Kampf · V43 Dungeon (--ref = v13-Server) · V44 Album · V45 Glanz · V46 Geheimraum
+node tests/node/vorlage.test.mjs --zeigen          # v14: Messgrößen (Monte-Carlo Beute, Kills je Level, Ziel-Kegel); dungeon.test.mjs --zeigen: 200 Seeds × 20 Ebenen
 ```
 `check.mjs` misst im Profil „gpu" (Chromium new-headless mit GPU-Raster, ungedrosselter Frame-Takt) und
 zusätzlich im reinen Software-Raster (Worst Case). Playwright wird global gesucht (`npm root -g`, nvm).
+
+## Changelog
+- **v14 (13.10.2026, [V14_VORLAGEN_BERICHT.md](V14_VORLAGEN_BERICHT.md))** — Vorlagen: 14.1 Bedarfs-Beute + Upgrade-Garantie ·
+  14.2 XP-Kurve als Polynom + Aufhol-Bonus (Spielstand v4) · 14.3 Zucken, „Huch!“, Ziel-Kegel · 14.4 Abkürzungs-Schleifen +
+  Truhen abseits · 14.5 Sammelalbum · 14.6 Glanz-Eigenschaften · 14.7 Geheimräume · 14.8 Abnahme (Bericht, Messungen).
+- v13 Technik-Nacht ([TECHNIK_BERICHT.md](TECHNIK_BERICHT.md)) · v13 Deko ([DEKO_BERICHT.md](DEKO_BERICHT.md)) ·
+  v12 Fels ([V12_BERICHT.md](V12_BERICHT.md)) · v11 Boss-Auftritt ([V11_BERICHT.md](V11_BERICHT.md)) · ältere: V4–V9_BERICHT.md.
 
 ## Credits
 - Musik: „Town Theme 1" (Geomancer) — CC0 / Public Domain via OpenGameArt.org, bleibt das **Leitmotiv** (Stadt, und alle zwei

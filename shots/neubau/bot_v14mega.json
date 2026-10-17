@@ -1,0 +1,1147 @@
+{
+  "date": "2026-10-13T09:53:41.445Z",
+  "ver": 14,
+  "q": "",
+  "ups": [
+    {
+      "lvl": 2,
+      "t": 8.4,
+      "d": 1
+    },
+    {
+      "lvl": 3,
+      "t": 28.3,
+      "d": 2
+    },
+    {
+      "lvl": 4,
+      "t": 60.4,
+      "d": 1
+    },
+    {
+      "lvl": 5,
+      "t": 118.1,
+      "d": 2
+    },
+    {
+      "lvl": 6,
+      "t": 191.8,
+      "d": 2
+    },
+    {
+      "lvl": 7,
+      "t": 279.8,
+      "d": 4
+    },
+    {
+      "lvl": 8,
+      "t": 382.1,
+      "d": 4
+    },
+    {
+      "lvl": 9,
+      "t": 552.6,
+      "d": 4
+    },
+    {
+      "lvl": 10,
+      "t": 641.1,
+      "d": 6
+    },
+    {
+      "lvl": 11,
+      "t": 721.9,
+      "d": 7
+    },
+    {
+      "lvl": 12,
+      "t": 814.1,
+      "d": 8
+    },
+    {
+      "lvl": 13,
+      "t": 990.6,
+      "d": 8
+    },
+    {
+      "lvl": 14,
+      "t": 1163,
+      "d": 10
+    },
+    {
+      "lvl": 15,
+      "t": 1247.8,
+      "d": 10
+    },
+    {
+      "lvl": 16,
+      "t": 1394.2,
+      "d": 10
+    },
+    {
+      "lvl": 17,
+      "t": 1507.2,
+      "d": 11
+    },
+    {
+      "lvl": 18,
+      "t": 1605.6,
+      "d": 11
+    }
+  ],
+  "stats": {
+    "kills": 580,
+    "dmgTaken": 4477,
+    "potionsUsed": 29,
+    "specials": 31,
+    "wallHits": 0,
+    "beute": {
+      "coin": 1341,
+      "up": 52,
+      "potion": 25,
+      "mushroom": 17,
+      "heart": 6,
+      "firefly": 1
+    },
+    "nutzlos": 68,
+    "ups": 54,
+    "upSicher": 9,
+    "windHit": 70,
+    "windAbort": 45,
+    "windKill": 72,
+    "schreck": 91,
+    "glanz": 1
+  },
+  "myth": "",
+  "mega": true,
+  "speed": 6,
+  "won": false,
+  "deaths": 90,
+  "specials": 31,
+  "dodges": 72,
+  "final": {
+    "screen": "play",
+    "depth": 0,
+    "biome": 0,
+    "hp": 47,
+    "maxHp": 47,
+    "lvl": 18,
+    "gold": 2637,
+    "ents": 0,
+    "boss": null,
+    "mega": true,
+    "secs": 0,
+    "won": false,
+    "demo": false,
+    "deepest": 11,
+    "x": 30.05,
+    "y": 25.6,
+    "tut": -1,
+    "potions": 5,
+    "atk": 25,
+    "name": "Bot",
+    "species": "kobold",
+    "hat": "diadem",
+    "audio": "running",
+    "track": "audio/town.m4a",
+    "where": "town",
+    "ammo": 40,
+    "ammoMax": 40,
+    "spec": 0,
+    "skPts": 0,
+    "sk": {
+      "kraft": 10,
+      "leben": 10,
+      "tempo": 5,
+      "blasen": 5,
+      "magnet": 4
+    },
+    "look": {
+      "species": "kobold",
+      "skin": "#86dc5c",
+      "outfit": "#ff6f91",
+      "eye": "#3b2a6b",
+      "hair": "#6b4430",
+      "style": "locke",
+      "earsV": 0,
+      "acc": "none",
+      "ears": "pointy",
+      "myth": "",
+      "mhat": false,
+      "id": "kobold|#86dc5c|#6b4430|#3b2a6b|locke|0|none"
+    },
+    "homeHidden": false,
+    "homeHideT": 0,
+    "levelName": "Koboldstadt",
+    "phase": 0,
+    "stairsSealed": false,
+    "mini": false,
+    "bossDone": [
+      2,
+      4,
+      6,
+      8,
+      10
+    ],
+    "minions": 0,
+    "spawning": 0,
+    "zoom": 1
+  },
+  "rows": [
+    {
+      "d": 1,
+      "secs": 76.40000000001302,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 4,
+      "arriveLvl": 1,
+      "arriveHp": "6/6",
+      "done": true,
+      "taps": 64,
+      "tapsEnemy": 28,
+      "walk": 46.60000000000882,
+      "arriveAtk": 4,
+      "wallHits": 0
+    },
+    {
+      "d": 2,
+      "secs": 121.10000000004368,
+      "dmg": 40,
+      "deaths": 4,
+      "pots": 2,
+      "tries": 5,
+      "arriveLvl": 2,
+      "arriveHp": "9/9",
+      "done": true,
+      "taps": 31,
+      "tapsEnemy": 32,
+      "walk": 65.5850000000269,
+      "arriveAtk": 5.5,
+      "wallHits": 0
+    },
+    {
+      "d": 3,
+      "secs": 19.40000000001544,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 6,
+      "arriveHp": "19/19",
+      "done": true,
+      "taps": 18,
+      "tapsEnemy": 1,
+      "walk": 10.400000000008276,
+      "arriveAtk": 6.5,
+      "wallHits": 0
+    },
+    {
+      "d": 4,
+      "secs": 374.93099999969775,
+      "dmg": 180,
+      "deaths": 10,
+      "pots": 9,
+      "tries": 11,
+      "arriveLvl": 6,
+      "arriveHp": "19/19",
+      "done": true,
+      "taps": 145,
+      "tapsEnemy": 105,
+      "walk": 174.1759999998343,
+      "arriveAtk": 6.5,
+      "wallHits": 0
+    },
+    {
+      "d": 5,
+      "secs": 16.499999999984993,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 9,
+      "arriveHp": "28/28",
+      "done": true,
+      "taps": 14,
+      "tapsEnemy": 5,
+      "walk": 10.399999999990541,
+      "arriveAtk": 10.5,
+      "wallHits": 0
+    },
+    {
+      "d": 6,
+      "secs": 53.239999999963175,
+      "dmg": 20,
+      "deaths": 0,
+      "pots": 1,
+      "tries": 1,
+      "arriveLvl": 9,
+      "arriveHp": "28/28",
+      "done": true,
+      "taps": 27,
+      "tapsEnemy": 17,
+      "walk": 26.96499999997718,
+      "arriveAtk": 11.5,
+      "wallHits": 0
+    },
+    {
+      "d": 7,
+      "secs": 97.22999999991634,
+      "dmg": 0,
+      "deaths": 9,
+      "pots": 0,
+      "tries": 10,
+      "arriveLvl": 10,
+      "arriveHp": "28/29",
+      "done": true,
+      "taps": 56,
+      "tapsEnemy": 47,
+      "walk": 65.47999999994181,
+      "arriveAtk": 12,
+      "wallHits": 0
+    },
+    {
+      "d": 8,
+      "secs": 317.9459999997871,
+      "dmg": 240,
+      "deaths": 10,
+      "pots": 8,
+      "tries": 11,
+      "arriveLvl": 11,
+      "arriveHp": "32/32",
+      "done": true,
+      "taps": 124,
+      "tapsEnemy": 98,
+      "walk": 143.58099999991737,
+      "arriveAtk": 14.5,
+      "wallHits": 0
+    },
+    {
+      "d": 9,
+      "secs": 83.79999999992378,
+      "dmg": 40,
+      "deaths": 8,
+      "pots": 1,
+      "tries": 9,
+      "arriveLvl": 13,
+      "arriveHp": "38/38",
+      "done": true,
+      "taps": 57,
+      "tapsEnemy": 20,
+      "walk": 57.499999999947704,
+      "arriveAtk": 18,
+      "wallHits": 0
+    },
+    {
+      "d": 10,
+      "secs": 219.37499999981992,
+      "dmg": 288,
+      "deaths": 6,
+      "pots": 8,
+      "tries": 8,
+      "arriveLvl": 13,
+      "arriveHp": "38/38",
+      "done": true,
+      "taps": 130,
+      "tapsEnemy": 66,
+      "walk": 112.42999999993253,
+      "arriveAtk": 18,
+      "wallHits": 0
+    },
+    {
+      "d": 11,
+      "secs": 270.14500000100224,
+      "dmg": 0,
+      "deaths": 43,
+      "pots": 0,
+      "tries": 43,
+      "arriveLvl": 16,
+      "arriveHp": "45/45",
+      "done": false,
+      "taps": 206,
+      "tapsEnemy": 170,
+      "walk": 152.91500000052838,
+      "arriveAtk": 20,
+      "wallHits": 0
+    }
+  ],
+  "fights": [
+    {
+      "d": 2,
+      "name": "Schlabbo",
+      "mini": true,
+      "secs": 12.6,
+      "dmg": 20,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 138
+    },
+    {
+      "d": 2,
+      "name": "Schlabbo",
+      "mini": true,
+      "secs": 16.2,
+      "dmg": 20,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 159
+    },
+    {
+      "d": 2,
+      "name": "Schlabbo",
+      "mini": true,
+      "secs": 13.4,
+      "dmg": 20,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 159
+    },
+    {
+      "d": 2,
+      "name": "Schlabbo",
+      "mini": true,
+      "secs": 14.1,
+      "dmg": 20,
+      "won": true,
+      "maxMin": 3,
+      "spawned": 0,
+      "hp": 169
+    },
+    {
+      "d": 2,
+      "name": "Schlabbo",
+      "mini": true,
+      "secs": 4.3,
+      "dmg": 0,
+      "won": true,
+      "maxMin": 0,
+      "spawned": 0,
+      "hp": 169
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 4.6,
+      "dmg": 20,
+      "won": false,
+      "maxMin": 0,
+      "spawned": 0,
+      "hp": 432
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 13.3,
+      "dmg": 20,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 432
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 14.8,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 432
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 9.7,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 447
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 14.5,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 447
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 27.2,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 5,
+      "spawned": 0,
+      "hp": 447
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 18.6,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 463
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 7.5,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 463
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 7,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 463
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 19.3,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 5,
+      "spawned": 0,
+      "hp": 463
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 22.2,
+      "dmg": 20,
+      "won": true,
+      "maxMin": 5,
+      "spawned": 9,
+      "hp": 463
+    },
+    {
+      "d": 6,
+      "name": "Funkelflatter",
+      "mini": true,
+      "secs": 15.8,
+      "dmg": 20,
+      "won": true,
+      "maxMin": 2,
+      "spawned": 3,
+      "hp": 389
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 16.5,
+      "dmg": 70,
+      "won": false,
+      "maxMin": 3,
+      "spawned": 0,
+      "hp": 853
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 24.9,
+      "dmg": 60,
+      "won": false,
+      "maxMin": 6,
+      "spawned": 0,
+      "hp": 853
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 21,
+      "dmg": 60,
+      "won": false,
+      "maxMin": 6,
+      "spawned": 0,
+      "hp": 874
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 9,
+      "dmg": 70,
+      "won": false,
+      "maxMin": 5,
+      "spawned": 0,
+      "hp": 874
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 6.5,
+      "dmg": 60,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 874
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 9.5,
+      "dmg": 70,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 874
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 19.9,
+      "dmg": 60,
+      "won": false,
+      "maxMin": 6,
+      "spawned": 0,
+      "hp": 894
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 19.9,
+      "dmg": 30,
+      "won": true,
+      "maxMin": 6,
+      "spawned": 9,
+      "hp": 894
+    },
+    {
+      "d": 10,
+      "name": "Lolli-Lutz",
+      "mini": true,
+      "secs": 4.8,
+      "dmg": 29,
+      "won": false,
+      "maxMin": 0,
+      "spawned": 0,
+      "hp": 684
+    },
+    {
+      "d": 10,
+      "name": "Lolli-Lutz",
+      "mini": true,
+      "secs": 6.8,
+      "dmg": 30,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 702
+    },
+    {
+      "d": 10,
+      "name": "Lolli-Lutz",
+      "mini": true,
+      "secs": 12.7,
+      "dmg": 60,
+      "won": false,
+      "maxMin": 3,
+      "spawned": 0,
+      "hp": 702
+    },
+    {
+      "d": 10,
+      "name": "Lolli-Lutz",
+      "mini": true,
+      "secs": 12.5,
+      "dmg": 58,
+      "won": true,
+      "maxMin": 4,
+      "spawned": 4,
+      "hp": 702
+    }
+  ],
+  "maxMinions": 6,
+  "town": [
+    {
+      "to": 1,
+      "secs": 5.2,
+      "taps": 7
+    },
+    {
+      "to": 2,
+      "secs": 5.4,
+      "taps": 6
+    },
+    {
+      "to": 2,
+      "secs": 4.5,
+      "taps": 6
+    },
+    {
+      "to": 2,
+      "secs": 6,
+      "taps": 6
+    },
+    {
+      "to": 2,
+      "secs": 4.4,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 4.5,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 4.6,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 5.6,
+      "taps": 6
+    },
+    {
+      "to": 4,
+      "secs": 5.4,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 5.5,
+      "taps": 6
+    },
+    {
+      "to": 4,
+      "secs": 4.6,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 5.7,
+      "taps": 6
+    },
+    {
+      "to": 4,
+      "secs": 4.6,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 4.5,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 5.8,
+      "taps": 6
+    },
+    {
+      "to": 7,
+      "secs": 5.1,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5.1,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5.3,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5.3,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5.3,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5.8,
+      "taps": 5
+    },
+    {
+      "to": 7,
+      "secs": 5,
+      "taps": 5
+    },
+    {
+      "to": 8,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.9,
+      "taps": 5
+    },
+    {
+      "to": 8,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 9,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 9,
+      "secs": 4.4,
+      "taps": 4
+    },
+    {
+      "to": 9,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 9,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 9,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 9,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 9,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 4.4,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.3,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.3,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 4.8,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.3,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.3,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 4.9,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.3,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 4.7,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 4.6,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 4.6,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 4.7,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 4.8,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 4.8,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5,
+      "taps": 4
+    }
+  ],
+  "taps": 1303,
+  "tapsEnemy": 589,
+  "walk": 1124.132000000417,
+  "stuck": [],
+  "errors": []
+}

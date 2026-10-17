@@ -1,0 +1,1058 @@
+{
+  "date": "2026-10-13T10:03:17.047Z",
+  "ver": 13,
+  "q": "",
+  "ups": [
+    {
+      "lvl": 2,
+      "t": 10,
+      "d": 1
+    },
+    {
+      "lvl": 3,
+      "t": 11.7,
+      "d": 1
+    },
+    {
+      "lvl": 4,
+      "t": 52.4,
+      "d": 2
+    },
+    {
+      "lvl": 5,
+      "t": 66.3,
+      "d": 3
+    },
+    {
+      "lvl": 6,
+      "t": 79.7,
+      "d": 4
+    },
+    {
+      "lvl": 7,
+      "t": 124.2,
+      "d": 4
+    },
+    {
+      "lvl": 8,
+      "t": 214.4,
+      "d": 4
+    },
+    {
+      "lvl": 9,
+      "t": 305.7,
+      "d": 4
+    },
+    {
+      "lvl": 10,
+      "t": 351.7,
+      "d": 6
+    },
+    {
+      "lvl": 11,
+      "t": 412.2,
+      "d": 6
+    },
+    {
+      "lvl": 12,
+      "t": 501.5,
+      "d": 6
+    },
+    {
+      "lvl": 13,
+      "t": 607.8,
+      "d": 6
+    },
+    {
+      "lvl": 14,
+      "t": 736.9,
+      "d": 6
+    },
+    {
+      "lvl": 15,
+      "t": 906.2,
+      "d": 9
+    },
+    {
+      "lvl": 16,
+      "t": 1028.7,
+      "d": 9
+    },
+    {
+      "lvl": 17,
+      "t": 1198.6,
+      "d": 10
+    },
+    {
+      "lvl": 18,
+      "t": 1433.3,
+      "d": 10
+    },
+    {
+      "lvl": 19,
+      "t": 1786.6,
+      "d": 0
+    }
+  ],
+  "stats": {
+    "kills": 694,
+    "dmgTaken": 5959,
+    "potionsUsed": 50,
+    "specials": 25,
+    "wallHits": 6
+  },
+  "myth": "",
+  "mega": true,
+  "speed": 6,
+  "won": false,
+  "deaths": 101,
+  "specials": 25,
+  "dodges": 70,
+  "final": {
+    "screen": "play",
+    "depth": 12,
+    "biome": 3,
+    "hp": 46,
+    "maxHp": 46,
+    "lvl": 19,
+    "gold": 3532,
+    "ents": 10,
+    "boss": {
+      "name": "Zuckerschnute",
+      "hp": 1404,
+      "king": false,
+      "scale": 1.9,
+      "skin": "#ff8fc8"
+    },
+    "mega": true,
+    "secs": 0,
+    "won": false,
+    "demo": false,
+    "deepest": 12,
+    "x": 49.5,
+    "y": 14.5,
+    "tut": -1,
+    "potions": 5,
+    "atk": 44,
+    "name": "Bot",
+    "species": "kobold",
+    "hat": "diadem",
+    "audio": "running",
+    "track": "audio/town.m4a",
+    "where": "dungeon",
+    "ammo": 44,
+    "ammoMax": 44,
+    "spec": 1,
+    "skPts": 0,
+    "sk": {
+      "kraft": 10,
+      "leben": 10,
+      "tempo": 5,
+      "blasen": 6,
+      "magnet": 5
+    },
+    "look": {
+      "species": "kobold",
+      "skin": "#86dc5c",
+      "outfit": "#ff6f91",
+      "eye": "#3b2a6b",
+      "hair": "#6b4430",
+      "style": "locke",
+      "earsV": 0,
+      "acc": "none",
+      "ears": "pointy",
+      "myth": "",
+      "mhat": false,
+      "id": "kobold|#86dc5c|#6b4430|#3b2a6b|locke|0|none"
+    },
+    "homeHidden": true,
+    "homeHideT": 20,
+    "levelName": "Zuckerschnutes Naschpalast",
+    "phase": 1,
+    "stairsSealed": true,
+    "mini": false,
+    "bossDone": [
+      2,
+      4,
+      6,
+      8,
+      10
+    ],
+    "minions": 0,
+    "spawning": 0,
+    "zoom": 1
+  },
+  "rows": [
+    {
+      "d": 1,
+      "secs": 16.400000000000023,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 1,
+      "arriveHp": "6/6",
+      "done": true,
+      "taps": 16,
+      "tapsEnemy": 4,
+      "walk": 7.500000000000007,
+      "wallHits": 0
+    },
+    {
+      "d": 2,
+      "secs": 39.05999999999905,
+      "dmg": 10,
+      "deaths": 0,
+      "pots": 1,
+      "tries": 1,
+      "arriveLvl": 3,
+      "arriveHp": "12/12",
+      "done": true,
+      "taps": 11,
+      "tapsEnemy": 9,
+      "walk": 18.29999999999986,
+      "wallHits": 0
+    },
+    {
+      "d": 3,
+      "secs": 15.654999999998388,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 4,
+      "arriveHp": "13/13",
+      "done": true,
+      "taps": 15,
+      "tapsEnemy": 4,
+      "walk": 7.504999999999228,
+      "wallHits": 0
+    },
+    {
+      "d": 4,
+      "secs": 253.13599999999292,
+      "dmg": 120,
+      "deaths": 5,
+      "pots": 6,
+      "tries": 6,
+      "arriveLvl": 5,
+      "arriveHp": "16/16",
+      "done": true,
+      "taps": 89,
+      "tapsEnemy": 80,
+      "walk": 109.42799999999504,
+      "wallHits": 0
+    },
+    {
+      "d": 5,
+      "secs": 45.59999999995853,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 3,
+      "arriveLvl": 9,
+      "arriveHp": "19/26",
+      "done": true,
+      "taps": 45,
+      "tapsEnemy": 15,
+      "walk": 27.799999999974716,
+      "wallHits": 0
+    },
+    {
+      "d": 6,
+      "secs": 392.039999999682,
+      "dmg": 540,
+      "deaths": 24,
+      "pots": 16,
+      "tries": 25,
+      "arriveLvl": 9,
+      "arriveHp": "26/26",
+      "done": true,
+      "taps": 254,
+      "tapsEnemy": 159,
+      "walk": 198.00499999982708,
+      "wallHits": 5
+    },
+    {
+      "d": 7,
+      "secs": 13.299999999987904,
+      "dmg": 0,
+      "deaths": 1,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 14,
+      "arriveHp": "21/37",
+      "done": true,
+      "taps": 11,
+      "tapsEnemy": 4,
+      "walk": 7.699999999992997,
+      "wallHits": 0
+    },
+    {
+      "d": 8,
+      "secs": 90.52099999997245,
+      "dmg": 90,
+      "deaths": 2,
+      "pots": 3,
+      "tries": 4,
+      "arriveLvl": 14,
+      "arriveHp": "37/37",
+      "done": true,
+      "taps": 27,
+      "tapsEnemy": 34,
+      "walk": 39.25100000000066,
+      "wallHits": 0
+    },
+    {
+      "d": 9,
+      "secs": 124.11499999986427,
+      "dmg": 80,
+      "deaths": 1,
+      "pots": 2,
+      "tries": 7,
+      "arriveLvl": 14,
+      "arriveHp": "39/39",
+      "done": true,
+      "taps": 80,
+      "tapsEnemy": 56,
+      "walk": 74.02499999992415,
+      "wallHits": 0
+    },
+    {
+      "d": 10,
+      "secs": 447.8499999995661,
+      "dmg": 900,
+      "deaths": 21,
+      "pots": 22,
+      "tries": 22,
+      "arriveLvl": 15,
+      "arriveHp": "42/42",
+      "done": true,
+      "taps": 330,
+      "tapsEnemy": 166,
+      "walk": 256.6649999997717,
+      "wallHits": 1
+    },
+    {
+      "d": 11,
+      "secs": 55.16499999994403,
+      "dmg": 0,
+      "deaths": 2,
+      "pots": 0,
+      "tries": 3,
+      "arriveLvl": 18,
+      "arriveHp": "40/45",
+      "done": true,
+      "taps": 35,
+      "tapsEnemy": 31,
+      "walk": 32.51499999996804,
+      "wallHits": 0
+    },
+    {
+      "d": 12,
+      "secs": 307.10000000273385,
+      "dmg": 0,
+      "deaths": 45,
+      "pots": 0,
+      "tries": 45,
+      "arriveLvl": 18,
+      "arriveHp": "45/45",
+      "done": false,
+      "taps": 266,
+      "tapsEnemy": 124,
+      "walk": 186.8000000016691,
+      "wallHits": 0
+    }
+  ],
+  "fights": [
+    {
+      "d": 2,
+      "name": "Schlabbo",
+      "mini": true,
+      "secs": 21.6,
+      "dmg": 10,
+      "won": true,
+      "maxMin": 3,
+      "spawned": 5,
+      "hp": 148
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 6.8,
+      "dmg": 20,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 416
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 32.2,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 5,
+      "spawned": 0,
+      "hp": 432
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 24.1,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 5,
+      "spawned": 0,
+      "hp": 447
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 25.5,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 4,
+      "spawned": 0,
+      "hp": 447
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 31.4,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 5,
+      "spawned": 0,
+      "hp": 463
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 25.1,
+      "dmg": 40,
+      "won": true,
+      "maxMin": 5,
+      "spawned": 10,
+      "hp": 463
+    },
+    {
+      "d": 6,
+      "name": "Funkelflatter",
+      "mini": true,
+      "secs": 12.6,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 3,
+      "spawned": 0,
+      "hp": 389
+    },
+    {
+      "d": 6,
+      "name": "Funkelflatter",
+      "mini": true,
+      "secs": 13.4,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 417
+    },
+    {
+      "d": 6,
+      "name": "Funkelflatter",
+      "mini": true,
+      "secs": 4,
+      "dmg": 20,
+      "won": false,
+      "maxMin": 0,
+      "spawned": 0,
+      "hp": 432
+    },
+    {
+      "d": 6,
+      "name": "Funkelflatter",
+      "mini": true,
+      "secs": 12.5,
+      "dmg": 40,
+      "won": false,
+      "maxMin": 2,
+      "spawned": 0,
+      "hp": 432
+    },
+    {
+      "d": 6,
+      "name": "Funkelflatter",
+      "mini": true,
+      "secs": 16.4,
+      "dmg": 20,
+      "won": true,
+      "maxMin": 2,
+      "spawned": 5,
+      "hp": 446
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 25.7,
+      "dmg": 90,
+      "won": false,
+      "maxMin": 6,
+      "spawned": 0,
+      "hp": 915
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 22.7,
+      "dmg": 30,
+      "won": true,
+      "maxMin": 6,
+      "spawned": 7,
+      "hp": 915
+    },
+    {
+      "d": 10,
+      "name": "Lolli-Lutz",
+      "mini": true,
+      "secs": 9.3,
+      "dmg": 29,
+      "won": false,
+      "maxMin": 4,
+      "spawned": 0,
+      "hp": 738
+    },
+    {
+      "d": 10,
+      "name": "Lolli-Lutz",
+      "mini": true,
+      "secs": 7.9,
+      "dmg": 0,
+      "won": true,
+      "maxMin": 2,
+      "spawned": 2,
+      "hp": 738
+    }
+  ],
+  "maxMinions": 6,
+  "town": [
+    {
+      "to": 1,
+      "secs": 5.2,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 5.5,
+      "taps": 6
+    },
+    {
+      "to": 4,
+      "secs": 5.5,
+      "taps": 6
+    },
+    {
+      "to": 4,
+      "secs": 5.3,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 5.4,
+      "taps": 7
+    },
+    {
+      "to": 4,
+      "secs": 5.6,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 6,
+      "secs": 5.6,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.7,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 6.1,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.9,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 6,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.7,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.8,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.7,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.9,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.7,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 6,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 4.8,
+      "taps": 5
+    },
+    {
+      "to": 6,
+      "secs": 4.9,
+      "taps": 5
+    },
+    {
+      "to": 6,
+      "secs": 5.7,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 6,
+      "secs": 5.5,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.7,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 6.1,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.5,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.6,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.6,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.6,
+      "taps": 6
+    },
+    {
+      "to": 6,
+      "secs": 5.5,
+      "taps": 6
+    },
+    {
+      "to": 8,
+      "secs": 5,
+      "taps": 5
+    },
+    {
+      "to": 8,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 8,
+      "secs": 4.9,
+      "taps": 5
+    },
+    {
+      "to": 9,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 5.9,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 5.5,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 5.6,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 5.2,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 5.3,
+      "taps": 5
+    },
+    {
+      "to": 10,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.2,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.3,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.1,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.3,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 5.4,
+      "taps": 4
+    },
+    {
+      "to": 10,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 11,
+      "secs": 5.4,
+      "taps": 5
+    },
+    {
+      "to": 11,
+      "secs": 5.2,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.4,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.6,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 5,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 5
+    },
+    {
+      "to": 12,
+      "secs": 4.8,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.9,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.7,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.4,
+      "taps": 4
+    },
+    {
+      "to": 12,
+      "secs": 4.5,
+      "taps": 5
+    }
+  ],
+  "taps": 1659,
+  "tapsEnemy": 686,
+  "walk": 1259.5940000021333,
+  "stuck": [],
+  "errors": []
+}

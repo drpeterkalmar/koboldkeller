@@ -300,7 +300,7 @@ export function makeEnt(type, x, y) {
   const e = {
     type, x, y, z: 0, r: def.r, hp, maxHp: hp, xp: gegnerXp(def, d, Lv),     // v14: ohne Level-Anteil, wenn der Aufhol-Bonus an ist
     speed: def.speed * (D ? D.spd : 1) * (mega ? MEGA.speed : 1), fly: !!def.fly, ranged: !!def.ranged,
-    dmg: (D ? D.dmg : 1) + Math.floor(Lv / 10), cdMul: D ? D.cd : 1,
+    dmg: (D ? D.dmg : 1) + Math.min(Math.floor(Lv / 10), VORLAGE.aufhol ? VORLAGE.gegnerLvDmgMax : 99), cdMul: D ? D.cd : 1,   // v14: Level-Zuschlag gedeckelt
     face: 1, t: Math.random() * 10, sq: 0, sqv: 0, flashT: 0, hurtT: 0, kx: 0, ky: 0,
     state: "idle", st: rand(0.5, 2), atkCd: rand(0.5, 1.5), tele: 0, moving: false,
     homeX: x, homeY: y, tx: x, ty: y, tint: null, alpha: 1, scale: 1, awake: false, wob: 0, invulT: 0, blinkCd: rand(2, 5),

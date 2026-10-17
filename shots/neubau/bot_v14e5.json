@@ -1,0 +1,784 @@
+{
+  "date": "2026-10-13T09:28:28.015Z",
+  "ver": 14,
+  "q": "",
+  "ups": [
+    {
+      "lvl": 2,
+      "t": 7.5,
+      "d": 1
+    },
+    {
+      "lvl": 3,
+      "t": 29,
+      "d": 2
+    },
+    {
+      "lvl": 4,
+      "t": 65.5,
+      "d": 3
+    },
+    {
+      "lvl": 5,
+      "t": 93.9,
+      "d": 4
+    },
+    {
+      "lvl": 6,
+      "t": 138,
+      "d": 4
+    },
+    {
+      "lvl": 7,
+      "t": 183.3,
+      "d": 6
+    },
+    {
+      "lvl": 8,
+      "t": 228.9,
+      "d": 6
+    },
+    {
+      "lvl": 9,
+      "t": 256.1,
+      "d": 7
+    },
+    {
+      "lvl": 10,
+      "t": 336.1,
+      "d": 8
+    },
+    {
+      "lvl": 11,
+      "t": 377.1,
+      "d": 10
+    },
+    {
+      "lvl": 12,
+      "t": 442.1,
+      "d": 11
+    },
+    {
+      "lvl": 13,
+      "t": 477.1,
+      "d": 12
+    },
+    {
+      "lvl": 14,
+      "t": 571.4,
+      "d": 13
+    },
+    {
+      "lvl": 15,
+      "t": 615.4,
+      "d": 14
+    },
+    {
+      "lvl": 16,
+      "t": 683.5,
+      "d": 15
+    },
+    {
+      "lvl": 17,
+      "t": 769.1,
+      "d": 17
+    },
+    {
+      "lvl": 18,
+      "t": 815.3,
+      "d": 18
+    },
+    {
+      "lvl": 19,
+      "t": 890.3,
+      "d": 19
+    },
+    {
+      "lvl": 20,
+      "t": 1024.6,
+      "d": 20
+    },
+    {
+      "lvl": 21,
+      "t": 1300.7,
+      "d": 20
+    }
+  ],
+  "stats": {
+    "kills": 279,
+    "dmgTaken": 1354,
+    "potionsUsed": 24,
+    "specials": 16,
+    "wallHits": 1,
+    "beute": {
+      "coin": 582,
+      "mushroom": 17,
+      "up": 15,
+      "potion": 10,
+      "heart": 26
+    },
+    "nutzlos": 31,
+    "ups": 20,
+    "upSicher": 1,
+    "windHit": 122,
+    "windAbort": 40,
+    "windKill": 22,
+    "schreck": 20,
+    "glanz": 1
+  },
+  "myth": "",
+  "mega": false,
+  "speed": 6,
+  "won": true,
+  "deaths": 8,
+  "specials": 16,
+  "dodges": 126,
+  "final": {
+    "screen": "win",
+    "depth": 20,
+    "biome": 5,
+    "hp": 52,
+    "maxHp": 52,
+    "lvl": 21,
+    "gold": 1409,
+    "ents": 9,
+    "boss": null,
+    "mega": false,
+    "secs": 55,
+    "won": true,
+    "demo": false,
+    "deepest": 20,
+    "x": 55.02,
+    "y": 55.22,
+    "tut": -1,
+    "potions": 0,
+    "atk": 25,
+    "name": "Bot",
+    "species": "kobold",
+    "hat": "krone",
+    "audio": "running",
+    "track": "audio/town.m4a",
+    "where": "dungeon",
+    "ammo": 20,
+    "ammoMax": 48,
+    "spec": 1,
+    "skPts": 0,
+    "sk": {
+      "kraft": 10,
+      "leben": 10,
+      "tempo": 7,
+      "blasen": 7,
+      "magnet": 6
+    },
+    "look": {
+      "species": "kobold",
+      "skin": "#86dc5c",
+      "outfit": "#ff6f91",
+      "eye": "#3b2a6b",
+      "hair": "#6b4430",
+      "style": "locke",
+      "earsV": 0,
+      "acc": "none",
+      "ears": "pointy",
+      "myth": "",
+      "mhat": false,
+      "id": "kobold|#86dc5c|#6b4430|#3b2a6b|locke|0|none"
+    },
+    "homeHidden": false,
+    "homeHideT": 0,
+    "levelName": "Der Thronsaal des Kellerkönigs",
+    "phase": 0,
+    "stairsSealed": false,
+    "mini": false,
+    "bossDone": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20
+    ],
+    "minions": 0,
+    "spawning": 0,
+    "zoom": 0.996
+  },
+  "rows": [
+    {
+      "d": 1,
+      "secs": 19.29999999999987,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 1,
+      "arriveHp": "6/6",
+      "done": true,
+      "taps": 14,
+      "tapsEnemy": 7,
+      "walk": 12.099999999999955,
+      "arriveAtk": 4,
+      "wallHits": 0
+    },
+    {
+      "d": 2,
+      "secs": 35.55999999999925,
+      "dmg": 1,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 2,
+      "arriveHp": "9/9",
+      "done": true,
+      "taps": 10,
+      "tapsEnemy": 8,
+      "walk": 16.499999999999957,
+      "arriveAtk": 4.5,
+      "wallHits": 0
+    },
+    {
+      "d": 3,
+      "secs": 20.499999999998842,
+      "dmg": 0,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 3,
+      "arriveHp": "12/12",
+      "done": true,
+      "taps": 16,
+      "tapsEnemy": 3,
+      "walk": 10.499999999999403,
+      "arriveAtk": 4.5,
+      "wallHits": 0
+    },
+    {
+      "d": 4,
+      "secs": 64.98600000001197,
+      "dmg": 8,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 4,
+      "arriveHp": "13/13",
+      "done": true,
+      "taps": 17,
+      "tapsEnemy": 16,
+      "walk": 24.331000000004934,
+      "arriveAtk": 5,
+      "wallHits": 0
+    },
+    {
+      "d": 5,
+      "secs": 19.40000000001544,
+      "dmg": 2,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 6,
+      "arriveHp": "19/19",
+      "done": true,
+      "taps": 12,
+      "tapsEnemy": 5,
+      "walk": 11.200000000008913,
+      "arriveAtk": 5.5,
+      "wallHits": 0
+    },
+    {
+      "d": 6,
+      "secs": 70.17000000004992,
+      "dmg": 15,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 6,
+      "arriveHp": "19/19",
+      "done": true,
+      "taps": 26,
+      "tapsEnemy": 17,
+      "walk": 29.005000000020004,
+      "arriveAtk": 5.5,
+      "wallHits": 0
+    },
+    {
+      "d": 7,
+      "secs": 25.10000000000798,
+      "dmg": 3,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 8,
+      "arriveHp": "23/23",
+      "done": true,
+      "taps": 13,
+      "tapsEnemy": 13,
+      "walk": 13.700000000006412,
+      "arriveAtk": 7.5,
+      "wallHits": 0
+    },
+    {
+      "d": 8,
+      "secs": 81.48599999993121,
+      "dmg": 30,
+      "deaths": 0,
+      "pots": 1,
+      "tries": 1,
+      "arriveLvl": 9,
+      "arriveHp": "26/26",
+      "done": true,
+      "taps": 17,
+      "tapsEnemy": 26,
+      "walk": 29.780999999978235,
+      "arriveAtk": 7.5,
+      "wallHits": 0
+    },
+    {
+      "d": 9,
+      "secs": 19.99999999998181,
+      "dmg": 4,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 10,
+      "arriveHp": "29/29",
+      "done": true,
+      "taps": 10,
+      "tapsEnemy": 6,
+      "walk": 14.099999999987176,
+      "arriveAtk": 9,
+      "wallHits": 0
+    },
+    {
+      "d": 10,
+      "secs": 70.46499999993591,
+      "dmg": 16,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 10,
+      "arriveHp": "25/29",
+      "done": true,
+      "taps": 24,
+      "tapsEnemy": 17,
+      "walk": 30.97499999997183,
+      "arriveAtk": 9,
+      "wallHits": 1
+    },
+    {
+      "d": 11,
+      "secs": 23.699999999978445,
+      "dmg": 11,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 11,
+      "arriveHp": "24/32",
+      "done": true,
+      "taps": 11,
+      "tapsEnemy": 13,
+      "walk": 13.299999999987904,
+      "arriveAtk": 10.5,
+      "wallHits": 0
+    },
+    {
+      "d": 12,
+      "secs": 98.9309999999004,
+      "dmg": 55,
+      "deaths": 0,
+      "pots": 1,
+      "tries": 1,
+      "arriveLvl": 12,
+      "arriveHp": "29/35",
+      "done": true,
+      "taps": 22,
+      "tapsEnemy": 33,
+      "walk": 37.85099999994566,
+      "arriveAtk": 10.5,
+      "wallHits": 0
+    },
+    {
+      "d": 13,
+      "secs": 43.754999999966685,
+      "dmg": 6,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 13,
+      "arriveHp": "16/36",
+      "done": true,
+      "taps": 20,
+      "tapsEnemy": 17,
+      "walk": 21.70499999998333,
+      "arriveAtk": 11,
+      "wallHits": 0
+    },
+    {
+      "d": 14,
+      "secs": 69.2199999999541,
+      "dmg": 26,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 14,
+      "arriveHp": "33/39",
+      "done": true,
+      "taps": 23,
+      "tapsEnemy": 22,
+      "walk": 27.73999999997818,
+      "arriveAtk": 11.5,
+      "wallHits": 0
+    },
+    {
+      "d": 15,
+      "secs": 26.39999999997599,
+      "dmg": 17,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 15,
+      "arriveHp": "30/42",
+      "done": true,
+      "taps": 11,
+      "tapsEnemy": 8,
+      "walk": 9.799999999991087,
+      "arriveAtk": 13.5,
+      "wallHits": 0
+    },
+    {
+      "d": 16,
+      "secs": 61.14099999993982,
+      "dmg": 40,
+      "deaths": 0,
+      "pots": 1,
+      "tries": 1,
+      "arriveLvl": 16,
+      "arriveHp": "43/43",
+      "done": true,
+      "taps": 16,
+      "tapsEnemy": 14,
+      "walk": 18.611999999965064,
+      "arriveAtk": 14,
+      "wallHits": 0
+    },
+    {
+      "d": 17,
+      "secs": 37.399999999965985,
+      "dmg": 36,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 16,
+      "arriveHp": "45/45",
+      "done": true,
+      "taps": 17,
+      "tapsEnemy": 9,
+      "walk": 18.299999999983356,
+      "arriveAtk": 14,
+      "wallHits": 0
+    },
+    {
+      "d": 18,
+      "secs": 91.86499999992702,
+      "dmg": 104,
+      "deaths": 0,
+      "pots": 3,
+      "tries": 1,
+      "arriveLvl": 17,
+      "arriveHp": "29/46",
+      "done": true,
+      "taps": 29,
+      "tapsEnemy": 34,
+      "walk": 34.17999999997028,
+      "arriveAtk": 14,
+      "wallHits": 0
+    },
+    {
+      "d": 19,
+      "secs": 28.49999999997408,
+      "dmg": 43,
+      "deaths": 0,
+      "pots": 0,
+      "tries": 1,
+      "arriveLvl": 18,
+      "arriveHp": "39/47",
+      "done": true,
+      "taps": 10,
+      "tapsEnemy": 5,
+      "walk": 11.49999999998954,
+      "arriveAtk": 15,
+      "wallHits": 0
+    },
+    {
+      "d": 20,
+      "secs": 525.7409999996516,
+      "dmg": 872,
+      "deaths": 8,
+      "pots": 18,
+      "tries": 9,
+      "arriveLvl": 19,
+      "arriveHp": "25/48",
+      "done": true,
+      "taps": 130,
+      "tapsEnemy": 95,
+      "walk": 186.85699999987173,
+      "arriveAtk": 15,
+      "wallHits": 0
+    }
+  ],
+  "fights": [
+    {
+      "d": 2,
+      "name": "Schlabbo",
+      "mini": true,
+      "secs": 17.3,
+      "dmg": 1,
+      "won": true,
+      "maxMin": 2,
+      "spawned": 3,
+      "hp": 138
+    },
+    {
+      "d": 4,
+      "name": "Moosbart",
+      "mini": false,
+      "secs": 38.5,
+      "dmg": 8,
+      "won": true,
+      "maxMin": 5,
+      "spawned": 14,
+      "hp": 400
+    },
+    {
+      "d": 6,
+      "name": "Funkelflatter",
+      "mini": true,
+      "secs": 28,
+      "dmg": 12,
+      "won": true,
+      "maxMin": 3,
+      "spawned": 6,
+      "hp": 346
+    },
+    {
+      "d": 8,
+      "name": "Glitzerzahn",
+      "mini": false,
+      "secs": 52.4,
+      "dmg": 27,
+      "won": true,
+      "maxMin": 6,
+      "spawned": 12,
+      "hp": 811
+    },
+    {
+      "d": 10,
+      "name": "Lolli-Lutz",
+      "mini": true,
+      "secs": 31,
+      "dmg": 10,
+      "won": true,
+      "maxMin": 4,
+      "spawned": 9,
+      "hp": 611
+    },
+    {
+      "d": 12,
+      "name": "Zuckerschnute",
+      "mini": false,
+      "secs": 62.6,
+      "dmg": 33,
+      "won": true,
+      "maxMin": 7,
+      "spawned": 23,
+      "hp": 1222
+    },
+    {
+      "d": 14,
+      "name": "Bibber",
+      "mini": true,
+      "secs": 31,
+      "dmg": 12,
+      "won": true,
+      "maxMin": 5,
+      "spawned": 11,
+      "hp": 920
+    },
+    {
+      "d": 16,
+      "name": "Frostnase",
+      "mini": false,
+      "secs": 40.2,
+      "dmg": 40,
+      "won": true,
+      "maxMin": 8,
+      "spawned": 14,
+      "hp": 1734
+    },
+    {
+      "d": 18,
+      "name": "Glutpanzer Gustav",
+      "mini": true,
+      "secs": 44.6,
+      "dmg": 56,
+      "won": true,
+      "maxMin": 5,
+      "spawned": 6,
+      "hp": 1296
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 41.3,
+      "dmg": 139,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2691
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 27.7,
+      "dmg": 88,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2691
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 45.4,
+      "dmg": 87,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2730
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 25.2,
+      "dmg": 51,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2730
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 52.9,
+      "dmg": 85,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2730
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 38.9,
+      "dmg": 61,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2730
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 35.7,
+      "dmg": 82,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2730
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 26.8,
+      "dmg": 67,
+      "won": false,
+      "maxMin": 9,
+      "spawned": 0,
+      "hp": 2769
+    },
+    {
+      "d": 20,
+      "name": "Kellerkönig",
+      "mini": false,
+      "secs": 32.2,
+      "dmg": 72,
+      "won": true,
+      "maxMin": 9,
+      "spawned": 12,
+      "hp": 2769
+    }
+  ],
+  "maxMinions": 9,
+  "town": [
+    {
+      "to": 1,
+      "secs": 4.9,
+      "taps": 8
+    },
+    {
+      "to": 20,
+      "secs": 4,
+      "taps": 6
+    },
+    {
+      "to": 20,
+      "secs": 3.9,
+      "taps": 6
+    },
+    {
+      "to": 20,
+      "secs": 4.1,
+      "taps": 6
+    },
+    {
+      "to": 20,
+      "secs": 4.2,
+      "taps": 7
+    },
+    {
+      "to": 20,
+      "secs": 4.2,
+      "taps": 6
+    },
+    {
+      "to": 20,
+      "secs": 4.2,
+      "taps": 6
+    },
+    {
+      "to": 20,
+      "secs": 4.1,
+      "taps": 7
+    },
+    {
+      "to": 20,
+      "secs": 4.1,
+      "taps": 7
+    }
+  ],
+  "taps": 507,
+  "tapsEnemy": 368,
+  "walk": 585.2369999996326,
+  "stuck": [],
+  "errors": []
+}

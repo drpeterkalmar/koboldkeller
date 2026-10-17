@@ -226,14 +226,20 @@ export const VORLAGE = {
   heiler: 0.5, heilerTempo: 2.6,           // Glühwürmchen-Heiler: +50 % Max-❤️, schwebt mit 2,6 Kacheln/s zum Kobold
   // E1 Upgrade-Zähler (?beutetakt=0 = aus): +30 je betretene Ebene, −50 je Upgrade aus Beute (Gegner, Truhen, Bosse),
   // ab 60 enthält die nächste Truhe sicher ein Upgrade. Zähler fällt nicht unter 0 (eine Glückssträhne schaltet die
-  // Garantie sonst für viele Ebenen ab). Zufalls-Upgrade je normalem Kill 7 % → 5 %.
+  // Garantie sonst für viele Ebenen ab). Zufalls-Upgrade je normalem Kill: Datenblatt-Startwert 5 %, nach Bot-Messung wieder 7 % wie v13
+  // (seit E4 stehen Truhen abseits — wer direkt zur Treppe läuft, öffnet weniger Truhen und kam mit ⚔️ 15 statt 19 zum Kellerkönig).
   beutetakt: _qn("beutetakt", 1) > 0,
-  taktEbene: 30, taktFund: 50, taktSicher: 60, taktMin: 0, upKill: 0.05,
-  // E2 XP-Kurve als Polynom (Vorlage D): Bedarf(L) = a + b·L + c·L² (?xpkurve=alt = v13: Start 10, dann ×1,4 + 4)
-  xpkurve: _q.get("xpkurve") === "alt" ? "alt" : "quad", xpA: 10, xpB: 5, xpC: 2,
+  taktEbene: 30, taktFund: 50, taktSicher: 60, taktMin: 0, upKill: 0.07,
+  // E2 XP-Kurve als Polynom (Vorlage D): Bedarf(L) = a + b·L + c·L² (?xpkurve=alt = v13: Start 10, dann ×1,4 + 4).
+  // c: Datenblatt-Startwert 2 („unsicher, Messung entscheidet“); Bot 1→20 endete mit c = 2 auf Level 19–20, Abstände ab Lv 16 ≈ 68 s
+  // → c = 1,8 (Lv 15: 490, Lv 20: 830 XP)
+  xpkurve: _q.get("xpkurve") === "alt" ? "alt" : "quad", xpA: 10, xpB: 5, xpC: 1.8,
   // E2 Aufhol-Bonus (Vorlage A): XP × (1 + (Soll-Level − Level) · aufhol), Soll-Level = Ebene + 1, gekappt 0,6 … 1,5.
   // Dafür fällt der Spieler-Level-Anteil der Gegner-XP (ENEMIES.xp[2]) weg. ?aufhol=0 = v13 (mit Level-Anteil, ohne Faktor)
   aufhol: _qn("aufhol", 0.1), aufholMin: 0.6, aufholMax: 1.5,
+  // Gegner-Schaden steigt in v13 um +1 je 10 Spieler-Level. Mit der neuen Kurve erreicht man Level 20 schon auf Ebene 19/20 —
+  // ein Level-Aufstieg soll den Endkampf nicht härter machen: mit Aufhol-Bonus höchstens +1 (wie v13, wo man Level 16 erreichte)
+  gegnerLvDmgMax: 1,
   // E3 Treffer bricht Ausholen ab (Vorlage A): Schaden ≥ 25 % der Max-❤️ (Elite 40 %) oder Krit → 0,25 s Zucken (💫),
   // Angriffspause startet neu. Bosse nie (die haben Phasen). ?zucken=0 = v13
   zucken: _qn("zucken", 0.25), zuckenElite: 0.4, zuckT: 0.25,
